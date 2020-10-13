@@ -29,7 +29,7 @@ def _all_indices(d1, d2):
 class Summand:
     def __init__(
             self,
-            multipliers,  # Tuple[D]
+            multipliers,  # List[D]
             coeff = 1,    # integer  (rational ?)
         ):
         self.multipliers = tuple(sorted(multipliers, key=D.as_tuple))

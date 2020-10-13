@@ -1,5 +1,8 @@
 minus = "−"
-otimes = "⊗ "  # add space to fix how this looks in terminal
+
+# add spaces to prevent wide characters from overlapping when using monospace fonts
+otimes = "⊗ "
+shuffle = "⧢ "
 
 _subscript_map = {
     "+": "₊",
@@ -17,15 +20,22 @@ _subscript_map = {
     "9": "₉",
 }
 
+
+def fix_minus(s):
+    return s.replace("-", minus)
+
 def substript(n):
     return "".join([_subscript_map[c] for c in str(n)])
 
+
 def coeff(x):
-    if x == 0:
-        return " 0 "
-    if x == 1:
-        return " + "
-    elif x == -1:
-        return " - "
-    else:
-        return "{:+} ".format(x)
+    def impl(x):
+        if x == 0:
+            return " 0 "
+        if x == 1:
+            return " + "
+        elif x == -1:
+            return " - "
+        else:
+            return "{:+} ".format(x)
+    return fix_minus(impl(x))
