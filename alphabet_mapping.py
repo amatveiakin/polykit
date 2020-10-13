@@ -17,7 +17,7 @@ class AlphabetMapping:
             pair,  # (a, b)  where  a, b are integers  and  1 <= a < b <= dimension
         ):
         (a, b) = pair
-        assert 1 <= a and a < b and b <= self.dimension
+        assert 1 <= a and a < b and b <= self.dimension, [a, b, self.dimension]
         a -= 1
         b -= 1
         return b*(b-1)//2 + a

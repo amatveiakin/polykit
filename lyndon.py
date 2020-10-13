@@ -1,6 +1,9 @@
+from util import flatten
+
+
 def _gen_lyndon_words(alphabet_size, max_length):
     last_w = [0]
-    words = [last_w]
+    words = [tuple(last_w)]
     while True:
         w = [last_w[i % len(last_w)] for i in range(max_length)]
         while w and w[-1] == alphabet_size - 1:
@@ -8,7 +11,7 @@ def _gen_lyndon_words(alphabet_size, max_length):
         if not w:
             break
         w[-1] += 1
-        words.append(w)
+        words.append(tuple(w))
         last_w = w
     return words
 
@@ -33,7 +36,7 @@ def lyndon_factorize(
     while k < n:
         if m >= n or word[k] > word[m]:
             l = m - k
-            result.append(word[start:(start+l)])
+            result.append(tuple(word[start:(start+l)]))
             start += l
             k = start
             m = start + 1
@@ -44,19 +47,19 @@ def lyndon_factorize(
             k += 1
             m += 1
     if start < n:
-        result.append(word[start:])
+        result.append(tuple(word[start:]))
     return result
 
 
-def _concat_multi(word_collection, suffix):
+def _concat_many(word_collection, suffix):
     return [w + suffix for w in word_collection]
 
-# Gets two words. Returns their shuffle product as a List of words.
+# Returns shuffle product of two words as a List of words.
 # Rules:
 #   1 ⧢ v = v
 #   u ⧢ 1 = u
 #   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
-# TODO: Cache results (?)
+# Optimization potential: Cache results.
 def shuffle_product(u, v):
     if not u:
         return [v]
@@ -67,6 +70,18 @@ def shuffle_product(u, v):
     u = u[:-1]
     v = v[:-1]
     return (
-        _concat_multi(shuffle_product(u, v+[b]), [a]) +
-        _concat_multi(shuffle_product(u+[a], v), [b])
+        _concat_many(shuffle_product(u, v+(b,)), (a,)) +
+        _concat_many(shuffle_product(u+(a,), v), (b,))
     )
+
+# Returns shuffle product of a list of words as a List of words.
+# Optimization potential: Do de-duping in the process.
+def shuffle_product_many(words):
+    l = len(words)
+    assert l > 0
+    if l == 1:
+        return words
+    else:
+        return flatten(
+            [shuffle_product(w, words[-1]) for w in shuffle_product_many(words[:-1])]
+        )
