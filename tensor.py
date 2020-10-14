@@ -124,13 +124,16 @@ class Tensor:
     def from_list(
             summands,  # List[Product]
         ):
-        return Tensor(Linear({s.multipliers: s.coeff for s in summands}))
+        data = Linear()
+        for s in summands:
+            data[s.multipliers] += s.coeff
+        return Tensor(data)
 
     def normalize_summands(self):
         summands_normalized = Linear()
         for multipliers, coeff in self.summands.items():
             normalized_multipliers, sign = _normalize_multipliers(multipliers)
-            summands_normalized[normalized_multipliers] = coeff * sign
+            summands_normalized[normalized_multipliers] += coeff * sign
         self.summands = summands_normalized
 
     def convert_to_lyndon_basis(self):

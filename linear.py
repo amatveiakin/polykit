@@ -1,3 +1,5 @@
+import functools
+
 import format
 
 
@@ -7,7 +9,7 @@ class Linear:
         if data is None:
             data = {}
         assert isinstance(data, dict)
-        self.__data = data
+        self.data = data
 
     # Counts the number of each element in the list
     # Example:  ["a", "b", "a"]  ->  {"a": 2, "b": 1}
@@ -19,25 +21,25 @@ class Linear:
         return Linear(cnt)
 
     def copy(self):
-        return Linear(self.__data.copy())
+        return Linear(self.data.copy())
 
     def items(self):
-        return self.__data.items()
+        return self.data.items()
 
     # Use items() to iterate over Linear
     __iter__ = None
 
     def __len__(self):
-        return len(self.__data)
+        return len(self.data)
 
     def __getitem__(self, key):
-        return self.__data.get(key, 0)
+        return self.data.get(key, 0)
 
     def __setitem__(self, key, value):
         if value != 0:
-            self.__data[key] = value
-        elif key in self.__data:
-            del self.__data[key]
+            self.data[key] = value
+        elif key in self.data:
+            del self.data[key]
 
     def __add__(self, other):
         ret = self.copy()
@@ -59,10 +61,14 @@ class Linear:
     def to_str(self, element_to_str):
         return "\n".join([format.coeff(v) + element_to_str(k) for k, v in self.items()])
 
+    def __str__(self):
+        return self.to_str(str)
+
+
 def tensor_product(
-        lhs,           # Linear[A]
-        rhs,           # Linear[B]
-        basis_product  # function: A, B -> C
+        lhs,            # Linear[A]
+        rhs,            # Linear[B]
+        basis_product,  # function: A, B -> C
     ):
     ret = Linear({})
     for kl, vl in lhs.items():
@@ -71,6 +77,15 @@ def tensor_product(
             assert ret[k] == 0, f"Tensor product is not unique: {k} = ({kl}) * ({kr})"
             ret[k] = vl * vr
     return ret
+
+def tensor_product_many(
+        multipliers,    # iterable[Linear[A]]
+        basis_product,  # function: A, A -> A,
+    ):
+    return functools.reduce(
+        lambda lhs, rhs: tensor_product(lhs, rhs, basis_product),
+        multipliers
+    )
 
 
 # Returns a / b; asserts that the result is an integer.

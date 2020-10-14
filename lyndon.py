@@ -27,8 +27,6 @@ class Lyndon:
 
 # Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 # Such split always exists and is unique (Chen–Fox–Lyndon theorem).
-#
-# TODO: Add unit tests
 def lyndon_factorize(
         word,  # Tuple[x]  where  x is integer  and  0 <= x < alphabet_size
     ):
@@ -57,12 +55,14 @@ def lyndon_factorize(
 
 # Converts a linear combination of words to Lyndon basis.
 #
-# TODO: Add unit tests
 # Optimization potential: Cache word_orig => words_expanded.
+#   Better yet: sort summands and add replacement directly to the expression.
+#   Thus avoid processing the same Lyndon word twice.
 # Optimization potential: Don't generate all (N!) results for each (word^N).
 def to_lyndon_basis(
         words,  # Linear[word]
     ):
+    assert isinstance(words, Linear)
     finished = False
     while not finished:
         words_new = Linear()
@@ -71,8 +71,7 @@ def to_lyndon_basis(
             lyndon_words = lyndon_factorize(word_orig)
             lyndon_word_sum = Linear.count(lyndon_words)
             # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_sum) == 1 ?
-            # We should either allow Lyndon_word^N in the basis or assert that it doesn't happen.
-            # if len(lyndon_word_sum) == 1:
+            # As implemented, words of the form (Lyndon_word^N) simply disappear.
             if len(lyndon_words) == 1:
                 words_new[word_orig] += coeff
                 continue
@@ -81,9 +80,9 @@ def to_lyndon_basis(
             for _, count in lyndon_word_sum.items():
                 denominator *= math.factorial(count)
             expanded_word_counts = Linear.count(shuffle_product_many(lyndon_words)).div_int(denominator)
-            assert expanded_word_counts[word_orig] == 1, str(word_orig) + " not in " + str(expanded_word_counts)
-            # print("Lyndon transform: " + str(word_orig) + " => " + str(expanded_word_counts))
+            assert expanded_word_counts[word_orig] == 1, f"{word_orig} not in {expanded_word_counts}"
+            # print(f"Lyndon transform: {word_orig} =>\n{expanded_word_counts}")
             expanded_word_counts[word_orig] = 0
-            words_new += (-count * coeff) * expanded_word_counts
+            words_new += (-coeff) * expanded_word_counts
         words = words_new
     return words
