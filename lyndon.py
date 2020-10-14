@@ -1,7 +1,7 @@
 import math
 
+from linear import Linear
 from shuffle import shuffle_product_many
-from util import count_items, append_counting_dict
 
 
 def _gen_lyndon_words(alphabet_size, max_length):
@@ -61,56 +61,29 @@ def lyndon_factorize(
 # Optimization potential: Cache word_orig => words_expanded.
 # Optimization potential: Don't generate all (N!) results for each (word^N).
 def to_lyndon_basis(
-        words,  # word -> coeff
+        words,  # Linear[word]
     ):
     finished = False
     while not finished:
-        words_new = {}
+        words_new = Linear({})
         finished = True
         for word_orig, coeff in words.items():
             lyndon_words = lyndon_factorize(word_orig)
-            lyndon_word_counts = count_items(lyndon_words)
-            # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_counts) == 1 ?
+            lyndon_word_sum = Linear.count(lyndon_words)
+            # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_sum) == 1 ?
             # We should either allow Lyndon_word^N in the basis or assert that it doesn't happen.
-            # if len(lyndon_word_counts) == 1:
+            # if len(lyndon_word_sum) == 1:
             if len(lyndon_words) == 1:
-                append_counting_dict(words_new, {word_orig: coeff})
+                words_new[word_orig] += coeff
                 continue
             finished = False
-            # denominator = 1
-            # numerator = []
-            # for word, count in lyndon_word_counts.items():
-            #     denominator *= math.factorial(count)
-            #     numerator.append(word * count)
-            # expanded_word_counts = {
-            #     word: _div_int(count, denominator)
-            #     for (word, count)
-            #     in count_items(shuffle_product_many(numerator)).items()
-            # }
             denominator = 1
-            for count in lyndon_word_counts.values():
+            for _, count in lyndon_word_sum.items():
                 denominator *= math.factorial(count)
-            expanded_word_counts = {
-                word: _div_int(count, denominator)
-                for word, count
-                in count_items(shuffle_product_many(lyndon_words)).items()
-            }
-            assert expanded_word_counts.get(word_orig) == 1, str(word_orig) + " not in " + str(expanded_word_counts)
+            expanded_word_counts = Linear.count(shuffle_product_many(lyndon_words)).div_int(denominator)
+            assert expanded_word_counts[word_orig] == 1, str(word_orig) + " not in " + str(expanded_word_counts)
             # print("Lyndon transform: " + str(word_orig) + " => " + str(expanded_word_counts))
-            del expanded_word_counts[word_orig]
-            append_counting_dict(
-                words_new,
-                {
-                    word: -count * coeff
-                    for word, count
-                    in expanded_word_counts.items()
-                }
-            )
+            expanded_word_counts[word_orig] = 0
+            words_new += (-count * coeff) * expanded_word_counts
         words = words_new
     return words
-
-# Returns a / b; asserts that the result is an integer.
-def _div_int(x, y):
-    result, reminder = divmod(x, y)
-    assert reminder == 0
-    return result
