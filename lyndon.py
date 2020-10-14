@@ -65,7 +65,7 @@ def to_lyndon_basis(
     ):
     finished = False
     while not finished:
-        words_new = Linear({})
+        words_new = Linear()
         finished = True
         for word_orig, coeff in words.items():
             lyndon_words = lyndon_factorize(word_orig)

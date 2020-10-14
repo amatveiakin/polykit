@@ -1,7 +1,7 @@
-from tensor import D,  Product, Tensor
+from tensor import D, Product, Tensor
 
 
-t = Tensor([
+t = Tensor.from_list([
      Product([D(1, 2), D(1, 2), D(1, 3), D(1, 5)]),
     -Product([D(1, 2), D(1, 2), D(1, 3), D(4, 5)]),
     -Product([D(1, 2), D(1, 2), D(1, 3), D(1, 6)]),

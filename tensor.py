@@ -1,5 +1,7 @@
 import math
 
+from dataclasses import dataclass
+
 import format
 
 from alphabet_mapping import AlphabetMapping
@@ -9,11 +11,13 @@ from util import get_one_item
 
 
 # Represents a single difference (x_i - x_j)
+@dataclass(eq=True, frozen=True)
 class D:
-    def __init__(self, a, b):  # a, b are integers
-        assert a != b
-        self.a = a
-        self.b = b
+    a: int
+    b: int
+
+    def __post_init__(self):
+        assert self.a != self.b
 
     @staticmethod
     def from_tuple(tpl):
@@ -23,18 +27,11 @@ class D:
     def as_tuple(self):
         return (self.a, self.b)
 
-    def normalize(self):
-        if self.a < self.b:
-            return 1
-        else:
-            self.a, self.b = self.b, self.a
-            return -1
+    def sign(self):
+        return 1 if self.a < self.b else -1
 
-    def __eq__(self, other):
-        return isinstance(other, D) and self.as_tuple() == other.as_tuple()
-
-    def __hash__(self):
-        return hash(self.as_tuple())
+    def normalized(self):
+        return self if self.a < self.b else D(self.b, self.a)
 
     def __str__(self):
         return f"(x{format.substript(self.a)} {format.minus} x{format.substript(self.b)})"
@@ -53,11 +50,10 @@ class Product:
     def __init__(
             self,
             multipliers,  # iterable[D]
-            coeff = 1,    # integer  (rational ?)
+            coeff = 1,    # integer
         ):
-        self.multipliers = tuple(multipliers)
-        self.coeff = coeff
-        [coeff := coeff * d.normalize() for d in self.multipliers]
+        self.multipliers, sign = _normalize_multipliers(multipliers)
+        self.coeff = coeff * sign
 
     def __neg__(self):
         return Product(self.multipliers, -self.coeff)
@@ -67,6 +63,16 @@ class Product:
 
 def _multipliers_to_str(multipliers):
     return format.otimes.join(str(d) for d in multipliers)
+
+def _normalize_multipliers(
+        multipliers,  # iterable[D]
+    ):
+    ret_multipliers = []
+    ret_sign = 1
+    for d in multipliers:
+        ret_sign *= d.sign()
+        ret_multipliers.append(d.normalized())
+    return (tuple(ret_multipliers), ret_sign)
 
 def _change_multipliers(
         multipliers,    # Tuple[D]
@@ -93,15 +99,39 @@ def _from_word(
 class Tensor:
     def __init__(
             self,
-            summands  # List[Product]
+            summands,  # Linear[Tuple[D]]
         ):
-        self.summands = Linear({s.multipliers: s.coeff for s in summands})
-        self.weight = len(summands[0].multipliers) if len(summands) > 0 else -1
-        for s in summands:
-            assert len(s.multipliers) == self.weight
-        self.dimension = max([max([max(d.a, d.b) for d in s.multipliers]) for s in summands])
+        assert isinstance(summands, Linear)
+        self.summands = summands
+        self.weight = None
+        for multipliers, _ in summands.items():
+            if self.weight is None:
+                self.weight = len(multipliers)
+            else:
+                assert len(multipliers) == self.weight
+        self.dimension = max([
+            max([
+                max(d.a, d.b)
+                for d in multipliers
+            ])
+            for multipliers, _ in summands.items()
+        ])
+        self.normalize_summands()
         self.convert_to_lyndon_basis()
         self.check_criterion()
+
+    @staticmethod
+    def from_list(
+            summands,  # List[Product]
+        ):
+        return Tensor(Linear({s.multipliers: s.coeff for s in summands}))
+
+    def normalize_summands(self):
+        summands_normalized = Linear()
+        for multipliers, coeff in self.summands.items():
+            normalized_multipliers, sign = _normalize_multipliers(multipliers)
+            summands_normalized[normalized_multipliers] = coeff * sign
+        self.summands = summands_normalized
 
     def convert_to_lyndon_basis(self):
         print("convert_to_lyndon_basis - before:\n" + str(self))
@@ -147,15 +177,16 @@ class Tensor:
                     b = get_one_item(common)
                     a = _other_index(d1, b)
                     c = _other_index(d2, b)
-                    self.__check_criterion_condition(multipliers, coeff, {
+                    sign = D(a, b).sign() * D(b, c).sign()
+                    self.__check_criterion_condition(multipliers, coeff * sign, {
                         k1: D(a, b),
                         k2: D(b, c),
                     })
-                    self.__check_criterion_condition(multipliers, coeff, {
+                    self.__check_criterion_condition(multipliers, coeff * sign, {
                         k1: D(b, c),
                         k2: D(c, a),
                     })
-                    self.__check_criterion_condition(multipliers, coeff, {
+                    self.__check_criterion_condition(multipliers, coeff * sign, {
                         k1: D(c, a),
                         k2: D(a, b),
                     })

@@ -3,7 +3,9 @@ import format
 
 # Represents a linear combination of any hashable objects
 class Linear:
-    def __init__(self, data):
+    def __init__(self, data=None):
+        if data is None:
+            data = {}
         assert isinstance(data, dict)
         self.__data = data
 
@@ -24,6 +26,9 @@ class Linear:
 
     # Use items() to iterate over Linear
     __iter__ = None
+
+    def __len__(self):
+        return len(self.__data)
 
     def __getitem__(self, key):
         return self.__data.get(key, 0)
@@ -53,6 +58,19 @@ class Linear:
 
     def to_str(self, element_to_str):
         return "\n".join([format.coeff(v) + element_to_str(k) for k, v in self.items()])
+
+def tensor_product(
+        lhs,           # Linear[A]
+        rhs,           # Linear[B]
+        basis_product  # function: A, B -> C
+    ):
+    ret = Linear({})
+    for kl, vl in lhs.items():
+        for kr, vr in rhs.items():
+            k = basis_product(kl, kr)
+            assert ret[k] == 0, f"Tensor product is not unique: {k} = ({kl}) * ({kr})"
+            ret[k] = vl * vr
+    return ret
 
 
 # Returns a / b; asserts that the result is an integer.
