@@ -1,14 +1,22 @@
-from tensor import D, Summand, Tensor
-from lyndon import Lyndon, lyndon_factorize, shuffle_product, shuffle_product_many
+import format
+
+from tensor import D,  Summand, Tensor
+from lyndon import Lyndon, lyndon_factorize
+from shuffle import shuffle_product, shuffle_product_many
 from alphabet_mapping import AlphabetMapping
 
 
-t = Tensor([
-    Summand([D(1,2), D(1,3)]),
-    Summand([D(2,3), D(2,1)]),
-    Summand([D(3,1), D(3,2)]),
-])
-print(str(t))
+# format.set_enable_unicode(True)
+# format.set_enable_monospace_font_correction(False)
+
+# t = Tensor([
+#      Summand([D(1, 2), D(2, 3)]),
+#      Summand([D(2, 3), D(3, 1)]),
+#      Summand([D(3, 1), D(1, 2)]),
+# ])
+# print(str(t))
+# with open("out.txt", "w", encoding="utf-8") as f:
+#     f.write(str(t))
 
 # print(AlphabetMapping(4).from_alphabet_mapping)
 

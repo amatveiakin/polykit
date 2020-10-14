@@ -1,8 +1,32 @@
-minus = "−"
+enable_unicode = False
+enable_monospace_font_correction = True
+
+def set_enable_unicode(v):
+    global enable_unicode
+    enable_unicode = v
+    _gen_ops()
+
+def set_enable_monospace_font_correction(v):
+    global enable_monospace_font_correction
+    enable_monospace_font_correction = v
+    _gen_ops()
+
+
+minus = None
+otimes = None
+shuffle = None
 
 # add spaces to prevent wide characters from overlapping when using monospace fonts
-otimes = "⊗ "
-shuffle = "⧢ "
+def _monofont_op_correction(op):
+    return op + (" " if enable_monospace_font_correction else "")
+
+def _gen_ops():
+    global minus, otimes, shuffle
+    minus = "−" if enable_unicode else "-"
+    otimes = _monofont_op_correction("⊗") if enable_unicode else "*"
+    shuffle = _monofont_op_correction("⧢") if enable_unicode else "#"
+
+_gen_ops()
 
 _subscript_map = {
     "+": "₊",
@@ -25,7 +49,7 @@ def fix_minus(s):
     return s.replace("-", minus)
 
 def substript(n):
-    return "".join([_subscript_map[c] for c in str(n)])
+    return "".join([_subscript_map[c] for c in str(n)]) if enable_unicode else str(n)
 
 
 def coeff(x):

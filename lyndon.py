@@ -1,4 +1,7 @@
-from util import flatten
+import math
+
+from shuffle import shuffle_product_many
+from util import count_items, append_counting_dict
 
 
 def _gen_lyndon_words(alphabet_size, max_length):
@@ -22,11 +25,12 @@ class Lyndon:
         self.words = _gen_lyndon_words(alphabet_size, max_length)
 
 
-# TODO: Add unit tests
 # Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 # Such split always exists and is unique (Chen–Fox–Lyndon theorem).
+#
+# TODO: Add unit tests
 def lyndon_factorize(
-        word,  # List[x]  where  x is integer  and  0 <= x < alphabet_size
+        word,  # Tuple[x]  where  x is integer  and  0 <= x < alphabet_size
     ):
     result = []
     start = 0
@@ -51,37 +55,62 @@ def lyndon_factorize(
     return result
 
 
-def _concat_many(word_collection, suffix):
-    return [w + suffix for w in word_collection]
+# Converts a linear combination of words to Lyndon basis.
+#
+# TODO: Add unit tests
+# Optimization potential: Cache word_orig => words_expanded.
+# Optimization potential: Don't generate all (N!) results for each (word^N).
+def to_lyndon_basis(
+        words,  # word -> coeff
+    ):
+    finished = False
+    while not finished:
+        words_new = {}
+        finished = True
+        for word_orig, coeff in words.items():
+            lyndon_words = lyndon_factorize(word_orig)
+            lyndon_word_counts = count_items(lyndon_words)
+            # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_counts) == 1 ?
+            # We should either allow Lyndon_word^N in the basis or assert that it doesn't happen.
+            # if len(lyndon_word_counts) == 1:
+            if len(lyndon_words) == 1:
+                append_counting_dict(words_new, {word_orig: coeff})
+                continue
+            finished = False
+            # denominator = 1
+            # numerator = []
+            # for word, count in lyndon_word_counts.items():
+            #     denominator *= math.factorial(count)
+            #     numerator.append(word * count)
+            # expanded_word_counts = {
+            #     word: _div_int(count, denominator)
+            #     for (word, count)
+            #     in count_items(shuffle_product_many(numerator)).items()
+            # }
+            denominator = 1
+            for count in lyndon_word_counts.values():
+                denominator *= math.factorial(count)
+            expanded_word_counts = {
+                word: _div_int(count, denominator)
+                for word, count
+                in count_items(shuffle_product_many(lyndon_words)).items()
+            }
+            assert expanded_word_counts.get(word_orig) == 1, str(word_orig) + " not in " + str(expanded_word_counts)
+            # print("Lyndon transform: " + str(word_orig) + " => " + str(expanded_word_counts))
+            del expanded_word_counts[word_orig]
+            append_counting_dict(
+                words_new,
+                {
+                    word: -count * coeff
+                    for word, count
+                    in expanded_word_counts.items()
+                }
+            )
+        words = words_new
+    return words
 
-# Returns shuffle product of two words as a List of words.
-# Rules:
-#   1 ⧢ v = v
-#   u ⧢ 1 = u
-#   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
-# Optimization potential: Cache results.
-def shuffle_product(u, v):
-    if not u:
-        return [v]
-    if not v:
-        return [u]
-    a = u[-1]
-    b = v[-1]
-    u = u[:-1]
-    v = v[:-1]
-    return (
-        _concat_many(shuffle_product(u, v+(b,)), (a,)) +
-        _concat_many(shuffle_product(u+(a,), v), (b,))
-    )
-
-# Returns shuffle product of a list of words as a List of words.
-# Optimization potential: Do de-duping in the process.
-def shuffle_product_many(words):
-    l = len(words)
-    assert l > 0
-    if l == 1:
-        return words
-    else:
-        return flatten(
-            [shuffle_product(w, words[-1]) for w in shuffle_product_many(words[:-1])]
-        )
+# Returns a / b; asserts that the result is an integer.
+def _div_int(x, y):
+    result, reminder = divmod(x, y)
+    assert reminder == 0
+    return result
