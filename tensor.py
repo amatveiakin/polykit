@@ -10,14 +10,19 @@ from lyndon import to_lyndon_basis
 from util import get_one_item
 
 
+# TODO: Replace D and Product wit more convenient input (like in polylog)
+
 # Represents a single difference (x_i - x_j)
-@dataclass(eq=True, frozen=True)
+@dataclass(init=False, eq=True, order=True, frozen=True)
 class D:
     a: int
     b: int
 
-    def __post_init__(self):
-        assert self.a != self.b
+    def __init__(self, a, b):
+        assert a != b
+        (a, b) = (a, b) if a < b else (b, a)
+        object.__setattr__(self, "a", a)
+        object.__setattr__(self, "b", b)
 
     @staticmethod
     def from_tuple(tpl):
@@ -26,12 +31,6 @@ class D:
 
     def as_tuple(self):
         return (self.a, self.b)
-
-    def sign(self):
-        return 1 if self.a < self.b else -1
-
-    def normalized(self):
-        return self if self.a < self.b else D(self.b, self.a)
 
     def __str__(self):
         return f"(x{format.substript(self.a)} {format.minus} x{format.substript(self.b)})"
@@ -52,8 +51,8 @@ class Product:
             multipliers,  # iterable[D]
             coeff = 1,    # integer
         ):
-        self.multipliers, sign = _normalize_multipliers(multipliers)
-        self.coeff = coeff * sign
+        self.multipliers = tuple(multipliers)
+        self.coeff = coeff
 
     def __neg__(self):
         return Product(self.multipliers, -self.coeff)
@@ -63,16 +62,6 @@ class Product:
 
 def _multipliers_to_str(multipliers):
     return format.otimes.join(str(d) for d in multipliers)
-
-def _normalize_multipliers(
-        multipliers,  # iterable[D]
-    ):
-    ret_multipliers = []
-    ret_sign = 1
-    for d in multipliers:
-        ret_sign *= d.sign()
-        ret_multipliers.append(d.normalized())
-    return (tuple(ret_multipliers), ret_sign)
 
 def _change_multipliers(
         multipliers,    # Tuple[D]
@@ -116,7 +105,6 @@ class Tensor:
             ])
             for multipliers, _ in summands.items()
         ])
-        self.normalize_summands()
         self.convert_to_lyndon_basis()
         self.check_criterion()
 
@@ -129,15 +117,8 @@ class Tensor:
             data[s.multipliers] += s.coeff
         return Tensor(data)
 
-    def normalize_summands(self):
-        summands_normalized = Linear()
-        for multipliers, coeff in self.summands.items():
-            normalized_multipliers, sign = _normalize_multipliers(multipliers)
-            summands_normalized[normalized_multipliers] += coeff * sign
-        self.summands = summands_normalized
-
     def convert_to_lyndon_basis(self):
-        print("convert_to_lyndon_basis - before:\n" + str(self))
+        print("convert_to_lyndon_basis - before:\n" + self.to_str_with_alphabet_mapping() + "\n")
         alphabet_mapping = AlphabetMapping(self.dimension)
         summand_words = Linear({
             _to_word(alphabet_mapping, multipliers): coeff
@@ -149,19 +130,44 @@ class Tensor:
             for word, coeff
             in to_lyndon_basis(summand_words).items()
         })
-        print("\nconvert_to_lyndon_basis - after:\n" + str(self))
+        print("convert_to_lyndon_basis - after:\n" + self.to_str_with_alphabet_mapping() + "\n")
     
-    def __check_criterion_condition(
+    def __check_criterion_condition_no_swap(
             self,
             multipliers,    # Tuple[D]
             coeff,          # expected coeff (integer)
             substitutions,  # as in _change_multipliers
         ):
-        product = Product(multipliers, coeff)
-        assert product.coeff == coeff
-        new_product = Product(_change_multipliers(multipliers, substitutions))
-        new_product.coeff *= self.summands[new_product.multipliers]
-        assert product.coeff == new_product.coeff, f"Criterion failed:\n  {product}\nvs\n  {new_product}"
+        new_multipliers = _change_multipliers(multipliers, substitutions)
+        new_coeff = self.summands[new_multipliers]
+        assert coeff == new_coeff, (
+            f"Criterion failed:\n  {Product(multipliers, coeff)}"
+            f"\nvs\n  {Product(new_multipliers, new_coeff)}"
+        )
+
+    def __check_criterion_condition_allow_swap(
+            self,
+            multipliers,    # Tuple[D]
+            coeff,          # expected coeff (integer)
+            substitutions,  # as in _change_multipliers
+        ):
+        assert(len(substitutions) == 2)
+        subs = list(substitutions.items())
+        substitutions_2 = {
+            subs[0][0]: subs[1][1],
+            subs[1][0]: subs[0][1],
+        }
+        new_multipliers_1 = _change_multipliers(multipliers, substitutions)
+        new_coeff_1 = self.summands[new_multipliers_1]
+        new_multipliers_2 = _change_multipliers(multipliers, substitutions_2)
+        new_coeff_2 = -self.summands[new_multipliers_2]
+        assert (
+            (coeff == new_coeff_1 and new_coeff_2 == 0) or
+            (coeff == new_coeff_2 and new_coeff_1 == 0)), (
+            f"Criterion failed:\n  {Product(multipliers, coeff)}"
+            f"\nvs\n  {Product(new_multipliers_1, new_coeff_1)}"
+            f"\nvs\n  {Product(new_multipliers_2, new_coeff_2)}"
+        )
 
     def check_criterion(self):
         for k1 in range(0, self.weight - 1):
@@ -172,24 +178,23 @@ class Tensor:
                 common = _common_indices(d1, d2)
                 num_common = len(common)
                 if num_common == 0:
-                    self.__check_criterion_condition(multipliers, coeff, {
-                        k1: multipliers[k2],
-                        k2: multipliers[k1],
+                    self.__check_criterion_condition_no_swap(multipliers, coeff, {
+                        k1: d2,
+                        k2: d1,
                     })
                 if num_common == 1:
                     b = get_one_item(common)
                     a = _other_index(d1, b)
                     c = _other_index(d2, b)
-                    sign = D(a, b).sign() * D(b, c).sign()
-                    self.__check_criterion_condition(multipliers, coeff * sign, {
+                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
                         k1: D(a, b),
                         k2: D(b, c),
                     })
-                    self.__check_criterion_condition(multipliers, coeff * sign, {
+                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
                         k1: D(b, c),
                         k2: D(c, a),
                     })
-                    self.__check_criterion_condition(multipliers, coeff * sign, {
+                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
                         k1: D(c, a),
                         k2: D(a, b),
                     })
@@ -200,3 +205,11 @@ class Tensor:
 
     def __str__(self):
         return self.summands.to_str(_multipliers_to_str)
+
+    def to_str_with_alphabet_mapping(self):
+        alphabet_mapping = AlphabetMapping(self.dimension)
+        return self.summands.to_str(lambda multipliers:
+            _multipliers_to_str(multipliers) +
+            "  <=>  " +
+            str(_to_word(alphabet_mapping, multipliers))
+        )

@@ -97,6 +97,16 @@ class TestLyndon(unittest.TestCase):
             }
         )
 
+    def test_to_lyndon_basis_triple(self):
+        self.assertEqual(
+            to_lyndon_basis(Linear({
+                (0, 1, 2): 1,
+                (0, 2, 1): 1,
+                (2, 0, 1): 1
+            })).data,
+            {}
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

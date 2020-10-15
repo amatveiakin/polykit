@@ -46,9 +46,19 @@ class Linear:
         ret += other
         return ret
 
+    def __sub__(self, other):
+        ret = self.copy()
+        ret -= other
+        return ret
+
     def __iadd__(self, other):
         for k, v in other.items():
             self[k] += v
+        return self
+
+    def __isub__(self, other):
+        for k, v in other.items():
+            self[k] -= v
         return self
 
     def __mul__(self, scalar):
@@ -59,7 +69,11 @@ class Linear:
         return Linear({k : _div_int(v, scalar) for k, v in self.items()})
 
     def to_str(self, element_to_str):
-        return "\n".join([format.coeff(v) + element_to_str(k) for k, v in self.items()])
+        return (
+            "\n".join([format.coeff(v) + element_to_str(k) for k, v in sorted(self.items())])
+            if self.data
+            else format.coeff(0)
+        )
 
     def __str__(self):
         return self.to_str(str)

@@ -71,7 +71,7 @@ def to_lyndon_basis(
             lyndon_words = lyndon_factorize(word_orig)
             lyndon_word_sum = Linear.count(lyndon_words)
             # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_sum) == 1 ?
-            # As implemented, words of the form (Lyndon_word^N) simply disappear.
+            # As implemented, words of the form (Lyndon_word^N) may simply disappear.
             if len(lyndon_words) == 1:
                 words_new[word_orig] += coeff
                 continue
@@ -79,10 +79,10 @@ def to_lyndon_basis(
             denominator = 1
             for _, count in lyndon_word_sum.items():
                 denominator *= math.factorial(count)
-            expanded_word_counts = Linear.count(shuffle_product_many(lyndon_words)).div_int(denominator)
-            assert expanded_word_counts[word_orig] == 1, f"{word_orig} not in {expanded_word_counts}"
-            # print(f"Lyndon transform: {word_orig} =>\n{expanded_word_counts}")
-            expanded_word_counts[word_orig] = 0
-            words_new += (-coeff) * expanded_word_counts
+            expanded_word_sum = Linear.count(shuffle_product_many(lyndon_words)).div_int(denominator)
+            assert expanded_word_sum[word_orig] == 1, f"{word_orig} not in {expanded_word_sum}"
+            # print(f"Lyndon transform: {word_orig} => {lyndon_words} =>\n{expanded_word_sum}")
+            expanded_word_sum[word_orig] = 0
+            words_new += (-coeff) * expanded_word_sum
         words = words_new
     return words
