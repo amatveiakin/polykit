@@ -38,13 +38,13 @@ from word_algebra import *
 # t.check_criterion()
 
 # l = Li5_p6(1, 2, 3, 4, 5, 6)
-l = gen_Li(8, 7)
+l = Li(8, 5)
 words_before_lyndon = project_on_xi(l, 1)
 words = to_lyndon_basis(words_before_lyndon)
 print(f"Before Lyndon - {len(words_before_lyndon)} terms:\n{words_before_lyndon}\n")
 print(f"After Lyndon - {len(words)} terms:\n{words}\n")
-words_filtered = Linear({k : v for k, v in words.items() if len(set(k)) >= 7})
-print(f"After Lyndon, at least 7 different - {len(words_filtered)} terms:\n{words_filtered}\n")
+# words_filtered = Linear({k : v for k, v in words.items() if len(set(k)) >= 7})
+# print(f"After Lyndon, at least 7 different - {len(words_filtered)} terms:\n{words_filtered}\n")
 
 # t = Tensor(Li2_p6(1, 2, 3, 4, 5, 6))
 # t = Tensor(gen_Li(8, 6))

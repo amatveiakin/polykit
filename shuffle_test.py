@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from shuffle import shuffle_product, shuffle_product_many
+from shuffle import shuffle_product
 
 
 class TestShuffle(unittest.TestCase):
@@ -38,9 +38,15 @@ class TestShuffle(unittest.TestCase):
             ]
         )
 
-    def test_shuffle_2_2_2(self):
+    def test_shuffle_2_2_2_as_list(self):
         self.assertCountEqual(
-            shuffle_product_many([(1, 1), (1, 1), (1, 1)]),
+            shuffle_product([(1, 1), (1, 1), (1, 1)]),
+            [(1, 1, 1, 1, 1, 1)] * (math.comb(6, 2) * math.comb(4, 2))
+        )
+
+    def test_shuffle_2_2_2_as_varargs(self):
+        self.assertCountEqual(
+            shuffle_product((1, 1), (1, 1), (1, 1)),
             [(1, 1, 1, 1, 1, 1)] * (math.comb(6, 2) * math.comb(4, 2))
         )
 

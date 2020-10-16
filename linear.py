@@ -2,6 +2,8 @@ import functools
 
 import format
 
+from util import args_to_iterable
+
 
 # Represents a linear combination of any hashable objects
 class Linear:
@@ -88,26 +90,26 @@ class Linear:
         return self.to_str(str)
 
 
-def tensor_product(
-        lhs,            # Linear[A]
-        rhs,            # Linear[B]
-        basis_product,  # function: A, B -> C
+def _tensor_product_two(
+        lhs,      # Linear[A]
+        rhs,      # Linear[B]
+        product,  # function: A, B -> C
     ):
     ret = Linear({})
     for obj_l, coeff_l in lhs.items():
         for obj_r, coeff_r in rhs.items():
-            obj = basis_product(obj_l, obj_r)
+            obj = product(obj_l, obj_r)
             assert ret[obj] == 0, f"Tensor product is not unique: {obj} = ({obj_l}) * ({obj_r})"
             ret[obj] = coeff_l * coeff_r
     return ret
 
-def tensor_product_many(
-        multipliers,    # iterable[Linear[A]]
-        basis_product,  # function: A, A -> A,
+def tensor_product(
+        *multipliers,  # iterable[Linear[A]]
+        product,       # function: A, A -> A
     ):
     return functools.reduce(
-        lambda lhs, rhs: tensor_product(lhs, rhs, basis_product),
-        multipliers
+        lambda lhs, rhs: _tensor_product_two(lhs, rhs, product),
+        args_to_iterable(multipliers)
     )
 
 

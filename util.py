@@ -9,6 +9,11 @@ def get_one_item(container):
         break
     return x
 
+# For vararg functions that can alternatively accept an iterable
+def args_to_iterable(args):
+    assert len(args) > 0
+    return args if len(args) > 1 else args[0]
+
 # Generates all possible words of a given length in an alphabet
 # of a given size, in lexicographic order.
 # Example:  generate_all_words(2, 3)  ->

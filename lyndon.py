@@ -1,7 +1,7 @@
 import math
 
 from linear import Linear
-from shuffle import shuffle_product_many
+from shuffle import shuffle_product
 
 
 def _gen_lyndon_words(alphabet_size, max_length):
@@ -79,7 +79,7 @@ def to_lyndon_basis(
             denominator = 1
             for _, count in lyndon_word_sum.items():
                 denominator *= math.factorial(count)
-            expanded_word_sum = Linear.count(shuffle_product_many(lyndon_words)).div_int(denominator)
+            expanded_word_sum = Linear.count(shuffle_product(lyndon_words)).div_int(denominator)
             assert expanded_word_sum[word_orig] == 1, f"{word_orig} not in {expanded_word_sum}"
             # print(f"Lyndon transform: {word_orig} => {lyndon_words} =>\n{expanded_word_sum}")
             expanded_word_sum[word_orig] = 0
