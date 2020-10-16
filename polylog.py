@@ -1,31 +1,6 @@
 from linear import Linear, tensor_product_many
-from tensor import D, Product, Tensor
-
-
-def symbol_product_many(symbols):
-    return tensor_product_many(symbols, lambda a, b: a + b)
-
-def X(a, b):
-    d = D(a, b)
-    return Linear() if d.is_nil() else Linear({(d,): 1})
-
-
-# Returns
-#   (a-b)(c-d)
-#   ----------
-#   (a-d)(c-b)
-# as symbol
-def cross_ratio(a, b, c, d):
-    return X(a, b) + X(c, d) - X(a, d) - X(c, b)
-
-def cross_ratio_6(a, b, c, d, e, f):
-    return X(a, b) + X(c, d) + X(e, f) - X(b, c) - X(d, e) - X(a, f)
-
-# Returns
-#   1 - cross_ratio(a, b, c, d)
-# as symbol
-def neg_cross_ratio(a, b, c, d):
-    return cross_ratio(a, c, b, d)
+from polylog_gen import X, cross_ratio, neg_cross_ratio, cross_ratio_6, symbol_product_many
+from tensor import D
 
 
 def Li2(a, b, c, d):

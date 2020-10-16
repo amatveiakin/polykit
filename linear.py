@@ -41,6 +41,9 @@ class Linear:
         elif key in self.data:
             del self.data[key]
 
+    def __neg__(self):
+        return Linear() - self
+
     def __add__(self, other):
         ret = self.copy()
         ret += other
