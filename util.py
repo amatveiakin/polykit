@@ -8,3 +8,18 @@ def get_one_item(container):
     for x in container:
         break
     return x
+
+# Generates all possible words of a given length in an alphabet
+# of a given size, in lexicographic order.
+# Example:  generate_all_words(2, 3)  ->
+#           [(0, 0, 0), (0, 0, 1), (0, 1, 0), ..., (1, 1, 1)]
+def generate_all_words(alphabet_size, length):
+    ret = [0] * length
+    while ret[0] < alphabet_size:
+        yield tuple(ret)
+        i = len(ret) - 1
+        ret[i] += 1
+        while i > 0 and ret[i] == alphabet_size:
+            ret[i] = 0
+            i -= 1
+            ret[i] += 1

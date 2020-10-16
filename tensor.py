@@ -10,7 +10,13 @@ from lyndon import to_lyndon_basis
 from util import get_one_item
 
 
+# TODO: Make sure that with D.a == D.b and infinities work correctly
 # TODO: Replace D and Product wit more convenient input (like in polylog)
+
+class _InfinityType:
+    def __str__(self):
+        return "Inf"
+Inf = _InfinityType()
 
 # Represents a single difference (x_i - x_j)
 @dataclass(init=False, eq=True, order=True, frozen=True)
@@ -19,8 +25,12 @@ class D:
     b: int
 
     def __init__(self, a, b):
-        assert a != b
-        (a, b) = (a, b) if a < b else (b, a)
+        assert isinstance(a, (int, _InfinityType))
+        assert isinstance(b, (int, _InfinityType))
+        if a == Inf or b == Inf:
+            (a, b) = (0, 0)
+        else:
+            (a, b) = (a, b) if a < b else (b, a)
         object.__setattr__(self, "a", a)
         object.__setattr__(self, "b", b)
 
@@ -28,6 +38,9 @@ class D:
     def from_tuple(tpl):
         assert len(tpl) == 2
         return D(tpl[0], tpl[1])
+
+    def is_nil(self):
+        return self.a == self.b
 
     def as_tuple(self):
         return (self.a, self.b)

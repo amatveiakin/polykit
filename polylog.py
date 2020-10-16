@@ -6,7 +6,8 @@ def symbol_product_many(symbols):
     return tensor_product_many(symbols, lambda a, b: a + b)
 
 def X(a, b):
-    return Linear({(D(a, b),): 1})
+    d = D(a, b)
+    return Linear() if d.is_nil() else Linear({(d,): 1})
 
 
 # Returns
@@ -53,13 +54,6 @@ def Li3(a, b, c, d):
         cross_ratio(a, b, c, d),
         cross_ratio(a, b, c, d),
         neg_cross_ratio(a, b, c, d)
-    ])
-
-def Li3_inf(a, b, c):
-    return symbol_product_many([
-        X(a, b) - X(a, c),
-        X(a, b) - X(a, c),
-        X(b, c) - X(a, c),
     ])
 
 def Li3_p6(x1, x2, x3, x4, x5, x6):

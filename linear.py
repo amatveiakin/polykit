@@ -52,25 +52,31 @@ class Linear:
         return ret
 
     def __iadd__(self, other):
-        for k, v in other.items():
-            self[k] += v
+        for obj, coeff in other.items():
+            self[obj] += coeff
         return self
 
     def __isub__(self, other):
-        for k, v in other.items():
-            self[k] -= v
+        for obj, coeff in other.items():
+            self[obj] -= coeff
         return self
 
     def __mul__(self, scalar):
-        return Linear({k : v * scalar for k, v in self.items()})
+        return self.map_coeff(lambda coeff: coeff * scalar)
     __rmul__ = __mul__
 
     def div_int(self, scalar):
-        return Linear({k : _div_int(v, scalar) for k, v in self.items()})
+        return self.map_coeff(lambda coeff: _div_int(coeff, scalar))
+
+    def map_obj(self, func):
+        return Linear({func(obj): coeff for obj, coeff in self.items()})
+
+    def map_coeff(self, func):
+        return Linear({obj: func(coeff) for obj, coeff in self.items()})
 
     def to_str(self, element_to_str):
         return (
-            "\n".join([format.coeff(v) + element_to_str(k) for k, v in sorted(self.items())])
+            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])
             if self.data
             else format.coeff(0)
         )
@@ -85,11 +91,11 @@ def tensor_product(
         basis_product,  # function: A, B -> C
     ):
     ret = Linear({})
-    for kl, vl in lhs.items():
-        for kr, vr in rhs.items():
-            k = basis_product(kl, kr)
-            assert ret[k] == 0, f"Tensor product is not unique: {k} = ({kl}) * ({kr})"
-            ret[k] = vl * vr
+    for obj_l, coeff_l in lhs.items():
+        for obj_r, coeff_r in rhs.items():
+            obj = basis_product(obj_l, obj_r)
+            assert ret[obj] == 0, f"Tensor product is not unique: {obj} = ({obj_l}) * ({obj_r})"
+            ret[obj] = coeff_l * coeff_r
     return ret
 
 def tensor_product_many(

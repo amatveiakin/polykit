@@ -3,18 +3,8 @@ import unittest
 
 from linear import Linear
 from lyndon import lyndon_factorize, to_lyndon_basis
+from util import generate_all_words
 
-
-def _generate_all_words(alphabet_size, length):
-    ret = [0] * length
-    while ret[0] < alphabet_size:
-        yield tuple(ret)
-        i = len(ret) - 1
-        ret[i] += 1
-        while i > 0 and ret[i] == alphabet_size:
-            ret[i] = 0
-            i -= 1
-            ret[i] += 1
 
 def _is_lyndon_word(word):
     for i in range(1, len(word)):
@@ -42,19 +32,18 @@ class TestLyndon(unittest.TestCase):
         )
 
     def test_lyndon_factorize_correctness(self):
-        self.assertEqual(len(list(_generate_all_words(3, 4))), 81)
         for length in range(1, 12):
-            for word in _generate_all_words(2, length):
+            for word in generate_all_words(2, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
         for length in range(1, 8):
-            for word in _generate_all_words(3, length):
+            for word in generate_all_words(3, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
         for length in range(1, 6):
-            for word in _generate_all_words(4, length):
+            for word in generate_all_words(4, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
-            for word in _generate_all_words(5, length):
+            for word in generate_all_words(5, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
-            for word in _generate_all_words(6, length):
+            for word in generate_all_words(6, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
 
     def test_to_lyndon_basis_empty(self):
