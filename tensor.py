@@ -10,9 +10,6 @@ from lyndon import to_lyndon_basis
 from util import get_one_item
 
 
-# TODO: Make sure that with D.a == D.b and infinities work correctly
-# TODO: Replace D and Product wit more convenient input (like in polylog)
-
 class _InfinityType:
     def __str__(self):
         return "Inf"
@@ -57,22 +54,6 @@ def _other_index(d, idx):
     return d.a if d.b == idx else d.b
 
 
-# Product of multiple `D`s. Temporary class for convenient input.
-class Product:
-    def __init__(
-            self,
-            multipliers,  # iterable[D]
-            coeff = 1,    # integer
-        ):
-        self.multipliers = tuple(multipliers)
-        self.coeff = coeff
-
-    def __neg__(self):
-        return Product(self.multipliers, -self.coeff)
-
-    def __str__(self):
-        return format.coeff(self.coeff) + _multipliers_to_str(self.multipliers)
-
 def _multipliers_to_str(multipliers):
     return format.otimes.join(str(d) for d in multipliers)
 
@@ -107,6 +88,8 @@ class Tensor:
         self.summands = summands
         self.weight = None
         for multipliers, _ in summands.items():
+            for d in multipliers:
+                assert not d.is_nil()
             if self.weight is None:
                 self.weight = len(multipliers)
             else:
@@ -120,15 +103,6 @@ class Tensor:
         ])
         # self.convert_to_lyndon_basis()
         # self.check_criterion()
-
-    @staticmethod
-    def from_list(
-            summands,  # List[Product]
-        ):
-        data = Linear()
-        for s in summands:
-            data[s.multipliers] += s.coeff
-        return Tensor(data)
 
     def convert_to_lyndon_basis(self):
         # print("convert_to_lyndon_basis - before:\n" + self.to_str_with_alphabet_mapping() + "\n")
@@ -154,8 +128,8 @@ class Tensor:
         new_multipliers = _change_multipliers(multipliers, substitutions)
         new_coeff = self.summands[new_multipliers]
         assert coeff == new_coeff, (
-            f"Criterion failed:\n  {Product(multipliers, coeff)}"
-            f"\nvs\n  {Product(new_multipliers, new_coeff)}"
+            f"Criterion failed:\n  {Linear({multipliers: coeff})}"
+            f"\nvs\n  {Linear({new_multipliers: new_coeff})}"
         )
 
     def __check_criterion_condition_allow_swap(
@@ -178,9 +152,9 @@ class Tensor:
             (coeff == new_coeff_1 and new_coeff_2 == 0) or
             (coeff == new_coeff_2 and new_coeff_1 == 0)
         ), (
-            f"Criterion failed:\n  {Product(multipliers, coeff)}"
-            f"\nvs\n  {Product(new_multipliers_1, new_coeff_1)}"
-            f"\nvs\n  {Product(new_multipliers_2, new_coeff_2)}"
+            f"Criterion failed:\n  {Linear({multipliers: coeff})}"
+            f"\nvs\n  {Linear({new_multipliers_1: new_coeff_1})}"
+            f"\nvs\n  {Linear({new_multipliers_2: new_coeff_2})}"
         )
 
     def check_criterion(self):

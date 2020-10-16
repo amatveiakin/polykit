@@ -1,6 +1,6 @@
 import format
 
-from tensor import Inf, D, Product, Tensor
+from tensor import Inf, Tensor
 from lyndon import lyndon_factorize, to_lyndon_basis
 from enumerator import Enumerator
 from polylog_gen import *
@@ -12,18 +12,6 @@ from word_algebra import *
 
 # format.set_enable_unicode(True)
 # format.set_enable_monospace_font_correction(False)
-
-# t = Tensor.from_list([
-#      Product([D(1, 2), D(1, 3)]),
-#      Product([D(1, 3), D(2, 3)]),
-#      Product([D(2, 3), D(1, 2)]),
-# ])
-# print(str(t))
-# with open("out.txt", "w", encoding="utf-8") as f:
-#     f.write(str(t))
-
-# t = Tensor(Li2(1, 2, 3, 4))
-# print(str(t))
 
 # t = Tensor(Li2_p6(1, 2, 3, 4, 5, 6))
 # print(str(t))
