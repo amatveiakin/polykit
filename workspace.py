@@ -34,6 +34,11 @@ from word_algebra import *
 # print("----")
 # print(t.summands - q.summands)
 
+# t = Tensor(Li5_p6(1, 2, 3, 4, 5, 6))
+# # print(t)
+# t.check_criterion()
+# exit()
+
 l = Li5_p6(1, 2, 3, 4, 5, 6)
 # l = Li5_p6(1, 2, 3, 4, Inf, 6) + Li5_p6(1, 2, 3, Inf, 4, 6)
 words_before_lyndon = project_on_xi(l, 1)

@@ -118,8 +118,8 @@ class Tensor:
             ])
             for multipliers, _ in summands.items()
         ])
-        self.convert_to_lyndon_basis()
-        self.check_criterion()
+        # self.convert_to_lyndon_basis()
+        # self.check_criterion()
 
     @staticmethod
     def from_list(
@@ -131,7 +131,7 @@ class Tensor:
         return Tensor(data)
 
     def convert_to_lyndon_basis(self):
-        print("convert_to_lyndon_basis - before:\n" + self.to_str_with_alphabet_mapping() + "\n")
+        # print("convert_to_lyndon_basis - before:\n" + self.to_str_with_alphabet_mapping() + "\n")
         alphabet_mapping = AlphabetMapping(self.dimension)
         summand_words = Linear({
             _to_word(alphabet_mapping, multipliers): coeff
@@ -143,7 +143,7 @@ class Tensor:
             for word, coeff
             in to_lyndon_basis(summand_words).items()
         })
-        print("convert_to_lyndon_basis - after:\n" + self.to_str_with_alphabet_mapping() + "\n")
+        # print("convert_to_lyndon_basis - after:\n" + self.to_str_with_alphabet_mapping() + "\n")
     
     def __check_criterion_condition_no_swap(
             self,
@@ -176,7 +176,8 @@ class Tensor:
         new_coeff_2 = -self.summands[new_multipliers_2]
         assert (
             (coeff == new_coeff_1 and new_coeff_2 == 0) or
-            (coeff == new_coeff_2 and new_coeff_1 == 0)), (
+            (coeff == new_coeff_2 and new_coeff_1 == 0)
+        ), (
             f"Criterion failed:\n  {Product(multipliers, coeff)}"
             f"\nvs\n  {Product(new_multipliers_1, new_coeff_1)}"
             f"\nvs\n  {Product(new_multipliers_2, new_coeff_2)}"
@@ -195,22 +196,28 @@ class Tensor:
                         k1: d2,
                         k2: d1,
                     })
-                if num_common == 1:
-                    b = get_one_item(common)
-                    a = _other_index(d1, b)
-                    c = _other_index(d2, b)
-                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
-                        k1: D(a, b),
-                        k2: D(b, c),
+                elif num_common == 1:
+                    swapped_multipliers = _change_multipliers(multipliers, {
+                        k1: d2,
+                        k2: d1,
                     })
-                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
-                        k1: D(b, c),
-                        k2: D(c, a),
-                    })
-                    self.__check_criterion_condition_allow_swap(multipliers, coeff, {
-                        k1: D(c, a),
-                        k2: D(a, b),
-                    })
+                    swapped_coeff = self.summands[swapped_multipliers]
+                    if coeff != swapped_coeff:
+                        b = get_one_item(common)
+                        a = _other_index(d1, b)
+                        c = _other_index(d2, b)
+                        self.__check_criterion_condition_allow_swap(multipliers, coeff, {
+                            k1: D(a, b),
+                            k2: D(b, c),
+                        })
+                        self.__check_criterion_condition_allow_swap(multipliers, coeff, {
+                            k1: D(b, c),
+                            k2: D(c, a),
+                        })
+                        self.__check_criterion_condition_allow_swap(multipliers, coeff, {
+                            k1: D(c, a),
+                            k2: D(a, b),
+                        })
                 elif num_common == 2:
                     pass
                 else:
