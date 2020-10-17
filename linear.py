@@ -1,8 +1,17 @@
 import functools
 
+from dataclasses import dataclass
+
 import format
 
 from util import args_to_iterable
+
+
+@dataclass(order=True, frozen=True)
+class Annotation:
+    name: str
+    def __str__(self):
+        return self.name
 
 
 # Represents a linear combination of any hashable objects
@@ -43,6 +52,12 @@ class Linear:
         elif key in self.data:
             del self.data[key]
 
+    def __eq__(self, other):
+        return self.data == other.data
+
+    def __pos__(self):
+        return self
+
     def __neg__(self):
         return Linear() - self
 
@@ -67,17 +82,29 @@ class Linear:
         return self
 
     def __mul__(self, scalar):
-        return self.map_coeff(lambda coeff: coeff * scalar)
+        return self.mapped_coeff(lambda coeff: coeff * scalar)
     __rmul__ = __mul__
 
     def div_int(self, scalar):
-        return self.map_coeff(lambda coeff: _div_int(coeff, scalar))
+        return self.mapped_coeff(lambda coeff: _div_int(coeff, scalar))
 
-    def map_obj(self, func):
+    def mapped_obj(self, func):
         return Linear({func(obj): coeff for obj, coeff in self.items()})
 
-    def map_coeff(self, func):
+    def mapped_coeff(self, func):
         return Linear({obj: func(coeff) for obj, coeff in self.items()})
+
+    def filtered_obj(self, predicate):
+        return Linear({obj: coeff for obj, coeff in self.items() if predicate(obj)})
+
+    def annotations(self):
+        return self.filtered_obj(lambda e: isinstance(e, Annotation))
+
+    def without_annotations(self):
+        return self.filtered_obj(lambda e: not isinstance(e, Annotation))
+
+    def annotated(self, s):
+        return self + Linear({Annotation(s): 1})
 
     def to_str(self, element_to_str):
         return (

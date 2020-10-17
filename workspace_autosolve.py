@@ -75,7 +75,7 @@ while True:
 #     words_new = to_lyndon_basis(word_expr_substitute(words, index_map))
 #     if len(words_new) == 0:
 #         continue
-#     expressions.append(words_new.map_obj(lambda w: enumerator.index(w)))
+#     expressions.append(words_new.mapped_obj(lambda w: enumerator.index(w)))
 
 # mat = np.zeros((len(expressions), enumerator.num_objects), dtype=int)
 # for k in range(len(expressions)):

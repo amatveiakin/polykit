@@ -1,4 +1,4 @@
-from linear import Linear
+from linear import Annotation, Linear
 from tensor import Inf
 
 
@@ -18,7 +18,7 @@ def project_on_xi(
         index,  # int
     ):
     words = Linear()
-    for multipliers, coeff in expr.items():
+    for multipliers, coeff in expr.without_annotations().items():
         w = []
         for d in multipliers:
             if d.a == index:
@@ -31,13 +31,43 @@ def project_on_xi(
             words += Linear({tuple(w): coeff})
     return words
 
+def project_on_x1(expr):
+    return project_on_xi(expr, 1)
+
+def project_on_x2(expr):
+    return project_on_xi(expr, 2)
+
+def project_on_x3(expr):
+    return project_on_xi(expr, 3)
+
+def project_on_x4(expr):
+    return project_on_xi(expr, 4)
+
+def project_on_x5(expr):
+    return project_on_xi(expr, 5)
+
+def project_on_x6(expr):
+    return project_on_xi(expr, 6)
+
+def project_on_x7(expr):
+    return project_on_xi(expr, 7)
+
+def project_on_x8(expr):
+    return project_on_xi(expr, 8)
+
+def project_on_x9(expr):
+    return project_on_xi(expr, 9)
+
+def project_on_x10(expr):
+    return project_on_xi(expr, 10)
+
 
 # Replaces each letter c with index_map[c]
 def word_substitute(
         word,       # Tuple[int]
         index_map,  # int -> int
     ):
-    return tuple([index_map[c] for c in word])
+    return tuple([index_map.get(c, c) for c in word])
 
 # For each word, replaces each letter c with index_map[c]
 def word_expr_substitute(

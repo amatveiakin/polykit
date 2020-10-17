@@ -3,6 +3,9 @@
 def flatten(l):
     return [item for sublist in l for item in sublist]
 
+def rotate_list(l, n):
+    return l[n:] + l[:n]
+
 # Gets an from list or set.
 def get_one_item(container):
     for x in container:

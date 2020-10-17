@@ -22,8 +22,8 @@ class D:
     b: int
 
     def __init__(self, a, b):
-        assert isinstance(a, (int, _InfinityType))
-        assert isinstance(b, (int, _InfinityType))
+        assert isinstance(a, (int, _InfinityType)), a
+        assert isinstance(b, (int, _InfinityType)), b
         if a == Inf or b == Inf:
             (a, b) = (0, 0)
         else:
@@ -94,13 +94,17 @@ class Tensor:
                 self.weight = len(multipliers)
             else:
                 assert len(multipliers) == self.weight
-        self.dimension = max([
+        self.dimension = (
             max([
-                max(d.a, d.b)
-                for d in multipliers
+                max([
+                    max(d.a, d.b)
+                    for d in multipliers
+                ])
+                for multipliers, _ in summands.items()
             ])
-            for multipliers, _ in summands.items()
-        ])
+            if len(summands) > 0 else
+            None
+        )
         # self.convert_to_lyndon_basis()
         # self.check_criterion()
 
