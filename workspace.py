@@ -75,20 +75,28 @@ class Profiler:
 def print_annotated(msg, expr):
     print(f"{msg} - {len(expr)} terms:\n{expr}\n")
 
-goal_before_lyndon = project_on_x1(
+goal_before_lyndon = (
     + Li4(1,2,3,4,5,6)
     + Li4(2,3,4,5,6,1)
+    - (
+        + Li4(1,2,3,4)
+        - Li4(1,2,3,6)
+        + Li4(1,2,5,6)
+        - Li4(1,4,5,6)
+        + Li4(2,3,4,5)
+        + Li4(3,4,5,6)
+    )
 )
-goal = to_lyndon_basis(goal_before_lyndon)
+goal = to_lyndon_basis(goal_before_lyndon.without_annotations())
 # print_annotated("Goal before Lyndon", goal_before_lyndon)
 print_annotated("Goal", goal)
 
-print_annotated("Tmpl 1", to_lyndon_basis(project_on_x1(Li4(1,2,3,4))))
-print_annotated("Tmpl 1 a", to_lyndon_basis(project_on_x1(Li4(1,Inf,3,4))))
-print_annotated("Tmpl 1 b", to_lyndon_basis(project_on_x1(Li4(1,2,Inf,4))))
-print_annotated("Tmpl 1 c", to_lyndon_basis(project_on_x1(Li4(1,2,3,Inf))))
-print_annotated("Tmpl 2", to_lyndon_basis(project_on_x1(Li4(1,3,4,2))))
-print_annotated("Tmpl 3", to_lyndon_basis(project_on_x1(Li4(1,4,2,3))))
+# print_annotated("Tmpl 1", to_lyndon_basis(project_on_x1(Li4(1,2,3,4))))
+# print_annotated("Tmpl 1 a", to_lyndon_basis(project_on_x1(Li4(1,Inf,3,4))))
+# print_annotated("Tmpl 1 b", to_lyndon_basis(project_on_x1(Li4(1,2,Inf,4))))
+# print_annotated("Tmpl 1 c", to_lyndon_basis(project_on_x1(Li4(1,2,3,Inf))))
+# print_annotated("Tmpl 2", to_lyndon_basis(project_on_x1(Li4(1,3,4,2))))
+# print_annotated("Tmpl 3", to_lyndon_basis(project_on_x1(Li4(1,4,2,3))))
 
 def aaab(a, b):
     return (
@@ -115,23 +123,23 @@ def aabc_abcc(a, b, c):
         - Li4(1,a,b,Inf)
     )
 
-expr_raw = (
-    + Li4(1,2,3,4)
-    - Li4(1,4,5,6)
-    + aaab(2,3)
-    - aaab(2,5)
-    + abbb(3,6)
-    - abbb(5,6)
-    - aabc_abcc(2,3,6)
-    + aabc_abcc(2,5,6)
-)
 # expr_raw = (
 #     + Li4(1,2,3,4)
-#     - Li4(1,2,3,6)
-#     + Li4(1,2,5,6)
 #     - Li4(1,4,5,6)
+#     + aaab(2,3)
+#     - aaab(2,5)
+#     + abbb(3,6)
+#     - abbb(5,6)
+#     - aabc_abcc(2,3,6)
+#     + aabc_abcc(2,5,6)
 # )
-expr = project_on_x1(expr_raw)
+# expr_raw = (
+#     + Li4(2,3,4,5)
+# )
+expr_raw = (
+    + Li4(3,4,5,6)
+)
+expr = project_on_x3(expr_raw)
 print_annotated("Expr", to_lyndon_basis(expr))
 print_annotated("Functional expr", expr_raw.annotations())
 
