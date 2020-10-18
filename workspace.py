@@ -105,8 +105,8 @@ def aaab(a, b):
 
 def aabb(a, b):
     return (
-        - Li4(1,a,Inf,b)
         - Li4(1,Inf,a,b)
+        - Li4(1,a,Inf,b)
         - Li4(1,a,b,Inf)
     )
 

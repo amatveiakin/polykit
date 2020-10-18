@@ -4,6 +4,7 @@ def flatten(l):
     return [item for sublist in l for item in sublist]
 
 def rotate_list(l, n):
+    n = n % len(l)
     return l[n:] + l[:n]
 
 # Gets an from list or set.

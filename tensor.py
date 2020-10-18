@@ -46,6 +46,25 @@ class D:
         return f"(x{format.substript(self.a)} {format.minus} x{format.substript(self.b)})"
 
 
+# Replaces each index c with index_map[c]
+def d_monom_substitute(
+        multipliers,  # Tuple[D]
+        index_map,    # int -> int
+    ):
+    return tuple([D(index_map[d.a], index_map[d.b]) for d in multipliers])
+
+# For each monom, replaces each index c with index_map[c]
+def d_expr_substitute(
+        expr,       # Linear[Tuple[D]]
+        index_map,  # int -> int
+    ):
+    ret = Linear()
+    for multipliers, coeff in expr.items():
+        multipliers_new = d_monom_substitute(multipliers, index_map)
+        if not any([d.is_nil() for d in multipliers_new]):
+            ret += Linear({multipliers_new: coeff})
+    return ret
+
 def _common_indices(d1, d2):
     return set(d1.as_tuple()) & set(d2.as_tuple())
 

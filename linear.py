@@ -88,6 +88,10 @@ class Linear:
     def div_int(self, scalar):
         return self.mapped_coeff(lambda coeff: _div_int(coeff, scalar))
 
+    def l1_norm(self):
+        assert not self.has_annotations()
+        return sum([abs(coeff) for _, coeff in self.items()])
+
     def mapped_obj(self, func):
         return Linear({func(obj): coeff for obj, coeff in self.items()})
 
@@ -96,6 +100,9 @@ class Linear:
 
     def filtered_obj(self, predicate):
         return Linear({obj: coeff for obj, coeff in self.items() if predicate(obj)})
+
+    def has_annotations(self):
+        return len(self.annotations()) > 0
 
     def annotations(self):
         return self.filtered_obj(lambda e: isinstance(e, Annotation))
@@ -108,7 +115,7 @@ class Linear:
 
     def to_str(self, element_to_str):
         return (
-            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])
+            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in self.items()])
             if self.data
             else format.coeff(0)
         )
@@ -122,6 +129,7 @@ def _tensor_product_two(
         rhs,      # Linear[B]
         product,  # function: A, B -> C
     ):
+    assert not lhs.has_annotations() and not rhs.has_annotations()
     ret = Linear({})
     for obj_l, coeff_l in lhs.items():
         for obj_r, coeff_r in rhs.items():
