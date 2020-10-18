@@ -93,7 +93,11 @@ class Linear:
         return sum([abs(coeff) for _, coeff in self.items()])
 
     def mapped_obj(self, func):
-        return Linear({func(obj): coeff for obj, coeff in self.items()})
+        # Don't use a list comprehension in case func is not injective
+        ret = Linear()
+        for obj, coeff in self.items():
+            ret += Linear({func(obj): coeff})
+        return ret
 
     def mapped_coeff(self, func):
         return Linear({obj: func(coeff) for obj, coeff in self.items()})
