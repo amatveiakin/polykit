@@ -90,11 +90,6 @@ def Li8(*points):
     return Li(8, args_to_iterable(points))
 
 
-@dataclass(frozen=True)
-class Point:
-    index: int
-    point: int
-
 def _Li_4_point(points):
     assert len(points) == 4
     return (
@@ -102,6 +97,20 @@ def _Li_4_point(points):
         if points[0] % 2 == 1 else
         -neg_cross_ratio(*rotate_list(points, 1))
     )
+
+# _li_impl_cache = {}
+# def _Li_impl(weight, points):
+#     # The only place where particular point values are used is `_Li_4_point`,
+#     # and only sign matters there
+#     cache_key = tuple([weight] + [p % 2 for p in points])
+#     if cache_key in _li_impl_cache:
+#         ret = _li_impl_cache[cache_key]
+#         ...  # TODO: index mapping
+#         return ret
+#     else:
+#         ret = _Li_impl_no_cache(weight, points)
+#         _li_impl_cache[cache_key] = ret
+#         return ret
 
 def _Li_impl(weight, points):
     num_points = len(points)
