@@ -12,22 +12,18 @@ from util import *
 from word_algebra import *
 
 
-def print_with_title(msg, expr):
-    print(f"{msg} - {len(expr)} terms:\n{expr}\n")
-
-
 weight = 5
 num_point = 6
 expr = Li(weight, num_point, project_on_x1).without_annotations()
 expr_lyndon = to_lyndon_basis(expr)
-print_with_title("Before Lyndon", expr)
-print_with_title("After Lyndon", expr_lyndon)
+format.print_expression("Before Lyndon", expr)
+format.print_expression("After Lyndon", expr_lyndon)
 
 threshold = min(weight, num_point - 2)
 expr_filtered = Linear({k : v for k, v in expr_lyndon.items() if len(set(k)) >= threshold})
-print_with_title(f"After Lyndon, at least {threshold} different", expr_filtered)
+format.print_expression(f"After Lyndon, at least {threshold} different", expr_filtered)
 
-# print_with_title(f"Diffs", expr_lyndon.mapped_obj(lambda w: tuple([w[i+1] - w[i] for i in range(len(w)-1)])))
+# format.print_expression(f"Diffs", expr_lyndon.mapped_obj(lambda w: tuple([w[i+1] - w[i] for i in range(len(w)-1)])))
 
 
 def is_good_word(word):

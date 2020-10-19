@@ -13,10 +13,6 @@ from util import *
 from word_algebra import *
 
 
-def print_with_title(msg, expr):
-    print(f"{msg} - {len(expr)} terms:\n{expr}\n")
-
-
 e = (
 (
     + Li3(1,2,3,4,5,6)
@@ -52,9 +48,6 @@ def normalize_Li3(word):
         w[3], w[1] = w[1], w[3]
     return tuple(w)
 
-def W(*args):
-    return Linear({args: 1})
-
 expr = (
     + W(1,2,3,4)
     - W(1,2,3,6)
@@ -69,8 +62,8 @@ expr_sum = Linear()
 for i in range(n):
     index_map = {j+1: (j+i)%n+1 for j in range(n)}
     expr_sum += (5-i) * word_expr_substitute(expr, index_map)
-print_with_title("Raw", expr_sum)
+format.print_expression("Raw", expr_sum)
 normalized = expr_sum.mapped_obj(lambda w: normalize_Li3(w))
 # normalized_verbous = expr_sum.mapped_obj(lambda w: f"{w} -> {normalize_Li3(w)}")
-# print_with_title("Normalized - verbous", normalized_verbous)
-print_with_title("Normalized", normalized)
+# format.print_expression("Normalized - verbous", normalized_verbous)
+format.print_expression("Normalized", normalized)

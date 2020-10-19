@@ -2,7 +2,11 @@ import re
 
 from linear import Annotation, Linear
 from tensor import Inf
+from util import get_one_item
 
+
+def W(*args):
+    return Linear({args: 1})
 
 # Projects a linear combination of tensor products of (x_i - x_j) on x_index.
 # Keeps only the products that contain x_index in every bracket. Turns each
@@ -40,8 +44,11 @@ def project_on_x1(expr, keep_annotations = False):
     return project_on_xi(expr, 1, keep_annotations=keep_annotations)
 
 
+def word_expr_weight(expr):
+    return len(get_one_item(expr.without_annotations().items())[0])
+
 def word_expr_max_char(expr):
-    return max([max(word) for word, _ in expr.items()])
+    return max([max(word) for word, _ in expr.without_annotations().items()])
 
 def words_with_n_distinct_chars(expr, min_distinct):
     return expr.without_annotations().filtered_obj(lambda word: len(set(word)) >= min_distinct)

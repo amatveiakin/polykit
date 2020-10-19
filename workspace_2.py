@@ -12,10 +12,6 @@ from util import *
 from word_algebra import *
 
 
-def print_with_title(msg, expr):
-    print(f"{msg} - {len(expr)} terms:\n{expr}\n")
-
-
 known_eliminations = {}
 find_eliminations(known_eliminations, project_on_x1(
     + Li4(1,2,3,4)
@@ -53,23 +49,23 @@ for axis in range(1, 6):
     print(f"\n\n=== Projecting on x{axis} ===\n")
     goal_before_lyndon = project_on_xi(goal_raw, axis)
     goal = to_lyndon_basis(goal_before_lyndon)
-    print_with_title("Goal functional expr", goal_raw.annotations())
-    # print_with_title("Goal before Lyndon", goal_before_lyndon)
-    print_with_title("Goal", goal)
+    format.print_expression("Goal functional expr", goal_raw.annotations())
+    # format.print_expression("Goal before Lyndon", goal_before_lyndon)
+    format.print_expression("Goal", goal)
 
     eliminated = apply_eliminations(known_eliminations, goal, 7, 3, axis)
-    print_with_title("After eliminations", eliminated.without_annotations())
-    print_with_title("Elimination expression", eliminated.annotations())
+    format.print_expression("After eliminations", eliminated.without_annotations())
+    format.print_expression("Elimination expression", eliminated.annotations())
     assert eliminated.without_annotations() == Linear()
     elimination_expr = Linear()
     for annotation, coeff in eliminated.annotations().items():
         elimination_expr += coeff * annotation_to_func(annotation)
-    # print_with_title("Elimination expression reconstructed", elimination_expr.annotations())
+    # format.print_expression("Elimination expression reconstructed", elimination_expr.annotations())
     goal_raw += elimination_expr
 
 t = Tensor(goal_raw.without_annotations())
 t.convert_to_lyndon_basis()
 assert t.summands == Linear()
 print(f"\n\n=== Result ===\n")
-print_with_title("LHS", goal_orig.annotations())
-print_with_title("RHS", (goal_orig - goal_raw).annotations())
+format.print_expression("LHS", goal_orig.annotations())
+format.print_expression("RHS", (goal_orig - goal_raw).annotations())

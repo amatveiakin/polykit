@@ -13,19 +13,6 @@ from util import *
 from word_algebra import *
 
 
-def print_with_title(msg, expr):
-    print(f"{msg} - {len(expr)} terms:\n{expr}\n")
-
-def print_eliminations(eliminations, min_distinct):
-    print(f"\n~~~ Known eliminations >= {min_distinct} ~~~\n")
-    for _, v in eliminations.items():
-        print(f"{v[0]}\nincluding\n{words_with_n_distinct_chars(v[0], min_distinct)}\nvia\n{v[1]}\n")
-    print()
-
-def W(*args):
-    return Linear({args: 1})
-
-
 # expr = Linear()
 # num_points = 9
 # asc = list(range(1, num_points+1))
@@ -33,10 +20,10 @@ def W(*args):
 #     expr += Li6(rotate_list(asc, i)[:8])
 
 # lyndon = to_lyndon_basis(project_on_x1(expr))
-# print_with_title("Expression", expr.annotations())
-# print_with_title("Lyndon", lyndon)
-# print_with_title("At least 6 distinct", words_with_n_distinct_chars(lyndon, 6))
-# print_with_title("At least 5 distinct", words_with_n_distinct_chars(lyndon, 5))
+# format.print_expression("Expression", expr.annotations())
+# format.print_expression("Lyndon", lyndon)
+# format.print_expression("At least 6 distinct", words_with_n_distinct_chars(lyndon, 6))
+# format.print_expression("At least 5 distinct", words_with_n_distinct_chars(lyndon, 5))
 
 
 # This is:
@@ -605,24 +592,24 @@ print_eliminations(known_eliminations_5, 5)
 print_eliminations(known_eliminations_3, 3)
 
 axis = 1
-# print_with_title("Goal functional expr", goal_raw.annotations())
-# print_with_title("Goal before Lyndon", goal_before_lyndon)
-print_with_title("Goal", goal)
+# format.print_expression("Goal functional expr", goal_raw.annotations())
+# format.print_expression("Goal before Lyndon", goal_before_lyndon)
+format.print_expression("Goal", goal)
 
 eliminated_5 = apply_eliminations(known_eliminations_5, goal, axis, min_distinct=5)
 eliminated_3 = apply_eliminations(known_eliminations_3, eliminated_5.without_annotations(), axis, min_distinct=3)
 eliminated = eliminated_3.without_annotations()
 eliminated_annotations = (eliminated_5 + eliminated_3).annotations()
-print_with_title("After eliminations", eliminated)
-print_with_title("After eliminations, filtered", words_with_n_distinct_chars(eliminated.without_annotations(), 5))
-print_with_title("Elimination expression", eliminated_annotations)
+format.print_expression("After eliminations", eliminated)
+format.print_expression("After eliminations, filtered", words_with_n_distinct_chars(eliminated.without_annotations(), 5))
+format.print_expression("Elimination expression", eliminated_annotations)
 assert eliminated == Linear()
 elimination_expr = Linear()
 for annotation, coeff in eliminated_annotations.items():
     elimination_expr += coeff * annotation_to_func(annotation)
-# print_with_title("Elimination expression reconstructed", elimination_expr.annotations())
+# format.print_expression("Elimination expression reconstructed", elimination_expr.annotations())
 goal_raw += elimination_expr
 
 print(f"\n\n=== Result for projection on X1 ===\n")
-print_with_title("LHS", goal_orig.annotations())
-print_with_title("RHS", (goal_orig - goal_raw).annotations())
+format.print_expression("LHS", goal_orig.annotations())
+format.print_expression("RHS", (goal_orig - goal_raw).annotations())

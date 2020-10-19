@@ -12,10 +12,6 @@ from util import *
 from word_algebra import *
 
 
-def print_with_title(msg, expr):
-    print(f"{msg} - {len(expr)} terms:\n{expr}\n")
-
-
 def is_zero(expr):
     num_points = 6  # TODO: !!!
     for i in range(1, num_points - 2):

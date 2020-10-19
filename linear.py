@@ -34,6 +34,7 @@ class Linear:
     def copy(self):
         return Linear(self.data.copy())
 
+    # TODO: Split into annotations and no annotations
     def items(self):
         return self.data.items()
 
@@ -134,7 +135,7 @@ def _tensor_product_two(
         product,  # function: A, B -> C
     ):
     assert not lhs.has_annotations() and not rhs.has_annotations()
-    ret = Linear({})
+    ret = Linear()
     for obj_l, coeff_l in lhs.items():
         for obj_r, coeff_r in rhs.items():
             obj = product(obj_l, obj_r)

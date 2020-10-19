@@ -138,3 +138,9 @@ def annotation_to_func(annotation):
     ret = Li(int(m.group(1)), [str_to_arg(a) for a in m.group(2).split(",")])
     return ret
     # return Linear() if to_lyndon_basis(ret.without_annotations()) == Linear() else ret
+
+def print_eliminations(eliminations, min_distinct):
+    print(f"\n~~~ Known eliminations >= {min_distinct} ~~~\n")
+    for _, v in eliminations.items():
+        print(f"{v[0]}\nincluding\n{words_with_n_distinct_chars(v[0], min_distinct)}\nvia\n{v[1]}\n")
+    print()
