@@ -120,7 +120,7 @@ class Linear:
 
     def to_str(self, element_to_str):
         return (
-            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in self.items()])
+            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])
             if self.data
             else format.coeff(0)
         )
