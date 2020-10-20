@@ -14,6 +14,7 @@ def set_enable_monospace_font_correction(v):
 
 minus = None
 otimes = None
+cotimes = None
 shuffle = None
 
 # add spaces to prevent wide characters from overlapping when using monospace fonts
@@ -21,9 +22,10 @@ def _monofont_op_correction(op):
     return op + (" " if enable_monospace_font_correction else "")
 
 def _gen_ops():
-    global minus, otimes, shuffle
+    global minus, otimes, cotimes, shuffle
     minus = "−" if enable_unicode else "-"
     otimes = _monofont_op_correction("⊗") if enable_unicode else "*"
+    cotimes = _monofont_op_correction("∧") if enable_unicode else "^"
     shuffle = _monofont_op_correction("⧢") if enable_unicode else "#"
 
 _gen_ops()
@@ -65,5 +67,6 @@ def coeff(x):
     return fix_minus(impl(x))
 
 
-def print_expression(title, expr):
-    print(f"{title} - {len(expr)} terms:\n{expr}\n")
+def print_expression(title, expr, element_to_str=None):
+    # print(f"{title} - {len(expr)} terms, norm = {expr.l1_norm()}:\n{expr.to_str(element_to_str or str)}\n")
+    print(f"{title} - {len(expr)} terms:\n{expr.to_str(element_to_str or str)}\n")

@@ -134,7 +134,8 @@ def _tensor_product_two(
         rhs,      # Linear[B]
         product,  # function: A, B -> C
     ):
-    assert not lhs.has_annotations() and not rhs.has_annotations()
+    lhs = lhs.without_annotations()
+    rhs = rhs.without_annotations()
     ret = Linear()
     for obj_l, coeff_l in lhs.items():
         for obj_r, coeff_r in rhs.items():

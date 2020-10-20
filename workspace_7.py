@@ -12,14 +12,6 @@ from util import *
 from word_algebra import *
 
 
-def is_zero(expr):
-    num_points = 6  # TODO: !!!
-    for i in range(1, num_points - 2):
-        if to_lyndon_basis(project_on_xi(expr, i)) != Linear():
-            return False
-    return True
-
-
 for weight in range(3,9):
     sign = (-1) ** weight
     goal_raw = (

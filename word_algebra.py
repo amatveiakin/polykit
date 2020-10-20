@@ -1,7 +1,8 @@
 import re
 
 from linear import Annotation, Linear
-from tensor import Inf
+from lyndon import to_lyndon_basis
+from tensor import Inf, d_expr_dimension
 from util import get_one_item
 
 
@@ -52,6 +53,18 @@ def word_expr_max_char(expr):
 
 def words_with_n_distinct_chars(expr, min_distinct):
     return expr.without_annotations().filtered_obj(lambda word: len(set(word)) >= min_distinct)
+
+
+# Equivalent to "Tensor(expr) -> lyndon_basis -> summands == Linear()", but faster
+def is_zero(expr):
+    expr = expr.without_annotations()
+    if expr == Linear():
+        return True
+    num_points = d_expr_dimension(expr)
+    for i in range(1, num_points - 2):
+        if to_lyndon_basis(project_on_xi(expr, i)) != Linear():
+            return False
+    return True
 
 
 # Replaces each letter c with index_map[c]

@@ -21,8 +21,7 @@ def cross_ratio(*indexed_points):
     ret = Linear()
     n = len(v)
     for i in range(n):
-        sign = 1 if i % 2 == 0 else -1
-        ret += sign * X(v[i], v[(i+1)%n])
+        ret += (-1)**i * X(v[i], v[(i+1)%n])
     return ret
 
 # Returns
@@ -33,7 +32,7 @@ def neg_cross_ratio(a, b, c, d):
 
 
 def symbol_product(*multipliers):
-    return tensor_product(multipliers, product=lambda a, b: a + b)
+    return tensor_product(*multipliers, product=lambda a, b: a + b)
 
 
 _li_cache = {}
@@ -64,7 +63,7 @@ def Li(weight, points):
         asc_expr,
         index_map
     ).annotated(
-        f"Li{weight}(" + ",".join([str(p) for p in point_indices]) + ")"
+        _annotation(f"Li{weight}", point_indices)
     )
 
 
@@ -89,6 +88,43 @@ def Li7(*points):
 def Li8(*points):
     return Li(8, args_to_iterable(points))
 
+
+def Li_sym_6_points(weight, points):
+    assert len(points) == 6
+    x1,x2,x3,x4,x5,x6 = points
+    return (
+        + Li(weight, [x1,x2,x3,x4,x5,x6])
+        - Li(weight, [x1,x2,x3,x4])
+        - Li(weight, [x3,x4,x5,x6])
+        - Li(weight, [x5,x6,x1,x2])
+    ).without_annotations().annotated(
+        _annotation(f"Li{weight}_sym", points)
+    )
+
+def Li2_sym(*points):
+    return Li_sym_6_points(2, args_to_iterable(points))
+
+def Li3_sym(*points):
+    return Li_sym_6_points(3, args_to_iterable(points))
+
+def Li4_sym(*points):
+    return Li_sym_6_points(4, args_to_iterable(points))
+
+def Li5_sym(*points):
+    return Li_sym_6_points(5, args_to_iterable(points))
+
+def Li6_sym(*points):
+    return Li_sym_6_points(6, args_to_iterable(points))
+
+def Li7_sym(*points):
+    return Li_sym_6_points(7, args_to_iterable(points))
+
+def Li8_sym(*points):
+    return Li_sym_6_points(8, args_to_iterable(points))
+
+
+def _annotation(function_name, args):
+    return function_name + "(" + ",".join([str(x) for x in args]) + ")"
 
 def _Li_4_point(points):
     assert len(points) == 4

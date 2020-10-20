@@ -16,6 +16,8 @@ class _InfinityType:
 Inf = _InfinityType()
 
 # Represents a single difference (x_i - x_j)
+# Optimization potential: Convert to alphabet mapping immediately
+#   (make it start from a 1000 to reduce the chances of messing up)
 @dataclass(init=False, eq=True, order=True, frozen=True)
 class D:
     a: int
@@ -46,6 +48,12 @@ class D:
         return f"(x{format.substript(self.a)} {format.minus} x{format.substript(self.b)})"
 
 
+def d_monom_to_str(
+        multipliers  # Tuple[D]
+    ):
+    return format.otimes.join(str(d) for d in multipliers)
+
+
 # Replaces each index c with index_map[c]
 def d_monom_substitute(
         multipliers,  # Tuple[D]
@@ -65,6 +73,18 @@ def d_expr_substitute(
             ret += Linear({multipliers_new: coeff})
     return ret
 
+def d_expr_dimension(
+        expr,  # Linear[Tuple[D]]
+    ):
+    return max([
+        max([
+            max(d.a, d.b)
+            for d in multipliers
+        ])
+        for multipliers, _ in expr.items()
+    ])
+
+
 def _common_indices(d1, d2):
     return set(d1.as_tuple()) & set(d2.as_tuple())
 
@@ -72,9 +92,6 @@ def _other_index(d, idx):
     assert d.a == idx or d.b == idx
     return d.a if d.b == idx else d.b
 
-
-def _multipliers_to_str(multipliers):
-    return format.otimes.join(str(d) for d in multipliers)
 
 def _change_multipliers(
         multipliers,    # Tuple[D]
@@ -113,17 +130,7 @@ class Tensor:
                 self.weight = len(multipliers)
             else:
                 assert len(multipliers) == self.weight
-        self.dimension = (
-            max([
-                max([
-                    max(d.a, d.b)
-                    for d in multipliers
-                ])
-                for multipliers, _ in summands.items()
-            ])
-            if len(summands) > 0 else
-            None
-        )
+        self.dimension = d_expr_dimension(summands) if len(summands) > 0 else None
         # self.convert_to_lyndon_basis()
         # self.check_criterion()
 
@@ -221,12 +228,12 @@ class Tensor:
                     assert False, f"Number of common indices == {num_common}"
 
     def __str__(self):
-        return self.summands.to_str(_multipliers_to_str)
+        return self.summands.to_str(d_monom_to_str)
 
     def to_str_with_alphabet_mapping(self):
         alphabet_mapping = AlphabetMapping(self.dimension)
         return self.summands.to_str(lambda multipliers:
-            _multipliers_to_str(multipliers) +
+            d_monom_to_str(multipliers) +
             "  <=>  " +
             str(_to_word(alphabet_mapping, multipliers))
         )
