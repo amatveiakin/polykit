@@ -1,29 +1,48 @@
-class AlphabetMapping:
+from typing import Tuple
+
+
+ALPHABET_MAPPING_MAX_D_DIMENSION = 20
+
+def d_to_alphabet(
+        pair: Tuple[int, int],  # (a, b)  where  1 <= a < b
+    ):
+    return _mapping.d_to_alphabet(pair)
+
+def d_from_alphabet(
+        alpha: int  # 0 <= alpha
+    ):
+    return _mapping.d_from_alphabet(alpha)
+
+
+class _AlphabetMapping:
     def __init__(
             self,
-            dimension,  # integer
+            dimension: int,
         ):
         self.dimension = dimension
-        self.alphabet_size = dimension * (dimension-1) // 2
-        self.from_alphabet_mapping = [None] * self.alphabet_size
+        alphabet_size = dimension * (dimension-1) // 2
+        self.d_from_alphabet_mapping = [None] * alphabet_size
         for b in range(dimension):
             for a in range(b):
                 pair = (a+1, b+1)
-                self.from_alphabet_mapping[self.to_alphabet(pair)] = pair
-        assert not None in self.from_alphabet_mapping
+                self.d_from_alphabet_mapping[self.d_to_alphabet(pair)] = pair
+        assert not None in self.d_from_alphabet_mapping
 
-    def to_alphabet(
+    def d_to_alphabet(
             self,
-            pair,  # (a, b)  where  a, b are integers  and  1 <= a < b <= dimension
+            pair: Tuple[int, int],
         ):
         (a, b) = pair
-        assert 1 <= a and a < b and b <= self.dimension, [a, b, self.dimension]
+        assert 1 <= a and a < b, f"Invalid coordinates: ({a}, {b})"
+        assert b <= self.dimension, f"Coordinate {b} exceeds max supported dimension {self.dimension}"
         a -= 1
         b -= 1
         return b*(b-1)//2 + a
 
-    def from_alphabet(
+    def d_from_alphabet(
             self,
-            alpha,  # integer;  0 <= alpha < alphabet_size
+            alpha: int,
         ):
-        return self.from_alphabet_mapping[alpha]
+        return self.d_from_alphabet_mapping[alpha]
+
+_mapping = _AlphabetMapping(ALPHABET_MAPPING_MAX_D_DIMENSION)

@@ -1,6 +1,6 @@
 import format
 
-from tensor import Inf, Tensor, d_monom_to_str
+from tensor import *
 from lyndon import lyndon_factorize, to_lyndon_basis
 from enumerator import Enumerator
 from autosolve import *

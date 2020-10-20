@@ -4,25 +4,25 @@ from linear import Linear
 from shuffle import shuffle_product
 
 
-def _gen_lyndon_words(alphabet_size, max_length):
-    last_w = [0]
-    words = [tuple(last_w)]
-    while True:
-        w = [last_w[i % len(last_w)] for i in range(max_length)]
-        while w and w[-1] == alphabet_size - 1:
-            w.pop()
-        if not w:
-            break
-        w[-1] += 1
-        words.append(tuple(w))
-        last_w = w
-    return words
+# def _gen_lyndon_words(alphabet_size, max_length):
+#     last_w = [0]
+#     words = [tuple(last_w)]
+#     while True:
+#         w = [last_w[i % len(last_w)] for i in range(max_length)]
+#         while w and w[-1] == alphabet_size - 1:
+#             w.pop()
+#         if not w:
+#             break
+#         w[-1] += 1
+#         words.append(tuple(w))
+#         last_w = w
+#     return words
 
-class Lyndon:
-    def __init__(self, alphabet_size, max_length):
-        self.alphabet_size = alphabet_size
-        self.max_length = max_length
-        self.words = _gen_lyndon_words(alphabet_size, max_length)
+# class Lyndon:
+#     def __init__(self, alphabet_size, max_length):
+#         self.alphabet_size = alphabet_size
+#         self.max_length = max_length
+#         self.words = _gen_lyndon_words(alphabet_size, max_length)
 
 
 # Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
@@ -71,8 +71,7 @@ def to_lyndon_basis(
         for word_orig, coeff in words.items():
             lyndon_words = lyndon_factorize(word_orig)
             lyndon_word_sum = Linear.count(lyndon_words)
-            # TODO: What about len(lyndon_words) > 1 and len(lyndon_word_sum) == 1 ?
-            # As implemented, words of the form (Lyndon_word^N) may simply disappear.
+            # Note: words of the form (Lyndon_word^N) may simply disappear.
             if len(lyndon_words) == 1:
                 words_new[word_orig] += coeff
                 continue
