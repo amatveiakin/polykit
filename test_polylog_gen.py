@@ -3,7 +3,7 @@ import unittest
 
 from linear import Linear
 from lyndon import to_lyndon_basis
-from tensor import Tensor
+from tensor import d_monom_to_str
 from polylog_gen import *
 
 
@@ -14,7 +14,7 @@ class TestShuffle(unittest.TestCase):
             Li(2, 6) -
             (Li2(1,3,5,6) - Li2(1,4,5,6) - Li2(2,3,5,6) + Li2(2,4,5,6))
         )
-        self.assertTrue(remainder == Linear(), "\n" + str(Tensor(remainder)))
+        self.assertTrue(remainder == Linear(), "\n" + remainder.to_str(element_to_str=d_monom_to_str))
 
     def test_li_sym(self):
         self.assertTrue(to_lyndon_basis(Li2_sym(1,2,3,4,5,6) + Li2_sym(2,3,4,5,6,1)) == Linear())

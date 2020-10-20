@@ -20,7 +20,7 @@ class TestDExpr(unittest.TestCase):
         profiler.finish("d_expr_to_lyndon_basis")
         lyndon_generic = to_lyndon_basis(expr)
         profiler.finish("to_lyndon_basis")
-        self.assertEquals(lyndon_d_expr, lyndon_generic)
+        self.assertEqual(lyndon_d_expr, lyndon_generic)
 
 
 
