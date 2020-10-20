@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import format
 
 from alphabet_mapping import d_to_alphabet, d_from_alphabet
-from linear import Linear
+from linear import Linear, tensor_product
 from lyndon import to_lyndon_basis
 from util import flatten, get_one_item
 
@@ -46,6 +46,15 @@ class D:
 
     def __str__(self):
         return f"(x{format.substript(self.a)} {format.minus} x{format.substript(self.b)})"
+
+
+def X(a, b):
+    d = D(a, b)
+    return Linear() if d.is_nil() else Linear({(d,): 1})
+
+
+def symbol_product(*multipliers):
+    return tensor_product(*multipliers, product=lambda a, b: a + b)
 
 
 # For Linear.to_str

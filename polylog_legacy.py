@@ -3,6 +3,13 @@ from polylog_gen import X, cross_ratio, neg_cross_ratio, symbol_product
 from tensor import D
 
 
+# def cross_ratio(a, b, c, d):
+#     return X(a, b) + X(c, d) - X(a, d) - X(c, b)
+
+# def cross_ratio_6(a, b, c, d, e, f):
+#     return X(a, b) + X(c, d) + X(e, f) - X(b, c) - X(d, e) - X(a, f)
+
+
 # def Li2(a, b, c, d):
 #     return symbol_product(
 #         cross_ratio(a, b, c, d),

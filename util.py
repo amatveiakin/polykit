@@ -14,7 +14,7 @@ def get_one_item(container):
     return x
 
 # Returns a copy of the list without elements at certain indices.
-def remove_indices(l, indices):
+def removed_indices(l, indices):
     return [l[i] for i in range(len(l)) if i not in indices]
 
 # For vararg functions that can alternatively accept an iterable.

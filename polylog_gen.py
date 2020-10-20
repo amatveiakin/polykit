@@ -1,20 +1,9 @@
 from dataclasses import dataclass
 
-from linear import Linear, tensor_product
-from tensor import D, d_expr_substitute
+from linear import Linear
+from tensor import D, X, d_expr_substitute, symbol_product
 from util import args_to_iterable, rotate_list
 
-
-def X(a, b):
-    d = D(a, b)
-    return Linear() if d.is_nil() else Linear({(d,): 1})
-
-
-# def cross_ratio(a, b, c, d):
-#     return X(a, b) + X(c, d) - X(a, d) - X(c, b)
-
-# def cross_ratio_6(a, b, c, d, e, f):
-#     return X(a, b) + X(c, d) + X(e, f) - X(b, c) - X(d, e) - X(a, f)
 
 def cross_ratio(*indexed_points):
     v = args_to_iterable(indexed_points)
@@ -29,10 +18,6 @@ def cross_ratio(*indexed_points):
 # as symbol
 def neg_cross_ratio(a, b, c, d):
     return cross_ratio(a, c, b, d)
-
-
-def symbol_product(*multipliers):
-    return tensor_product(*multipliers, product=lambda a, b: a + b)
 
 
 _li_cache = {}
@@ -62,9 +47,7 @@ def Li(weight, points):
     return d_expr_substitute(
         asc_expr,
         index_map
-    ).annotated(
-        _annotation(f"Li{weight}", point_indices)
-    )
+    ).annotated_with_function(f"Li{weight}", point_indices)
 
 
 def Li2(*points):
@@ -101,9 +84,7 @@ def Li_sym_6_points(weight, points):
         - Li(weight, [x1,x2,x3,x4])
         - Li(weight, [x3,x4,x5,x6])
         - Li(weight, [x5,x6,x1,x2])
-    ).without_annotations().annotated(
-        _annotation(f"Li{weight}_sym", points)
-    )
+    ).without_annotations().annotated_with_function(f"Li{weight}_sym", points)
 
 def Li2_sym(*points):
     return Li_sym_6_points(2, args_to_iterable(points))
@@ -126,9 +107,6 @@ def Li7_sym(*points):
 def Li8_sym(*points):
     return Li_sym_6_points(8, args_to_iterable(points))
 
-
-def _annotation(function_name, args):
-    return function_name + "(" + ",".join([str(x) for x in args]) + ")"
 
 def _Li_4_point(points):
     assert len(points) == 4

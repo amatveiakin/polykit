@@ -118,6 +118,9 @@ class Linear:
     def annotated(self, s):
         return self + Linear({Annotation(s): 1})
 
+    def annotated_with_function(self, name, args):
+        return self.annotated(name + "(" + ",".join([str(x) for x in args]) + ")")
+
     def to_str(self, element_to_str):
         return (
             "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])

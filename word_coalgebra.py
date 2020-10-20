@@ -6,8 +6,17 @@ from lyndon import to_lyndon_basis
 from word_algebra import W, word_expr_weight
 
 
-def word_coproduct(*multipliers):
-    return tensor_product(*[to_lyndon_basis(m) for m in multipliers], product=lambda a, b: (a, b))
+def word_coproduct(expr1, expr2):
+    ret = tensor_product(
+        to_lyndon_basis(expr1),
+        to_lyndon_basis(expr2),
+        product=lambda a, b: (a, b)
+    )
+    return (
+        normalize_square_coproduct(ret)
+        if word_expr_weight(expr1) == word_expr_weight(expr2) else
+        ret
+    )
 
 
 # For Linear.to_str
@@ -53,6 +62,4 @@ def word_comultiply(
                 to_lyndon_basis(Linear({word[split:]: 1})),
                 to_lyndon_basis(Linear({word[:split]: 1})),
             )
-    if form[0] == form[1]:
-        ret = normalize_square_coproduct(ret)
     return ret
