@@ -5,6 +5,7 @@ from lyndon import lyndon_factorize, to_lyndon_basis
 from enumerator import Enumerator
 from autosolve import *
 from polylog_gen import *
+from powertool import *
 from shuffle import *
 from util import *
 from word_algebra import *
@@ -54,11 +55,10 @@ def Li_8_points_fixed(weight, x1,x2,x3,x4,x5,x6,x7,x8):
 # criterion_expr = Li5_fixed(1,2,3,4,5,6) - Li5_fixed(2,3,4,5,6,1)
 criterion_expr = Li_8_points_fixed(5, 1,2,3,4,5,6,7,8) - Li_8_points_fixed(5, 2,3,4,5,6,7,8,1)
 # criterion_expr = Li6_fixed(1,2,3,4,5,6) + Li6_fixed(2,3,4,5,6,1)
-criterion_expr = criterion_expr.without_annotations()
 criterion_ok = is_zero(criterion_expr)
 print(f"Criterion ok = {criterion_ok}")
 if not criterion_ok:
-    format.print_expression("Leftovers", to_lyndon_basis(project_on_x1(criterion_expr)))
+    print_expression("Leftovers", to_lyndon_basis(project_on_x1(criterion_expr)))
     exit()
 print()
 
@@ -83,9 +83,9 @@ print()
 #     for j in range(i+1, 6):
 #         rhs += (-1)**(i - j) * Li3(asc[0:i] + asc[i+1:j] + asc[j+1:])
 # expr = lhs - rhs
-# format.print_expression("RHS", rhs.annotations())
-# # format.print_expression("Functional expression", expr.annotations())
-# format.print_expression("Projection on x1", to_lyndon_basis(project_on_x1(expr)))
+# print_expression("RHS", rhs.annotations())
+# # print_expression("Functional expression", expr.annotations())
+# print_expression("Projection on x1", to_lyndon_basis(project_on_x1(expr)))
 # print(f"Zero = {is_zero(expr)}")
 
 
@@ -97,15 +97,15 @@ for i in range(weight):
     for j in range(i+1, weight):
         rhs += (-1)**(i - j) * Li_6_points_fixed(5, *(asc[0:i] + asc[i+1:j] + asc[j+1:]))
 expr = lhs - rhs
-format.print_expression("RHS", rhs.annotations())
-# format.print_expression("Functional expression", expr.annotations())
-format.print_expression("Projection on x1", to_lyndon_basis(project_on_x1(expr)))
+print_expression("RHS", rhs.annotations())
+# print_expression("Functional expression", expr.annotations())
+print_expression("Projection on x1", to_lyndon_basis(project_on_x1(expr)))
 print(f"Zero = {is_zero(expr)}")
 
 exit()
 
 # expr = Li6(1,2,3,4,5,6,7,8) - Li6(3,4,5,6,7,8,1,2)
-# # format.print_expression("Diff", to_lyndon_basis(project_on_x1(expr)))
+# # print_expression("Diff", to_lyndon_basis(project_on_x1(expr)))
 # print(f"Zero = {is_zero(expr)}")
 # exit()
 
@@ -116,8 +116,5 @@ asc = list(range(1, num_points+1))
 for i in range(num_points):
     expr += (-1)**i * Li4(asc[0:i] + asc[i+1:])
 
-format.print_expression("Formula", expr.annotations())
-# t = Tensor(expr.without_annotations())
-# t.convert_to_lyndon_basis()
-# print(t)
-format.print_expression("Projected on x1", to_lyndon_basis(project_on_x1(expr)))
+print_expression("Formula", expr.annotations())
+print_expression("Projected on x1", to_lyndon_basis(project_on_x1(expr)))

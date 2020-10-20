@@ -65,8 +65,3 @@ def coeff(x):
         else:
             return "{:+} ".format(x)
     return fix_minus(impl(x))
-
-
-def print_expression(title, expr, element_to_str=None):
-    # print(f"{title} - {len(expr)} terms, norm = {expr.l1_norm()}:\n{expr.to_str(element_to_str or str)}\n")
-    print(f"{title} - {len(expr)} terms:\n{expr.to_str(element_to_str or str)}\n")
