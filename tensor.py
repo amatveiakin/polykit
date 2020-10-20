@@ -7,7 +7,7 @@ import format
 from alphabet_mapping import AlphabetMapping
 from linear import Linear
 from lyndon import to_lyndon_basis
-from util import get_one_item
+from util import flatten, get_one_item
 
 
 class _InfinityType:
@@ -72,6 +72,17 @@ def d_expr_substitute(
         if not any([d.is_nil() for d in multipliers_new]):
             ret += Linear({multipliers_new: coeff})
     return ret
+
+def d_monoms_distinct_chars(
+        multipliers,  # Tuple[D]
+    ):
+    return len(set(flatten([[d.a, d.b] for d in multipliers])))
+
+def d_monoms_with_n_distinct_chars(
+        expr,          # Linear[Tuple[D]]
+        min_distinct,  # int
+    ):
+    return expr.without_annotations().filtered_obj(lambda monom: d_monoms_distinct_chars(monom) >= min_distinct)
 
 def d_expr_dimension(
         expr,  # Linear[Tuple[D]]

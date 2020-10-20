@@ -90,7 +90,11 @@ def Li8(*points):
 
 
 def Li_sym_6_points(weight, points):
-    assert len(points) == 6
+    assert isinstance(points, (int, list, tuple))
+    num_points = points if isinstance(points, int) else len(points)
+    assert num_points == 6
+    if isinstance(points, int):
+        points = list(range(1, num_points + 1))
     x1,x2,x3,x4,x5,x6 = points
     return (
         + Li(weight, [x1,x2,x3,x4,x5,x6])

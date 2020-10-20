@@ -13,7 +13,12 @@ def get_one_item(container):
         break
     return x
 
-# For vararg functions that can alternatively accept an iterable
+# Returns a copy of the list without elements at certain indices.
+def remove_indices(l, indices):
+    return [l[i] for i in range(len(l)) if i not in indices]
+
+# For vararg functions that can alternatively accept an iterable.
+# Always assumes that 1-arg version is an iterable.
 def args_to_iterable(args):
     assert len(args) > 0
     return args if len(args) > 1 else args[0]
