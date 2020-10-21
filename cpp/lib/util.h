@@ -3,6 +3,11 @@
 #include <cassert>
 
 
+inline int neg_one_pow(int power) {
+  assert(power >= 0);
+  return 1 - power % 2 * 2;
+}
+
 inline int div_int(int a, int b) {
   assert(a % b == 0);
   return a / b;
@@ -19,7 +24,30 @@ inline int factorial(int n) {
 
 
 template<typename T>
-inline void append_vector(std::vector<T>& dst, const std::vector<T>& src) {
+std::vector<T> slice(const std::vector<T>& v, int from, int to = -1) {
+  if (to == -1) {
+    to = v.size();
+  }
+  assert(0 <= from && from <= v.size());
+  assert(0 <= to && to <= v.size());
+  return std::vector<T>(v.begin() + from, v.begin() + to);
+}
+
+template<typename T>
+std::vector<T> concat(std::vector<T> a, std::vector<T> b) {
+  a.insert(a.end(), std::move_iterator(b.begin()), std::move_iterator(b.end()));
+  return a;
+}
+
+template<typename T>
+void rotate_vector_right(std::vector<T>& v) {
+  T head = std::move(v.front());
+  std::move_backward(v.begin(), std::prev(v.end()), v.end());
+  v.back() = std::move(head);
+}
+
+template<typename T>
+void append_vector(std::vector<T>& dst, const std::vector<T>& src) {
   const size_t old_size = dst.size();
   dst.resize(old_size + src.size());
   std::move(src.begin(), src.end(), dst.begin() + old_size);

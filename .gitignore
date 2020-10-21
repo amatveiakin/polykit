@@ -1,6 +1,11 @@
 .vscode/
+Asan/
+Release/
+Debug/
+*.vcxproj.*
 __pycache__/
 *.exe
+.vs/
 
 *.pdf
 in*.txt

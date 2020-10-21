@@ -14,7 +14,7 @@ constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 // Should be small, as it's going to be used as hash table key.
 class IntWord {
 public:
-  using DataT = std::array<unsigned char, kMaxWordSize>;
+  using DataT = std::array<unsigned char, kWordStorageSize>;
   
   IntWord() {
     data_.fill(0);
@@ -110,7 +110,7 @@ inline IntWord concat_words(const IntWord& w1, const IntWord& w2) {
 }
 
 template <class T>
-inline void hash_combine(std::size_t& hash, const T& new_hash) {
+inline void hash_combine(size_t& hash, const T& new_hash) {
   hash ^= new_hash + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 }
 
@@ -118,14 +118,14 @@ namespace std {
   template <>
   // TODO: Test
   struct hash<IntWord> {
-    std::size_t operator()(IntWord const& w) const noexcept {
-      static_assert(kWordStorageSize % sizeof(std::size_t) == 0);
-      constexpr int kWordStorageSizeInHashT = kWordStorageSize / sizeof(std::size_t);
-      std::array<int, kWordStorageSizeInHashT> as_hash_t;
+    size_t operator()(IntWord const& w) const noexcept {
+      static_assert(kWordStorageSize % sizeof(size_t) == 0);
+      constexpr int kWordStorageSizeInHashT = kWordStorageSize / sizeof(size_t);
+      std::array<size_t, kWordStorageSizeInHashT> as_hash_t;
       std::memcpy(as_hash_t.data(), w.data_.data(), kWordStorageSize);
-      std::size_t ret = 0;
-      for (const std::size_t v : as_hash_t) {
-        hash_combine(ret, std::hash<std::size_t>()(v));
+      size_t ret = 0;
+      for (const size_t v : as_hash_t) {
+        hash_combine(ret, std::hash<size_t>()(v));
       }
       return ret;
     }

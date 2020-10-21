@@ -24,7 +24,5 @@ template<typename ParamT>
 Linear<ParamT> tensor_product(
     const Linear<ParamT>& lhs,
     const Linear<ParamT>& rhs) {
-  return outer_product(lhs, rhs, [](IntWord w1, IntWord w2) {
-    return concat_words(w1, w2);
-  });
+  return outer_product(lhs, rhs, concat_words);
 }

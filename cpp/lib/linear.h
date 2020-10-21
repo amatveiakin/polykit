@@ -192,11 +192,22 @@ public:
     annotations_ += BasicLinearAnnotation::single(annotation);
     return *this;
   }
+  template<typename Arg>
+  Linear& annotate_with_function(const std::string& name, const std::vector<Arg>& args) {
+    return annotate(name + "(" + str_join(args, ", ") + ")");
+  }
   void copy_annotations(const Linear& other) {
     annotations_ += other.annotations_;
   }
   Linear without_annotations() const {
     return Linear(main_);
+  }
+
+  Linear operator+() const {
+    return *this;
+  }
+  Linear operator-() const {
+    return Linear() - *this;
   }
 
   Linear operator+(const Linear& other) const {

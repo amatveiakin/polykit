@@ -13,10 +13,10 @@ class Delta {
 public:
   Delta() {}
   Delta(int a, int b) : a_(a), b_(b) {
-    assert(a >= 1);
-    assert(b >= 1);
-    if (a > b) {
-      std::swap(a, b);
+    assert(a_ >= 1);
+    assert(b_ >= 1);
+    if (a_ > b_) {
+      std::swap(a_, b_);
     }
   }
 
@@ -27,7 +27,7 @@ public:
 
   bool operator==(const Delta& other) const { return as_pair() == other.as_pair(); }
   bool operator!=(const Delta& other) const { return as_pair() != other.as_pair(); }
-  bool operator<(const Delta& other) const { return as_pair() < other.as_pair(); }
+  bool operator< (const Delta& other) const { return as_pair() <  other.as_pair(); }
 
   std::pair<int, int> as_pair() const { return {a_, b_}; }
 
@@ -73,7 +73,6 @@ private:
 };
 
 DeltaAlphabetMapping delta_alphabet_mapping;
-// const DeltaAlphabetMapping& delta_alphabet_mapping = *(new DeltaAlphabetMapping);
 
 
 struct LinearParamDeltaExpr {
