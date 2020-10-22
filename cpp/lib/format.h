@@ -4,12 +4,12 @@
 
 
 // For generic programming like str_join
-std::string to_string(int x) { return std::to_string(x); }
+inline std::string to_string(int x) { return std::to_string(x); }
 
 
 // TODO: Rewrite via absl::StrJoin
 template<typename T, typename F>
-inline std::string str_join(const T& container, std::string separator, F element_to_string) {
+std::string str_join(const T& container, std::string separator, F element_to_string) {
   std::string ret;
   for (const auto v : container) {
     if (!ret.empty()) {
@@ -21,7 +21,7 @@ inline std::string str_join(const T& container, std::string separator, F element
 }
 
 template<typename T>
-inline std::string str_join(const T& container, std::string separator) {
+std::string str_join(const T& container, std::string separator) {
   std::string ret;
   for (const auto v : container) {
     if (!ret.empty()) {

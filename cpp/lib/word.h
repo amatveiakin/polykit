@@ -96,7 +96,7 @@ std::string to_string(IntWord w, F char_to_string) {
   return list_to_string(w, char_to_string);
 }
 
-std::string to_string(IntWord w) {
+inline std::string to_string(IntWord w) {
   return to_string(w, [](auto c){ return to_string(c); });
 }
 

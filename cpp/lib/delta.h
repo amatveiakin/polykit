@@ -36,7 +36,7 @@ private:
   int b_ = 0;
 };
 
-std::string to_string(const Delta& d) {
+inline std::string to_string(const Delta& d) {
   return "(x" + to_string(d.a()) + " - x" + to_string(d.b()) + ")";
 }
 
@@ -72,7 +72,7 @@ private:
   std::vector<Delta> deltas_;
 };
 
-DeltaAlphabetMapping delta_alphabet_mapping;
+extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
 struct LinearParamDeltaExpr {
@@ -99,7 +99,7 @@ struct LinearParamDeltaExpr {
 
 using DeltaExpr = Linear<LinearParamDeltaExpr>;
 
-DeltaExpr D(int a, int b) {
+inline DeltaExpr D(int a, int b) {
   Delta d(a, b);
   return d.is_nil() ? DeltaExpr() : DeltaExpr::single({d});
 }
