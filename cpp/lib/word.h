@@ -79,8 +79,8 @@ private:
   friend std::hash<IntWord>;
 
   void write_size(int new_size) {
-    assert(0 <= new_size);
-    assert(new_size <= kMaxWordSize);
+    CHECK_LE(0, new_size);
+    CHECK_LE(new_size, kMaxWordSize);
     data_[0] = new_size;
   }
 

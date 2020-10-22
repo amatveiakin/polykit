@@ -53,7 +53,7 @@ Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
     finished = true;
     expr.main().foreach_key([&](const IntWord& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
-      assert(!lyndon_words.empty());
+      CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
         expr_new += coeff * LinearT::single_key(word_orig);
         return;
@@ -68,7 +68,7 @@ Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
         shuffle_product(lyndon_words)
       );
       shuffle_expr.div_int(denominator);
-      assert(shuffle_expr.main().coeff_for_key(word_orig) == 1);
+      CHECK_EQ(shuffle_expr.main().coeff_for_key(word_orig), 1);
       expr_new += (-coeff) * (shuffle_expr - LinearT::single_key(word_orig));
     });
     expr = std::move(expr_new);

@@ -56,3 +56,15 @@ inline std::string format_coeff(int coeff) {
     return to_string(coeff) + " ";
   }
 }
+
+
+inline std::string en_plural(
+    int number,
+    const std::string& singular,
+    const std::string& plural = {}) {
+  number = std::abs(number);
+  const bool use_plural = number % 100 == 11 || number % 10 != 1;
+  return use_plural
+      ? (plural.empty() ? singular + "s" : plural)
+      : singular;
+}

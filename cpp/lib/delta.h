@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 
+#include "check.h"
 #include "format.h"
 #include "linear.h"
 #include "util.h"
@@ -13,8 +13,8 @@ class Delta {
 public:
   Delta() {}
   Delta(int a, int b) : a_(a), b_(b) {
-    assert(a_ >= 1);
-    assert(b_ >= 1);
+    CHECK_GE(a_, 1);
+    CHECK_GE(b_, 1);
     if (a_ > b_) {
       std::swap(a_, b_);
     }
@@ -58,7 +58,7 @@ public:
   }
 
   int to_alphabet(const Delta& d) const {
-    assert(d.b() <= kMaxDimension);
+    CHECK_LE(d.b(), kMaxDimension);
     const int za = d.a() - 1;
     const int zb = d.b() - 1;
     return zb*(zb-1)/2 + za;
@@ -103,3 +103,8 @@ inline DeltaExpr D(int a, int b) {
   Delta d(a, b);
   return d.is_nil() ? DeltaExpr() : DeltaExpr::single({d});
 }
+
+
+DeltaExpr delta_expr_substitute(
+    const DeltaExpr& expr,
+    const std::vector<int>& new_points);

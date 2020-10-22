@@ -41,6 +41,11 @@ public:
 
   bool empty() const { return data_.empty(); }
   int size() const { return data_.size(); }
+  int l1_norm() const {
+    int ret = 0;
+    foreach_key([&](const auto&, int coeff) { ret += std::abs(coeff); });
+    return ret;
+  }
 
   int operator[](const ObjectT& obj) const {
     return coeff_for_key(ParamT::object_to_key(obj));
@@ -132,8 +137,7 @@ BasicLinear<ParamT> operator*(int scalar, const BasicLinear<ParamT>& linear) {
 }
 
 template<typename ParamT>
-std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear)
-{
+std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
   linear.foreach([&dump](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
@@ -257,11 +261,19 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
 }
 
 template<typename ParamT>
-std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear)
-{
-  if (!linear.annotations().empty()) {
-    os << linear.annotations() << "=>\n";
+std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
+  if (!linear.main().empty()) {
+    const int size = linear.main().size();
+    os << "# " << size << " " << en_plural(size, "term");
+    os << ", |coeff| = " << linear.main().l1_norm() << ":\n";
+    os << linear.main();
+  } else {
+    os << "\n" << format_coeff(0) << "\n";
   }
-  os << linear.main();
+  if (!linear.annotations().empty()) {
+    os << "^^^\n";
+    os << linear.annotations();
+  }
+  os.flush();
   return os;
 }

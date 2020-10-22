@@ -1,10 +1,13 @@
 #include "polylog.h"
 
+#include "absl/strings/str_cat.h"
+
 #include "algebra.h"
+#include "check.h"
 
 
 static DeltaExpr Li_4_point(const std::vector<int>& p) {
-  assert(p.size() == 4);
+  CHECK_EQ(p.size(), 4);
   return p[0] % 2 == 1
     ?  neg_cross_ratio(p[0], p[1], p[2], p[3])
     : -neg_cross_ratio(p[1], p[2], p[3], p[0]);
@@ -12,9 +15,9 @@ static DeltaExpr Li_4_point(const std::vector<int>& p) {
 
 static DeltaExpr Li_impl(int weight, const std::vector<int>& points) {
   const int num_points = points.size();
-  assert(num_points >= 4 && num_points % 2 == 0);
+  CHECK(num_points >= 4 && num_points % 2 == 0, absl::StrCat("Bad number of Li points: ", num_points));
   const int min_weight = (num_points - 2) / 2;
-  assert(weight >= min_weight);
+  CHECK_GE(weight, min_weight);
   const auto subsums = [&]() {
     DeltaExpr ret;
     for (int i = 0; i < num_points - 3; ++i) {
@@ -46,7 +49,12 @@ static DeltaExpr Li_impl(int weight, const std::vector<int>& points) {
 
 // TODO: Add cache
 DeltaExpr Li(int weight, const std::vector<int>& points) {
-  return Li_impl(weight, points).annotate_with_function(
+  const int num_points = points.size();
+  const auto asc_points = int_seq(1, num_points+1);
+  return delta_expr_substitute(
+    Li_impl(weight, asc_points),
+    points
+  ).annotate_with_function(
     "Li" + to_string(weight), points
   );
 }
