@@ -1,12 +1,23 @@
+# VS Code
 .vscode/
+
+# MSVC
 Asan/
 Release/
 Debug/
 *.vcxproj.*
-__pycache__/
-*.exe
 .vs/
 
+# bazel
+bazel-bin/
+bazel-cpp/
+bazel-out/
+
+# Binaries
+__pycache__/
+*.exe
+
+# Misc
 *.pdf
 in*.txt
 out*.txt

@@ -2,6 +2,13 @@
 
 #include <cassert>
 
+#include "absl/algorithm/container.h"
+
+
+inline int pos_mod(int x, int y) {
+  assert(y > 0);
+  return (x % y + y) % y;
+}
 
 inline int neg_one_pow(int power) {
   assert(power >= 0);
@@ -40,15 +47,14 @@ std::vector<T> concat(std::vector<T> a, std::vector<T> b) {
 }
 
 template<typename T>
-void rotate_vector_right(std::vector<T>& v) {
-  T head = std::move(v.front());
-  std::move_backward(v.begin(), std::prev(v.end()), v.end());
-  v.back() = std::move(head);
+void rotate_vector(std::vector<T>& v, int n) {
+  n = pos_mod(n, v.size());
+  absl::c_rotate(v, v.begin() + n);
 }
 
 template<typename T>
 void append_vector(std::vector<T>& dst, const std::vector<T>& src) {
   const size_t old_size = dst.size();
   dst.resize(old_size + src.size());
-  std::move(src.begin(), src.end(), dst.begin() + old_size);
+  absl::c_move(src, dst.begin() + old_size);
 }

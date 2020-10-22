@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+
 #include "format.h"
 #include "util.h"
 
@@ -121,8 +123,7 @@ private:
     }
   }
 
-  // Optimization potential: use absl hash_map
-  std::unordered_map<StorageT, int> data_;
+  absl::flat_hash_map<StorageT, int> data_;
 };
 
 template<typename ParamT>

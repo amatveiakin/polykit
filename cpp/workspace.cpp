@@ -34,14 +34,16 @@ int main() {
   //   IntWord{1},
   // }), "\n") << "\n";
 
-  Profiler profiler;
-  auto expr = Li(6, {1,2,3,4,5,6,7,8});
-  // auto expr = Li(2, {1,2,3,4,5,6});
-  profiler.finish("expr");
-  std::cout << "Num terms before Lyndon = " << expr.main().size() << "\n";
-  //auto lyndon = to_lyndon_basis(expr);
-  //profiler.finish("lyndon");
-  //std::cout << "Num terms after Lyndon = " << lyndon.main().size() << "\n";
-  // std::cout << format_expr("Before Lyndon", expr) << "\n";
-  // std::cout << format_expr("After Lyndon", lyndon) << "\n";
+  // Profiler profiler;
+  // auto expr = Li(6, {1,2,3,4,5,6,7,8});
+  // profiler.finish("expr");
+  // std::cout << "Num terms before Lyndon = " << expr.main().size() << "\n";
+  // auto lyndon = to_lyndon_basis(expr);
+  // profiler.finish("lyndon");
+  // std::cout << "Num terms after Lyndon = " << lyndon.main().size() << "\n";
+
+  auto expr = Li(2, {1,2,3,4,5,6});
+  std::cout << format_expr("Before Lyndon", expr) << "\n";
+  auto lyndon = to_lyndon_basis(expr);
+  std::cout << format_expr("After Lyndon", lyndon) << "\n";
 }
