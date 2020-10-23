@@ -8,6 +8,7 @@
 #include "lib/lyndon.h"
 #include "lib/polylog.h"
 #include "lib/profiler.h"
+#include "lib/projection.h"
 #include "lib/shuffle.h"
 
 
@@ -161,22 +162,18 @@ int main(int argc, char *argv[]) {
   //   IntWord{1},
   // }), "\n") << "\n";
 
-  Profiler profiler;
-  // auto expr = Li6(1,2,3,4,5,6,7,8);
-  auto expr = Li6(1,2,3,4,5,6);
-  profiler.finish("expr");
-  std::cout << "Num terms before Lyndon = " << expr.size() << "\n";
-  auto lyndon = to_lyndon_basis(expr);
-  profiler.finish("lyndon");
-  std::cout << "Num terms after Lyndon = " << lyndon.size() << "\n";
-
-  // auto expr = Li2(1,2,3,4,5,6);
-  // auto expr = Li(2, {1,2,3,4,5,6});
-  // auto expr =
-  //     + Li2(1,2,3,4,5,6)
-  //     - (Li2(1,3,5,6) - Li2(1,4,5,6) - Li2(2,3,5,6) + Li2(2,4,5,6));
-  // expr = expr.without_annotations();
-  // std::cout << "Before Lyndon " << expr << "\n";
+  // Profiler profiler;
+  // // auto expr = Li6(1,2,3,4,5,6,7,8);
+  // auto expr = Li6(1,2,3,4,5,6);
+  // profiler.finish("expr");
+  // std::cout << "Num terms before Lyndon = " << expr.size() << "\n";
   // auto lyndon = to_lyndon_basis(expr);
-  // std::cout << "After Lyndon " << lyndon << "\n";
+  // profiler.finish("lyndon");
+  // std::cout << "Num terms after Lyndon = " << lyndon.size() << "\n";
+
+  auto expr = project_on_x1(Li4(1,2,3,4));
+  expr = expr.without_annotations();
+  std::cout << "Before Lyndon " << expr << "\n";
+  auto lyndon = to_lyndon_basis(expr);
+  std::cout << "After Lyndon " << lyndon << "\n";
 }
