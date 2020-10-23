@@ -6,12 +6,14 @@
 #include <string>
 #include <vector>
 
+#include "linear.h"
+
 
 constexpr int kMaxWordSize = 15;
 constexpr int kWordStorageSize = kMaxWordSize + 1;  // +1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 
-// Should be small, as it's going to be used as hash table key.
+// Short inline vector of ints. Small and well-suited to work as hash table key.
 class IntWord {
 public:
   using DataT = std::array<unsigned char, kWordStorageSize>;
@@ -131,3 +133,5 @@ namespace std {
     }
   };
 }
+
+using IntWordExpr = Linear<SimpleLinearParam<IntWord>>;

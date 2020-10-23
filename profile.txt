@@ -1,0 +1,31 @@
+Li6(1,2,3,4,5,6)
+
+Python:
+    Profiler: expr took 3.712808609008789 seconds
+    Num terms before Lyndon = 114544
+    Profiler: lyndon took 270.83938908576965 seconds
+    Num terms after Lyndon = 32652
+
+C++ old
+    Profiler: expr took 0.194 seconds
+    Num terms before Lyndon = 114544
+    Profiler: lyndon took 113.714 seconds
+    Num terms after Lyndon = 32652
+
+C++ dedup in process
+    Profiler: expr took 0.147 seconds
+    Num terms before Lyndon = 114544
+    Profiler: lyndon took 61.677 seconds
+    Num terms after Lyndon = 32652
+
+C++ dedup in process + shuffle power unrolling
+    Profiler: expr took 0.145 seconds
+    Num terms before Lyndon = 114544
+    Profiler: lyndon took 71.214 seconds
+    Num terms after Lyndon = 32652
+
+C++ dedup in process + shuffle product unrolling
+    Profiler: expr took 0.14 seconds
+    Num terms before Lyndon = 114544
+    Profiler: lyndon took 46.341 seconds
+    Num terms after Lyndon = 32652

@@ -5,6 +5,7 @@
 
 // For generic programming like str_join
 inline std::string to_string(int x) { return std::to_string(x); }
+inline std::string to_string(std::string s) { return s; }
 
 
 // TODO: Rewrite via absl::StrJoin
@@ -40,6 +41,12 @@ std::string list_to_string(T container, F element_to_string) {
 template<typename T>
 std::string list_to_string(T container) {
   return "(" + str_join(container, ", ") + ")";
+}
+
+
+inline std::string pad_left(std::string str, int length, char padding = ' ') {
+  return std::string(std::max(0, length - static_cast<int>(str.length())), padding) +
+      std::move(str);
 }
 
 

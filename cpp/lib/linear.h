@@ -13,12 +13,14 @@
 #include "util.h"
 
 
-struct LinearParamAnnotation {
-  using ObjectT = std::string;
-  using StorageT = std::string;
-  static StorageT object_to_key(const ObjectT& obj) { return obj; }
-  static ObjectT key_to_object(const StorageT& key) { return key; }
-  static std::string object_to_string(const ObjectT& obj) { return obj; }
+template<typename T>
+struct SimpleLinearParam {
+  using ObjectT = T;
+  using StorageT = T;
+  static StorageT object_to_key(const T& obj) { return obj; }
+  static ObjectT key_to_object(const T& key) { return key; }
+  // can be overwritten if necessary
+  static std::string object_to_string(const T& obj) { return to_string(obj); }
 };
 
 
@@ -29,6 +31,9 @@ public:
   using StorageT = typename ParamT::StorageT;
 
   BasicLinear() {}
+  // TODO: debug `template<typename OtherParamT> friend class BasicLinear<OtherParamT>` and move to private
+  BasicLinear(absl::flat_hash_map<StorageT, int> data) : data_(std::move(data)) {}
+  ~BasicLinear() {}
 
   static BasicLinear single(const ObjectT& obj) {
     return single_key(ParamT::object_to_key(obj));
@@ -39,7 +44,7 @@ public:
     return ret;
   }
 
-  bool empty() const { return data_.empty(); }
+  bool zero() const { return data_.empty(); }
   int size() const { return data_.size(); }
   int l1_norm() const {
     int ret = 0;
@@ -59,9 +64,25 @@ public:
     }
   }
 
+  void add_to(const ObjectT& obj, int x) {
+    add_to_key(ParamT::object_to_key(obj), x);
+  }
+  void add_to_key(const StorageT& key, int x) {
+    set_coeff_for_key(key, coeff_for_key(key) + x);
+  }
+  std::pair<ObjectT, int> pop() {
+    auto key_coeff = pop_key();
+    return {ParamT::key_to_object(key_coeff.first), key_coeff.second};
+  }
+  std::pair<StorageT, int> pop_key() {
+    auto ret = std::move(*data_.begin());
+    data_.erase(data_.begin());
+    return ret;
+  }
+
   template<typename F>
   void foreach(F func) const {
-    foreach_key([&func](const auto& key, int coeff){
+    foreach_key([&func](const auto& key, int coeff) {
       func(ParamT::key_to_object(key), coeff);
     });
   }
@@ -70,6 +91,28 @@ public:
     for (const auto& [key, coeff]: data_) {
       func(key, coeff);
     }
+  }
+
+  template<typename NewBasicLinearT, typename F>
+  NewBasicLinearT mapped(F func) const {
+    NewBasicLinearT ret;
+    foreach([&](const auto& obj, int coeff) {
+      ret.add_to(func(obj), coeff);
+    });
+    return ret;
+  }
+  template<typename NewBasicLinearT, typename F>
+  NewBasicLinearT mapped_key(F func) const {
+    NewBasicLinearT ret;
+    foreach_key([&](const auto& key, int coeff) {
+      ret.add_to_key(func(key), coeff);
+    });
+    return ret;
+  }
+  template<typename NewBasicLinearT>
+  NewBasicLinearT cast_to() const {
+    static_assert(std::is_same_v<typename NewBasicLinearT::StorageT, StorageT>);
+    return NewBasicLinearT(data_);
   }
 
   BasicLinear operator+(const BasicLinear& other) const {
@@ -139,17 +182,29 @@ BasicLinear<ParamT> operator*(int scalar, const BasicLinear<ParamT>& linear) {
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
-  linear.foreach([&dump](const auto& obj, int coeff) {
+  int max_coeff_length = 0;
+  linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
+    max_coeff_length = std::max<int>(max_coeff_length, format_coeff(coeff).length());
   });
   std::sort(dump.begin(), dump.end());
   for (const auto& [obj, coeff] : dump) {
-    os << format_coeff(coeff) << ParamT::object_to_string(obj) << "\n";
+    // TODO: Add an option for this.
+    //
+    // std::string coeff_str = format_coeff(coeff);
+    // CHECK(coeff > 0);
+    // if (std::abs(coeff) > 1) {
+    //   CHECK(coeff_str.back() == ' ');
+    //   coeff_str.back() = '*';
+    // }
+    // os << "    " << pad_left(coeff_str, max_coeff_length);
+    os << pad_left(format_coeff(coeff), max_coeff_length);
+    os << ParamT::object_to_string(obj) << "\n";
   }
   return os;
 }
 
-using BasicLinearAnnotation = BasicLinear<LinearParamAnnotation>;
+using BasicLinearAnnotation = BasicLinear<SimpleLinearParam<std::string>>;
 
 
 template<typename ParamT>
@@ -160,7 +215,10 @@ public:
   using BasicLinearMain = BasicLinear<ParamT>;
 
   Linear() {}
-  Linear(BasicLinear<ParamT> main) : main_(main) {}
+
+  // TODO: debug `template<typename OtherParamT> friend class Linear<OtherParamT>` and move to private
+  Linear(BasicLinearMain main, BasicLinearAnnotation annotations)
+    : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
   static Linear single(const ObjectT& obj) {
     Linear ret;
@@ -190,6 +248,36 @@ public:
     return ret;
   }
 
+  bool zero() const { return main_.zero(); }
+  int size() const { return main_.size(); }
+  int l1_norm() const { return main_.l1_norm(); }
+
+  int operator[](const ObjectT& obj) const { return main_[obj]; }
+  int coeff_for_key(const StorageT& key) const { return main_.coeff_for_key(key); }
+  void add_to(const ObjectT& obj, int x) { return main_.add_to(obj, x); }
+  void add_to_key(const StorageT& key, int x)  { return main_.add_to_key(key, x); }
+  std::pair<ObjectT, int> pop() { return main_.pop(); }
+  std::pair<StorageT, int> pop_key() { return main_.pop_key(); }
+
+  template<typename F>
+  void foreach(F func) const { return main_.foreach(func); }
+  template<typename F>
+  void foreach_key(F func) const { return main_.foreach_key(func); }
+
+
+  template<typename NewLinearT, typename F>
+  NewLinearT mapped(F func) const {
+    return NewLinearT(main_.mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);
+  }
+  template<typename NewLinearT, typename F>
+  NewLinearT mapped_key(F func) const {
+    return NewLinearT(main_.mapped_key<typename NewLinearT::BasicLinearMain>(func), annotations_);
+  }
+  template<typename NewLinearT>
+  NewLinearT cast_to() const {
+    return NewLinearT(main_.cast_to<typename NewLinearT::BasicLinearMain>(), annotations_);
+  }
+
   const BasicLinearMain& main() const { return main_; };
   const BasicLinearAnnotation& annotations() const { return annotations_; };
 
@@ -205,7 +293,7 @@ public:
     annotations_ += other.annotations_;
   }
   Linear without_annotations() const {
-    return Linear(main_);
+    return Linear(main_, {});
   }
 
   Linear operator+() const {
@@ -262,15 +350,15 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
-  if (!linear.main().empty()) {
-    const int size = linear.main().size();
+  if (!linear.zero()) {
+    const int size = linear.size();
     os << "# " << size << " " << en_plural(size, "term");
-    os << ", |coeff| = " << linear.main().l1_norm() << ":\n";
+    os << ", |coeff| = " << linear.l1_norm() << ":\n";
     os << linear.main();
   } else {
     os << "\n" << format_coeff(0) << "\n";
   }
-  if (!linear.annotations().empty()) {
+  if (!linear.annotations().zero()) {
     os << "^^^\n";
     os << linear.annotations();
   }

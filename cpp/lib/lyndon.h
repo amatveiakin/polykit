@@ -39,19 +39,18 @@ inline std::vector<IntWord> lyndon_factorize(const IntWord& word) {
 // Converts a linear combination of words to Lyndon basis.
 //
 // Optimization potential: Cache word_orig => words_expanded.
-//   Better yet: sort summands and add replacement directly to the expression.
+// Optimization potential: Sort summands and add replacement directly to the expression.
 //   Thus avoid processing the same Lyndon word twice.
-// Optimization potential: Don't generate all (N!) results for each (word^N).
 template<typename ParamT>
 Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
   using LinearT = Linear<ParamT>;
   static_assert(std::is_same_v<typename ParamT::StorageT, IntWord>);
   bool finished = false;
-  LinearT expr(expression.main());
+  LinearT expr = expression.without_annotations();
   while (!finished) {
     LinearT expr_new;
     finished = true;
-    expr.main().foreach_key([&](const IntWord& word_orig, int coeff) {
+    expr.foreach_key([&](const IntWord& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
       CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
@@ -61,15 +60,14 @@ Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
       finished = false;
       const auto& lyndon_expr = LinearT::from_key_collection(lyndon_words);
       int denominator = 1;
-      lyndon_expr.main().foreach_key([&denominator](const auto&, int coeff) {
+      lyndon_expr.foreach_key([&denominator](const auto&, int coeff) {
         denominator *= factorial(coeff);
       });
-      LinearT shuffle_expr = LinearT::from_key_collection(
-        shuffle_product(lyndon_words)
-      );
+      LinearT shuffle_expr = shuffle_product(lyndon_words).cast_to<LinearT>();
       shuffle_expr.div_int(denominator);
-      CHECK_EQ(shuffle_expr.main().coeff_for_key(word_orig), 1);
-      expr_new += (-coeff) * (shuffle_expr - LinearT::single_key(word_orig));
+      CHECK_EQ(shuffle_expr.coeff_for_key(word_orig), 1);
+      shuffle_expr.add_to_key(word_orig, -1);
+      expr_new += (-coeff) * shuffle_expr;
     });
     expr = std::move(expr_new);
   };
