@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "absl/algorithm/container.h"
 
 #include "check.h"
@@ -52,6 +50,12 @@ template<typename T>
 std::vector<T> concat(std::vector<T> a, std::vector<T> b) {
   a.insert(a.end(), std::move_iterator(b.begin()), std::move_iterator(b.end()));
   return a;
+}
+
+template<typename T>
+std::vector<T> removed_index(std::vector<T> v, int index) {
+  v.erase(v.begin() + index);
+  return v;
 }
 
 template<typename In, typename F>
