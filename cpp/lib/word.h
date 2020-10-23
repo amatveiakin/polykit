@@ -25,9 +25,16 @@ public:
   IntWord(const T& src_begin, const T& src_end)
     : IntWord()
   {
-    // TODO: Add assertion that each char is less than kWordAlphabetSize in debug mode
     write_size(std::distance(src_begin, src_end));
-    std::copy(src_begin, src_end, begin());
+    auto word_it = begin();
+    for (auto it = src_begin; it != src_end; ++it) {
+      // TODO: Disable the check in release; in a benchmark it slowed
+      // Li6(1,2,3,4,5,6) from ~46 to ~60 seconds.
+      CHECK_LT(*it, kWordAlphabetSize);
+      *word_it = *it;
+      ++word_it;
+    }
+    // std::copy(src_begin, src_end, begin());
   }
   IntWord(std::initializer_list<int> data)
     : IntWord(data.begin(), data.end()) {}
