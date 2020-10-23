@@ -77,13 +77,13 @@ extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 struct LinearParamDeltaExpr {
   using ObjectT = std::vector<Delta>;
-  using StorageT = IntWord;
+  using StorageT = Word;
   static StorageT object_to_key(const ObjectT& obj) {
     std::vector<int> as_ints(obj.size());
     std::transform(obj.begin(), obj.end(), as_ints.begin(), [](Delta d){
       return delta_alphabet_mapping.to_alphabet(d);
     });
-    return IntWord(as_ints.begin(), as_ints.end());
+    return Word(as_ints.begin(), as_ints.end());
   }
   static ObjectT key_to_object(const StorageT& key) {
     ObjectT ret(key.size());

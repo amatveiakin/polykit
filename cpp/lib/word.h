@@ -13,16 +13,16 @@ constexpr int kWordStorageSize = kMaxWordSize + 1;  // +1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 
 // Short inline vector of ints. Small and well-suited to work as hash table key.
-class IntWord {
+class Word {
 public:
   using DataT = std::array<unsigned char, kWordStorageSize>;
   
-  IntWord() {
+  Word() {
     data_.fill(0);
   }
   template<typename T>
-  IntWord(const T& src_begin, const T& src_end)
-    : IntWord()
+  Word(const T& src_begin, const T& src_end)
+    : Word()
   {
     write_size(std::distance(src_begin, src_end));
     auto word_it = begin();
@@ -35,8 +35,8 @@ public:
     }
     // std::copy(src_begin, src_end, begin());
   }
-  IntWord(std::initializer_list<int> data)
-    : IntWord(data.begin(), data.end()) {}
+  Word(std::initializer_list<int> data)
+    : Word(data.begin(), data.end()) {}
 
   bool empty() const { return size() == 0; }
   int size() const { return data_[0]; }
@@ -58,13 +58,13 @@ public:
     *std::prev(end()) = ch;
   }
 
-  bool operator==(const IntWord& other) const {
+  bool operator==(const Word& other) const {
     return data_ == other.data_;
   }
-  bool operator!=(const IntWord& other) const {
+  bool operator!=(const Word& other) const {
     return data_ != other.data_;
   }
-  bool operator<(const IntWord& other) const {
+  bool operator<(const Word& other) const {
     return data_ < other.data_;
   }
 
@@ -83,8 +83,8 @@ public:
   }
 
 private:
-  friend IntWord concat_words(const IntWord&, const IntWord&);
-  friend std::hash<IntWord>;
+  friend Word concat_words(const Word&, const Word&);
+  friend std::hash<Word>;
 
   void write_size(int new_size) {
     CHECK_LE(0, new_size);
@@ -100,16 +100,16 @@ private:
 };
 
 template<typename F>
-std::string to_string(IntWord w, F char_to_string) {
+std::string to_string(Word w, F char_to_string) {
   return list_to_string(w, char_to_string);
 }
 
-inline std::string to_string(IntWord w) {
+inline std::string to_string(Word w) {
   return to_string(w, [](auto c){ return to_string(c); });
 }
 
-inline IntWord concat_words(const IntWord& w1, const IntWord& w2) {
-  IntWord ret;
+inline Word concat_words(const Word& w1, const Word& w2) {
+  Word ret;
   ret.write_size(w1.size() + w2.size());
   auto it = ret.begin();
   it = std::copy(w1.begin(), w1.end(), it);
@@ -125,8 +125,8 @@ inline void hash_combine(size_t& hash, const T& new_hash) {
 namespace std {
   template <>
   // TODO: Test
-  struct hash<IntWord> {
-    size_t operator()(IntWord const& w) const noexcept {
+  struct hash<Word> {
+    size_t operator()(Word const& w) const noexcept {
       static_assert(kWordStorageSize % sizeof(size_t) == 0);
       constexpr int kWordStorageSizeInHashT = kWordStorageSize / sizeof(size_t);
       std::array<size_t, kWordStorageSizeInHashT> as_hash_t;
@@ -140,4 +140,4 @@ namespace std {
   };
 }
 
-using IntWordExpr = Linear<SimpleLinearParam<IntWord>>;
+using WordExpr = Linear<SimpleLinearParam<Word>>;

@@ -1,10 +1,10 @@
 #include "projection.h"
 
 
-IntWordExpr project_on(int axis, const DeltaExpr& expr) {
-  IntWordExpr ret;
+WordExpr project_on(int axis, const DeltaExpr& expr) {
+  WordExpr ret;
   expr.foreach([&](const std::vector<Delta>& deltas, int coeff) {
-    IntWord word;
+    Word word;
     for (const Delta& d : deltas) {
       CHECK(!d.is_nil());
       if (d.a() == axis) {

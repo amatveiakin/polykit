@@ -8,7 +8,7 @@ using StringExpr = Linear<SimpleLinearParam<std::string>>;
 
 std::string shuffle_unrolled(int n, int m) {
   constexpr int kThreshold = 100;
-  IntWord u, v;
+  Word u, v;
   for (int i = 0; i < n; ++i) {
     u.push_back(i);
   }
@@ -16,7 +16,7 @@ std::string shuffle_unrolled(int n, int m) {
     v.push_back(i + kThreshold);
   }
   auto prod = shuffle_product(u, v);
-  auto unrolled_expr = prod.mapped<StringExpr>([&](const IntWord& w) {
+  auto unrolled_expr = prod.mapped<StringExpr>([&](const Word& w) {
     std::vector<std::string> terms;
     for (const int ch : w) {
       if (ch < kThreshold) {
@@ -27,10 +27,10 @@ std::string shuffle_unrolled(int n, int m) {
         terms.push_back(absl::StrCat("v[", idx, "]"));
       }
     }
-    return absl::StrCat("IntWordExpr::single({", str_join(terms, ", "), "})");
+    return absl::StrCat("WordExpr::single({", str_join(terms, ", "), "})");
   });
   std::string function_name = absl::StrCat("shuffle_product_unrolled_", n, "_", m);
-  std::cout << "IntWordExpr " << function_name << "(const IntWord& u, const IntWord& v) {\n";
+  std::cout << "WordExpr " << function_name << "(const Word& u, const Word& v) {\n";
   std::cout << "  return (\n" << unrolled_expr.main() << "  );\n";
   std::cout << "}\n";
   std::cout << "\n";
@@ -50,7 +50,7 @@ void generate_shuffle_unrolled() {
       }
     }
   }
-  std::cout << "IntWordExpr shuffle_power_unrolled(const IntWord& u, const IntWord& v) {\n";
+  std::cout << "WordExpr shuffle_power_unrolled(const Word& u, const Word& v) {\n";
   std::cout << "  switch (u.size()) {\n";
   for (const auto& [n, functions_outer] : function_names) {
     if (functions_outer.empty()) {
@@ -75,12 +75,12 @@ FAIL(absl::StrCat(
 
 std::string shuffle_power_unrolled(int len, int rep) {
   constexpr int kThreshold = 100;
-  IntWord v;
+  Word v;
   for (int i = 0; i < len; ++i) {
     v.push_back(i);
   }
-  auto prod = shuffle_product(std::vector<IntWord>(rep, v));
-  auto unrolled_expr = prod.mapped<StringExpr>([&](const IntWord& w) {
+  auto prod = shuffle_product(std::vector<Word>(rep, v));
+  auto unrolled_expr = prod.mapped<StringExpr>([&](const Word& w) {
     std::vector<std::string> terms;
     for (const int ch : w) {
       if (ch < kThreshold) {
@@ -88,10 +88,10 @@ std::string shuffle_power_unrolled(int len, int rep) {
         terms.push_back(absl::StrCat("w[", idx, "]"));
       }
     }
-    return absl::StrCat("IntWordExpr::single({", str_join(terms, ", "), "})");
+    return absl::StrCat("WordExpr::single({", str_join(terms, ", "), "})");
   });
   std::string function_name = absl::StrCat("shuffle_power_unrolled_len_", len, "_pow_", rep);
-  std::cout << "IntWordExpr " << function_name << "(const IntWord& w) {\n";
+  std::cout << "WordExpr " << function_name << "(const Word& w) {\n";
   std::cout << "  return (\n" << unrolled_expr.main() << "  );\n";
   std::cout << "}\n";
   std::cout << "\n";
@@ -111,7 +111,7 @@ void generate_shuffle_power_unrolled() {
       }
     }
   }
-  std::cout << "IntWordExpr shuffle_power_unrolled(IntWord word, int pow) {\n";
+  std::cout << "WordExpr shuffle_power_unrolled(Word word, int pow) {\n";
   std::cout << "  switch (word.size()) {\n";
   for (const auto& [len, functions_outer] : function_names) {
     if (functions_outer.empty()) {

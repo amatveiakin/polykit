@@ -4,4 +4,4 @@
 
 
 // zero value means unroll doesn't exist
-IntWordExpr shuffle_power_unrolled(const IntWord& u, const IntWord& v);
+WordExpr shuffle_power_unrolled(const Word& u, const Word& v);

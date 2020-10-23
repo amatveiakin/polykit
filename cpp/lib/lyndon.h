@@ -8,16 +8,16 @@
 
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 // Such split always exists and is unique (Chen–Fox–Lyndon theorem).
-inline std::vector<IntWord> lyndon_factorize(const IntWord& word) {
+inline std::vector<Word> lyndon_factorize(const Word& word) {
   const int n = word.size();
   int start = 0;
   int k = start;
   int m = start + 1;
-  std::vector<IntWord> ret;
+  std::vector<Word> ret;
   while (k < n) {
     if (m >= n || word[k] > word[m]) {
       const int l = m - k;
-      ret.push_back(IntWord(word.begin() + start, word.begin() + start + l));
+      ret.push_back(Word(word.begin() + start, word.begin() + start + l));
       start += l;
       k = start;
       m = start + 1;
@@ -30,7 +30,7 @@ inline std::vector<IntWord> lyndon_factorize(const IntWord& word) {
     }
   }
   if (start < n) {
-    ret.push_back(IntWord(word.begin() + start, word.end()));
+    ret.push_back(Word(word.begin() + start, word.end()));
   }
   return ret;
 }
@@ -44,13 +44,13 @@ inline std::vector<IntWord> lyndon_factorize(const IntWord& word) {
 template<typename ParamT>
 Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
   using LinearT = Linear<ParamT>;
-  static_assert(std::is_same_v<typename ParamT::StorageT, IntWord>);
+  static_assert(std::is_same_v<typename ParamT::StorageT, Word>);
   bool finished = false;
   LinearT expr = expression.without_annotations();
   while (!finished) {
     LinearT expr_new;
     finished = true;
-    expr.foreach_key([&](const IntWord& word_orig, int coeff) {
+    expr.foreach_key([&](const Word& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
       CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
