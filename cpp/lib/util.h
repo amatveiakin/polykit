@@ -1,6 +1,7 @@
 #pragma once
 
 #include "absl/algorithm/container.h"
+#include "absl/types/span.h"
 
 #include "check.h"
 
@@ -30,7 +31,8 @@ inline int factorial(int n) {
 }
 
 
-inline std::vector<int> int_seq(int from, int to) {
+inline std::vector<int> seq_incl(int from, int to) {
+  ++to;
   std::vector<int> ret(to - from);
   absl::c_iota(ret, from);
   return ret;
@@ -59,7 +61,7 @@ std::vector<T> removed_index(std::vector<T> v, int index) {
 }
 
 template<typename In, typename F>
-auto mapped(const std::vector<In>& src, F&& func) {
+auto mapped(const absl::Span<const In>& src, F&& func) {
   std::vector<std::invoke_result_t<F, In>> dst(src.size());
   absl::c_transform(src, dst.begin(), func);
   return dst;

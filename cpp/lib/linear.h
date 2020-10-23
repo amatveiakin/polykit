@@ -51,6 +51,10 @@ public:
     foreach_key([&](const auto&, int coeff) { ret += std::abs(coeff); });
     return ret;
   }
+  int weight() const {
+    CHECK(!zero());
+    return element().first.size();  // should be the same for each term
+  }
 
   int operator[](const ObjectT& obj) const {
     return coeff_for_key(ParamT::object_to_key(obj));
@@ -69,6 +73,13 @@ public:
   }
   void add_to_key(const StorageT& key, int x) {
     set_coeff_for_key(key, coeff_for_key(key) + x);
+  }
+  std::pair<ObjectT, int> element() const {
+    auto key_coeff = element_key();
+    return {ParamT::key_to_object(key_coeff.first), key_coeff.second};
+  }
+  std::pair<StorageT, int> element_key() const {
+    return *data_.begin();
   }
   std::pair<ObjectT, int> pop() {
     auto key_coeff = pop_key();
@@ -113,6 +124,27 @@ public:
   NewBasicLinearT cast_to() const {
     static_assert(std::is_same_v<typename NewBasicLinearT::StorageT, StorageT>);
     return NewBasicLinearT(data_);
+  }
+
+  template<typename F>
+  BasicLinear filtered(F func) const {
+    BasicLinear ret;
+    foreach_key([&](const auto& key, int coeff) {
+      if (func(ParamT::key_to_object(key))) {
+        ret.add_to_key(key, coeff);
+      }
+    });
+    return ret;
+  }
+  template<typename F>
+  BasicLinear filtered_key(F func) const {
+    BasicLinear ret;
+    foreach_key([&](const auto& key, int coeff) {
+      if (func(key)) {
+        ret.add_to_key(key, coeff);
+      }
+    });
+    return ret;
   }
 
   BasicLinear operator+(const BasicLinear& other) const {
@@ -160,6 +192,13 @@ public:
       coeff = ::div_int(coeff, scalar);
       assert(coeff != 0);
     }
+  }
+
+  bool operator==(const BasicLinear& other) const {
+    return ((*this) - other).zero();
+  }
+  bool operator!=(const BasicLinear& other) const {
+    return !(*this == other);
   }
 
 private:
@@ -251,11 +290,14 @@ public:
   bool zero() const { return main_.zero(); }
   int size() const { return main_.size(); }
   int l1_norm() const { return main_.l1_norm(); }
+  int weight() const { return main_.weight(); }
 
   int operator[](const ObjectT& obj) const { return main_[obj]; }
   int coeff_for_key(const StorageT& key) const { return main_.coeff_for_key(key); }
   void add_to(const ObjectT& obj, int x) { return main_.add_to(obj, x); }
   void add_to_key(const StorageT& key, int x)  { return main_.add_to_key(key, x); }
+  std::pair<ObjectT, int> element() const { return main_.element(); }
+  std::pair<StorageT, int> element_key() const { return main_.element_key(); }
   std::pair<ObjectT, int> pop() { return main_.pop(); }
   std::pair<StorageT, int> pop_key() { return main_.pop_key(); }
 
@@ -267,15 +309,24 @@ public:
 
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
-    return NewLinearT(main_.mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);
+    return NewLinearT(main_.template mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);
   }
   template<typename NewLinearT, typename F>
   NewLinearT mapped_key(F func) const {
-    return NewLinearT(main_.mapped_key<typename NewLinearT::BasicLinearMain>(func), annotations_);
+    return NewLinearT(main_.template mapped_key<typename NewLinearT::BasicLinearMain>(func), annotations_);
   }
   template<typename NewLinearT>
   NewLinearT cast_to() const {
-    return NewLinearT(main_.cast_to<typename NewLinearT::BasicLinearMain>(), annotations_);
+    return NewLinearT(main_.template cast_to<typename NewLinearT::BasicLinearMain>(), annotations_);
+  }
+
+  template<typename F>
+  Linear filtered(F func) const {
+    return Linear(main_.filtered(func), annotations_);
+  }
+  template<typename F>
+  Linear filtered_key(F func) const {
+    return Linear(main_.filtered_key(func), annotations_);
   }
 
   const BasicLinearMain& main() const { return main_; };
@@ -287,7 +338,7 @@ public:
   }
   template<typename Arg>
   Linear& annotate_with_function(const std::string& name, const std::vector<Arg>& args) {
-    return annotate(name + "(" + str_join(args, ", ") + ")");
+    return annotate(name + "(" + str_join(args, ",") + ")");
   }
   void copy_annotations(const Linear& other) {
     annotations_ += other.annotations_;
@@ -338,6 +389,13 @@ public:
     main_.div_int(scalar);
   }
 
+  bool operator==(const Linear& other) const {
+    return main_ == other.main_ && annotations_ == other.annotations_;
+  }
+  bool operator!=(const Linear& other) const {
+    return !(*this == other);
+  }
+
 private:
   BasicLinearMain main_;
   BasicLinearAnnotation annotations_;
@@ -359,7 +417,7 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
     os << "\n" << format_coeff(0) << "\n";
   }
   if (!linear.annotations().zero()) {
-    os << "^^^\n";
+    os << "~~~\n";
     os << linear.annotations();
   }
   os.flush();

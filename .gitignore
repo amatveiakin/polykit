@@ -9,9 +9,10 @@ Debug/
 .vs/
 
 # bazel
-bazel-bin/
-bazel-cpp/
-bazel-out/
+bazel-bin
+bazel-cpp
+bazel-out
+bazel-testlogs
 
 # Binaries
 __pycache__/

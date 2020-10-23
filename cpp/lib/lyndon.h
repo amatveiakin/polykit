@@ -41,10 +41,9 @@ inline std::vector<Word> lyndon_factorize(const Word& word) {
 // Optimization potential: Cache word_orig => words_expanded.
 // Optimization potential: Sort summands and add replacement directly to the expression.
 //   Thus avoid processing the same Lyndon word twice.
-template<typename ParamT>
-Linear<ParamT> to_lyndon_basis(const Linear<ParamT>& expression) {
-  using LinearT = Linear<ParamT>;
-  static_assert(std::is_same_v<typename ParamT::StorageT, Word>);
+template<typename LinearT>
+LinearT to_lyndon_basis(const LinearT& expression) {
+  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
   bool finished = false;
   LinearT expr = expression.without_annotations();
   while (!finished) {

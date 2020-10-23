@@ -1,1 +1,13 @@
-build --cxxopt="/std:c++17"
+build:msvc --cxxopt="/std:c++17"
+
+build:clang --repo_env=CC=clang
+build:clang --cxxopt="-std=c++17"
+
+# TODO: Fix ASAN config
+build:asan --strip=never
+build:asan --copt -fsanitize=address
+build:asan --copt -DADDRESS_SANITIZER
+build:asan --copt -O1
+build:asan --copt -g
+build:asan --copt -fno-omit-frame-pointer
+build:asan --linkopt -fsanitize=address

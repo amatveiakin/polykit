@@ -9,11 +9,30 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "test_util",
+    hdrs = glob(["test_util/*.h"]),
+    srcs = glob(["test_util/*.cpp"]),
+    deps = [
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "polylog_lib_test",
+    srcs = glob(["test/*.cpp"]),
+    deps = [
+        "@googletest//:gtest_main",
+        ":polylog_lib",
+        ":test_util",
+    ],
+)
+
 cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [
-        "polylog_lib",
+        ":polylog_lib",
         "@absl//absl/debugging:failure_signal_handler",
         "@absl//absl/debugging:symbolize",
     ]

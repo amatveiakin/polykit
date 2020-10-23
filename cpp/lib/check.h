@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "format_basic.h"
+
 
 inline void FAIL(const std::string& msg = {}) {
   std::cerr << "Assertion failed";

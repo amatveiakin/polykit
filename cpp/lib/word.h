@@ -5,14 +5,17 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/span.h"
+
+#include "hash.h"
 #include "linear.h"
 
 
-constexpr int kMaxWordSize = 15;
-constexpr int kWordStorageSize = kMaxWordSize + 1;  // +1 for length
+constexpr int kWordStorageSize = 16;
+constexpr int kMaxWordSize = kWordStorageSize - 1;  // 1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 
-// Short inline vector of ints. Small and well-suited to work as hash table key.
+// Inline vector<int>. Small and well-suited to work as hash table key.
 class Word {
 public:
   using DataT = std::array<unsigned char, kWordStorageSize>;
@@ -37,6 +40,8 @@ public:
   }
   Word(std::initializer_list<int> data)
     : Word(data.begin(), data.end()) {}
+  explicit Word(absl::Span<const unsigned char> data)
+    : Word(data.begin(), data.end()) {}
 
   bool empty() const { return size() == 0; }
   int size() const { return data_[0]; }
@@ -58,6 +63,16 @@ public:
     *std::prev(end()) = ch;
   }
 
+  DataT::iterator begin() { return data_.begin() + kDataStart; }
+  DataT::iterator end() { return begin() + size(); }
+
+  DataT::const_iterator begin() const { return data_.begin() + kDataStart; }
+  DataT::const_iterator end() const { return begin() + size(); }
+
+  absl::Span<const unsigned char> span() const {
+    return absl::Span(data_.data() + kDataStart, size());
+  }
+
   bool operator==(const Word& other) const {
     return data_ == other.data_;
   }
@@ -68,21 +83,9 @@ public:
     return data_ < other.data_;
   }
 
-  DataT::iterator begin() { return std::next(data_.begin()); }
-  DataT::iterator end() { return begin() + size(); }
-
-  DataT::const_iterator begin() const { return std::next(data_.begin()); }
-  DataT::const_iterator end() const { return begin() + size(); }
-
-  template<typename F>
-  std::string to_string(F char_to_string) const {
-    return list_to_string(*this, char_to_string);
-  }
-  std::string to_string() const {
-    return to_string([](DataT::value_type c){ return std::to_string(c); });
-  }
-
 private:
+  static constexpr int kDataStart = 1;
+
   friend Word concat_words(const Word&, const Word&);
   friend std::hash<Word>;
 
@@ -100,11 +103,11 @@ private:
 };
 
 template<typename F>
-std::string to_string(Word w, F char_to_string) {
+std::string to_string(const Word& w, F char_to_string) {
   return list_to_string(w, char_to_string);
 }
 
-inline std::string to_string(Word w) {
+inline std::string to_string(const Word& w) {
   return to_string(w, [](auto c){ return to_string(c); });
 }
 
@@ -117,27 +120,24 @@ inline Word concat_words(const Word& w1, const Word& w2) {
   return ret;
 }
 
-template <class T>
-inline void hash_combine(size_t& hash, const T& new_hash) {
-  hash ^= new_hash + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-}
-
 namespace std {
   template <>
-  // TODO: Test
   struct hash<Word> {
-    size_t operator()(Word const& w) const noexcept {
-      static_assert(kWordStorageSize % sizeof(size_t) == 0);
-      constexpr int kWordStorageSizeInHashT = kWordStorageSize / sizeof(size_t);
-      std::array<size_t, kWordStorageSizeInHashT> as_hash_t;
-      std::memcpy(as_hash_t.data(), w.data_.data(), kWordStorageSize);
-      size_t ret = 0;
-      for (const size_t v : as_hash_t) {
-        hash_combine(ret, std::hash<size_t>()(v));
-      }
-      return ret;
-    }
+    size_t operator()(Word const& w) const noexcept { return hash_array(w.data_); }
   };
 }
 
 using WordExpr = Linear<SimpleLinearParam<Word>>;
+
+inline int distinct_chars(Word word) {
+  std::sort(word.begin(), word.end());
+  return std::unique(word.begin(), word.end()) - word.begin();
+}
+
+template<typename LinearT>
+LinearT terms_with_min_distinct_elements(const LinearT& expr, int min_distinct) {
+  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
+  return expr.filtered_key([&](const Word& key) {
+    return distinct_chars(key) >= min_distinct;
+  });
+}

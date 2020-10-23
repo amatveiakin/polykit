@@ -50,7 +50,7 @@ static DeltaExpr Li_impl(int weight, const std::vector<int>& points) {
 // TODO: Add cache
 DeltaExpr Li(int weight, const std::vector<int>& points) {
   const int num_points = points.size();
-  const auto asc_points = int_seq(1, num_points+1);
+  const auto asc_points = seq_incl(1, num_points);
   return delta_expr_substitute(
     Li_impl(weight, asc_points),
     points

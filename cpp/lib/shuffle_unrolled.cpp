@@ -1,6 +1,10 @@
 #include "shuffle_unrolled.h"
 
 
+// Gives a small boost to shuffle (and thus Lyndon) speed,
+// but increases compilation time.
+#ifdef UNROLL_SHUFFLE
+
 WordExpr shuffle_product_unrolled_1_1(const Word& u, const Word& v) {
   return (
      + WordExpr::single({u[0], v[0]})
@@ -696,3 +700,11 @@ WordExpr shuffle_power_unrolled(const Word& u, const Word& v) {
   }
   return {};
 }
+
+#else
+
+WordExpr shuffle_power_unrolled(const Word& u, const Word& v) {
+  return {};
+}
+
+#endif
