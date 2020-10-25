@@ -287,7 +287,7 @@ public:
     return ret;
   }
 
-  bool zero() const { return main_.zero(); }
+  bool zero() const { return main_.zero(); }  // TODO: rename to `is_zero`
   int size() const { return main_.size(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }

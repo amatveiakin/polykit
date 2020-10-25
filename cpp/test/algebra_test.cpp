@@ -1,8 +1,8 @@
 #include "lib/algebra.h"
 
-#include "test_util/matchers.h"
-
 #include "gtest/gtest.h"
+
+#include "test_util/matchers.h"
 
 
 using StringExpr = Linear<SimpleLinearParam<std::string>>;

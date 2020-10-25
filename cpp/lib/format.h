@@ -9,7 +9,7 @@
 template<typename T, typename F>
 std::string str_join(const T& container, std::string separator, F element_to_string) {
   std::string ret;
-  for (const auto v : container) {
+  for (const auto& v : container) {
     if (!ret.empty()) {
       ret += separator;
     }
@@ -21,7 +21,7 @@ std::string str_join(const T& container, std::string separator, F element_to_str
 template<typename T>
 std::string str_join(const T& container, std::string separator) {
   std::string ret;
-  for (const auto v : container) {
+  for (const auto& v : container) {
     if (!ret.empty()) {
       ret += separator;
     }

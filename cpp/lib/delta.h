@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "absl/strings/str_cat.h"
+
 #include "check.h"
 #include "format.h"
 #include "linear.h"
@@ -11,6 +13,7 @@
 
 // TODO: Implement integratability criterion
 
+// Represents (x_i - x_j).
 class Delta {
 public:
   Delta() {}
@@ -39,7 +42,7 @@ private:
 };
 
 inline std::string to_string(const Delta& d) {
-  return "(x" + to_string(d.a()) + " - x" + to_string(d.b()) + ")";
+  return absl::StrCat("(x", d.a(), " - x", d.b(), ")");
 }
 
 

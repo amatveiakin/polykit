@@ -9,6 +9,7 @@
 #include "lib/format.h"
 #include "lib/lyndon.h"
 #include "lib/polylog.h"
+#include "lib/polylog_multiarg.h"
 #include "lib/iterated_integral.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
@@ -67,14 +68,94 @@ int main(int argc, char *argv[]) {
   // profiler.finish("expr");
   // return 0;
 
-  auto lhs = comultiply(I(1,2,3,4,5,6), {2,2});
-  auto rhs = (
-      + coproduct(I(1,2,3,4), I(1,4,5,6))
-      + coproduct(I(2,3,4,5), I(1,2,5,6))
-      + coproduct(I(3,4,5,6), I(1,2,3,6))
+  // auto lhs = comultiply(I(1,2,3,4,5,6), {2,2});
+  // auto rhs = (
+  //     + coproduct(I(1,2,3,4), I(1,4,5,6))
+  //     + coproduct(I(2,3,4,5), I(1,2,5,6))
+  //     + coproduct(I(3,4,5,6), I(1,2,3,6))
+  // );
+
+  // std::cout << "LHS " << lhs << "\n";
+  // std::cout << "RHS " << rhs << "\n";
+  // std::cout << "Diff " << (lhs - rhs) << "\n";
+
+  Profiler profiler;
+
+  auto expr = (
+    + Lily({1,1,1}, {{1},{2},{3}})
+    + Lily({1,1,1}, {{1},{3},{2}})
+    + Lily({1,1,1}, {{3},{1},{2}})
+    - Lily({1,2},   {{1},{2,3}})
+    - Lily({2,1},   {{1,3},{2}})
+  )
+  -
+  shuffle_product_expr(
+    Lily({1,1}, {{1},{2}}),
+    Lily({1},   {{3}})
   );
 
-  std::cout << "LHS " << lhs << "\n";
-  std::cout << "RHS " << rhs << "\n";
-  std::cout << "Diff " << (lhs - rhs) << "\n";
+  // auto expr = (
+  //   + Lily({1,1,2}, {{1},{2},{3}})
+  //   + Lily({1,2,1}, {{1},{3},{2}})
+  //   + Lily({2,1,1}, {{3},{1},{2}})
+  //   - Lily({1,3},   {{1},{2,3}})
+  //   - Lily({3,1},   {{1,3},{2}})
+  // );
+
+  // auto expr = (
+  //   + Lily({2,2,2}, {{1},{2},{3}})
+  //   + Lily({2,2,2}, {{1},{3},{2}})
+  //   + Lily({2,2,2}, {{3},{1},{2}})
+  //   - Lily({2,4},   {{1},{2,3}})
+  //   - Lily({4,2},   {{1,3},{2}})
+  // );
+
+  // auto expr = (
+  //   + Lily({2,2,2,2}, {{1},{2},{3},{4}})
+  //   + Lily({2,2,2,2}, {{1},{2},{4},{3}})
+  //   + Lily({2,2,2,2}, {{1},{4},{2},{3}})
+  //   + Lily({2,2,2,2}, {{4},{1},{2},{3}})
+  //   - Lily({2,2,4},   {{1},{2},{3,4}})
+  //   - Lily({2,4,2},   {{1},{2,4},{3}})
+  //   - Lily({4,2,2},   {{1,4},{2},{3}})
+  // );
+
+  // auto expr = (
+  //   + Lily({2,2,2,2}, {{1},{2},{3},{4}})
+  //   + Lily({2,2,2,2}, {{1},{2},{4},{3}})
+  //   + Lily({2,2,2,2}, {{1},{4},{2},{3}})
+  //   + Lily({2,2,2,2}, {{4},{1},{2},{3}})
+  //   - Lily({2,2,4},   {{1},{2},{3,4}})
+  //   - Lily({2,4,2},   {{1},{2,4},{3}})
+  //   - Lily({4,2,2},   {{1,4},{2},{3}})
+  // )
+  // -
+  // shuffle_product_expr(
+  //   Lily({2,2,2}, {{1},{2},{3}}),
+  //   Lily({2},     {{4}})
+  // );
+
+  // auto expr = (
+  //   + Lily({1,2}, {{1},{2}})
+  //   + Lily({2,1}, {{2},{1}})
+  //   - Lily({3},   {{1,2}})
+  // );
+
+  std::cout << "\n";
+  profiler.finish("expr");
+  auto lyndon = to_lyndon_basis(expr);
+  profiler.finish("lyndon");
+  std::cout << "\n";
+  std::cout << "Before Lyndon " << expr << "\n";
+  std::cout << "After Lyndon " << lyndon << "\n";
+  std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";
+  // std::cout << "After Lyndon: " << lyndon.size() << " terms, |coeff| = " << lyndon.l1_norm() << "\n";
+
+  // auto lhs = to_lyndon_basis(Li2(1,2,3,4));
+  // auto rhs = to_lyndon_basis(  // TODO: Find expression
+  //     I(1,2,3,4)
+  // );
+  // std::cout << "LHS " << lhs << "\n";
+  // std::cout << "RHS " << rhs << "\n";
+  // std::cout << "Diff " << (lhs - rhs) << "\n";
 }

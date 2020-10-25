@@ -1,9 +1,9 @@
 #include "lib/coalgebra.h"
 
+#include "gtest/gtest.h"
+
 #include "lib/iterated_integral.h"
 #include "test_util/matchers.h"
-
-#include "gtest/gtest.h"
 
 
 TEST(CoproductTest, TwoExpressions) {

@@ -46,14 +46,15 @@ LinearT outer_product_expanding(
     const LinearT& lhs,
     const LinearT& rhs,
     const MonomProdF& monom_key_product) {
+  using LinearStorageT = typename LinearT::StorageT;
   static_assert(std::is_same_v<
-      std::invoke_result_t<MonomProdF, typename LinearT::StorageT, typename LinearT::StorageT>,
-      LinearT>);
+      std::invoke_result_t<MonomProdF, LinearStorageT, LinearStorageT>::StorageT,
+      LinearStorageT>);
   LinearT ret;
   lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
     rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
-      const LinearT& prod = monom_key_product(lhs_key, rhs_key);
-      ret += (lhs_coeff * rhs_coeff) * prod;
+      const auto& prod = monom_key_product(lhs_key, rhs_key);
+      ret += (lhs_coeff * rhs_coeff) * prod.cast_to<LinearT>();
     });
   });
   return LinearT(ret);

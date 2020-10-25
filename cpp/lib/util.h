@@ -6,6 +6,11 @@
 #include "check.h"
 
 
+// For std::visit
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+
 inline int pos_mod(int x, int y) {
   CHECK_GT(y, 0);
   return (x % y + y) % y;
