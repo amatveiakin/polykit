@@ -8,7 +8,7 @@
 #include "lib/coalgebra.h"
 #include "lib/format.h"
 #include "lib/lyndon.h"
-#include "lib/polylog.h"
+#include "lib/polylog_cross_ratio.h"
 #include "lib/polylog_multiarg.h"
 #include "lib/iterated_integral.h"
 #include "lib/profiler.h"
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
   // std::cout << list_to_string(shuffle_product(IntWord{1,2}, IntWord{3,4})) << "\n";
   // std::cout << "lynd fact:\n" << list_to_string(lyndon_factorize(IntWord{1,0,1,1,0,0,1})) << "\n";
-  // auto expr = Li(3, {1,2,3,4});
+  // auto expr = Lira(3, {1,2,3,4});
 
   // std::cout << tensor_product(D(1, 2) + 2*D(3, 4), -D(5, 6) + 3*D(7, 8)) << "\n";
   // std::cout << str_join(shuffle_product({
@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
   // }), "\n") << "\n";
 
   // Profiler profiler;
-  // // auto expr = Li6(1,2,3,4,5,6,7,8);
-  // auto expr = Li6(1,2,3,4,5,6);
+  // // auto expr = Lira6(1,2,3,4,5,6,7,8);
+  // auto expr = Lira6(1,2,3,4,5,6);
   // profiler.finish("expr");
   // std::cout << "Num terms before Lyndon = " << expr.size() << "\n";
   // auto lyndon = to_lyndon_basis(expr);
@@ -43,15 +43,15 @@ int main(int argc, char *argv[]) {
 
   // auto expr = I(1,2,3,4);
   // auto expr = project_on_x1(I({1,2,3,4,5}));
-  // auto expr = project_on_x1(Li4(1,2,3,4));
-  // auto expr = project_on_x2(Li4(2,3,4,5));
-  // auto expr = Li4(4,2,3,4);
+  // auto expr = project_on_x1(Lira4(1,2,3,4));
+  // auto expr = project_on_x2(Lira4(2,3,4,5));
+  // auto expr = Lira4(4,2,3,4);
   // expr = expr.without_annotations();
   // std::cout << "Before Lyndon " << expr << "\n";
   // auto lyndon = to_lyndon_basis(expr);
   // std::cout << "After Lyndon " << lyndon << "\n";
 
-  // auto expr = Li4(1,2,3,4);
+  // auto expr = Lira4(1,2,3,4);
   // std::cout << "Before Lyndon " << expr << "\n";
   // auto lyndon = to_lyndon_basis(expr);
   // std::cout << "After Lyndon " << lyndon << "\n";
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   // int distinct = std::min(w, n-1);
   // Profiler profiler;
   // std::cout << "Expr " << terms_with_min_distinct_elements(
-  //   to_lyndon_basis(project_on_x1(Li(w, seq_incl(1, n)))),
+  //   to_lyndon_basis(project_on_x1(Lira(w, seq_incl(1, n)))),
   //   distinct) << "\n";
   // profiler.finish("expr");
   // return 0;
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";
   // std::cout << "After Lyndon: " << lyndon.size() << " terms, |coeff| = " << lyndon.l1_norm() << "\n";
 
-  // auto lhs = to_lyndon_basis(Li2(1,2,3,4));
+  // auto lhs = to_lyndon_basis(Lira2(1,2,3,4));
   // auto rhs = to_lyndon_basis(  // TODO: Find expression
   //     I(1,2,3,4)
   // );
