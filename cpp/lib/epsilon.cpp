@@ -27,7 +27,7 @@ EpsilonExpr epsilon_expr_substitute(
                 const auto& new_indices = new_products.at(idx - 1);
                 for (const int new_idx : new_indices) {
                   CHECK_LT(new_idx, kMaxMonsterVariables);
-                  CHECK(term_indices[new_idx] == 0, "Epsilon doesn't support duplicate indices.");
+                  CHECK(term_indices[new_idx] == 0) << "Epsilon doesn't support duplicate indices.";
                   term_indices[new_idx] = 1;
                 }
               }

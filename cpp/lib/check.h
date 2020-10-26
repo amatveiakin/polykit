@@ -1,3 +1,6 @@
+// TODO: Print argument names from macros like CHECK_EQ.
+// TODO: Add debug-only checks and replace all asserts.
+
 #pragma once
 
 #include <cstdlib>
@@ -11,59 +14,94 @@
   if (!msg.empty()) {
     std::cerr << ": " << msg;
   }
-  std::cerr << "\n";
+  std::cerr << std::endl;
   std::abort();
 }
 
-// TODO: Macros that print names
-// TODO: Include file and line number
-// TODO: Include stacktrace
-// TODO: Debug-only checks and replace all asserts
-// TODO: Annotations via operator<<
-inline void CHECK(bool cond, const std::string& msg = {}) {
-  if (!cond) {
-    FAIL(msg);
+
+namespace internal {
+
+struct CheckLocation {
+  const char* file;
+  int line;
+};
+
+struct CheckResult {
+  CheckResult(bool ok_arg) : ok(ok_arg) {}
+  CheckResult(const CheckResult&) = delete;
+  CheckResult& operator=(const CheckResult&) = delete;
+  CheckResult(CheckResult&&) = delete;
+  CheckResult& operator=(CheckResult&&) = delete;
+  ~CheckResult() {
+    if (!ok) {
+      std::cerr << std::endl;
+      abort();
+    }
   }
+  const bool ok;
+};
+
+inline std::ostream& assertion_failed(CheckLocation loc) {
+  return std::cerr << "Assertion failed in " << loc.file << ":" << loc.line << "\n";
 }
 
-template<typename X, typename Y>
-inline void CHECK_EQ(X&& x, Y&& y) {
-  if (!(x == y)) {
-    FAIL(to_string(x) + " == " + to_string(y));
-  }
+inline CheckResult check(CheckLocation loc, bool ok) {
+  if (!ok) assertion_failed(loc);
+  return CheckResult(ok);
 }
+template<typename X, typename Y>
+CheckResult check_eq(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x == y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " == " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+template<typename X, typename Y>
+CheckResult check_ne(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x != y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " != " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+template<typename X, typename Y>
+CheckResult check_lt(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x < y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " < " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+template<typename X, typename Y>
+CheckResult check_le(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x <= y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " <= " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+template<typename X, typename Y>
+CheckResult check_gt(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x > y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " > " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+template<typename X, typename Y>
+CheckResult check_ge(CheckLocation loc, const X& x, const Y& y) {
+  const bool ok = x >= y;
+  if (!ok) assertion_failed(loc) << to_string(x) << " >= " << to_string(y) << "\n";
+  return CheckResult(ok);
+}
+}  // namespace internal
 
-template<typename X, typename Y>
-inline void CHECK_NE(X&& x, Y&& y) {
-  if (!(x != y)) {
-    FAIL(to_string(x) + " != " + to_string(y));
-  }
-}
 
-template<typename X, typename Y>
-inline void CHECK_LT(X&& x, Y&& y) {
-  if (!(x < y)) {
-    FAIL(to_string(x) + " < " + to_string(y));
-  }
-}
+// Use tertiary operator to avoid evaluating arguments when check passes
 
-template<typename X, typename Y>
-inline void CHECK_GT(X&& x, Y&& y) {
-  if (!(x > y)) {
-    FAIL(to_string(x) + " > " + to_string(y));
-  }
-}
+#define CHECK(condition)  \
+  internal::check({__FILE__, __LINE__}, condition).ok ? std::cerr : std::cerr
 
-template<typename X, typename Y>
-inline void CHECK_LE(X&& x, Y&& y) {
-  if (!(x <= y)) {
-    FAIL(to_string(x) + " <= " + to_string(y));
-  }
-}
-
-template<typename X, typename Y>
-inline void CHECK_GE(X&& x, Y&& y) {
-  if (!(x >= y)) {
-    FAIL(to_string(x) + " >= " + to_string(y));
-  }
-}
+#define CHECK_EQ(lhs, rhs)  \
+  internal::check_eq({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr
+#define CHECK_NE(lhs, rhs)  \
+  internal::check_ne({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr
+#define CHECK_LT(lhs, rhs)  \
+  internal::check_lt({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr
+#define CHECK_LE(lhs, rhs)  \
+  internal::check_le({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr
+#define CHECK_GT(lhs, rhs)  \
+  internal::check_gt({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr
+#define CHECK_GE(lhs, rhs)  \
+  internal::check_ge({__FILE__, __LINE__}, lhs, rhs).ok ? std::cerr : std::cerr

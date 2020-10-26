@@ -15,7 +15,7 @@ static DeltaExpr Lira_4_point(const std::vector<int>& p) {
 
 static DeltaExpr Lira_impl(int weight, const std::vector<int>& points) {
   const int num_points = points.size();
-  CHECK(num_points >= 4 && num_points % 2 == 0, absl::StrCat("Bad number of Lira points: ", num_points));
+  CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of Lira points: " << num_points;
   const int min_weight = (num_points - 2) / 2;
   CHECK_GE(weight, min_weight);
   const auto subsums = [&]() {
