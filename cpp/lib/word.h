@@ -19,7 +19,7 @@ constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 class Word {
 public:
   using DataT = std::array<unsigned char, kWordStorageSize>;
-  
+
   Word() {
     data_.fill(0);
   }

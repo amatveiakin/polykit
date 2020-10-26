@@ -40,6 +40,11 @@ std::string list_to_string(T container) {
   return "(" + str_join(container, ", ") + ")";
 }
 
+template<typename Arg>
+std::string function_to_string(const std::string& name, const std::vector<Arg>& args) {
+  return name + "(" + str_join(args, ",") + ")";
+}
+
 
 inline std::string pad_left(std::string str, int length, char padding = ' ') {
   return std::string(std::max(0, length - static_cast<int>(str.length())), padding) +

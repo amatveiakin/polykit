@@ -121,8 +121,7 @@ static EpsilonExpr Lily_3_point(const absl::Span<const int>& p) {
   }
 }
 
-// TODO: Add cache
-EpsilonExpr Lily_impl(const std::vector<int>& points) {
+static EpsilonExpr Lily_impl(const std::vector<int>& points) {
   const int num_points = points.size();
   CHECK_GE(num_points, 3);
   EpsilonExpr ret;
@@ -139,7 +138,7 @@ EpsilonExpr Lily_impl(const std::vector<int>& points) {
   return ret;
 }
 
-
+// TODO: Add cache
 EpsilonExpr LilyVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
@@ -156,9 +155,16 @@ EpsilonExpr LilyVec(
     args.push_back(p);
   }
   return epsilon_expr_substitute(Lily_impl(args), points).
-      annotate_with_function(
-        "Li_" + str_join(weights, "_"),
-        mapped(points, [](const std::vector<int>& prod){
-          return str_join(prod, "", [](int v) { return absl::StrCat("x", v); });
-        }));
+      annotate(lily_to_string(weights, points));
+}
+
+std::string lily_to_string(
+    const std::vector<int>& weights,
+    const std::vector<std::vector<int>>& points) {
+  return function_to_string(
+    "Li_" + str_join(weights, "_"),
+    mapped(points, [](const std::vector<int>& prod){
+      return str_join(prod, "", [](int v) { return absl::StrCat("x", v); });
+    })
+  );
 }

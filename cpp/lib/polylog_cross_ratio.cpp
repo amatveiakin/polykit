@@ -54,7 +54,7 @@ DeltaExpr Lira(int weight, const std::vector<int>& points) {
   return delta_expr_substitute(
     Lira_impl(weight, asc_points),
     points
-  ).annotate_with_function(
-    "Lira" + to_string(weight), points
-  );
+  ).annotate(function_to_string(
+    "Lira_" + to_string(weight), points
+  ));
 }

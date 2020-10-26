@@ -1,3 +1,6 @@
+// TODO: Sort words by lenght and remove half of the functions.
+// TODO: Pre-convert to char and make sure WordExpr::single does a simple memcpy.
+
 #include "shuffle_unrolled.h"
 
 
