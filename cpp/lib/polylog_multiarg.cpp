@@ -15,11 +15,9 @@
 //   -1 => 1
 //    k => x_1 * ... * x_{k-1} for k >= 1
 
-// TODO: Strong int type for safety
 static constexpr int kZero = 0;
 static constexpr int kOne = -1;
 
-static constexpr int kPointsBeforeVariables = 2;
 static constexpr inline bool is_var (int index) { return index >=  1; }
 static constexpr inline bool is_zero(int index) { return index == kZero; }
 static constexpr inline bool is_one (int index) { return index == kOne; }
@@ -138,12 +136,11 @@ EpsilonExpr Lily_impl(const std::vector<int>& points) {
       );
     }
   }
-  const int weight = num_points - 2;
   return ret;
 }
 
 
-EpsilonExpr Lily(
+EpsilonExpr LilyVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
   CHECK_EQ(weights.size(), points.size());
@@ -158,7 +155,10 @@ EpsilonExpr Lily(
     }
     args.push_back(p);
   }
-  return epsilon_expr_substitute(Lily_impl(args), points);
-  // TODO: annotations
-      // annotate_with_function("Li_" + str_join(weights, "_"), points);
+  return epsilon_expr_substitute(Lily_impl(args), points).
+      annotate_with_function(
+        "Li_" + str_join(weights, "_"),
+        mapped(points, [](const std::vector<int>& prod){
+          return str_join(prod, "", [](int v) { return absl::StrCat("x", v); });
+        }));
 }

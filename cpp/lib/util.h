@@ -72,6 +72,11 @@ auto mapped(const absl::Span<const In>& src, F&& func) {
   return dst;
 }
 
+template<typename In, typename F>
+auto mapped(const std::vector<In>& src, F&& func) {
+  return mapped(absl::MakeConstSpan(src), std::forward<F>(func));
+}
+
 template<typename T>
 void rotate_vector(std::vector<T>& v, int n) {
   n = pos_mod(n, v.size());

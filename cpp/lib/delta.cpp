@@ -10,7 +10,7 @@ DeltaExpr delta_expr_substitute(
     const DeltaExpr& expr,
     const std::vector<int>& new_points) {
   return expr.mapped<DeltaExpr>([&](const std::vector<Delta>& term) {
-    return mapped(absl::MakeConstSpan(term),
+    return mapped(term,
       [&](const Delta& d) {
         return Delta(new_points.at(d.a() - 1), new_points.at(d.b() - 1));
       });

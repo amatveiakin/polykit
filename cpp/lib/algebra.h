@@ -54,7 +54,7 @@ LinearT outer_product_expanding(
   lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
     rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
       const auto& prod = monom_key_product(lhs_key, rhs_key);
-      ret += (lhs_coeff * rhs_coeff) * prod.cast_to<LinearT>();
+      ret += (lhs_coeff * rhs_coeff) * prod.template cast_to<LinearT>();
     });
   });
   return LinearT(ret);

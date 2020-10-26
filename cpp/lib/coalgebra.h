@@ -1,5 +1,7 @@
-#pragma once
+// TODO: Normalization parameters describing what can be swapped.
+// Right now we apparently have Lie algebras here.
 
+#pragma once
 
 #include "algebra.h"
 #include "delta.h"
@@ -34,7 +36,7 @@ struct DeltaCoExprParam {
   static ObjectT key_to_object(const StorageT& key) {
     std::vector<std::vector<Delta>> ret;
     for (auto it = key.begin(); it != key.end(); ++it) {
-      ret.push_back(mapped(*it, [](int ch) { 
+      ret.push_back(mapped(*it, [](int ch) {
         return delta_alphabet_mapping.from_alphabet(ch);
       }));
     }
@@ -77,6 +79,7 @@ WordCoExpr coproduct(const WordExpr& lhs, const WordExpr& rhs) {
 }
 
 
+// TODO: Should the be exposed publicly?
 template<typename CoExprT>
 CoExprT normalize_coproduct(const CoExprT& expr) {
   static_assert(std::is_same_v<typename CoExprT::StorageT, MultiWord>);
@@ -86,9 +89,6 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
     const auto& key1 = key.segment(0);
     const auto& key2 = key.segment(1);
     if (key1.size() == key2.size()) {
-      auto str = [](absl::Span<const unsigned char> span) -> std::string {
-        return internal::DeltaExprParam::object_to_string(internal::DeltaExprParam::key_to_object(Word(span)));
-      };
       if (key1 < key2) {
         ret += coeff * CoExprT::single_key(key);
       } else {
@@ -122,6 +122,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
       to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split))))
     );
     if (form.first != form.second) {
+      // TODO: Consider moving this logic to coproduct/normalize_coproduct
       const int split = form.second;
       ret -= coeff * coproduct<CoExprT>(
         to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split)))),

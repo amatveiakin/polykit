@@ -22,7 +22,7 @@ template<typename LinearT>
 LinearT shuffle_product_expr(
     const LinearT& lhs,
     const LinearT& rhs) {
-  return outer_product_expanding<EpsilonExpr>(lhs, rhs,
+  return outer_product_expanding<LinearT>(lhs, rhs,
     static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product));
 }
 
