@@ -17,10 +17,17 @@ template<typename T>
 struct SimpleLinearParam {
   using ObjectT = T;
   using StorageT = T;
-  static StorageT object_to_key(const T& obj) { return obj; }
-  static ObjectT key_to_object(const T& key) { return key; }
+  static StorageT object_to_key(const ObjectT& obj) { return obj; }
+  static ObjectT key_to_object(const StorageT& key) { return key; }
   // can be overwritten if necessary
-  static std::string object_to_string(const T& obj) { return to_string(obj); }
+  static std::string object_to_string(const ObjectT& obj) { return to_string(obj); }
+  // left to define (optional; if missing the corresponding functionality will be unavailable):
+  // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
+  // static int object_to_weight(const ObjectT& obj);
+  // static StorageT shuffle_preprocess(const StorageT& key);
+  // static StorageT shuffle_postprocess(const StorageT& key);
+  // static constexpr bool coproduct_is_lie_algebra = ...;
+  // TODO: Try to find clearer structure that doesn't require shuffle_preprocess/shuffle_postprocess
 };
 
 
@@ -53,7 +60,7 @@ public:
   }
   int weight() const {
     CHECK(!zero());
-    return element().first.size();  // should be the same for each term
+    return ParamT::object_to_weight(element().first);  // must be the same for each term
   }
 
   int operator[](const ObjectT& obj) const {
@@ -249,6 +256,7 @@ using BasicLinearAnnotation = BasicLinear<SimpleLinearParam<std::string>>;
 template<typename ParamT>
 class Linear {
 public:
+  using Param = ParamT;
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
   using BasicLinearMain = BasicLinear<ParamT>;

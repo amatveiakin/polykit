@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/types/span.h"
 
 #include "hash.h"
@@ -62,6 +63,11 @@ public:
     write_size(size() + 1);
     *std::prev(end()) = ch;
   }
+  void append_word(const Word& other) {
+    const auto it = end();
+    write_size(size() + other.size());
+    absl::c_copy(other, it);
+  }
 
   DataT::iterator begin() { return data_.begin() + kDataStart; }
   DataT::iterator end() { return begin() + size(); }
@@ -86,7 +92,6 @@ public:
 private:
   static constexpr int kDataStart = 1;
 
-  friend Word concat_words(const Word&, const Word&);
   friend std::hash<Word>;
 
   void write_size(int new_size) {
@@ -113,10 +118,8 @@ inline std::string to_string(const Word& w) {
 
 inline Word concat_words(const Word& w1, const Word& w2) {
   Word ret;
-  ret.write_size(w1.size() + w2.size());
-  auto it = ret.begin();
-  it = std::copy(w1.begin(), w1.end(), it);
-  it = std::copy(w2.begin(), w2.end(), it);
+  ret.append_word(w1);
+  ret.append_word(w2);
   return ret;
 }
 
@@ -127,7 +130,24 @@ namespace std {
   };
 }
 
-using WordExpr = Linear<SimpleLinearParam<Word>>;
+namespace internal {
+struct WordExprParam : SimpleLinearParam<Word> {
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    return concat_words(lhs, rhs);
+  }
+  static int object_to_weight(const ObjectT& obj) {
+    return obj.size();
+  }
+  static StorageT shuffle_preprocess(const StorageT& key) {
+    return key;
+  }
+  static StorageT shuffle_postprocess(const StorageT& key) {
+    return key;
+  }
+};
+}
+
+using WordExpr = Linear<internal::WordExprParam>;
 
 inline int distinct_chars(Word word) {
   std::sort(word.begin(), word.end());

@@ -83,3 +83,20 @@ TEST(LilyTest, LiShuffleProductNoLyndon) {
   );
 #endif
 }
+
+TEST(CoLiTest, CoLiShuffleProduct) {
+  EXPECT_EXPR_EQ(
+    + CoLi({1,1}, {{1},{2}})
+    + CoLi({1,1}, {{2},{1}})
+    - CoLi({2},   {{1,2}})
+    ,
+    + coproduct(
+      EFormalSymbol(LiParam({1}, {{1}})),
+      EFormalSymbol(LiParam({1}, {{2}}))
+    )
+    + coproduct(
+      EFormalSymbol(LiParam({1}, {{2}})),
+      EFormalSymbol(LiParam({1}, {{1}}))
+    )
+  );
+}

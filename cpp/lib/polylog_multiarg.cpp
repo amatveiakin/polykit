@@ -1,6 +1,8 @@
 // Note: Cutting formulas are the same as in `iterated_integral`.
 // Difference: Epsilon instead of Delta, `..._3_point` implementation.
 
+// TODO: Consistent terminology: 'points' vs 'dots'.
+
 #include "polylog_multiarg.h"
 
 #include "absl/types/span.h"
@@ -8,12 +10,13 @@
 #include "algebra.h"
 #include "check.h"
 #include "format.h"
+#include "sequence_iteration.h"
 
 
 // Points:
 //    0 => 0
 //   -1 => 1
-//    k => x_1 * ... * x_{k-1} for k >= 1
+//    k => x_1 * ... * x_k  for  k >= 1
 
 static constexpr int kZero = 0;
 static constexpr int kOne = -1;
@@ -21,6 +24,69 @@ static constexpr int kOne = -1;
 static constexpr inline bool is_var (int index) { return index >=  1; }
 static constexpr inline bool is_zero(int index) { return index == kZero; }
 static constexpr inline bool is_one (int index) { return index == kOne; }
+
+
+std::vector<int> weights_to_dots(const std::vector<int>& weights) {
+  std::vector<int> dots;
+  dots.push_back(kZero);
+  dots.push_back(kOne);
+  for (int i = 0; i < weights.size(); ++i) {
+    const int w = weights[i];
+    const int p = i + 1;
+    CHECK_GE(w, 1);
+    CHECK_GE(p, 1);
+    for (int j = 1; j < w; ++j) {
+      dots.push_back(kZero);
+    }
+    dots.push_back(p);
+  }
+  return dots;
+}
+
+LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
+  std::vector<int> dots = dots_orig;
+  CHECK_GE(dots.size(), 3) << list_to_string(dots_orig);
+  CHECK(is_zero(dots.front())) << list_to_string(dots_orig);
+  CHECK(is_var(dots.back())) << list_to_string(dots_orig);
+
+  int common_vars = 0;
+  if (is_var(dots[1])) {
+    // Cancel common multipliers
+    common_vars = dots[1];
+    dots[1] = kOne;
+    for (int i = 2; i < dots.size(); ++i) {
+      int& dot = dots[i];
+      if (is_var(dot)) {
+        dot -= common_vars;
+      }
+    }
+  }
+
+  std::vector<int> weights;
+  std::vector<std::vector<int>> points;
+  int cur_weight = 0;
+  int prev_vars = 0;
+  for (int i = 2; i < dots.size(); ++i) {
+    const int dot = dots[i];
+    CHECK(!is_one(dot)) << list_to_string(dots_orig);
+    if (is_var(dot)) {
+      ++cur_weight;
+      weights.push_back(cur_weight);
+      points.push_back(seq_incl(common_vars+prev_vars+1, common_vars+dot));
+      CHECK_LT(prev_vars, dot) << list_to_string(dots_orig);
+      prev_vars = dot;
+      cur_weight = 0;
+    } else {
+      CHECK(is_zero(dot)) << list_to_string(dots_orig);
+      ++cur_weight;
+    }
+  }
+  return LiParam(std::move(weights), std::move(points));
+}
+
+static EpsilonExpr EFormalSymbol(const std::vector<int>& dots) {
+  return EFormalSymbol(dots_to_li_params(dots));
+}
 
 static EpsilonExpr EVarProd(int from, int to) {
   EpsilonExpr ret;
@@ -130,8 +196,8 @@ static EpsilonExpr Lily_impl(const std::vector<int>& points) {
   } else {
     for (int i = 0; i <= num_points - 3; ++i) {
       ret += tensor_product(
-        Lily_3_point(absl::MakeConstSpan(points).subspan(i, 3)),
-        Lily_impl(removed_index(points, i+1))
+        Lily_impl(removed_index(points, i+1)),
+        Lily_3_point(absl::MakeConstSpan(points).subspan(i, 3))
       );
     }
   }
@@ -143,28 +209,77 @@ EpsilonExpr LilyVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
   CHECK_EQ(weights.size(), points.size());
-  std::vector<int> args{kZero, kOne};
-  for (int i = 0; i < weights.size(); ++i) {
-    const int w = weights[i];
-    const int p = i + 1;
-    CHECK_GE(w, 1);
-    CHECK_GE(p, 1);
-    for (int j = 1; j < w; ++j) {
-      args.push_back(kZero);
-    }
-    args.push_back(p);
-  }
-  return epsilon_expr_substitute(Lily_impl(args), points).
-      annotate(lily_to_string(weights, points));
+  const std::vector<int> dots = weights_to_dots(weights);
+  return epsilon_expr_substitute(Lily_impl(dots), points).
+      annotate(to_string(LiParam{weights, points}));
 }
 
-std::string lily_to_string(
+
+EpsilonCoExpr CoLi(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
-  return function_to_string(
-    "Li_" + str_join(weights, "_"),
-    mapped(points, [](const std::vector<int>& prod){
-      return str_join(prod, "", [](int v) { return absl::StrCat("x", v); });
-    })
-  );
+  CHECK_EQ(weights.size(), points.size());
+  const std::vector<int> dots = weights_to_dots(weights);
+  const int total_weight = dots.size() - 2;
+  LiParam li_param{weights, points};
+  CHECK_EQ(total_weight, li_param.total_weight());
+
+  EpsilonCoExpr ret;
+  auto add_term = [&](const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
+    ret += coproduct(
+        epsilon_expr_substitute(lhs, points),
+        epsilon_expr_substitute(rhs, points)
+    );
+  };
+  for (const std::vector<int>& seq_prototype : increasing_squences(dots.size() - 2)) {
+    if (seq_prototype.empty()) {
+      continue;
+    }
+    std::vector<int> seq;
+    seq.push_back(0);
+    for (const int x : seq_prototype) {
+      seq.push_back(x + 1);
+    }
+    seq.push_back(dots.size() - 1);
+
+    bool two_formal_symbols_special_case = true;
+    for (int i = 1; i < seq.size()-1; ++i) {
+      if (seq[i+1] - seq[i] != 1) {
+        two_formal_symbols_special_case = false;
+        break;
+      }
+    }
+
+    if (two_formal_symbols_special_case) {
+      const int cut = seq[1];
+      if (is_var(dots[cut])) {
+        const auto lower_dots = removed_slice(dots, 1, cut);
+        const auto upper_dots = slice(dots, 0, cut+1);
+        add_term(
+          EFormalSymbol(lower_dots),
+          EFormalSymbol(upper_dots)
+        );
+      }
+    } else {
+      bool term_is_zero = false;
+      std::vector<EpsilonExpr> rhs_components;
+      for (int i = 0; i < seq.size()-1; ++i) {
+        CHECK_LT(seq[i], seq[i+1]);
+        if (seq[i+1] - seq[i] > 1) {
+          if (is_zero(dots[seq[i]]) && is_zero(dots[seq[i+1]])) {
+            term_is_zero = true;
+            break;
+          }
+          rhs_components.push_back(Lily_impl(slice(dots, seq[i], seq[i+1]+1)));
+        }
+      }
+      if (!term_is_zero) {
+        add_term(
+          EFormalSymbol(choose_indices(dots, seq)),
+          shuffle_product_expr(absl::MakeConstSpan(rhs_components))
+        );
+      }
+    }
+  }
+  return ret.annotate("Co" + to_string(li_param));
 }

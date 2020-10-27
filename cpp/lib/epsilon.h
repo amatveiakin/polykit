@@ -6,14 +6,15 @@
 
 #include "lib/bit.h"
 #include "lib/check.h"
+#include "lib/polylog_param.h"
 #include "lib/word.h"
 
 
 using EpsilonStorageType = unsigned char;
 
-static constexpr int kEpsilonControlBits = 1;
-static constexpr int kEpsilonDataBits = 7;
-static constexpr int kMaxMonsterVariables = kEpsilonDataBits;
+constexpr int kEpsilonControlBits = 1;
+constexpr int kEpsilonDataBits = 7;
+constexpr int kMaxMonsterVariables = kEpsilonDataBits;
 
 static_assert(
   kEpsilonControlBits + kEpsilonDataBits <=  // 1 for the type bit
@@ -25,7 +26,7 @@ class EpsilonVariable {
 public:
   EpsilonVariable() {}
   EpsilonVariable(int idx) : idx_(idx) {
-    CHECK(is_valid());
+    CHECK(is_valid()) << "EpsilonVariable index = " << idx_;
   }
 
   bool is_valid() const { return 1 <= idx_ && idx_ < (1 << kEpsilonDataBits); }
@@ -59,6 +60,8 @@ private:
 // Idea behind the name: it's fancier than Delta, thus the next letter.
 using Epsilon = std::variant<EpsilonVariable, EpsilonMonster>;
 
+using EpsilonPack = std::variant<std::vector<Epsilon>, LiParam>;
+
 
 inline std::string to_string(const EpsilonVariable& var) {
   return absl::StrCat("x", var.idx());
@@ -81,11 +84,25 @@ inline std::string to_string(const Epsilon& e) {
   return std::visit([](auto&& arg) { return to_string(arg); }, e);
 }
 
-namespace internal {
-static constexpr int kEpsilonTypeBit = kEpsilonDataBits;
+inline std::string to_string(const EpsilonPack& pack) {
+  return std::visit(overloaded{
+    [](const std::vector<Epsilon>& product) {
+      return str_join(product, "*");
+    },
+    [](const LiParam& formal_symbol) {
+      return to_string(formal_symbol);
+    },
+  }, pack);
+}
 
-static constexpr int kEpsilonTypeVariable = 0;
-static constexpr int kEpsilonTypeMonster = 1;
+namespace internal {
+constexpr int kEpsilonTypeBit = kEpsilonDataBits;
+
+constexpr int kEpsilonTypeVariable = 0;
+constexpr int kEpsilonTypeMonster = 1;
+
+constexpr int kEpsilonPackTypeProduct = 0;
+constexpr int kEpsilonPackTypeFormalSymbol = 1;
 
 inline EpsilonStorageType epsilon_to_key(const Epsilon& e) {
   return std::visit(overloaded{
@@ -114,25 +131,78 @@ inline Epsilon key_to_epsilon(EpsilonStorageType key) {
   }
 }
 
-struct EpsilonExprParam {
-  using ObjectT = std::vector<Epsilon>;
-  using StorageT = Word;
-  static StorageT object_to_key(const ObjectT& obj) {
-    Word ret;
-    for (const Epsilon& e : obj) {
-      ret.push_back(epsilon_to_key(e));
-    }
-    return ret;
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    ObjectT ret(key.size());
-    std::transform(key.begin(), key.end(), ret.begin(), [](int ch){
+inline Word epsilon_pack_to_key(const EpsilonPack& pack) {
+  return std::visit(overloaded{
+    [](const std::vector<Epsilon>& product) {
+      Word ret;
+      ret.push_back(kEpsilonPackTypeProduct);
+      for (const Epsilon& e : product) {
+        ret.push_back(epsilon_to_key(e));
+      }
+      return ret;
+    },
+    [](const LiParam& formal_symbol) {
+      Word ret;
+      ret.push_back(kEpsilonPackTypeFormalSymbol);
+      ret.append_word(li_param_to_key(formal_symbol));
+      return ret;
+    },
+  }, pack);
+}
+
+inline EpsilonPack key_to_epsilon_pack(const Word& key) {
+  const int type = key.front();
+  const auto data = key.span().subspan(1);
+  if (type == kEpsilonPackTypeProduct) {
+    return mapped(data, [](int ch){
       return key_to_epsilon(ch);
     });
-    return ret;
+  } else if (type == kEpsilonPackTypeFormalSymbol) {
+    return key_to_li_param(Word(data));
+  } else {
+    FAIL(absl::StrCat("Bad EpsilonPack type: ", type));
+  }
+}
+
+struct EpsilonExprParam {
+  using ObjectT = EpsilonPack;
+  using StorageT = Word;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return epsilon_pack_to_key(obj);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return key_to_epsilon_pack(key);
   }
   static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, "*");
+    return to_string(obj);
+  }
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    const int type = lhs.front();
+    CHECK_EQ(type, rhs.front());
+    CHECK_EQ(type, kEpsilonPackTypeProduct) << "Tensor product for formal symbols is not defined";
+    // TODO: Don't create an intermediate word
+    return concat_words(lhs, Word(rhs.span().subspan(1)));
+  }
+  static int object_to_weight(const ObjectT& obj) {
+    return std::visit(overloaded{
+      [](const std::vector<Epsilon>& product) -> int {
+        return product.size();
+      },
+      [](const LiParam& formal_symbol) -> int {
+        return formal_symbol.total_weight();
+      },
+    }, obj);
+  }
+  static StorageT shuffle_preprocess(const StorageT& key) {
+    const int type = key.front();
+    CHECK_EQ(type, kEpsilonPackTypeProduct) << "Lyndon for formal symbols is not defined";
+    return Word(key.span().subspan(1));
+  }
+  static StorageT shuffle_postprocess(const StorageT& key) {
+    Word ret;
+    ret.push_back(kEpsilonPackTypeProduct);
+    ret.append_word(key);
+    return ret;
   }
 };
 }  // namespace internal
@@ -140,11 +210,11 @@ struct EpsilonExprParam {
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 
 inline EpsilonExpr EVar(int idx) {
-  return EpsilonExpr::single({EpsilonVariable(idx)});
+  return EpsilonExpr::single(std::vector<Epsilon>{EpsilonVariable(idx)});
 }
 
 inline EpsilonExpr EMonsterIndexSet(std::bitset<kMaxMonsterVariables> index_set) {
-  return EpsilonExpr::single({EpsilonMonster(std::move(index_set))});
+  return EpsilonExpr::single(std::vector<Epsilon>{EpsilonMonster(std::move(index_set))});
 }
 
 inline EpsilonExpr EMonsterIndexList(const std::vector<int> index_list) {
@@ -166,6 +236,10 @@ inline EpsilonExpr EMonsterRangeInclusive(int from, int to) {
   return EMonsterIndexSet(std::move(index_set));
 }
 
+inline EpsilonExpr EFormalSymbol(const LiParam& li_param) {
+  return EpsilonExpr::single(li_param);
+}
+
 
 // Optimization potential: make sure sorting always happens in key space.
 inline bool operator<(const Epsilon& lhs, const Epsilon& rhs) {
@@ -176,4 +250,5 @@ EpsilonExpr epsilon_expr_substitute(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 
+// TODO: Add EpsilonCoExpr overload
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);

@@ -1,9 +1,19 @@
+// TODO: Lily -> Li
+// TODO: Rename module to 'polylog'
+// TODO: Allow to pass LiParam as arg
+
 #pragma once
 
+#include "coalgebra.h"
 #include "epsilon.h"
+#include "polylog_param.h"
 
 
 EpsilonExpr LilyVec(
+    const std::vector<int>& weights,
+    const std::vector<std::vector<int>>& points);
+
+EpsilonCoExpr CoLi(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
 
@@ -27,7 +37,3 @@ template<typename... Args>
 internal::LilyFixedWeights Lily(Args... args) {
   return {{args...}};
 }
-
-std::string lily_to_string(
-    const std::vector<int>& weights,
-    const std::vector<std::vector<int>>& points);

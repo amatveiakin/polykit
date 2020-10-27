@@ -9,7 +9,7 @@
 #include "format_basic.h"
 
 
-[[ noreturn ]] inline void FAIL(const std::string& msg = {}) {
+inline void FAIL [[noreturn]] (const std::string& msg = {}) {
   std::cerr << "Assertion failed";
   if (!msg.empty()) {
     std::cerr << ": " << msg;

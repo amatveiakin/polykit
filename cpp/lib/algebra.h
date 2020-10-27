@@ -48,7 +48,7 @@ LinearT outer_product_expanding(
     const MonomProdF& monom_key_product) {
   using LinearStorageT = typename LinearT::StorageT;
   static_assert(std::is_same_v<
-      std::invoke_result_t<MonomProdF, LinearStorageT, LinearStorageT>::StorageT,
+      typename std::invoke_result_t<MonomProdF, LinearStorageT, LinearStorageT>::StorageT,
       LinearStorageT>);
   LinearT ret;
   lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
@@ -79,11 +79,11 @@ template<typename LinearT>
 LinearT tensor_product(
     const LinearT& lhs,
     const LinearT& rhs) {
-  return outer_product<LinearT>(lhs, rhs, concat_words);
+  return outer_product<LinearT>(lhs, rhs, LinearT::Param::monom_tensor_product);
 }
 
 template<typename LinearT>
 LinearT tensor_product(
     const absl::Span<const LinearT>& expressions) {
-  return outer_product(expressions, concat_words);
+  return outer_product(expressions, LinearT::Param::monom_tensor_product);
 }

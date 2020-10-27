@@ -92,14 +92,24 @@ struct DeltaExprParam {
     return ret;
   }
   static ObjectT key_to_object(const StorageT& key) {
-    ObjectT ret(key.size());
-    std::transform(key.begin(), key.end(), ret.begin(), [](int ch){
+    return mapped(key.span(), [](int ch){
       return delta_alphabet_mapping.from_alphabet(ch);
     });
-    return ret;
   }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, "*");
+  }
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    return concat_words(lhs, rhs);
+  }
+  static int object_to_weight(const ObjectT& obj) {
+    return obj.size();
+  }
+  static StorageT shuffle_preprocess(const StorageT& key) {
+    return key;
+  }
+  static StorageT shuffle_postprocess(const StorageT& key) {
+    return key;
   }
 };
 }  // namespace internal

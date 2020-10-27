@@ -33,20 +33,35 @@ int main(int argc, char *argv[]) {
 
   Profiler profiler;
 
-  auto expr = (
-    + Lily(1,2)({1},{2})
-    + Lily(2,1)({2},{1})
-    - Lily(3)  ({1,2})
-  );
+  // auto expr = (
+  //   + Lily(1,2)({1},{2})
+  //   + Lily(2,1)({2},{1})
+  //   - Lily(3)  ({1,2})
+  // );
+
+  // TODO: to tests
+  // auto expr = (
+  //   + CoLi({1,2}, {{1},{2}})
+  //   + CoLi({2,1}, {{2},{1}})
+  //   - CoLi({3},   {{1,2}})
+  // );
+
+  auto a = CoLi({1,2}, {{1},{2}});
+  auto b = CoLi({2,1}, {{2},{1}});
+  auto c = -CoLi({3},   {{1,2}});
+  auto expr = a + b + c;
 
   std::cout << "\n";
   profiler.finish("expr");
-  auto lyndon = to_lyndon_basis(expr);
-  profiler.finish("lyndon");
+  // auto lyndon = to_lyndon_basis(expr);
+  // profiler.finish("lyndon");
   std::cout << "\n";
-  std::cout << "Before Lyndon " << expr << "\n";
-  std::cout << "After Lyndon " << lyndon << "\n";
-  std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";
+  std::cout << "A " << a << "\n";
+  std::cout << "B " << b << "\n";
+  std::cout << "C " << c << "\n";
+  std::cout << "Expr " << expr << "\n";
+  // std::cout << "After Lyndon " << lyndon << "\n";
+  // std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";
   // std::cout << "After Lyndon: " << lyndon.size() << " terms, |coeff| = " << lyndon.l1_norm() << "\n";
 
   // auto lhs = to_lyndon_basis(Lira2(1,2,3,4));
