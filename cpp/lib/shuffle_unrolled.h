@@ -3,5 +3,13 @@
 #include "word.h"
 
 
-// zero value means unroll doesn't exist
-WordExpr shuffle_power_unrolled(const Word& u, const Word& v);
+// Gives a small boost to shuffle (and thus Lyndon) speed,
+// but increases compilation time.
+// Zero return value means unroll doesn't exist.
+#ifdef UNROLL_SHUFFLE
+WordExpr shuffle_product_unrolled(Word u, Word v);
+#else
+inline WordExpr shuffle_product_unrolled(Word u, Word v) {
+  return {};
+}
+#endif

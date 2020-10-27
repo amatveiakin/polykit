@@ -52,4 +52,5 @@ int main(int argc, char *argv[]) {
   // std::cout << "D " << d << "\n";
   std::cout << "Expr " << expr << "\n";
   // std::cout << "After Lyndon " << lyndon << "\n";
+  // std::cout << "After Lyndon: " << lyndon.size() << " terms, |coeff| = " << lyndon.l1_norm() << "\n";
 }

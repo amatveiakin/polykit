@@ -29,6 +29,14 @@ cc_test(
 )
 
 cc_binary(
+    name = "shuffle_unroll",
+    srcs = ["generators/shuffle_unroll.cpp"],
+    deps = [
+        ":polylog_lib",
+    ]
+)
+
+cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [

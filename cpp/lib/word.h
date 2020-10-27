@@ -31,8 +31,7 @@ public:
     write_size(std::distance(src_begin, src_end));
     auto word_it = begin();
     for (auto it = src_begin; it != src_end; ++it) {
-      // TODO: Disable the check in release; in a benchmark it slowed
-      // Li6(1,2,3,4,5,6) from ~46 to ~60 seconds.
+      // Optimization potential: disable the check in release.
       CHECK_LT(*it, kWordAlphabetSize);
       *word_it = *it;
       ++word_it;

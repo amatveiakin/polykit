@@ -38,19 +38,21 @@ std::string shuffle_unrolled(int n, int m) {
 }
 
 void generate_shuffle_unrolled() {
-  std::cout << R"(#include "shuffle_unrolled.h")" "\n\n";
-  std::cout << R"(#include "absl/strings/str_cat.h")" "\n\n\n";
+  std::cout << R"(#include "shuffle_unrolled.h")" "\n\n\n";
   constexpr int max_len = 8;
   std::map<int, std::map<int, std::string>> function_names;
   for (int n = 1; n <= max_len; ++n) {
     function_names[n] = {};
-    for (int m = 1; m <= max_len; ++m) {
+    for (int m = n; m <= max_len; ++m) {
       if (n + m <= max_len) {
         function_names[n][m] = shuffle_unrolled(n, m);
       }
     }
   }
-  std::cout << "WordExpr shuffle_power_unrolled(const Word& u, const Word& v) {\n";
+  std::cout << "WordExpr shuffle_product_unrolled(Word u, Word v) {\n";
+  std::cout << "  if (u.size() > v.size()) {\n";
+  std::cout << "    std::swap(u, v);\n";
+  std::cout << "  }\n";
   std::cout << "  switch (u.size()) {\n";
   for (const auto& [n, functions_outer] : function_names) {
     if (functions_outer.empty()) {
@@ -64,12 +66,8 @@ void generate_shuffle_unrolled() {
     std::cout << "    }\n";
     std::cout << "    break;\n";
   }
-  std::cout << "  }";
-  std::cout << R"(
-FAIL(absl::StrCat(
-    "Shuffle power unroll doesn't exit for words ",
-    to_string(u), ", ", to_string(v)));
-)";
+  std::cout << "  }\n";
+  std::cout << "  return {};\n";
   std::cout << "}\n";
 }
 
@@ -107,7 +105,7 @@ void generate_shuffle_power_unrolled() {
     function_names[len] = {};
     for (int rep = 2; rep <= max_len; ++rep) {
       if (len * rep <= max_len) {
-        function_names[len][rep] = shuffle_unrolled_same(len, rep);
+        function_names[len][rep] = shuffle_power_unrolled(len, rep);
       }
     }
   }

@@ -15,7 +15,7 @@ WordExpr shuffle_product(const Word& u, const Word& v) {
     return WordExpr::single_key(u);
   }
   {
-    WordExpr unrolled = shuffle_power_unrolled(u, v);
+    WordExpr unrolled = shuffle_product_unrolled(u, v);
     if (!unrolled.zero()) {
       return unrolled;
     }
