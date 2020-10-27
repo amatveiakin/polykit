@@ -96,7 +96,7 @@ static EpsilonExpr EVarProd(int from, int to) {
   return ret;
 }
 
-static EpsilonExpr Lily_2_point_irreducible(int a, int b) {
+static EpsilonExpr Li_2_point_irreducible(int a, int b) {
   const int num_vars = is_var(a) + is_var(b);
   CHECK_LE(num_vars, 1);
   if (num_vars == 0) {
@@ -117,7 +117,7 @@ static EpsilonExpr Lily_2_point_irreducible(int a, int b) {
 }
 
 // Computes symbol for (p[2] - p[1]) / (p[1] - p[0]).
-static EpsilonExpr Lily_3_point(const absl::Span<const int>& p) {
+static EpsilonExpr Li_3_point(const absl::Span<const int>& p) {
   CHECK_EQ(p.size(), 3);
   int a = p[0];
   int b = p[1];
@@ -129,8 +129,8 @@ static EpsilonExpr Lily_3_point(const absl::Span<const int>& p) {
     return EpsilonExpr();
   } else if (num_vars == 1) {
     // If there is only one variable, the fraction is irreducible.
-    return + Lily_2_point_irreducible(c, b)
-           - Lily_2_point_irreducible(b, a);
+    return + Li_2_point_irreducible(c, b)
+           - Li_2_point_irreducible(b, a);
   } else if (num_vars == 2) {
     if (!is_var(a)) {
       CHECK(!is_var(a) && is_var(b) && is_var(c));
@@ -187,17 +187,17 @@ static EpsilonExpr Lily_3_point(const absl::Span<const int>& p) {
   }
 }
 
-static EpsilonExpr Lily_impl(const std::vector<int>& points) {
+static EpsilonExpr Li_impl(const std::vector<int>& points) {
   const int num_points = points.size();
   CHECK_GE(num_points, 3);
   EpsilonExpr ret;
   if (num_points == 3) {
-    ret = Lily_3_point(absl::MakeConstSpan(points));
+    ret = Li_3_point(absl::MakeConstSpan(points));
   } else {
     for (int i = 0; i <= num_points - 3; ++i) {
       ret += tensor_product(
-        Lily_impl(removed_index(points, i+1)),
-        Lily_3_point(absl::MakeConstSpan(points).subspan(i, 3))
+        Li_impl(removed_index(points, i+1)),
+        Li_3_point(absl::MakeConstSpan(points).subspan(i, 3))
       );
     }
   }
@@ -205,12 +205,12 @@ static EpsilonExpr Lily_impl(const std::vector<int>& points) {
 }
 
 // TODO: Add cache
-EpsilonExpr LilyVec(
+EpsilonExpr LiVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
   CHECK_EQ(weights.size(), points.size());
   const std::vector<int> dots = weights_to_dots(weights);
-  return epsilon_expr_substitute(Lily_impl(dots), points).
+  return epsilon_expr_substitute(Li_impl(dots), points).
       annotate(to_string(LiParam{weights, points}));
 }
 
@@ -270,7 +270,7 @@ EpsilonCoExpr CoLi(
             term_is_zero = true;
             break;
           }
-          rhs_components.push_back(Lily_impl(slice(dots, seq[i], seq[i+1]+1)));
+          rhs_components.push_back(Li_impl(slice(dots, seq[i], seq[i+1]+1)));
         }
       }
       if (!term_is_zero) {

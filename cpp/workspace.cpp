@@ -34,9 +34,9 @@ int main(int argc, char *argv[]) {
   Profiler profiler;
 
   // auto expr = (
-  //   + Lily(1,2)({1},{2})
-  //   + Lily(2,1)({2},{1})
-  //   - Lily(3)  ({1,2})
+  //   + Li(1,2)({1},{2})
+  //   + Li(2,1)({2},{1})
+  //   - Li(3)  ({1,2})
   // );
 
   // TODO: to tests
