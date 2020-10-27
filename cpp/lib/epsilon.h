@@ -32,6 +32,10 @@ public:
   bool is_valid() const { return 1 <= idx_ && idx_ < (1 << kEpsilonDataBits); }
   int idx() const { return idx_; }
 
+  bool operator==(const EpsilonVariable& other) const {
+    return idx_ == other.idx_;
+  }
+
 private:
   int idx_ = 0;
 };
@@ -48,6 +52,10 @@ public:
 
   bool is_valid() const { return indices_.any(); }
   const std::bitset<kMaxMonsterVariables>& indices() const { return indices_; }
+
+  bool operator==(const EpsilonMonster& other) const {
+    return indices_ == other.indices_;
+  }
 
 private:
   // TODO: Convert to 0-based and back.
@@ -225,8 +233,12 @@ inline bool epsilon_pack_is_one(const EpsilonPack& pack) {
   return as_product && as_product->empty();
 }
 
-inline EpsilonExpr EOne() {
-  return EpsilonExpr::single(std::vector<Epsilon>{});
+inline EpsilonPack EpsilonUnityElement() {
+  return std::vector<Epsilon>{};
+}
+
+inline EpsilonExpr EUnity() {
+  return EpsilonExpr::single(EpsilonUnityElement());
 }
 
 inline EpsilonExpr EVar(int idx) {

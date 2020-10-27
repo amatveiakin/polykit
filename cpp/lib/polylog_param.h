@@ -23,6 +23,8 @@ public:
   int sign() const { return neg_one_pow(points().size()); }
   int total_weight() const { return absl::c_accumulate(weights_, 0); }
 
+  auto as_tie() const { return std::tie(weights_, points_); }
+
 private:
   std::vector<int> weights_;
   std::vector<std::vector<int>> points_;
@@ -32,7 +34,10 @@ Word li_param_to_key(const LiParam& params);
 LiParam key_to_li_param(const Word& word);
 std::string to_string(const LiParam& params);
 
-// For sorting when printing
+// For filtering and sorting when printing
+inline bool operator==(const LiParam& lhs, const LiParam& rhs) {
+  return lhs.as_tie() == rhs.as_tie();
+}
 inline bool operator<(const LiParam& lhs, const LiParam& rhs) {
-  return std::tie(lhs.weights(), lhs.points()) < std::tie(rhs.weights(), rhs.points());
+  return lhs.as_tie() < rhs.as_tie();
 }

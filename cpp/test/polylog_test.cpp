@@ -104,11 +104,11 @@ TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
                 EFormalSymbolPositive(LiParam({1}, {{2}})))
     + coproduct(EFormalSymbolPositive(LiParam({1}, {{2}})),
                 EFormalSymbolPositive(LiParam({1}, {{1}})))
-    + coproduct(EOne(), EFormalSymbolPositive(li_a))
-    + coproduct(EOne(), EFormalSymbolPositive(li_b))
-    + coproduct(EOne(), EFormalSymbolPositive(li_c))
-    + coproduct(EFormalSymbolPositive(li_a), EOne())
-    + coproduct(EFormalSymbolPositive(li_b), EOne())
-    + coproduct(EFormalSymbolPositive(li_c), EOne())
+    + coproduct(EUnity(), EFormalSymbolPositive(li_a))
+    + coproduct(EUnity(), EFormalSymbolPositive(li_b))
+    + coproduct(EUnity(), EFormalSymbolPositive(li_c))
+    + coproduct(EFormalSymbolPositive(li_a), EUnity())
+    + coproduct(EFormalSymbolPositive(li_b), EUnity())
+    + coproduct(EFormalSymbolPositive(li_c), EUnity())
   );
 }

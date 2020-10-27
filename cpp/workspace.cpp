@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
   // std::cout << "C " << c << "\n";
   // std::cout << "D " << d << "\n";
   std::cout << "Expr " << expr << "\n";
+  // auto filtered = filter_coexpr(expr, 0, LiParam({1},{{1,2}}));
+  // std::cout << "Expr filtered " << filtered << "\n";
   // std::cout << "After Lyndon " << lyndon << "\n";
   // std::cout << "After Lyndon: " << lyndon.size() << " terms, |coeff| = " << lyndon.l1_norm() << "\n";
 }

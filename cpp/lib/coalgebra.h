@@ -138,6 +138,7 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
 // the number of times individual terms need to be converted.
 template<typename CoExprT, typename ExprT>
 CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
+  CHECK(CoExprT::Param::coproduct_is_lie_algebra);
   if (expr.zero()) {
     return {};
   }
@@ -173,4 +174,21 @@ inline WordCoExpr comultiply(const WordExpr& expr, std::pair<int, int> form) {
 }
 inline EpsilonCoExpr comultiply(const EpsilonExpr& expr, std::pair<int, int> form) {
   return comultiply<EpsilonCoExpr>(expr, form);
+}
+
+
+template<typename CoExprT, typename F>
+CoExprT filter_coexpr_predicate(const CoExprT& expr, int side, const F& predicate) {
+  return expr.filtered([&](const typename CoExprT::ObjectT& term) {
+    return predicate(term.at(side));
+  });
+}
+
+template<typename CoExprT>
+CoExprT filter_coexpr(
+    const CoExprT& expr, int side, const typename CoExprT::ObjectT::value_type& value) {
+  return filter_coexpr_predicate(expr, side,
+    [&](const typename CoExprT::ObjectT::value_type& x) {
+      return x == value;
+    });
 }
