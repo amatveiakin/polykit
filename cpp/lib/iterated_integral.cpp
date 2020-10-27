@@ -12,7 +12,7 @@ static DeltaExpr I_3_point(const absl::Span<const int>& p) {
   return D(p[2], p[1]) - D(p[1], p[0]);
 }
 
-// TODO: Add cache
+// Optimization potential: Add cache
 DeltaExpr I_impl(const std::vector<int>& points) {
   const int num_points = points.size();
   CHECK_GE(num_points, 3);

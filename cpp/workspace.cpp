@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
   //   - CoLi({3},   {{1,2}})
   // );
 
-  auto a = CoLi({1,2}, {{1},{2}});
-  auto b = CoLi({2,1}, {{2},{1}});
-  auto c = -CoLi({3},   {{1,2}});
+  auto a =  CoLi(1,2)({1},{2});
+  auto b =  CoLi(2,1)({2},{1});
+  auto c = -CoLi(3) ({1,2});
   auto expr = a + b + c;
 
   std::cout << "\n";

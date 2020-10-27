@@ -86,9 +86,9 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
 
 TEST(CoLiTest, CoLiShuffleProduct) {
   EXPECT_EXPR_EQ(
-    + CoLi({1,1}, {{1},{2}})
-    + CoLi({1,1}, {{2},{1}})
-    - CoLi({2},   {{1,2}})
+    + CoLi(1,1)({1},{2})
+    + CoLi(1,1)({2},{1})
+    - CoLi(2)  ({1,2})
     ,
     + coproduct(
       EFormalSymbol(LiParam({1}, {{1}})),

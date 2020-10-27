@@ -204,31 +204,36 @@ static EpsilonExpr Li_impl(const std::vector<int>& points) {
   return ret;
 }
 
-// TODO: Add cache
+// Optimization potential: Add cache
 EpsilonExpr LiVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
-  CHECK_EQ(weights.size(), points.size());
-  const std::vector<int> dots = weights_to_dots(weights);
-  return epsilon_expr_substitute(Li_impl(dots), points).
-      annotate(to_string(LiParam{weights, points}));
+  return LiVec(LiParam(weights, points));
+}
+
+EpsilonExpr LiVec(const LiParam& param) {
+  const std::vector<int> dots = weights_to_dots(param.weights());
+  return epsilon_expr_substitute(Li_impl(dots), param.points()).
+      annotate(to_string(param));
 }
 
 
-EpsilonCoExpr CoLi(
+EpsilonCoExpr CoLiVec(
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
-  CHECK_EQ(weights.size(), points.size());
-  const std::vector<int> dots = weights_to_dots(weights);
+  return CoLiVec(LiParam(weights, points));
+}
+
+EpsilonCoExpr CoLiVec(const LiParam& param) {
+  const std::vector<int> dots = weights_to_dots(param.weights());
   const int total_weight = dots.size() - 2;
-  LiParam li_param{weights, points};
-  CHECK_EQ(total_weight, li_param.total_weight());
+  CHECK_EQ(total_weight, param.total_weight());
 
   EpsilonCoExpr ret;
   auto add_term = [&](const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
     ret += coproduct(
-        epsilon_expr_substitute(lhs, points),
-        epsilon_expr_substitute(rhs, points)
+        epsilon_expr_substitute(lhs, param.points()),
+        epsilon_expr_substitute(rhs, param.points())
     );
   };
   for (const std::vector<int>& seq_prototype : increasing_squences(dots.size() - 2)) {
@@ -281,5 +286,5 @@ EpsilonCoExpr CoLi(
       }
     }
   }
-  return ret.annotate("Co" + to_string(li_param));
+  return ret.annotate("Co" + to_string(param));
 }

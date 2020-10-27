@@ -47,7 +47,7 @@ static DeltaExpr Lira_impl(int weight, const std::vector<int>& points) {
 }
 
 
-// TODO: Add cache
+// Optimization potential: Add cache
 DeltaExpr Lira(int weight, const std::vector<int>& points) {
   const int num_points = points.size();
   const auto asc_points = seq_incl(1, num_points);
