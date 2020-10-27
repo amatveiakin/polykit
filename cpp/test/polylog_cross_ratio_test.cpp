@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/projection.h"
+#include "test_util/helpers.h"
 #include "test_util/matchers.h"
 
 

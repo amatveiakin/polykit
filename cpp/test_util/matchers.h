@@ -5,12 +5,6 @@
 #include "lib/lyndon.h"
 
 
-// TODO: Move to a separate lib
-inline WordExpr W(std::initializer_list<int> data) {
-  return WordExpr::single(Word(data));
-}
-
-
 template<typename LinearT>
 void EXPECT_EXPR_EQ(const LinearT& lhs, const LinearT& rhs) {
   const LinearT diff = lhs - rhs;

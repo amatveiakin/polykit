@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "test_util/helpers.h"
 #include "test_util/matchers.h"
 
 
