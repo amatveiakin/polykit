@@ -12,8 +12,8 @@
 #include "word.h"
 
 
-constexpr int kMultiWordMaxSegments = 5;
-constexpr int kMultiWordStorageSize = 16;
+constexpr int kMultiWordMaxSegments = 7;
+constexpr int kMultiWordStorageSize = 32;
 constexpr int kMaxMultiWordDataSize =
     kMultiWordStorageSize - kMultiWordMaxSegments - 1;  // 1 for num segments
 constexpr int kMultiWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
@@ -62,7 +62,7 @@ public:
   };
 
   using DataT = std::array<unsigned char, kMultiWordStorageSize>;
-  
+
   MultiWord() {
     data_.fill(0);
   }

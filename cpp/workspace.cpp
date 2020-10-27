@@ -8,6 +8,7 @@
 #include "lib/coalgebra.h"
 #include "lib/format.h"
 #include "lib/lyndon.h"
+#include "lib/mystic_algebra.h"
 #include "lib/polylog_cross_ratio.h"
 #include "lib/polylog.h"
 #include "lib/iterated_integral.h"
@@ -41,24 +42,33 @@ int main(int argc, char *argv[]) {
 
   // TODO: to tests
   // auto expr = (
-  //   + CoLi({1,2}, {{1},{2}})
-  //   + CoLi({2,1}, {{2},{1}})
-  //   + CoLi({3},   {{1,2}})
+  //   + CoLi(1,2)({1},{2})
+  //   + CoLi(2,1)({2},{1})
+  //   + CoLi(3)  ({1,2})
   // );
 
-  auto a = CoLi(1,2)({1},{2});
-  auto b = CoLi(2,1)({2},{1});
-  auto c = CoLi(3)  ({1,2});
-  auto expr = a + b + c;
+  auto expr =
+    + CoLi(1,1)({1},{2})
+    + CoLi(1,1)({2},{1})
+    + CoLi(2)  ({1,2})
+    - mystic_product(
+      CoLi(1)({1}),
+      CoLi(1)({2})
+    );
+
+  // auto a = CoLi(1,2)({1},{2});
+  // auto b = CoLi(2,1)({2},{1});
+  // auto c = CoLi(3)  ({1,2});
+  // auto expr = a + b + c;
 
   std::cout << "\n";
   profiler.finish("expr");
   // auto lyndon = to_lyndon_basis(expr);
   // profiler.finish("lyndon");
   std::cout << "\n";
-  std::cout << "A " << a << "\n";
-  std::cout << "B " << b << "\n";
-  std::cout << "C " << c << "\n";
+  // std::cout << "A " << a << "\n";
+  // std::cout << "B " << b << "\n";
+  // std::cout << "C " << c << "\n";
   std::cout << "Expr " << expr << "\n";
   // std::cout << "After Lyndon " << lyndon << "\n";
   // std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";

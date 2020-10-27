@@ -275,8 +275,8 @@ public:
   template<typename T>
   static Linear from_collection(const T& container) {
     Linear ret;
-    for (const int& v : container) {
-      ret += Linear::single(v);
+    for (const ObjectT& obj : container) {
+      ret.add_to(obj, 1);
     }
     return ret;
   }

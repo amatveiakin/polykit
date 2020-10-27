@@ -62,6 +62,11 @@ using Epsilon = std::variant<EpsilonVariable, EpsilonMonster>;
 
 using EpsilonPack = std::variant<std::vector<Epsilon>, LiParam>;
 
+enum EpsilonPackType {
+  kEpsilonPackTypeProduct = 0,
+  kEpsilonPackTypeFormalSymbol = 1,
+};
+
 
 inline std::string to_string(const EpsilonVariable& var) {
   return absl::StrCat("x", var.idx());
@@ -100,9 +105,6 @@ constexpr int kEpsilonTypeBit = kEpsilonDataBits;
 
 constexpr int kEpsilonTypeVariable = 0;
 constexpr int kEpsilonTypeMonster = 1;
-
-constexpr int kEpsilonPackTypeProduct = 0;
-constexpr int kEpsilonPackTypeFormalSymbol = 1;
 
 inline EpsilonStorageType epsilon_to_key(const Epsilon& e) {
   return std::visit(overloaded{
@@ -150,18 +152,26 @@ inline Word epsilon_pack_to_key(const EpsilonPack& pack) {
   }, pack);
 }
 
+inline EpsilonPackType key_to_epsilon_pack_type(const Word& key) {
+  return EpsilonPackType(key.front());
+}
+
+inline absl::Span<const unsigned char> key_to_epsilon_pack_data(const Word& key) {
+  return key.span().subspan(1);
+}
+
 inline EpsilonPack key_to_epsilon_pack(const Word& key) {
-  const int type = key.front();
-  const auto data = key.span().subspan(1);
-  if (type == kEpsilonPackTypeProduct) {
-    return mapped(data, [](int ch){
-      return key_to_epsilon(ch);
-    });
-  } else if (type == kEpsilonPackTypeFormalSymbol) {
-    return key_to_li_param(Word(data));
-  } else {
-    FAIL(absl::StrCat("Bad EpsilonPack type = ", type, "; key = ", to_string(key)));
+  const EpsilonPackType type = key_to_epsilon_pack_type(key);
+  const auto data = key_to_epsilon_pack_data(key);
+  switch (type) {
+    case kEpsilonPackTypeProduct:
+      return mapped(data, [](int ch){
+        return key_to_epsilon(ch);
+      });
+    case kEpsilonPackTypeFormalSymbol:
+      return key_to_li_param(Word(data));
   }
+  FAIL(absl::StrCat("Bad EpsilonPack type = ", type, "; key = ", to_string(key)));
 }
 
 struct EpsilonExprParam {
@@ -177,11 +187,11 @@ struct EpsilonExprParam {
     return to_string(obj);
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
-    const int type = lhs.front();
-    CHECK_EQ(type, rhs.front());
+    const auto type = key_to_epsilon_pack_type(lhs);
+    CHECK_EQ(type, key_to_epsilon_pack_type(rhs));
     CHECK_EQ(type, kEpsilonPackTypeProduct) << "Tensor product for formal symbols is not defined";
     // TODO: Don't create an intermediate word
-    return concat_words(lhs, Word(rhs.span().subspan(1)));
+    return concat_words(lhs, Word(key_to_epsilon_pack_data(rhs)));
   }
   static int object_to_weight(const ObjectT& obj) {
     return std::visit(overloaded{
@@ -194,9 +204,9 @@ struct EpsilonExprParam {
     }, obj);
   }
   static StorageT shuffle_preprocess(const StorageT& key) {
-    const int type = key.front();
+    const int type = key_to_epsilon_pack_type(key);
     CHECK_EQ(type, kEpsilonPackTypeProduct) << "Lyndon for formal symbols is not defined";
-    return Word(key.span().subspan(1));
+    return Word(key_to_epsilon_pack_data(key));
   }
   static StorageT shuffle_postprocess(const StorageT& key) {
     Word ret;
