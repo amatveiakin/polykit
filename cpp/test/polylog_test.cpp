@@ -5,17 +5,21 @@
 #include "test_util/matchers.h"
 
 
-TEST(LiTest, Li_1_n_plus_Li_n_1) {
+TEST(LiTest, LiShuffle_Arg2_Weight2) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + Li(1,1)({1},{2})
+    + Li(1,1)({2},{1})
+    + Li(2)  ({1,2})
+  );
+}
+TEST(LiTest, LiShuffle_Arg2_Weight3) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + Li(1,2)({1},{2})
     + Li(2,1)({2},{1})
     + Li(3)  ({1,2})
   );
-  EXPECT_EXPR_ZERO_AFTER_LYNDON(
-    + Li(1,2)({1},{2})
-    + Li(2,1)({2},{1})
-    + Li(3)  ({1,2})
-  );
+}
+TEST(LiTest, LiShuffle_Arg2_Weight4) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + Li(1,3)({1},{2})
     + Li(3,1)({2},{1})
@@ -23,7 +27,7 @@ TEST(LiTest, Li_1_n_plus_Li_n_1) {
   );
 }
 
-TEST(LiTest, LiShuffleProductNoLyndon) {
+TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight3) {
   EXPECT_EXPR_EQ(
     + Li(1,1,1)({1},{2},{3})
     + Li(1,1,1)({1},{3},{2})
@@ -36,7 +40,9 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
       Li(1)  ({3})
     )
   );
+}
 
+TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight4) {
   EXPECT_EXPR_EQ(
     + Li(1,1,2)({1},{2},{3})
     + Li(1,2,1)({1},{3},{2})
@@ -49,8 +55,10 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
       Li(2)  ({3})
     )
   );
+}
 
-#if 0  // More expensive tests
+#if 0  // Slow tests
+TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight6) {
   EXPECT_EXPR_EQ(
     + Li(2,2,2)({1},{2},{3})
     + Li(2,2,2)({1},{3},{2})
@@ -63,7 +71,9 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
       Li(2)  ({3})
     )
   );
+}
 
+TEST(LiTest, LiShuffle_NoLyndon_Arg4_Weight8) {
   EXPECT_EXPR_EQ(
     + Li(2,2,2,2)({1},{2},{3},{4})
     + Li(2,2,2,2)({1},{2},{4},{3})
@@ -78,10 +88,10 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
       Li(2)    ({4})
     )
   );
-#endif
 }
+#endif
 
-TEST(CoLiTest, CoLiShuffleProduct) {
+TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
   const LiParam li_a({1,1},{{1},{2}});
   const LiParam li_b({1,1},{{2},{1}});
   const LiParam li_c({2},{{1,2}});
