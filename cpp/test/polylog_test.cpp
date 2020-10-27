@@ -6,22 +6,19 @@
 
 
 TEST(LiTest, Li_1_n_plus_Li_n_1) {
-  EXPECT_EXPR_EQ_AFTER_LYNDON(
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + Li(1,2)({1},{2})
     + Li(2,1)({2},{1})
-    ,
     + Li(3)  ({1,2})
   );
-  EXPECT_EXPR_EQ_AFTER_LYNDON(
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + Li(1,2)({1},{2})
     + Li(2,1)({2},{1})
-    ,
     + Li(3)  ({1,2})
   );
-  EXPECT_EXPR_EQ_AFTER_LYNDON(
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + Li(1,3)({1},{2})
     + Li(3,1)({2},{1})
-    ,
     + Li(4)  ({1,2})
   );
 }
@@ -31,8 +28,8 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
     + Li(1,1,1)({1},{2},{3})
     + Li(1,1,1)({1},{3},{2})
     + Li(1,1,1)({3},{1},{2})
-    - Li(1,2)  ({1},{2,3})
-    - Li(2,1)  ({1,3},{2})
+    + Li(1,2)  ({1},{2,3})
+    + Li(2,1)  ({1,3},{2})
     ,
     shuffle_product_expr(
       Li(1,1)({1},{2}),
@@ -44,8 +41,8 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
     + Li(1,1,2)({1},{2},{3})
     + Li(1,2,1)({1},{3},{2})
     + Li(2,1,1)({3},{1},{2})
-    - Li(1,3)  ({1},{2,3})
-    - Li(3,1)  ({1,3},{2})
+    + Li(1,3)  ({1},{2,3})
+    + Li(3,1)  ({1,3},{2})
     ,
     shuffle_product_expr(
       Li(1,1)({1},{2}),
@@ -88,7 +85,7 @@ TEST(CoLiTest, CoLiShuffleProduct) {
   EXPECT_EXPR_EQ(
     + CoLi(1,1)({1},{2})
     + CoLi(1,1)({2},{1})
-    - CoLi(2)  ({1,2})
+    + CoLi(2)  ({1,2})
     ,
     + coproduct(
       EFormalSymbol(LiParam({1}, {{1}})),

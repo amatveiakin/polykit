@@ -26,6 +26,10 @@ static constexpr inline bool is_zero(int index) { return index == kZero; }
 static constexpr inline bool is_one (int index) { return index == kOne; }
 
 
+int li_sign(const LiParam& param) {
+  return neg_one_pow(param.points().size());
+}
+
 std::vector<int> weights_to_dots(const std::vector<int>& weights) {
   std::vector<int> dots;
   dots.push_back(kZero);
@@ -212,9 +216,10 @@ EpsilonExpr LiVec(
 }
 
 EpsilonExpr LiVec(const LiParam& param) {
-  const std::vector<int> dots = weights_to_dots(param.weights());
-  return epsilon_expr_substitute(Li_impl(dots), param.points()).
-      annotate(to_string(param));
+  return epsilon_expr_substitute(
+      li_sign(param) * Li_impl(weights_to_dots(param.weights())),
+      param.points()
+    ).annotate(to_string(param));
 }
 
 
@@ -286,5 +291,5 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
       }
     }
   }
-  return ret.annotate("Co" + to_string(param));
+  return (li_sign(param) * ret).annotate("Co" + to_string(param));
 }

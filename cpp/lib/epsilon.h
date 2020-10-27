@@ -160,7 +160,7 @@ inline EpsilonPack key_to_epsilon_pack(const Word& key) {
   } else if (type == kEpsilonPackTypeFormalSymbol) {
     return key_to_li_param(Word(data));
   } else {
-    FAIL(absl::StrCat("Bad EpsilonPack type: ", type));
+    FAIL(absl::StrCat("Bad EpsilonPack type = ", type, "; key = ", to_string(key)));
   }
 }
 

@@ -5,6 +5,8 @@ build:clang --repo_env=CC=clang
 build:clang --cxxopt="-std=c++17"
 
 # TODO: Fix ASAN config
+build:asan --repo_env=CC=clang
+build:asan --cxxopt="-std=c++17"
 build:asan --strip=never
 build:asan --copt -fsanitize=address
 build:asan --copt -DADDRESS_SANITIZER

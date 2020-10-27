@@ -25,3 +25,10 @@ void EXPECT_EXPR_EQ_AFTER_LYNDON(const LinearT& lhs, const LinearT& rhs) {
                                   << "\nDiff before Lyndon " << diff
                                   << "\nDiff after Lyndon " << diff_lyndon;
 }
+
+template<typename LinearT>
+void EXPECT_EXPR_ZERO_AFTER_LYNDON(const LinearT& expr) {
+  const LinearT expr_lyndon = to_lyndon_basis(expr);
+  EXPECT_TRUE(expr_lyndon.zero()) << "\nBefore Lyndon " << expr
+                                  << "\nAfter Lyndon " << expr_lyndon;
+}

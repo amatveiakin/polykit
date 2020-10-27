@@ -36,19 +36,19 @@ int main(int argc, char *argv[]) {
   // auto expr = (
   //   + Li(1,2)({1},{2})
   //   + Li(2,1)({2},{1})
-  //   - Li(3)  ({1,2})
+  //   + Li(3)  ({1,2})
   // );
 
   // TODO: to tests
   // auto expr = (
   //   + CoLi({1,2}, {{1},{2}})
   //   + CoLi({2,1}, {{2},{1}})
-  //   - CoLi({3},   {{1,2}})
+  //   + CoLi({3},   {{1,2}})
   // );
 
-  auto a =  CoLi(1,2)({1},{2});
-  auto b =  CoLi(2,1)({2},{1});
-  auto c = -CoLi(3) ({1,2});
+  auto a = CoLi(1,2)({1},{2});
+  auto b = CoLi(2,1)({2},{1});
+  auto c = CoLi(3)  ({1,2});
   auto expr = a + b + c;
 
   std::cout << "\n";
