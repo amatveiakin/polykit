@@ -1,4 +1,3 @@
-// TODO: Rename module to 'polylog'
 // TODO: Allow to pass LiParam as arg
 
 #pragma once

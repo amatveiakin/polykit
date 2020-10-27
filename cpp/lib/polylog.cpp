@@ -3,7 +3,7 @@
 
 // TODO: Consistent terminology: 'points' vs 'dots'.
 
-#include "polylog_multiarg.h"
+#include "polylog.h"
 
 #include "absl/types/span.h"
 

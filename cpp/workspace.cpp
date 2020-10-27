@@ -9,7 +9,7 @@
 #include "lib/format.h"
 #include "lib/lyndon.h"
 #include "lib/polylog_cross_ratio.h"
-#include "lib/polylog_multiarg.h"
+#include "lib/polylog.h"
 #include "lib/iterated_integral.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
