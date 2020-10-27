@@ -39,6 +39,12 @@ static LiParamZipElement glue_li_elements(
 static EpsilonExpr monom_mystic_product(
     const EpsilonPack& lhs,
     const EpsilonPack& rhs) {
+  if (epsilon_pack_is_one(lhs)) {
+    return EpsilonExpr::single(rhs);
+  }
+  if (epsilon_pack_is_one(rhs)) {
+    return EpsilonExpr::single(lhs);
+  }
   if (std::holds_alternative<std::vector<Epsilon>>(lhs) ||
       std::holds_alternative<std::vector<Epsilon>>(rhs)) {
     return shuffle_product_expr(

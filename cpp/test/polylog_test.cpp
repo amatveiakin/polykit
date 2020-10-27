@@ -55,8 +55,8 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
     + Li(2,2,2)({1},{2},{3})
     + Li(2,2,2)({1},{3},{2})
     + Li(2,2,2)({3},{1},{2})
-    - Li(2,4)  ({1},{2,3})
-    - Li(4,2)  ({1,3},{2})
+    + Li(2,4)  ({1},{2,3})
+    + Li(4,2)  ({1,3},{2})
     ,
     shuffle_product_expr(
       Li(2,2)({1},{2}),
@@ -69,9 +69,9 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
     + Li(2,2,2,2)({1},{2},{4},{3})
     + Li(2,2,2,2)({1},{4},{2},{3})
     + Li(2,2,2,2)({4},{1},{2},{3})
-    - Li(2,2,4)  ({1},{2},{3,4})
-    - Li(2,4,2)  ({1},{2,4},{3})
-    - Li(4,2,2)  ({1,4},{2},{3})
+    + Li(2,2,4)  ({1},{2},{3,4})
+    + Li(2,4,2)  ({1},{2,4},{3})
+    + Li(4,2,2)  ({1,4},{2},{3})
     ,
     shuffle_product_expr(
       Li(2,2,2)({1},{2},{3}),
@@ -82,18 +82,23 @@ TEST(LiTest, LiShuffleProductNoLyndon) {
 }
 
 TEST(CoLiTest, CoLiShuffleProduct) {
+  const LiParam li_a({1,1},{{1},{2}});
+  const LiParam li_b({1,1},{{2},{1}});
+  const LiParam li_c({2},{{1,2}});
   EXPECT_EXPR_EQ(
-    + CoLi(1,1)({1},{2})
-    + CoLi(1,1)({2},{1})
-    + CoLi(2)  ({1,2})
+    + CoLiVec(li_a)
+    + CoLiVec(li_b)
+    + CoLiVec(li_c)
     ,
-    + coproduct(
-      EFormalSymbol(LiParam({1}, {{1}})),
-      EFormalSymbol(LiParam({1}, {{2}}))
-    )
-    + coproduct(
-      EFormalSymbol(LiParam({1}, {{2}})),
-      EFormalSymbol(LiParam({1}, {{1}}))
-    )
+    + coproduct(EFormalSymbolPositive(LiParam({1}, {{1}})),
+                EFormalSymbolPositive(LiParam({1}, {{2}})))
+    + coproduct(EFormalSymbolPositive(LiParam({1}, {{2}})),
+                EFormalSymbolPositive(LiParam({1}, {{1}})))
+    + coproduct(EOne(), EFormalSymbolPositive(li_a))
+    + coproduct(EOne(), EFormalSymbolPositive(li_b))
+    + coproduct(EOne(), EFormalSymbolPositive(li_c))
+    + coproduct(EFormalSymbolPositive(li_a), EOne())
+    + coproduct(EFormalSymbolPositive(li_b), EOne())
+    + coproduct(EFormalSymbolPositive(li_c), EOne())
   );
 }

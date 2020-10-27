@@ -47,19 +47,46 @@ int main(int argc, char *argv[]) {
   //   + CoLi(3)  ({1,2})
   // );
 
-  auto expr =
-    + CoLi(1,1)({1},{2})
-    + CoLi(1,1)({2},{1})
-    + CoLi(2)  ({1,2})
-    - mystic_product(
-      CoLi(1)({1}),
-      CoLi(1)({2})
-    );
+  // auto expr =
+  //   + CoLi(1,1)({1},{2})
+  //   + CoLi(1,1)({2},{1})
+  //   + CoLi(2)  ({1,2})
+  //   - mystic_product(
+  //     CoLi(1)({1}),
+  //     CoLi(1)({2})
+  //   );
 
-  // auto a = CoLi(1,2)({1},{2});
-  // auto b = CoLi(2,1)({2},{1});
-  // auto c = CoLi(3)  ({1,2});
-  // auto expr = a + b + c;
+  // auto a = CoLi(1,3)({1},{2});
+  // auto b = CoLi(3,1)({2},{1});
+  // auto c = CoLi(4)  ({1,2});
+  // auto d1 = CoLi(1)({1});
+  // auto d2 = CoLi(3)({2});
+  // auto d = mystic_product(d1, d2);
+  // auto expr = a + b + c - d;
+
+  // auto expr =
+  //   + CoLi(2,2,2)({1},{2},{3})
+  //   + CoLi(2,2,2)({1},{3},{2})
+  //   + CoLi(2,2,2)({3},{1},{2})
+  //   + CoLi(2,4)  ({1},{2,3})
+  //   + CoLi(4,2)  ({1,3},{2})
+  //   - mystic_product(
+  //     CoLi(2,2)({1},{2}),
+  //     CoLi(2)  ({3})
+  //   );
+
+  auto expr =
+    + CoLi(2,2,2,2)({1},{2},{3},{4})
+    + CoLi(2,2,2,2)({1},{2},{4},{3})
+    + CoLi(2,2,2,2)({1},{4},{2},{3})
+    + CoLi(2,2,2,2)({4},{1},{2},{3})
+    + CoLi(2,2,4)  ({1},{2},{3,4})
+    + CoLi(2,4,2)  ({1},{2,4},{3})
+    + CoLi(4,2,2)  ({1,4},{2},{3})
+    - mystic_product(
+      CoLi(2,2,2)({1},{2},{3}),
+      CoLi(2)    ({4})
+    );
 
   std::cout << "\n";
   profiler.finish("expr");
@@ -69,6 +96,7 @@ int main(int argc, char *argv[]) {
   // std::cout << "A " << a << "\n";
   // std::cout << "B " << b << "\n";
   // std::cout << "C " << c << "\n";
+  // std::cout << "D " << d << "\n";
   std::cout << "Expr " << expr << "\n";
   // std::cout << "After Lyndon " << lyndon << "\n";
   // std::cout << "Without monsters " << epsilon_expr_without_monsters(lyndon) << "\n";

@@ -5,10 +5,10 @@
 
 // TODO: unit tests
 // Returns quasi shuffle product of two words as a List of words.
-// Rules:  // TODO: Check !!!
+// Rules:
 //   1 🟉 v = v
 //   u 🟉 1 = u
-//   ua 🟉 vb = (u 🟉 vb)a + (ua 🟉 v)b - (u 🟉 v)(a ⋄ b)
+//   ua 🟉 vb = (u 🟉 vb)a + (ua 🟉 v)b + (u 🟉 v)(a ⋄ b)
 // Optimization potential: return Linear.
 // Optimization potential: pass Spans internally.
 template<typename T, typename F>
@@ -17,7 +17,7 @@ std::vector<std::vector<T>> quasi_shuffle_product(
     const std::vector<T>& v,
     F glue_func) {
   if (u.empty() && v.empty()) {
-    return {};
+    return {{}};
   }
   if (u.empty()) {
     return {v};

@@ -92,7 +92,7 @@ inline std::string to_string(const Epsilon& e) {
 inline std::string to_string(const EpsilonPack& pack) {
   return std::visit(overloaded{
     [](const std::vector<Epsilon>& product) {
-      return str_join(product, "*");
+      return product.empty() ? "<1>" : str_join(product, "*");
     },
     [](const LiParam& formal_symbol) {
       return to_string(formal_symbol);
@@ -219,6 +219,16 @@ struct EpsilonExprParam {
 
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 
+// Whether expr is one w.r.t. shuffle multiplication.
+inline bool epsilon_pack_is_one(const EpsilonPack& pack) {
+  const auto* as_product = std::get_if<std::vector<Epsilon>>(&pack);
+  return as_product && as_product->empty();
+}
+
+inline EpsilonExpr EOne() {
+  return EpsilonExpr::single(std::vector<Epsilon>{});
+}
+
 inline EpsilonExpr EVar(int idx) {
   return EpsilonExpr::single(std::vector<Epsilon>{EpsilonVariable(idx)});
 }
@@ -246,8 +256,12 @@ inline EpsilonExpr EMonsterRangeInclusive(int from, int to) {
   return EMonsterIndexSet(std::move(index_set));
 }
 
-inline EpsilonExpr EFormalSymbol(const LiParam& li_param) {
+inline EpsilonExpr EFormalSymbolPositive(const LiParam& li_param) {
   return EpsilonExpr::single(li_param);
+}
+
+inline EpsilonExpr EFormalSymbolSigned(const LiParam& li_param) {
+  return li_param.sign() * EFormalSymbolPositive(li_param);
 }
 
 

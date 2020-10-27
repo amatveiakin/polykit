@@ -26,10 +26,6 @@ static constexpr inline bool is_zero(int index) { return index == kZero; }
 static constexpr inline bool is_one (int index) { return index == kOne; }
 
 
-int li_sign(const LiParam& param) {
-  return neg_one_pow(param.points().size());
-}
-
 std::vector<int> weights_to_dots(const std::vector<int>& weights) {
   std::vector<int> dots;
   dots.push_back(kZero);
@@ -88,8 +84,8 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   return LiParam(std::move(weights), std::move(points));
 }
 
-static EpsilonExpr EFormalSymbol(const std::vector<int>& dots) {
-  return EFormalSymbol(dots_to_li_params(dots));
+static EpsilonExpr EFormalSymbolSigned(const std::vector<int>& dots) {
+  return EFormalSymbolSigned(dots_to_li_params(dots));
 }
 
 static EpsilonExpr EVarProd(int from, int to) {
@@ -217,7 +213,7 @@ EpsilonExpr LiVec(
 
 EpsilonExpr LiVec(const LiParam& param) {
   return epsilon_expr_substitute(
-      li_sign(param) * Li_impl(weights_to_dots(param.weights())),
+      param.sign() * Li_impl(weights_to_dots(param.weights())),
       param.points()
     ).annotate(to_string(param));
 }
@@ -237,8 +233,8 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
   EpsilonCoExpr ret;
   auto add_term = [&](const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
     ret += coproduct(
-        epsilon_expr_substitute(lhs, param.points()),
-        epsilon_expr_substitute(rhs, param.points())
+      epsilon_expr_substitute(lhs, param.points()),
+      epsilon_expr_substitute(rhs, param.points())
     );
   };
   for (const std::vector<int>& seq_prototype : increasing_squences(dots.size() - 2)) {
@@ -266,8 +262,8 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
         const auto lower_dots = removed_slice(dots, 1, cut);
         const auto upper_dots = slice(dots, 0, cut+1);
         add_term(
-          EFormalSymbol(lower_dots),
-          EFormalSymbol(upper_dots)
+          EFormalSymbolSigned(lower_dots),
+          EFormalSymbolSigned(upper_dots)
         );
       }
     } else {
@@ -285,11 +281,13 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
       }
       if (!term_is_zero) {
         add_term(
-          EFormalSymbol(choose_indices(dots, seq)),
+          EFormalSymbolSigned(choose_indices(dots, seq)),
           shuffle_product_expr(absl::MakeConstSpan(rhs_components))
         );
       }
     }
   }
-  return (li_sign(param) * ret).annotate("Co" + to_string(param));
+  ret += coproduct(EOne(), EFormalSymbolSigned(param));
+  ret += coproduct(EFormalSymbolSigned(param), EOne());
+  return (param.sign() * ret).annotate("Co" + to_string(param));
 }

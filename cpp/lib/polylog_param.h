@@ -20,6 +20,7 @@ public:
   const std::vector<int>& weights() const { return weights_; }
   const std::vector<std::vector<int>>& points() const { return points_; }
 
+  int sign() const { return neg_one_pow(points().size()); }
   int total_weight() const { return absl::c_accumulate(weights_, 0); }
 
 private:

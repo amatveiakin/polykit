@@ -1,3 +1,5 @@
+// TODO: What is the best way to store one? Separate type of thing or zero-length product?
+
 #include  "epsilon.h"
 
 #include  "algebra.h"
@@ -49,7 +51,7 @@ EpsilonExpr epsilon_expr_substitute(
               append_vector(new_points.back(), new_products.at(p - 1));
             }
           }
-          return EFormalSymbol(LiParam(formal_symbol.weights(), new_points));
+          return EFormalSymbolPositive(LiParam(formal_symbol.weights(), new_points));
         },
       }, term);
   });
