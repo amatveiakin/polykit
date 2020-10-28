@@ -14,7 +14,7 @@ using EpsilonStorageType = unsigned char;
 
 constexpr int kEpsilonControlBits = 1;
 constexpr int kEpsilonDataBits = 7;
-constexpr int kMaxMonsterVariables = kEpsilonDataBits;
+constexpr int kMaxComplementVariables = kEpsilonDataBits;
 
 static_assert(
   kEpsilonControlBits + kEpsilonDataBits <=  // 1 for the type bit
@@ -41,32 +41,30 @@ private:
 };
 
 // Represents (1 - x_{i_1} * ... * x_{i_k})
-// Optimization potential: Inline vector and/or smaller int type or Word.
-// TODO: Rename 'Monster' to smth, as it also covers (1 - x_i).
-class EpsilonMonster {
+class EpsilonComplement {
 public:
-  EpsilonMonster() {}
-  EpsilonMonster(std::bitset<kMaxMonsterVariables> indices) : indices_(std::move(indices)) {
+  EpsilonComplement() {}
+  EpsilonComplement(std::bitset<kMaxComplementVariables> indices) : indices_(std::move(indices)) {
     CHECK(is_valid());
   }
 
   bool is_valid() const { return indices_.any(); }
-  const std::bitset<kMaxMonsterVariables>& indices() const { return indices_; }
+  const std::bitset<kMaxComplementVariables>& indices() const { return indices_; }
 
-  bool operator==(const EpsilonMonster& other) const {
+  bool operator==(const EpsilonComplement& other) const {
     return indices_ == other.indices_;
   }
 
 private:
   // TODO: Convert to 0-based and back.
-  std::bitset<kMaxMonsterVariables> indices_;
+  std::bitset<kMaxComplementVariables> indices_;
 };
 
 // Represents one of the two:
 //   * x_k
 //   * 1 - x_{i_1} * ... * x_{i_k}
 // Idea behind the name: it's fancier than Delta, thus the next letter.
-using Epsilon = std::variant<EpsilonVariable, EpsilonMonster>;
+using Epsilon = std::variant<EpsilonVariable, EpsilonComplement>;
 
 using EpsilonPack = std::variant<std::vector<Epsilon>, LiParam>;
 
@@ -80,10 +78,10 @@ inline std::string to_string(const EpsilonVariable& var) {
   return fmt::var(var.idx());
 }
 
-inline std::string to_string(const EpsilonMonster& monster) {
-  const auto& index_set = monster.indices();
+inline std::string to_string(const EpsilonComplement& complement) {
+  const auto& index_set = complement.indices();
   std::vector<int> index_list;
-  for (int i = 0; i < kMaxMonsterVariables; ++i) {
+  for (int i = 0; i < kMaxComplementVariables; ++i) {
     if (index_set[i]) {
       index_list.push_back(i);
     }
@@ -110,7 +108,7 @@ namespace internal {
 constexpr int kEpsilonTypeBit = kEpsilonDataBits;
 
 constexpr int kEpsilonTypeVariable = 0;
-constexpr int kEpsilonTypeMonster = 1;
+constexpr int kEpsilonTypeComplement = 1;
 
 inline EpsilonStorageType epsilon_to_key(const Epsilon& e) {
   return std::visit(overloaded{
@@ -119,10 +117,10 @@ inline EpsilonStorageType epsilon_to_key(const Epsilon& e) {
       CHECK_EQ(get_bit(ret, kEpsilonTypeBit), kEpsilonTypeVariable);
       return ret;
     },
-    [](const EpsilonMonster& monster) {
-      EpsilonStorageType ret = monster.indices().to_ulong();
+    [](const EpsilonComplement& complement) {
+      EpsilonStorageType ret = complement.indices().to_ulong();
       CHECK_EQ(get_bit(ret, kEpsilonTypeBit), kEpsilonTypeVariable);
-      return EpsilonStorageType(set_bit(ret, kEpsilonTypeBit, kEpsilonTypeMonster));
+      return EpsilonStorageType(set_bit(ret, kEpsilonTypeBit, kEpsilonTypeComplement));
     },
   }, e);
 }
@@ -132,8 +130,8 @@ inline Epsilon key_to_epsilon(EpsilonStorageType key) {
   const EpsilonStorageType data = set_bit(key, kEpsilonTypeBit, 0);
   if (type == kEpsilonTypeVariable) {
     return EpsilonVariable(data);
-  } else if (type == kEpsilonTypeMonster) {
-    return EpsilonMonster(std::bitset<kMaxMonsterVariables>(data));
+  } else if (type == kEpsilonTypeComplement) {
+    return EpsilonComplement(std::bitset<kMaxComplementVariables>(data));
   } else {
     FAIL(absl::StrCat("Bad Epsilon type: ", type));
   }
@@ -243,27 +241,27 @@ inline EpsilonExpr EVar(int idx) {
   return EpsilonExpr::single(std::vector<Epsilon>{EpsilonVariable(idx)});
 }
 
-inline EpsilonExpr EMonsterIndexSet(std::bitset<kMaxMonsterVariables> index_set) {
-  return EpsilonExpr::single(std::vector<Epsilon>{EpsilonMonster(std::move(index_set))});
+inline EpsilonExpr EComplementIndexSet(std::bitset<kMaxComplementVariables> index_set) {
+  return EpsilonExpr::single(std::vector<Epsilon>{EpsilonComplement(std::move(index_set))});
 }
 
-inline EpsilonExpr EMonsterIndexList(const std::vector<int> index_list) {
-  std::bitset<kMaxMonsterVariables> index_set;
+inline EpsilonExpr EComplementIndexList(const std::vector<int> index_list) {
+  std::bitset<kMaxComplementVariables> index_set;
   for (const int i : index_list) {
-    CHECK_LT(i, kMaxMonsterVariables);
+    CHECK_LT(i, kMaxComplementVariables);
     index_set[i] = 1;
   }
-  return EMonsterIndexSet(std::move(index_set));
+  return EComplementIndexSet(std::move(index_set));
 }
 
-inline EpsilonExpr EMonsterRangeInclusive(int from, int to) {
+inline EpsilonExpr EComplementRangeInclusive(int from, int to) {
   CHECK_LE(from, to);
-  CHECK_LT(to, kMaxMonsterVariables);
-  std::bitset<kMaxMonsterVariables> index_set;
+  CHECK_LT(to, kMaxComplementVariables);
+  std::bitset<kMaxComplementVariables> index_set;
   for (int i = from; i <= to; ++i) {
     index_set[i] = 1;
   }
-  return EMonsterIndexSet(std::move(index_set));
+  return EComplementIndexSet(std::move(index_set));
 }
 
 inline EpsilonExpr EFormalSymbolPositive(const LiParam& li_param) {
@@ -284,5 +282,6 @@ EpsilonExpr epsilon_expr_substitute(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 
+// Removes EpsilonComplement-s with more than one variable.
 // TODO: Add EpsilonCoExpr overload
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);

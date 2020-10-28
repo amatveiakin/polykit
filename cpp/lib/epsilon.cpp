@@ -25,19 +25,19 @@ EpsilonExpr epsilon_expr_substitute(
                   }
                   return term;
                 },
-                [&](const EpsilonMonster& v) {
-                  std::bitset<kMaxMonsterVariables> term_indices;
-                  for (int idx = 0; idx < kMaxMonsterVariables; ++idx) {
+                [&](const EpsilonComplement& v) {
+                  std::bitset<kMaxComplementVariables> term_indices;
+                  for (int idx = 0; idx < kMaxComplementVariables; ++idx) {
                     if (v.indices()[idx]) {
                       const auto& new_indices = new_products.at(idx - 1);
                       for (const int new_idx : new_indices) {
-                        CHECK_LT(new_idx, kMaxMonsterVariables);
+                        CHECK_LT(new_idx, kMaxComplementVariables);
                         CHECK(term_indices[new_idx] == 0) << "Epsilon doesn't support duplicate indices.";
                         term_indices[new_idx] = 1;
                       }
                     }
                   }
-                  return EMonsterIndexSet(term_indices);
+                  return EComplementIndexSet(term_indices);
                 },
               }, e);
             }
@@ -67,7 +67,7 @@ EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr) {
           [](const Epsilon& e) {
             return std::visit(overloaded{
               [](const EpsilonVariable&) { return true; },
-              [](const EpsilonMonster& v) { return v.indices().count() == 1; },
+              [](const EpsilonComplement& v) { return v.indices().count() == 1; },
             }, e);
           }
         );

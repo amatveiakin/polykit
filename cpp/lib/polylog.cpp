@@ -112,7 +112,7 @@ static EpsilonExpr Li_2_point_irreducible(int a, int b) {
   } else {
     CHECK(is_one(a));
     // x_1...x_b - 1
-    return EMonsterRangeInclusive(1, b);
+    return EComplementRangeInclusive(1, b);
   }
 }
 
@@ -139,15 +139,15 @@ static EpsilonExpr Li_3_point(const absl::Span<const int>& p) {
         // x_1...x_c - x_1...x_b
         // ----------------------  =  x_{b+1}...x_c - 1
         //     x_1...x_b - 0
-        return EMonsterRangeInclusive(b+1, c);
+        return EComplementRangeInclusive(b+1, c);
       } else {
         CHECK(is_one(a));
         // x_1...x_c - x_1...x_b      x_1 * ... * x_b * (x_{b+1}...x_c - 1)
         // ----------------------  =  -------------------------------------
         //     x_1...x_b - 1                      x_1...x_b - 1
         return + EVarProd(1, b)
-               + EMonsterRangeInclusive(b+1, c)
-               - EMonsterRangeInclusive(1, b);
+               + EComplementRangeInclusive(b+1, c)
+               - EComplementRangeInclusive(1, b);
       }
     } else if (!is_var(b)) {
       CHECK(is_var(a) && !is_var(b) && is_var(c));
@@ -162,8 +162,8 @@ static EpsilonExpr Li_3_point(const absl::Span<const int>& p) {
         // x_1...x_c - 1
         // -------------
         // 1 - x_1...x_a
-        return + EMonsterRangeInclusive(1, c)
-               - EMonsterRangeInclusive(1, a);
+        return + EComplementRangeInclusive(1, c)
+               - EComplementRangeInclusive(1, a);
       }
     } else {
       CHECK(is_var(a) && is_var(b) && !is_var(c));
@@ -173,15 +173,15 @@ static EpsilonExpr Li_3_point(const absl::Span<const int>& p) {
       // ----------------------  =  -------------------
       // x_1...x_b - x_1...x_a       x_{a+1}...x_b - 1
       return + EVarProd(a+1, b)
-             - EMonsterRangeInclusive(a+1, b);
+             - EComplementRangeInclusive(a+1, b);
     }
   } else if (num_vars == 3) {
     // x_1...x_c - x_1...x_b      x_{a+1} * ... * x_b * (x_{b+1}...x_c - 1)
     // ----------------------  =  -----------------------------------------
     // x_1...x_b - x_1...x_a                  x_{a+1}...x_b - 1
     return + EVarProd(a+1, b)
-           + EMonsterRangeInclusive(b+1, c)
-           - EMonsterRangeInclusive(a+1, b);
+           + EComplementRangeInclusive(b+1, c)
+           - EComplementRangeInclusive(a+1, b);
   } else {
     FAIL(absl::StrCat("Bad num_vars: ", num_vars));
   }
