@@ -1,5 +1,7 @@
 #include "mystic_algebra.h"
 
+#include <sstream>
+
 #include "algebra.h"
 #include "epsilon.h"
 #include "polylog.h"
@@ -69,6 +71,31 @@ static EpsilonExpr monom_mystic_product(
   }
 }
 
+// TODO: Move to util and apply to other porducts
+template<typename LinearT>
+static std::string short_linear_description(const LinearT& expr) {
+  const auto& annotations = expr.annotations();
+  if (annotations.size() == 0) {
+    return "<0>";
+  } else if (annotations.size() == 1) {
+    std::stringstream ss;
+    ss << annotations;
+    return trimed(ss.str());
+  } else {
+    return absl::StrCat("<", annotations.size(), " ",
+        en_plural(annotations.size(), "term"), ">");
+  }
+}
+template<typename LinearT>
+static std::string product_annotation(
+    const std::string& product_name,
+    const LinearT& lhs,
+    const LinearT& rhs) {
+  return absl::StrCat(product_name,
+    "(", short_linear_description(lhs),
+    ", ", short_linear_description(rhs), ")");
+}
+
 EpsilonCoExpr mystic_product(
     const EpsilonCoExpr& lhs,
     const EpsilonCoExpr& rhs) {
@@ -87,5 +114,5 @@ EpsilonCoExpr mystic_product(
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );
     }
-  );  // TODO: Add annotations
+  ).annotate(product_annotation("mystic", lhs, rhs));
 }
