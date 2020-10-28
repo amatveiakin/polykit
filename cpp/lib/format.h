@@ -1,79 +1,69 @@
 #pragma once
 
-#include <string>
+#include <vector>
 
-#include "format_basic.h"
+#include "string.h"
 
 
-// TODO: Rewrite via absl::StrJoin
-template<typename T, typename F>
-std::string str_join(const T& container, std::string separator, F element_to_string) {
-  std::string ret;
-  for (const auto& v : container) {
-    if (!ret.empty()) {
-      ret += separator;
-    }
-    ret += element_to_string(v);
-  }
-  return ret;
+class Formatter {
+public:
+  virtual ~Formatter() {}
+
+  virtual std::string unity() = 0;
+  virtual std::string dot() = 0;
+  virtual std::string tensor_prod() = 0;
+  virtual std::string coprod_lie() = 0;
+  virtual std::string coprod_hopf() = 0;
+  virtual std::string comult() = 0;
+
+  virtual std::string box(const std::string& s) = 0;
+
+  virtual std::string coeff(int v) = 0;
+
+  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) = 0;
+  virtual std::string sub_num(const std::string& main, const std::vector<int>& indices);
+
+  virtual std::string var(int idx) = 0;
+  virtual std::string function(const std::string& name, const std::vector<std::string>& args) = 0;
+  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices) = 0;
+};
+
+// TODO: Allow to dymanically change formatter and format options
+extern Formatter* formatter;
+
+
+namespace fmt {
+
+inline std::string unity() { return formatter->unity(); }
+inline std::string dot() { return formatter->dot(); }
+inline std::string tensor_prod() { return formatter->tensor_prod(); }
+inline std::string coprod_lie() { return formatter->coprod_lie(); }
+inline std::string coprod_hopf() { return formatter->coprod_hopf(); }
+inline std::string comult() { return formatter->comult(); }
+
+inline std::string box(const std::string& s) {
+  return formatter->box(s);
 }
 
-template<typename T>
-std::string str_join(const T& container, std::string separator) {
-  std::string ret;
-  for (const auto& v : container) {
-    if (!ret.empty()) {
-      ret += separator;
-    }
-    ret += to_string(v);
-  }
-  return ret;
+inline std::string coeff(int v) {
+  return formatter->coeff(v);
 }
 
-template<typename T, typename F>
-std::string list_to_string(T container, F element_to_string) {
-  return "(" + str_join(container, ", ", element_to_string) + ")";
+inline std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+  return formatter->sub(main, indices);
+}
+inline std::string sub_num(const std::string& main, const std::vector<int>& indices) {
+  return formatter->sub_num(main, indices);
 }
 
-template<typename T>
-std::string list_to_string(T container) {
-  return "(" + str_join(container, ", ") + ")";
+inline std::string var(int idx) {
+  return formatter->var(idx);
+}
+inline std::string function(const std::string& name, const std::vector<std::string>& args) {
+  return formatter->function(name, args);
+}
+inline std::string function_indexed_args(const std::string& name, const std::vector<int>& indices) {
+  return formatter->function_indexed_args(name, indices);
 }
 
-template<typename Arg>
-std::string function_to_string(const std::string& name, const std::vector<Arg>& args) {
-  return name + "(" + str_join(args, ",") + ")";
-}
-
-
-inline std::string pad_left(std::string str, int length, char padding = ' ') {
-  return std::string(std::max(0, length - static_cast<int>(str.length())), padding) +
-      std::move(str);
-}
-
-
-inline std::string format_coeff(int coeff) {
-  if (coeff == 0) {
-    return " 0 ";
-  } else if (coeff == 1) {
-    return " + ";
-  } else if (coeff == -1) {
-    return " - ";
-  } else if (coeff > 0) {
-    return "+" + to_string(coeff) + " ";
-  } else {
-    return to_string(coeff) + " ";
-  }
-}
-
-
-inline std::string en_plural(
-    int number,
-    const std::string& singular,
-    const std::string& plural = {}) {
-  number = std::abs(number);
-  const bool use_plural = number % 100 == 11 || number % 10 != 1;
-  return use_plural
-      ? (plural.empty() ? singular + "s" : plural)
-      : singular;
-}
+}  // namespace fmt

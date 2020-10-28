@@ -28,7 +28,7 @@ DeltaExpr I_impl(const std::vector<int>& points) {
     }
   }
   // TODO: Annotate in non-recursive part.
-  return ret.annotate(function_to_string("I_", points));
+  return ret.annotate(fmt::function_indexed_args("I", points));
 }
 
 }  // namespace internal

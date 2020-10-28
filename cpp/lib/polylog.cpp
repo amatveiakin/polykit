@@ -289,5 +289,5 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
   }
   ret += coproduct(EUnity(), EFormalSymbolSigned(param));
   ret += coproduct(EFormalSymbolSigned(param), EUnity());
-  return (param.sign() * ret).annotate("Co" + to_string(param));
+  return (param.sign() * ret).annotate(fmt::comult() + to_string(param));
 }

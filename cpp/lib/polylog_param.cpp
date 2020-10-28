@@ -28,10 +28,10 @@ LiParam key_to_li_param(const Word& word) {
 }
 
 std::string to_string(const LiParam& params) {
-  return function_to_string(
-    "Li_" + str_join(params.weights(), "_"),
+  return fmt::function(
+    fmt::sub_num("Li", params.weights()),
     mapped(params.points(), [](const std::vector<int>& prod){
-      return str_join(prod, "", [](int v) { return absl::StrCat("x", v); });
+      return str_join(prod, "", fmt::var);
     })
   );
 }

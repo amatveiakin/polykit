@@ -6,7 +6,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
-#include "format.h"
+#include "string.h"
 #include "util.h"
 
 

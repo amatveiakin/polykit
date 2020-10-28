@@ -87,5 +87,5 @@ EpsilonCoExpr mystic_product(
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );
     }
-  );
+  );  // TODO: Add annotations
 }

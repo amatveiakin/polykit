@@ -97,7 +97,7 @@ struct DeltaExprParam {
     });
   }
   static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, "*");
+    return str_join(obj, fmt::tensor_prod());
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat_words(lhs, rhs);

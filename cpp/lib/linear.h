@@ -231,21 +231,21 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
-    max_coeff_length = std::max<int>(max_coeff_length, format_coeff(coeff).length());
+    max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
   });
   std::sort(dump.begin(), dump.end());
   for (const auto& [obj, coeff] : dump) {
     // TODO: Add an option for this.
     //
-    // std::string coeff_str = format_coeff(coeff);
+    // std::string coeff_str = fmt::coeff(coeff);
     // CHECK(coeff > 0);
     // if (std::abs(coeff) > 1) {
     //   CHECK(coeff_str.back() == ' ');
     //   coeff_str.back() = '*';
     // }
     // os << "    " << pad_left(coeff_str, max_coeff_length);
-    os << pad_left(format_coeff(coeff), max_coeff_length);
-    os << ParamT::object_to_string(obj) << "\n";
+    os << pad_left(fmt::coeff(coeff), max_coeff_length);
+    os << fmt::box(ParamT::object_to_string(obj));
   }
   return os;
 }
@@ -418,7 +418,7 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
     os << ", |coeff| = " << linear.l1_norm() << ":\n";
     os << linear.main();
   } else {
-    os << "\n" << format_coeff(0) << "\n";
+    os << "\n" << fmt::coeff(0) << "\n";
   }
   if (!linear.annotations().zero()) {
     os << "~~~\n";

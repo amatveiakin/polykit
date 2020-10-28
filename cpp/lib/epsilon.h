@@ -77,7 +77,7 @@ enum EpsilonPackType {
 
 
 inline std::string to_string(const EpsilonVariable& var) {
-  return absl::StrCat("x", var.idx());
+  return fmt::var(var.idx());
 }
 
 inline std::string to_string(const EpsilonMonster& monster) {
@@ -88,9 +88,7 @@ inline std::string to_string(const EpsilonMonster& monster) {
       index_list.push_back(i);
     }
   }
-  return absl::StrCat("(1 - ", str_join(index_list, ".", [](int x){
-    return absl::StrCat("x", x);
-  }), ")");
+  return absl::StrCat("(1 - ", str_join(index_list, fmt::dot(), fmt::var), ")");
 }
 
 inline std::string to_string(const Epsilon& e) {
@@ -100,7 +98,7 @@ inline std::string to_string(const Epsilon& e) {
 inline std::string to_string(const EpsilonPack& pack) {
   return std::visit(overloaded{
     [](const std::vector<Epsilon>& product) {
-      return product.empty() ? "<1>" : str_join(product, "*");
+      return product.empty() ? fmt::unity() : str_join(product, fmt::tensor_prod());
     },
     [](const LiParam& formal_symbol) {
       return to_string(formal_symbol);

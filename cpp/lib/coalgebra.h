@@ -12,15 +12,13 @@
 
 
 namespace internal {
-constexpr char kCoprodSign[] = " @ ";
-
 struct WordCoExprParam : SimpleLinearParam<MultiWord> {
   static std::string object_to_string(const MultiWord& word) {
     std::vector<std::string> segment_strings;
     for (const auto& segment : word) {
       segment_strings.push_back(list_to_string(segment));
     }
-    return str_join(segment_strings, kCoprodSign);
+    return str_join(segment_strings, fmt::coprod_lie());
   }
   static constexpr bool coproduct_is_lie_algebra = true;
 };
@@ -43,7 +41,7 @@ struct DeltaCoExprParam {
     return ret;
   }
   static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, kCoprodSign, DeltaExprParam::object_to_string);
+    return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
   }
   static constexpr bool coproduct_is_lie_algebra = true;
 };
@@ -66,7 +64,7 @@ struct EpsilonCoExprParam {
     return ret;
   }
   static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, kCoprodSign);
+    return str_join(obj, fmt::coprod_hopf());
   }
   static constexpr bool coproduct_is_lie_algebra = false;
 };
