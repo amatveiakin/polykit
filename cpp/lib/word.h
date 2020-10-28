@@ -62,10 +62,13 @@ public:
     write_size(size() + 1);
     *std::prev(end()) = ch;
   }
-  void append_word(const Word& other) {
+  void append_data(absl::Span<const unsigned char> data) {
     const auto it = end();
-    write_size(size() + other.size());
-    absl::c_copy(other, it);
+    write_size(size() + data.size());
+    absl::c_copy(data, it);
+  }
+  void append_word(const Word& other) {
+    append_data(other.span());
   }
 
   DataT::iterator begin() { return data_.begin() + kDataStart; }

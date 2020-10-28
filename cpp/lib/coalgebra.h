@@ -8,8 +8,11 @@
 #include "epsilon.h"
 #include "lyndon.h"
 #include "multiword.h"
+#include "theta.h"
 #include "word.h"
 
+
+constexpr int kThetaCoExprComponents = 2;
 
 namespace internal {
 struct WordCoExprParam : SimpleLinearParam<MultiWord> {
@@ -69,11 +72,27 @@ struct EpsilonCoExprParam {
   static constexpr bool coproduct_is_lie_algebra = false;
 };
 
+struct ThetaCoExprParam {
+  using ObjectT = std::array<ThetaPack, kThetaCoExprComponents>;
+  using StorageT = std::array<MultiWord, kThetaCoExprComponents>;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return mapped_array(obj, ThetaExprParam::object_to_key);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return mapped_array(key, ThetaExprParam::key_to_object);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return str_join(obj, fmt::coprod_hopf());
+  }
+  static constexpr bool coproduct_is_lie_algebra = false;
+};
+
 }  // namespace internal
 
 using WordCoExpr = Linear<internal::WordCoExprParam>;
 using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
 using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
+using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
 
 template<typename CoExprT, typename ExprT>

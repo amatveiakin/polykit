@@ -157,10 +157,12 @@ inline Word epsilon_pack_to_key(const EpsilonPack& pack) {
 }
 
 inline EpsilonPackType key_to_epsilon_pack_type(const Word& key) {
+  CHECK(!key.empty());
   return EpsilonPackType(key.front());
 }
 
 inline absl::Span<const unsigned char> key_to_epsilon_pack_data(const Word& key) {
+  CHECK(!key.empty());
   return key.span().subspan(1);
 }
 
@@ -224,7 +226,7 @@ struct EpsilonExprParam {
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 
 // Whether expr is one w.r.t. shuffle multiplication.
-inline bool epsilon_pack_is_one(const EpsilonPack& pack) {
+inline bool epsilon_pack_is_unity(const EpsilonPack& pack) {
   const auto* as_product = std::get_if<std::vector<Epsilon>>(&pack);
   return as_product && as_product->empty();
 }

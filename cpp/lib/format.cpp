@@ -20,7 +20,7 @@ std::string Formatter::sub_num(const std::string& main, const std::vector<int>& 
 class PlainTextFormatter : public Formatter {
   virtual std::string unity() { return "<1>"; }
   virtual std::string dot() { return "."; }
-  virtual std::string tensor_prod() { return "*"; }
+  virtual std::string tensor_prod() { return " * "; }
   virtual std::string coprod_lie() { return " ^ "; }
   virtual std::string coprod_hopf() { return " @ "; }
   virtual std::string comult() { return "&"; }

@@ -6,6 +6,7 @@
 
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
+#include "lib/cotheta.h"
 #include "lib/format.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
@@ -15,6 +16,7 @@
 #include "lib/profiler.h"
 #include "lib/projection.h"
 #include "lib/shuffle.h"
+#include "lib/theta.h"
 
 
 int main(int argc, char *argv[]) {
@@ -33,20 +35,27 @@ int main(int argc, char *argv[]) {
   //     CoLi(1)({2})
   //   );
 
-  auto expr = CoLi(1,5)({1},{2});
-  // auto expr = CoLi(1,1,1,1,1)({1},{2},{3},{4},{5});
-  auto filtered = filter_coexpr_predicate(expr, 0, [](const EpsilonPack& pack) {
-    return std::visit(overloaded{
-      [](const std::vector<Epsilon>& product) {
-        return false;
-      },
-      [](const LiParam& formal_symbol) {
-        return formal_symbol.points().size() == 1 &&
-          // formal_symbol.points().front().size() == 3 &&
-          formal_symbol.weights().front() >= 5;
-      },
-    }, pack);
+  auto expr = CoLi(1,1)({1},{2});
+
+  auto cr_expr = epsilon_coexpr_to_theta_coexpr(expr, {
+    {CR(1,2,3,6)},
+    {CR(3,4,5,6)},
   });
+
+  // auto expr = CoLi(1,5)({1},{2});
+  // // auto expr = CoLi(1,1,1,1,1)({1},{2},{3},{4},{5});
+  // auto filtered = filter_coexpr_predicate(expr, 0, [](const EpsilonPack& pack) {
+  //   return std::visit(overloaded{
+  //     [](const std::vector<Epsilon>& product) {
+  //       return false;
+  //     },
+  //     [](const LiParam& formal_symbol) {
+  //       return formal_symbol.points().size() == 1 &&
+  //         // formal_symbol.points().front().size() == 3 &&
+  //         formal_symbol.weights().front() >= 5;
+  //     },
+  //   }, pack);
+  // });
 
   // auto a = CoLi(1,2)({1},{2});
   // auto b = CoLi(2,1)({2},{1});
@@ -66,7 +75,8 @@ int main(int argc, char *argv[]) {
   // std::cout << "C " << c << "\n";
   // std::cout << "D " << d << "\n";
   std::cout << "Expr " << expr << "\n";
-  std::cout << "Filtered " << filtered << "\n";
+  std::cout << "Cross-ratio expr " << cr_expr << "\n";
+  // std::cout << "Filtered " << filtered << "\n";
   // auto filtered = filter_coexpr(expr, 0, LiParam({1},{{1,2}}));
   // std::cout << "Expr filtered " << filtered << "\n";
   // std::cout << "After Lyndon " << lyndon << "\n";

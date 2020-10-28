@@ -23,23 +23,23 @@ inline DeltaExpr neg_cross_ratio(int a, int b, int c, int d) {
   return cross_ratio(a, c, b, d);
 }
 
-DeltaExpr Lira(int weight, const std::vector<int>& points);
+DeltaExpr Lido(int weight, const std::vector<int>& points);
 
 namespace internal {
 template<typename... Args>
-DeltaExpr Lira_dispatch(int weight, Args... args) {
-  return Lira(weight, {args...});
+DeltaExpr Lido_dispatch(int weight, Args... args) {
+  return Lido(weight, {args...});
 }
 template<>
-inline DeltaExpr Lira_dispatch(int weight, const std::vector<int>& points) {
-  return Lira(weight, points);
+inline DeltaExpr Lido_dispatch(int weight, const std::vector<int>& points) {
+  return Lido(weight, points);
 }
 }  // namespace internal
 
-template<typename... Args> inline DeltaExpr Lira2(Args... args) { return internal::Lira_dispatch(2, args...); }
-template<typename... Args> inline DeltaExpr Lira3(Args... args) { return internal::Lira_dispatch(3, args...); }
-template<typename... Args> inline DeltaExpr Lira4(Args... args) { return internal::Lira_dispatch(4, args...); }
-template<typename... Args> inline DeltaExpr Lira5(Args... args) { return internal::Lira_dispatch(5, args...); }
-template<typename... Args> inline DeltaExpr Lira6(Args... args) { return internal::Lira_dispatch(6, args...); }
-template<typename... Args> inline DeltaExpr Lira7(Args... args) { return internal::Lira_dispatch(7, args...); }
-template<typename... Args> inline DeltaExpr Lira8(Args... args) { return internal::Lira_dispatch(8, args...); }
+template<typename... Args> inline DeltaExpr Lido2(Args... args) { return internal::Lido_dispatch(2, args...); }
+template<typename... Args> inline DeltaExpr Lido3(Args... args) { return internal::Lido_dispatch(3, args...); }
+template<typename... Args> inline DeltaExpr Lido4(Args... args) { return internal::Lido_dispatch(4, args...); }
+template<typename... Args> inline DeltaExpr Lido5(Args... args) { return internal::Lido_dispatch(5, args...); }
+template<typename... Args> inline DeltaExpr Lido6(Args... args) { return internal::Lido_dispatch(6, args...); }
+template<typename... Args> inline DeltaExpr Lido7(Args... args) { return internal::Lido_dispatch(7, args...); }
+template<typename... Args> inline DeltaExpr Lido8(Args... args) { return internal::Lido_dispatch(8, args...); }

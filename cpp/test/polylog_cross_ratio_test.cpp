@@ -7,8 +7,8 @@
 #include "test_util/matchers.h"
 
 
-TEST(LiraTest, Lira4_6) {
-  auto expr = Lira4(1,2,3,4,5,6);
+TEST(LidoTest, Lido4_6) {
+  auto expr = Lido4(1,2,3,4,5,6);
   EXPECT_EQ(expr.size(), 2560);
   auto lyndon = to_lyndon_basis(expr);
   EXPECT_EQ(lyndon.size(), 1272);

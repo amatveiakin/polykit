@@ -98,22 +98,24 @@ auto mapped(const std::vector<In>& src, F&& func) {
   return mapped(absl::MakeConstSpan(src), std::forward<F>(func));
 }
 
+template<typename In, int N, typename F>
+auto mapped_array(const std::array<In, N>& src, F&& func) {
+  std::array<std::invoke_result_t<F, In>, N> dst;
+  absl::c_transform(src, dst.begin(), func);
+  return dst;
+}
+
 template<typename T>
 void rotate_vector(std::vector<T>& v, int n) {
   n = pos_mod(n, v.size());
   absl::c_rotate(v, v.begin() + n);
 }
 
-template<typename T>
-void append_vector(std::vector<T>& dst, const absl::Span<const T>& src) {
+template<typename T, typename SrcContainerT>
+void append_vector(std::vector<T>& dst, const SrcContainerT& src) {
   const size_t old_size = dst.size();
   dst.resize(old_size + src.size());
   absl::c_move(src, dst.begin() + old_size);
-}
-
-template<typename T>
-void append_vector(std::vector<T>& dst, const std::vector<T>& src) {
-  append_vector(dst, absl::MakeConstSpan(src));
 }
 
 template<typename First, typename Second>

@@ -10,18 +10,9 @@
 #include "util.h"
 
 
-constexpr int kWordsPerByte = 2;  // Note: some code implicitly assumes it's 2
-constexpr int kShift = CHAR_BIT / kWordsPerByte;
-constexpr int kMaxValue = (1 << kShift) - 1;
-constexpr int kLowerValueMask = (1 << kShift) - 1;
-
-static constexpr bool char_ok(int ch) {
-  return 0 <= ch && ch <= kMaxValue && ch != kCompressionSentinel;
-};
-
 void Compressor::add_segment(absl::Span<const int> data) {
   CHECK(!data.empty());
-  CHECK(absl::c_all_of(data, char_ok)) << list_to_string(data);
+  CHECK(absl::c_all_of(data, compression_value_ok)) << list_to_string(data);
   if (!uncompressed_.empty()) {
     uncompressed_.push_back(kCompressionSentinel);
   }
@@ -30,10 +21,10 @@ void Compressor::add_segment(absl::Span<const int> data) {
 
 std::vector<unsigned char> Compressor::result() && {
   std::vector<unsigned char> ret;
-  for (int i = 0; i < uncompressed_.size(); i += kWordsPerByte) {
+  for (int i = 0; i < uncompressed_.size(); i += kCompressionValuesPerByte) {
     const int a = uncompressed_[i];
     const int b = (i+1 < uncompressed_.size()) ? uncompressed_[i+1] : kCompressionSentinel;
-    ret.push_back((a << kShift) + b);
+    ret.push_back(compress_pair_no_check(a, b));
   }
   return ret;
 }
@@ -41,8 +32,8 @@ std::vector<unsigned char> Compressor::result() && {
 Decompressor::Decompressor(absl::Span<const unsigned char> compressed) {
   CHECK(!compressed.empty());
   for (unsigned char ch : compressed) {
-    const int a = ch >> kShift;
-    const int b = ch & kLowerValueMask;
+    int a, b;
+    decompress_pair(ch, a, b);
     decompressed_.push_back(a);
     decompressed_.push_back(b);
   }

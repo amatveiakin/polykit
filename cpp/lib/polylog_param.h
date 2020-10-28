@@ -8,10 +8,9 @@
 class LiParam {
 public:
   LiParam() {}
-  // Neither weights nor points can contain the kCompressionSentinel.
   LiParam(std::vector<int> weights, std::vector<std::vector<int>> points)
       : weights_(std::move(weights)), points_(std::move(points)) {
-    CHECK_EQ(weights.size(), points.size());
+    CHECK_EQ(weights_.size(), points_.size());
     for (auto& p : points_) {
       absl::c_sort(p);
     }
@@ -25,6 +24,9 @@ public:
 
   auto as_tie() const { return std::tie(weights_, points_); }
 
+  bool operator==(const LiParam& other) const { return as_tie() == other.as_tie(); }
+  bool operator< (const LiParam& other) const { return as_tie() <  other.as_tie(); }
+
 private:
   std::vector<int> weights_;
   std::vector<std::vector<int>> points_;
@@ -33,11 +35,3 @@ private:
 Word li_param_to_key(const LiParam& params);
 LiParam key_to_li_param(const Word& word);
 std::string to_string(const LiParam& params);
-
-// For filtering and sorting when printing
-inline bool operator==(const LiParam& lhs, const LiParam& rhs) {
-  return lhs.as_tie() == rhs.as_tie();
-}
-inline bool operator<(const LiParam& lhs, const LiParam& rhs) {
-  return lhs.as_tie() < rhs.as_tie();
-}
