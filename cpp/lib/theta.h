@@ -16,37 +16,30 @@
 
 using ThetaStorageType = Word;
 
-// Represents (1 - [a1,b1,c1,d1] * ... * [an,bn,cn,dn]),  n >= 2
 class ThetaComplement {
 public:
   ThetaComplement() {}
-  ThetaComplement(std::vector<CrossRatio> ratios) : ratios_(std::move(ratios)) {
-    absl::c_sort(ratios_);
-    CHECK(is_valid()) << list_to_string(ratios_);
+  ThetaComplement(CompoundRatio ratio) : ratio_(std::move(ratio)) {
+    ratio_.check();
   }
 
-  bool is_valid() const {
-    if (ratios_.size() < 2) {
-      return false;  // A single cross ratio complement must be simplified
-    }
-    return absl::c_all_of(ratios_, [](const CrossRatio& ratio) {
-      return ratio.is_valid();
-    });
-  }
-  const std::vector<CrossRatio>& ratios() const { return ratios_; }
+  const CompoundRatio& ratio() const { return ratio_; }
 
-  bool operator==(const ThetaComplement& other) const {
-    return ratios_ == other.ratios_;
-  }
+  bool operator==(const ThetaComplement& other) const { return ratio_ == other.ratio_; }
 
 private:
-  std::vector<CrossRatio> ratios_;
+  CompoundRatio ratio_;
 };
 
 // Represents one of the two:
-//   * [a,b,c,d]
-//   * 1 - [a1,b1,c1,d1] * ... * [an,bn,cn,dn],  n >= 2
-using Theta = std::variant<CrossRatio, ThetaComplement>;
+//
+//   >  (x_i - x_j)
+//
+//            (x_{i_1} - x_{j_1}) * ... * (x_{i_n} - x_{j_n})
+//   >  1  -  -----------------------------------------------  ,  n >= 2
+//            (x_{k_1} - x_{l_1}) * ... * (x_{k_n} - x_{l_n})
+//
+using Theta = std::variant<Delta, ThetaComplement>;
 
 using ThetaPack = std::variant<std::vector<Theta>, LiraParam>;
 
@@ -57,7 +50,7 @@ enum ThetaPackType {
 
 
 inline std::string to_string(const ThetaComplement& complement) {
-  return absl::StrCat("(1 - ", str_join(complement.ratios(), ""), ")");
+  return absl::StrCat("(1 - ", to_string(complement.ratio()), ")");
 }
 
 inline std::string to_string(const Theta& t) {
@@ -77,38 +70,27 @@ inline std::string to_string(const ThetaPack& pack) {
 
 
 namespace internal {
-// Idea: Store just the cross-ratios. We don't need a type bit, because
-// ThetaComplement can never contain just one cross ratio.
+// Idea: Store just the data. We don't need a type bit, because Delta
+// is always one byte and CompoundRatio is always more.
 inline ThetaStorageType theta_to_key(const Theta& t) {
   return std::visit(overloaded{
-    [](const CrossRatio& ratio) {
-      return Word(ratio.compressed());
+    [](const Delta& d) {
+      return Word({delta_alphabet_mapping.to_alphabet(d)});
     },
     [](const ThetaComplement& complement) {
-      CHECK_GT(complement.ratios().size(), 1);
-      Word ret;
-      for (const CrossRatio& ratio : complement.ratios()) {
-        ret.append_data(ratio.compressed());
-      }
-      return ret;
+      // TODO: Compress
+      const auto serialized = complement.ratio().serialized();
+      CHECK_GT(serialized.size(), 1);
+      return Word(serialized.begin(), serialized.end());
     },
   }, t);
 }
 
 inline Theta key_to_theta(ThetaStorageType key) {
-  CHECK(key.size() % kCrossRatioElementsCompressed == 0) << to_string(key);
-  const int num_ratios = key.size() / kCrossRatioElementsCompressed;
-  if (num_ratios == 1) {
-    return CrossRatio::from_compressed(key.span());
-  } else if (num_ratios > 1) {
-    std::vector<CrossRatio> ratios;
-    for (int i = 0; i < num_ratios; ++i) {
-      ratios.push_back(CrossRatio::from_compressed(
-        key.span().subspan(i * kCrossRatioElementsCompressed, kCrossRatioElementsCompressed)));
-    }
-    return ThetaComplement(std::move(ratios));
+  if (key.size() == 1) {
+    return delta_alphabet_mapping.from_alphabet(key.front());
   } else {
-    FAIL(absl::StrCat("Bad num_ratios: ", num_ratios));
+    return ThetaComplement(CompoundRatio::from_serialized(key.span()));
   }
 }
 
@@ -207,17 +189,6 @@ struct ThetaExprParam {
       },
     }, obj);
   }
-  // static StorageT shuffle_preprocess(const StorageT& key) {
-  //   const int type = key_to_theta_pack_type(key);
-  //   CHECK_EQ(type, kThetaPackTypeProduct) << "Lyndon for formal symbols is not defined";
-  //   return Word(key_to_theta_pack_data(key));
-  // }
-  // static StorageT shuffle_postprocess(const StorageT& key) {
-  //   Word ret;
-  //   ret.push_back(kThetaPackTypeProduct);
-  //   ret.append_word(key);
-  //   return ret;
-  // }
 };
 }  // namespace internal
 
@@ -237,19 +208,25 @@ inline ThetaExpr TUnity() {
   return ThetaExpr::single(ThetaUnityElement());
 }
 
+inline ThetaExpr TRatio(const CompoundRatio& ratio) {
+  auto to_theta = [](const Delta& d) { return std::vector<Theta>{d}; };
+  return ThetaExpr::from_collection(mapped(ratio.numerator(), to_theta)) -
+         ThetaExpr::from_collection(mapped(ratio.denominator(), to_theta));
+}
+
 inline ThetaExpr TRatio(const CrossRatio& ratio) {
-  return ThetaExpr::single(std::vector<Theta>{ratio});
+  return TRatio(CompoundRatio::from_cross_ratio(ratio));
 }
 
 inline ThetaExpr TRatio(std::initializer_list<int> indices) {
   return TRatio(CrossRatio(indices));
 }
 
-inline ThetaExpr TComplement(std::vector<CrossRatio> ratios) {
-  CHECK(!ratios.empty());
-  return ratios.size() == 1
-    ? TRatio(CrossRatio::one_minus(ratios.front()))
-    : ThetaExpr::single(std::vector<Theta>{ThetaComplement(std::move(ratios))});
+inline ThetaExpr TComplement(CompoundRatio ratio) {
+  auto one_minus_ratio = ratio.one_minus();
+  return one_minus_ratio.has_value()
+    ? TRatio(std::move(one_minus_ratio.value()))
+    : ThetaExpr::single(std::vector<Theta>{ThetaComplement(std::move(ratio))});
 }
 
 inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices) {
@@ -257,7 +234,7 @@ inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> i
   for (auto&& r : indices) {
     ratios.push_back(CrossRatio(r));
   }
-  return TComplement(std::move(ratios));
+  return TComplement(CompoundRatio::from_cross_ratio_product(ratios));
 }
 
 inline ThetaExpr TFormalSymbolPositive(const LiraParam& lira_param) {
@@ -276,4 +253,4 @@ inline bool operator<(const Theta& lhs, const Theta& rhs) {
 
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& ratios);
+    const std::vector<std::vector<CrossRatio>>& cross_ratios);

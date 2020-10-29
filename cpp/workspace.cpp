@@ -35,12 +35,48 @@ int main(int argc, char *argv[]) {
   //     CoLi(1)({2})
   //   );
 
-  auto expr = CoLi(1,1)({1},{2});
+  // auto expr = CoLi(1,1)({1},{2});
 
-  auto cr_expr = epsilon_coexpr_to_theta_coexpr(expr, {
-    {CR(1,2,3,6)},
-    {CR(3,4,5,6)},
-  });
+  // TODO: Add to tests
+  // auto cr_expr =
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(1,2,3,6)},
+  //     {CR(3,4,5,6)},
+  //   })
+  //   - epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(1,2,5,6)},
+  //     {CR(3,4,5,2)},
+  //   })
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(1,4,5,6)},
+  //     {CR(1,2,3,4)},
+  //   });
+
+  // TODO: Add to tests
+  auto cr_expr =
+    + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+      {CR(3,4,7,2)},
+      {CR(5,6,7,4)},
+    })
+    - epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+      {CR(3,6,7,2)},
+      {CR(3,4,5,6)},
+    })
+    + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+      {CR(5,6,7,2)},
+      {CR(3,4,5,2)},
+    })
+    + epsilon_coexpr_to_theta_coexpr(CoLi(2)({1,2}), {
+      {CR(5,6,7,2)},
+      {CR(3,4,5,2)},
+    });
+
+  // auto cr_expr =
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1,1)({1},{2},{3}), {
+  //     {CR(1,2,3,8)},
+  //     {CR(3,4,5,8)},
+  //     {CR(5,6,7,8)},
+  //   });
 
   // auto expr = CoLi(1,5)({1},{2});
   // // auto expr = CoLi(1,1,1,1,1)({1},{2},{3},{4},{5});
@@ -74,7 +110,7 @@ int main(int argc, char *argv[]) {
   // std::cout << "B " << b << "\n";
   // std::cout << "C " << c << "\n";
   // std::cout << "D " << d << "\n";
-  std::cout << "Expr " << expr << "\n";
+  // std::cout << "Expr " << expr << "\n";
   std::cout << "Cross-ratio expr " << cr_expr << "\n";
   // std::cout << "Filtered " << filtered << "\n";
   // auto filtered = filter_coexpr(expr, 0, LiParam({1},{{1,2}}));

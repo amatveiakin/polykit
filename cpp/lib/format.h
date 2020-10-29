@@ -5,6 +5,11 @@
 #include "string.h"
 
 
+enum class HSpacing {
+  dense,
+  sparse,
+};
+
 class Formatter {
 public:
   virtual ~Formatter() {}
@@ -24,8 +29,14 @@ public:
   virtual std::string sub_num(const std::string& main, const std::vector<int>& indices);
 
   virtual std::string var(int idx) = 0;
-  virtual std::string function(const std::string& name, const std::vector<std::string>& args) = 0;
-  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices) = 0;
+  virtual std::string function(
+      const std::string& name,
+      const std::vector<std::string>& args,
+      HSpacing hspacing) = 0;
+  virtual std::string function_indexed_args(
+      const std::string& name,
+      const std::vector<int>& indices,
+      HSpacing hspacing) = 0;
 };
 
 // TODO: Allow to dymanically change formatter and format options
@@ -59,11 +70,17 @@ inline std::string sub_num(const std::string& main, const std::vector<int>& indi
 inline std::string var(int idx) {
   return formatter->var(idx);
 }
-inline std::string function(const std::string& name, const std::vector<std::string>& args) {
-  return formatter->function(name, args);
+inline std::string function(
+    const std::string& name,
+    const std::vector<std::string>& args,
+    HSpacing hspacing = HSpacing::dense) {
+  return formatter->function(name, args, hspacing);
 }
-inline std::string function_indexed_args(const std::string& name, const std::vector<int>& indices) {
-  return formatter->function_indexed_args(name, indices);
+inline std::string function_indexed_args(
+    const std::string& name,
+    const std::vector<int>& indices,
+    HSpacing hspacing = HSpacing::dense) {
+  return formatter->function_indexed_args(name, indices, hspacing);
 }
 
 }  // namespace fmt

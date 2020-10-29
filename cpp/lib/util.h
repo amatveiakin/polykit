@@ -112,7 +112,7 @@ void rotate_vector(std::vector<T>& v, int n) {
 }
 
 template<typename T, typename SrcContainerT>
-void append_vector(std::vector<T>& dst, const SrcContainerT& src) {
+void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
   const size_t old_size = dst.size();
   dst.resize(old_size + src.size());
   absl::c_move(src, dst.begin() + old_size);

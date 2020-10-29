@@ -42,7 +42,8 @@ private:
 };
 
 inline std::string to_string(const Delta& d) {
-  return absl::StrCat("(x", d.a(), " - x", d.b(), ")");
+  // return absl::StrCat("(", fmt::var(d.a()), " - ", fmt::var(d.b()), ")");
+  return absl::StrCat("[", d.a(), ",", d.b(), "]");
 }
 
 
@@ -77,6 +78,7 @@ private:
   std::vector<Delta> deltas_;
 };
 
+// TODO: Consider replacing with 4 bit + 4 bit mapping
 extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
