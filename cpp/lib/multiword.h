@@ -13,7 +13,8 @@
 
 
 constexpr int kMultiWordMaxSegments = 7;
-constexpr int kMultiWordStorageSize = 32;
+// constexpr int kMultiWordStorageSize = 32;  // TODO: revert
+constexpr int kMultiWordStorageSize = 64;
 constexpr int kMaxMultiWordDataSize =
     kMultiWordStorageSize - kMultiWordMaxSegments - 1;  // 1 for num segments
 constexpr int kMultiWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;

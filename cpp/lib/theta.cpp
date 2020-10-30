@@ -51,3 +51,23 @@ ThetaExpr epsilon_expr_to_theta_expr(
   });
   return ret;
 }
+
+// ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
+//   ThetaExpr ret;
+//   expr.foreach([&](const ThetaPack& term, int coeff) {
+//     if (theta_pack_is_unity(term)) {
+//       ret += coeff * TUnity();
+//       return;
+//     }
+//     ret += coeff *
+//       std::visit(overloaded{
+//         [&](const std::vector<Theta>& term_product) {
+//           return ThetaExpr::single(term);
+//         },
+//         [&](const LiraParam& formal_symbol) {
+//           return ...;
+//         },
+//       }, term);
+//   });
+//   return ret;
+// }

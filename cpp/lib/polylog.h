@@ -1,5 +1,3 @@
-// TODO: Allow to pass LiParam as arg
-
 #pragma once
 
 #include "coalgebra.h"

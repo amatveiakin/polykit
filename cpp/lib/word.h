@@ -12,7 +12,8 @@
 #include "linear.h"
 
 
-constexpr int kWordStorageSize = 16;
+// constexpr int kWordStorageSize = 16;  // TODO: revert
+constexpr int kWordStorageSize = 32;
 constexpr int kMaxWordSize = kWordStorageSize - 1;  // 1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 

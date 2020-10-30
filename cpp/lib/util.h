@@ -77,7 +77,7 @@ std::vector<T> removed_index(std::vector<T> v, int index) {
 }
 
 template<typename T>
-std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int> indices) {
+std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& indices) {
   std::vector<T> ret;
   ret.reserve(indices.size());
   for (int idx : indices) {
@@ -106,9 +106,10 @@ auto mapped_array(const std::array<In, N>& src, F&& func) {
 }
 
 template<typename T>
-void rotate_vector(std::vector<T>& v, int n) {
+std::vector<T> rotated_vector(std::vector<T> v, int n) {
   n = pos_mod(n, v.size());
   absl::c_rotate(v, v.begin() + n);
+  return v;
 }
 
 template<typename T, typename SrcContainerT>

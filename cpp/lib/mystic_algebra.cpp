@@ -71,6 +71,14 @@ static EpsilonExpr monom_mystic_product(
   }
 }
 
+static EpsilonExpr monom_key_mystic_product(
+    const Word& lhs_key,
+    const Word& rhs_key) {
+  return monom_mystic_product(
+    EpsilonExpr::Param::key_to_object(lhs_key),
+    EpsilonExpr::Param::key_to_object(rhs_key));
+}
+
 // TODO: Move to util and apply to other porducts
 template<typename LinearT>
 static std::string short_linear_description(const LinearT& expr) {
@@ -89,11 +97,29 @@ static std::string short_linear_description(const LinearT& expr) {
 template<typename LinearT>
 static std::string product_annotation(
     const std::string& product_name,
+    const absl::Span<const LinearT>& expressions) {
+  return absl::StrCat(product_name,
+    "(", str_join(expressions, ", ", &short_linear_description<LinearT>), ")");
+}
+template<typename LinearT>
+static std::string product_annotation(
+    const std::string& product_name,
     const LinearT& lhs,
     const LinearT& rhs) {
-  return absl::StrCat(product_name,
-    "(", short_linear_description(lhs),
-    ", ", short_linear_description(rhs), ")");
+  return product_annotation(product_name, absl::MakeConstSpan({lhs, rhs}));
+}
+
+EpsilonExpr mystic_product(
+    const EpsilonExpr& lhs,
+    const EpsilonExpr& rhs) {
+  return outer_product_expanding(lhs, rhs, monom_key_mystic_product)
+      .annotate(product_annotation("mystic", lhs, rhs));
+}
+
+EpsilonExpr mystic_product(
+    const absl::Span<const EpsilonExpr>& expressions) {
+  return outer_product_expanding(expressions, monom_key_mystic_product)
+      .annotate(product_annotation("mystic", expressions));
 }
 
 EpsilonCoExpr mystic_product(
@@ -115,4 +141,56 @@ EpsilonCoExpr mystic_product(
       );
     }
   ).annotate(product_annotation("mystic", lhs, rhs));
+}
+
+
+using LiraParamZipElement = std::pair<int, CompoundRatio>;
+
+static std::vector<LiraParamZipElement> lira_param_to_vec(const LiraParam& param) {
+  return zip(param.weights(), param.ratios());
+}
+
+static LiraParam vec_to_lira_params(const std::vector<LiraParamZipElement>& vec) {
+  auto [weights, ratios] = unzip(vec);
+  return LiraParam(std::move(weights), std::move(ratios));
+}
+
+static LiraParamZipElement glue_lira_elements(
+    const LiraParamZipElement& lhs, const LiraParamZipElement& rhs) {
+  CompoundRatio ratio = lhs.second;
+  ratio.add(rhs.second);
+  return LiraParamZipElement{lhs.first + rhs.first, ratio};
+}
+
+static ThetaExpr monom_quasi_shuffle_product(
+    const ThetaPack& lhs,
+    const ThetaPack& rhs) {
+  CHECK(std::holds_alternative<LiraParam>(lhs) &&
+        std::holds_alternative<LiraParam>(rhs));
+  return ThetaExpr::from_collection(
+    mapped(
+      quasi_shuffle_product(
+        lira_param_to_vec(std::get<LiraParam>(lhs)),
+        lira_param_to_vec(std::get<LiraParam>(rhs)),
+        glue_lira_elements
+      ),
+      [](const std::vector<LiraParamZipElement>& vec) {
+        return ThetaPack(vec_to_lira_params(vec));
+      }
+    )
+  );
+}
+
+static ThetaExpr monom_key_quasi_shuffle_product(
+    const MultiWord& lhs_key,
+    const MultiWord& rhs_key) {
+  return monom_quasi_shuffle_product(
+    ThetaExpr::Param::key_to_object(lhs_key),
+    ThetaExpr::Param::key_to_object(rhs_key));
+}
+
+ThetaExpr theta_expr_quasi_shuffle_product(
+    const absl::Span<const ThetaExpr>& expressions) {
+  // TODO: annotations
+  return outer_product_expanding(expressions, monom_key_quasi_shuffle_product);
 }

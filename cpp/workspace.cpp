@@ -13,6 +13,7 @@
 #include "lib/polylog_cross_ratio.h"
 #include "lib/polylog.h"
 #include "lib/iterated_integral.h"
+#include "lib/polylog_quadrangle.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
 #include "lib/shuffle.h"
@@ -53,23 +54,25 @@ int main(int argc, char *argv[]) {
   //   });
 
   // TODO: Add to tests
-  auto cr_expr =
-    + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
-      {CR(3,4,7,2)},
-      {CR(5,6,7,4)},
-    })
-    - epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
-      {CR(3,6,7,2)},
-      {CR(3,4,5,6)},
-    })
-    + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
-      {CR(5,6,7,2)},
-      {CR(3,4,5,2)},
-    })
-    + epsilon_coexpr_to_theta_coexpr(CoLi(2)({1,2}), {
-      {CR(5,6,7,2)},
-      {CR(3,4,5,2)},
-    });
+  // auto cr_expr =
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(3,4,7,2)},
+  //     {CR(5,6,7,4)},
+  //   })
+  //   - epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(3,6,7,2)},
+  //     {CR(3,4,5,6)},
+  //   })
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+  //     {CR(5,6,7,2)},
+  //     {CR(3,4,5,2)},
+  //   })
+  //   + epsilon_coexpr_to_theta_coexpr(CoLi(2)({1,2}), {
+  //     {CR(5,6,7,2)},
+  //     {CR(3,4,5,2)},
+  //   });
+
+  auto cr_expr = LiQuad({1,2,3,4,5,6});
 
   // auto cr_expr =
   //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1,1)({1},{2},{3}), {

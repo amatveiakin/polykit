@@ -147,6 +147,7 @@ public:
   bool operator< (const CompoundRatio& other) const { return as_tie() <  other.as_tie(); }
 
 private:
+  // TODO: Store as non-overlaping loops instead (e.g. [1,2,3,4,5,6][7,8,9,10])
   std::vector<Delta> numerator_;
   std::vector<Delta> denominator_;
 };
@@ -177,8 +178,9 @@ public:
   const std::vector<int>& weights() const { return weights_; }
   const std::vector<CompoundRatio>& ratios() const { return ratios_; }
 
-  int sign() const { return neg_one_pow(ratios().size()); }
+  int depth() const { return ratios().size(); }
   int total_weight() const { return absl::c_accumulate(weights_, 0); }
+  int sign() const { return neg_one_pow(depth()); }
 
   auto as_tie() const { return std::tie(weights_, ratios_); }
 

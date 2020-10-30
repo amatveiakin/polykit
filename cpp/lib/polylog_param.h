@@ -19,8 +19,9 @@ public:
   const std::vector<int>& weights() const { return weights_; }
   const std::vector<std::vector<int>>& points() const { return points_; }
 
-  int sign() const { return neg_one_pow(points().size()); }
+  int depth() const { return points().size(); }
   int total_weight() const { return absl::c_accumulate(weights_, 0); }
+  int sign() const { return neg_one_pow(depth()); }
 
   auto as_tie() const { return std::tie(weights_, points_); }
 
