@@ -28,12 +28,13 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
   const int n = points.size();
   CHECK(n >= 4 && n % 2 == 0) << "Bad number of LiQuad points: " << n;
   auto ratio_from_points = [&](const std::vector<int>& points) {
-    return CompoundRatio::from_cross_ratio(CrossRatio(
-      sigma ? rotated_vector(points, 1) : points));
+    const auto& point_args = sigma ? rotated_vector(points, 1) : points;
+    return CompoundRatio::from_cross_ratio(CrossRatio(point_args));
   };
+  const int sigma_sign = sigma ? -1 : 1;
   if (n == 4) {
-    return (sigma ? -1 : 1) *
-      TFormalSymbolSigned(LiraParam({1}, {ratio_from_points(points)}));
+    return sigma_sign *
+      TFormalSymbol(LiraParam({1}, {ratio_from_points(points)}));
   }
   ThetaExpr ret;
   int last = n - 1;
@@ -54,19 +55,19 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
       }
       CHECK(!upper_parts.empty());
       const ThetaExpr upper_prod = theta_expr_quasi_shuffle_product(upper_parts);
-      ret += lower_part.sign() * upper_prod.mapped<ThetaExpr>([&](const ThetaPack& expr) {
+      ret += upper_prod.mapped<ThetaExpr>([&](const ThetaPack& expr) {
         return concat_format_symbols(lower_part, std::get<LiraParam>(expr));
       });
       if (sigma) {
-        ret += lower_part.sign() * upper_prod.mapped<ThetaExpr>([&](const ThetaPack& expr) {
+        ret += upper_prod.mapped<ThetaExpr>([&](const ThetaPack& expr) {
           return infuse_format_symbol(lower_part, std::get<LiraParam>(expr));
         });
       }
     }
   }
-  return ret;
+  return sigma_sign * ret;
 }
 
-ThetaExpr LiQuad(const std::vector<int>& points) {
-  return LiQuadImpl(points, false);
+ThetaExpr LiQuad(const std::vector<int>& points, LiFirstPoint first_point) {
+  return LiQuadImpl(points, first_point == LiFirstPoint::even);
 }

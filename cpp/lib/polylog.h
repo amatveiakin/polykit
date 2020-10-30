@@ -3,6 +3,7 @@
 #include "coalgebra.h"
 #include "epsilon.h"
 #include "polylog_param.h"
+#include "theta.h"
 
 
 EpsilonExpr LiVec(
@@ -18,6 +19,9 @@ EpsilonCoExpr CoLiVec(
 
 EpsilonCoExpr CoLiVec(
     const LiParam& param);
+
+ThetaExpr eval_formal_symbols(const ThetaExpr& expr);
+ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr);
 
 
 namespace internal {

@@ -5,9 +5,7 @@
 
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& cross_ratios) {
-  const std::vector<CompoundRatio>& compound_ratios =
-    mapped(cross_ratios, CompoundRatio::from_cross_ratio_product);
+    const std::vector<CompoundRatio>& compound_ratios) {
   ThetaExpr ret;
   expr.foreach([&](const EpsilonPack& term, int coeff) {
     if (epsilon_pack_is_unity(term)) {
@@ -45,29 +43,17 @@ ThetaExpr epsilon_expr_to_theta_expr(
               symbol_ratios.back().add(compound_ratios.at(p - 1));
             }
           }
-          return TFormalSymbolPositive(LiraParam(formal_symbol.weights(), symbol_ratios));
+          return TFormalSymbol(LiraParam(formal_symbol.weights(), symbol_ratios));
         },
       }, term);
   });
   return ret;
 }
 
-// ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
-//   ThetaExpr ret;
-//   expr.foreach([&](const ThetaPack& term, int coeff) {
-//     if (theta_pack_is_unity(term)) {
-//       ret += coeff * TUnity();
-//       return;
-//     }
-//     ret += coeff *
-//       std::visit(overloaded{
-//         [&](const std::vector<Theta>& term_product) {
-//           return ThetaExpr::single(term);
-//         },
-//         [&](const LiraParam& formal_symbol) {
-//           return ...;
-//         },
-//       }, term);
-//   });
-//   return ret;
-// }
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& cross_ratios) {
+  return epsilon_expr_to_theta_expr(
+    expr,
+    mapped(cross_ratios, CompoundRatio::from_cross_ratio_product));
+}

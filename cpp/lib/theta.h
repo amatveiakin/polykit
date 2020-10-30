@@ -237,12 +237,8 @@ inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> i
   return TComplement(CompoundRatio::from_cross_ratio_product(ratios));
 }
 
-inline ThetaExpr TFormalSymbolPositive(const LiraParam& lira_param) {
+inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) {
   return ThetaExpr::single(lira_param);
-}
-
-inline ThetaExpr TFormalSymbolSigned(const LiraParam& lira_param) {
-  return lira_param.sign() * TFormalSymbolPositive(lira_param);
 }
 
 
@@ -250,6 +246,10 @@ inline ThetaExpr TFormalSymbolSigned(const LiraParam& lira_param) {
 inline bool operator<(const Theta& lhs, const Theta& rhs) {
   return internal::theta_to_key(lhs) < internal::theta_to_key(rhs);
 }
+
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<CompoundRatio>& compound_ratios);
 
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,

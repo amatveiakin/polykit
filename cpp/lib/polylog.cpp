@@ -291,3 +291,50 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
   ret += coproduct(EFormalSymbolSigned(param), EUnity());
   return (param.sign() * ret).annotate(fmt::comult() + to_string(param));
 }
+
+
+ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
+  ThetaExpr ret;
+  expr.foreach([&](const ThetaPack& term, int coeff) {
+    if (theta_pack_is_unity(term)) {
+      ret += coeff * TUnity();
+      return;
+    }
+    ret += coeff *
+      std::visit(overloaded{
+        [&](const std::vector<Theta>& term_product) {
+          return ThetaExpr::single(term);
+        },
+        [&](const LiraParam& as_cross_ratios) {
+          std::vector<std::vector<int>> points;
+          for (int i = 1; i <= as_cross_ratios.depth(); ++i) {
+            points.push_back({i});
+          }
+          LiParam as_variables(as_cross_ratios.weights(), std::move(points));
+          const EpsilonExpr epsilon_expr = LiVec(as_variables);
+          return epsilon_expr_to_theta_expr(epsilon_expr, as_cross_ratios.ratios());
+        },
+      }, term);
+  });
+  return ret;
+}
+
+// TODO: Unite common logic with epsilon_coexpr_to_theta_coexpr
+ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
+  ThetaCoExpr ret;
+  expr.foreach([&](const std::array<ThetaPack, kThetaCoExprComponents>& term, int coeff) {
+    const std::array multipliers =
+      mapped_array(term, [&](const ThetaPack& pack) {
+        return eval_formal_symbols(ThetaExpr::single(pack));
+      });
+    static_assert(kThetaCoExprComponents == 2);
+    ret += coeff * outer_product<ThetaCoExpr>(
+      multipliers[0],
+      multipliers[1],
+      [](const MultiWord& lhs, const MultiWord& rhs) {
+        return std::array{lhs, rhs};
+      }
+    );
+  });
+  return ret;
+}

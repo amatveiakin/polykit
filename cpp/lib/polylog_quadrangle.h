@@ -4,4 +4,9 @@
 #include "theta.h"
 
 
-ThetaExpr LiQuad(const std::vector<int>& points);
+enum class LiFirstPoint {
+  odd,
+  even,
+};
+
+ThetaExpr LiQuad(const std::vector<int>& points, LiFirstPoint first_point = LiFirstPoint::odd);

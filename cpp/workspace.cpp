@@ -72,7 +72,12 @@ int main(int argc, char *argv[]) {
   //     {CR(3,4,5,2)},
   //   });
 
-  auto cr_expr = LiQuad({1,2,3,4,5,6});
+  auto cr_expr = LiQuad({1,2,3,4,5,6,7,8,9,10}, LiFirstPoint::odd);
+  // auto cr_expr = epsilon_expr_to_theta_expr(Li(1)({1}), {
+  //   {CR(1,2,3,4)},
+  // });
+
+  auto eval_expr = eval_formal_symbols(cr_expr);
 
   // auto cr_expr =
   //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1,1)({1},{2},{3}), {
@@ -115,6 +120,7 @@ int main(int argc, char *argv[]) {
   // std::cout << "D " << d << "\n";
   // std::cout << "Expr " << expr << "\n";
   std::cout << "Cross-ratio expr " << cr_expr << "\n";
+  std::cout << "Evaluated expr " << eval_expr << "\n";
   // std::cout << "Filtered " << filtered << "\n";
   // auto filtered = filter_coexpr(expr, 0, LiParam({1},{{1,2}}));
   // std::cout << "Expr filtered " << filtered << "\n";
