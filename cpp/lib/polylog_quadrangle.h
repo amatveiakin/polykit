@@ -9,4 +9,7 @@ enum class LiFirstPoint {
   even,
 };
 
-ThetaExpr LiQuad(const std::vector<int>& points, LiFirstPoint first_point = LiFirstPoint::odd);
+ThetaExpr LiQuad(
+    int foreweight,
+    const std::vector<int>& points,
+    LiFirstPoint first_point = LiFirstPoint::odd);

@@ -8,6 +8,8 @@
 #include "quasi_shuffle.h"
 
 
+constexpr int kForeweight = 1;
+
 static EpsilonExpr to_expression(const EpsilonPack& pack) {
   return std::visit(overloaded{
     [](const std::vector<Epsilon>& product) {
@@ -22,12 +24,13 @@ static EpsilonExpr to_expression(const EpsilonPack& pack) {
 using LiParamZipElement = std::pair<int, std::vector<int>>;
 
 static std::vector<LiParamZipElement> li_param_to_vec(const LiParam& param) {
+  CHECK_EQ(param.foreweight(), kForeweight) << to_string(param);
   return zip(param.weights(), param.points());
 }
 
 static LiParam vec_to_li_params(const std::vector<LiParamZipElement>& vec) {
   auto [weights, points] = unzip(vec);
-  return LiParam(std::move(weights), std::move(points));
+  return LiParam(kForeweight, std::move(weights), std::move(points));
 }
 
 static LiParamZipElement glue_li_elements(
@@ -147,12 +150,13 @@ EpsilonCoExpr mystic_product(
 using LiraParamZipElement = std::pair<int, CompoundRatio>;
 
 static std::vector<LiraParamZipElement> lira_param_to_vec(const LiraParam& param) {
+  CHECK_EQ(param.foreweight(), kForeweight) << to_string(param);
   return zip(param.weights(), param.ratios());
 }
 
 static LiraParam vec_to_lira_params(const std::vector<LiraParamZipElement>& vec) {
   auto [weights, ratios] = unzip(vec);
-  return LiraParam(std::move(weights), std::move(ratios));
+  return LiraParam(kForeweight, std::move(weights), std::move(ratios));
 }
 
 static LiraParamZipElement glue_lira_elements(

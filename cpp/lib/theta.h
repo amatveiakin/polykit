@@ -254,3 +254,9 @@ ThetaExpr epsilon_expr_to_theta_expr(
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
     const std::vector<std::vector<CrossRatio>>& cross_ratios);
+
+DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
+
+ThetaExpr update_foreweight(
+    const ThetaExpr& expr,
+    int new_foreweight);

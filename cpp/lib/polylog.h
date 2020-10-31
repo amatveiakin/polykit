@@ -7,6 +7,7 @@
 
 
 EpsilonExpr LiVec(
+    int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
 
@@ -14,6 +15,7 @@ EpsilonExpr LiVec(
     const LiParam& param);
 
 EpsilonCoExpr CoLiVec(
+    int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
 
@@ -31,7 +33,7 @@ public:
     : weights_(std::move(weights)) {}
   template<typename... Args>
   EpsilonExpr operator()(std::initializer_list<Args>... args) const {
-    return LiVec(weights_, std::vector({std::vector(args)...}));
+    return LiVec(1, weights_, std::vector({std::vector(args)...}));
   }
 private:
   std::vector<int> weights_;
@@ -43,7 +45,7 @@ public:
     : weights_(std::move(weights)) {}
   template<typename... Args>
   EpsilonCoExpr operator()(std::initializer_list<Args>... args) const {
-    return CoLiVec(weights_, std::vector({std::vector(args)...}));
+    return CoLiVec(1, weights_, std::vector({std::vector(args)...}));
   }
 private:
   std::vector<int> weights_;

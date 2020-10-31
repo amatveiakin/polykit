@@ -72,6 +72,5 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     expr = std::move(expr_new);
   };
   expr = expr.template mapped_key<LinearT>(LinearT::Param::shuffle_postprocess);
-  expr.copy_annotations(expression);
-  return expr;
+  return expr.copy_annotations(expression);
 }

@@ -72,12 +72,39 @@ int main(int argc, char *argv[]) {
   //     {CR(3,4,5,2)},
   //   });
 
-  auto cr_expr = LiQuad({1,2,3,4,5,6,7,8,9,10}, LiFirstPoint::odd);
+  // const int fw = 4;
+  // auto cr_expr =
+  //   + epsilon_expr_to_theta_expr(LiVec(fw, {1,1}, {{1},{2}}), {
+  //     {CR(3,4,7,2)},
+  //     {CR(5,6,7,4)},
+  //   })
+  //   - epsilon_expr_to_theta_expr(LiVec(fw, {1,1}, {{1},{2}}), {
+  //     {CR(3,6,7,2)},
+  //     {CR(3,4,5,6)},
+  //   })
+  //   + epsilon_expr_to_theta_expr(LiVec(fw, {1,1}, {{1},{2}}), {
+  //     {CR(5,6,7,2)},
+  //     {CR(3,4,5,2)},
+  //   })
+  //   + epsilon_expr_to_theta_expr(LiVec(fw, {2}, {{1,2}}), {
+  //     {CR(5,6,7,2)},
+  //     {CR(3,4,5,2)},
+  //   });
+
   // auto cr_expr = epsilon_expr_to_theta_expr(Li(1)({1}), {
   //   {CR(1,2,3,4)},
   // });
 
+  auto cr_expr = LiQuad(2, {1,2,3,4,5,6}, LiFirstPoint::odd);
   auto eval_expr = eval_formal_symbols(cr_expr);
+  auto d_expr = theta_expr_to_delta_expr(eval_expr);
+  auto legacy_expr = Lido4(1,2,3,4,5,6);
+  auto diff = d_expr - legacy_expr;
+
+  // auto expr = LiVec(2, {1}, {{1}});
+  // auto cr_expr = epsilon_expr_to_theta_expr(expr, {
+  //   {CR(1,2,3,4)},
+  // });
 
   // auto cr_expr =
   //   + epsilon_coexpr_to_theta_coexpr(CoLi(1,1,1)({1},{2},{3}), {
@@ -120,7 +147,10 @@ int main(int argc, char *argv[]) {
   // std::cout << "D " << d << "\n";
   // std::cout << "Expr " << expr << "\n";
   std::cout << "Cross-ratio expr " << cr_expr << "\n";
-  std::cout << "Evaluated expr " << eval_expr << "\n";
+  // std::cout << "Evaluated expr " << eval_expr << "\n";
+  // std::cout << "Converted " << d_expr << "\n";
+  // std::cout << "Legacy " << legacy_expr << "\n";
+  std::cout << "Diff " << diff << "\n";
   // std::cout << "Filtered " << filtered << "\n";
   // auto filtered = filter_coexpr(expr, 0, LiParam({1},{{1,2}}));
   // std::cout << "Expr filtered " << filtered << "\n";

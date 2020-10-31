@@ -170,16 +170,20 @@ inline std::string to_string(const CompoundRatio& ratio) {
 class LiraParam {
 public:
   LiraParam() {}
-  LiraParam(std::vector<int> weights, std::vector<CompoundRatio> ratios)
-      : weights_(std::move(weights)), ratios_(std::move(ratios)) {
+  LiraParam(int foreweight, std::vector<int> weights, std::vector<CompoundRatio> ratios)
+      : foreweight_(foreweight), weights_(std::move(weights)), ratios_(std::move(ratios)) {
     CHECK_EQ(weights_.size(), ratios_.size());
+    CHECK_GT(weights_.size(), 0);
+    CHECK_GE(foreweight_, 1);
+    CHECK(absl::c_all_of(weights_, [](int w) { return w >= 1; }));
   }
 
+  int foreweight() const { return foreweight_; }
   const std::vector<int>& weights() const { return weights_; }
   const std::vector<CompoundRatio>& ratios() const { return ratios_; }
 
   int depth() const { return ratios().size(); }
-  int total_weight() const { return absl::c_accumulate(weights_, 0); }
+  int total_weight() const { return foreweight_ + absl::c_accumulate(weights_, 0) - 1; }
   int sign() const { return neg_one_pow(depth()); }
 
   auto as_tie() const { return std::tie(weights_, ratios_); }
@@ -188,6 +192,7 @@ public:
   bool operator< (const LiraParam& other) const { return as_tie() <  other.as_tie(); }
 
 private:
+  int foreweight_ = 0;
   std::vector<int> weights_;
   std::vector<CompoundRatio> ratios_;
 };

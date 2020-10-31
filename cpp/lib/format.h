@@ -25,8 +25,20 @@ public:
 
   virtual std::string coeff(int v) = 0;
 
-  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) = 0;
-  virtual std::string sub_num(const std::string& main, const std::vector<int>& indices);
+  virtual std::string sub(
+      const std::string& main,
+      const std::vector<std::string>& indices) = 0;
+  virtual std::string sub_num(
+      const std::string& main,
+      const std::vector<int>& indices);
+  virtual std::string lrsub(
+      const std::string& left_index,
+      const std::string& main,
+      const std::vector<std::string>& right_indices) = 0;
+  virtual std::string lrsub_num(
+      int left_index,
+      const std::string& main,
+      const std::vector<int>& right_indices);
 
   virtual std::string var(int idx) = 0;
   virtual std::string function(
@@ -60,11 +72,27 @@ inline std::string coeff(int v) {
   return formatter->coeff(v);
 }
 
-inline std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+inline std::string sub(
+    const std::string& main,
+    const std::vector<std::string>& indices) {
   return formatter->sub(main, indices);
 }
-inline std::string sub_num(const std::string& main, const std::vector<int>& indices) {
+inline std::string sub_num(
+    const std::string& main,
+    const std::vector<int>& indices) {
   return formatter->sub_num(main, indices);
+}
+inline std::string lrsub(
+    const std::string& left_index,
+    const std::string& main,
+    const std::vector<std::string>& right_indices) {
+  return formatter->lrsub(left_index, main, right_indices);
+}
+inline std::string lrsub_num(
+    int left_index,
+    const std::string& main,
+    const std::vector<int>& right_indices) {
+  return formatter->lrsub_num(left_index, main, right_indices);
 }
 
 inline std::string var(int idx) {

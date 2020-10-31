@@ -92,18 +92,18 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg4_Weight8) {
 #endif
 
 TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
-  const LiParam li_a({1,1},{{1},{2}});
-  const LiParam li_b({1,1},{{2},{1}});
-  const LiParam li_c({2},{{1,2}});
+  const LiParam li_a(1, {1,1},{{1},{2}});
+  const LiParam li_b(1, {1,1},{{2},{1}});
+  const LiParam li_c(1, {2},{{1,2}});
   EXPECT_EXPR_EQ(
     + CoLiVec(li_a)
     + CoLiVec(li_b)
     + CoLiVec(li_c)
     ,
-    + coproduct(EFormalSymbolPositive(LiParam({1}, {{1}})),
-                EFormalSymbolPositive(LiParam({1}, {{2}})))
-    + coproduct(EFormalSymbolPositive(LiParam({1}, {{2}})),
-                EFormalSymbolPositive(LiParam({1}, {{1}})))
+    + coproduct(EFormalSymbolPositive(LiParam(1, {1}, {{1}})),
+                EFormalSymbolPositive(LiParam(1, {1}, {{2}})))
+    + coproduct(EFormalSymbolPositive(LiParam(1, {1}, {{2}})),
+                EFormalSymbolPositive(LiParam(1, {1}, {{1}})))
     + coproduct(EUnity(), EFormalSymbolPositive(li_a))
     + coproduct(EUnity(), EFormalSymbolPositive(li_b))
     + coproduct(EUnity(), EFormalSymbolPositive(li_c))

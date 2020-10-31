@@ -78,10 +78,11 @@ std::optional<CompoundRatio> CompoundRatio::one_minus() const {
 }
 
 
-Word lira_param_to_key(const LiraParam& params) {
+Word lira_param_to_key(const LiraParam& param) {
   Compressor compressor;
-  compressor.add_segment(params.weights());
-  for (const auto& r : params.ratios()) {
+  compressor.add_segment({param.foreweight()});
+  compressor.add_segment(param.weights());
+  for (const auto& r : param.ratios()) {
     compressor.add_segment(r.serialized());
   }
   return Word(std::move(compressor).result());
@@ -89,19 +90,21 @@ Word lira_param_to_key(const LiraParam& params) {
 
 LiraParam key_to_lira_param(const Word& word) {
   Decompressor decompressor(word.span());
+  std::vector<int> foreweight = decompressor.next_segment();
+  CHECK_EQ(foreweight.size(), 1);
   std::vector<int> weights = decompressor.next_segment();
   std::vector<CompoundRatio> ratios;
   while (!decompressor.done()) {
     ratios.push_back(CompoundRatio::from_serialized(
       absl::MakeConstSpan(decompressor.next_segment())));
   }
-  return LiraParam(std::move(weights), std::move(ratios));
+  return LiraParam(foreweight.front(), std::move(weights), std::move(ratios));
 }
 
-std::string to_string(const LiraParam& params) {
+std::string to_string(const LiraParam& param) {
   return fmt::function(
-    fmt::sub_num("Li", params.weights()),
-    mapped(params.ratios(), [](const CompoundRatio& ratio){
+    fmt::lrsub_num(param.foreweight(), "Li", param.weights()),
+    mapped(param.ratios(), [](const CompoundRatio& ratio){
       return to_string(ratio);
     }),
     HSpacing::sparse

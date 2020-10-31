@@ -26,9 +26,11 @@ static constexpr inline bool is_zero(int index) { return index == kZero; }
 static constexpr inline bool is_one (int index) { return index == kOne; }
 
 
-std::vector<int> weights_to_dots(const std::vector<int>& weights) {
+std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights) {
   std::vector<int> dots;
-  dots.push_back(kZero);
+  for (int j = 0; j < foreweight; ++j) {
+    dots.push_back(kZero);
+  }
   dots.push_back(kOne);
   for (int i = 0; i < weights.size(); ++i) {
     const int w = weights[i];
@@ -46,14 +48,16 @@ std::vector<int> weights_to_dots(const std::vector<int>& weights) {
 LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   std::vector<int> dots = dots_orig;
   CHECK_GE(dots.size(), 3) << list_to_string(dots_orig);
-  CHECK(is_zero(dots.front())) << list_to_string(dots_orig);
   CHECK(is_var(dots.back())) << list_to_string(dots_orig);
 
+  const int foreweight = absl::c_find_if_not(dots, is_zero) - dots.begin();
+  CHECK_GT(foreweight, 0) << list_to_string(dots_orig);
+
   int common_vars = 0;
-  if (is_var(dots[1])) {
+  if (is_var(dots[foreweight])) {
     // Cancel common multipliers
-    common_vars = dots[1];
-    dots[1] = kOne;
+    common_vars = dots[foreweight];
+    dots[foreweight] = kOne;
     for (int i = 2; i < dots.size(); ++i) {
       int& dot = dots[i];
       if (is_var(dot)) {
@@ -66,7 +70,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   std::vector<std::vector<int>> points;
   int cur_weight = 0;
   int prev_vars = 0;
-  for (int i = 2; i < dots.size(); ++i) {
+  for (int i = foreweight + 1; i < dots.size(); ++i) {
     const int dot = dots[i];
     CHECK(!is_one(dot)) << list_to_string(dots_orig);
     if (is_var(dot)) {
@@ -81,7 +85,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
       ++cur_weight;
     }
   }
-  return LiParam(std::move(weights), std::move(points));
+  return LiParam(foreweight, std::move(weights), std::move(points));
 }
 
 static EpsilonExpr EFormalSymbolSigned(const std::vector<int>& dots) {
@@ -206,27 +210,29 @@ static EpsilonExpr Li_impl(const std::vector<int>& points) {
 
 // Optimization potential: Add cache
 EpsilonExpr LiVec(
+    int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
-  return LiVec(LiParam(weights, points));
+  return LiVec(LiParam(foreweight, weights, points));
 }
 
 EpsilonExpr LiVec(const LiParam& param) {
   return epsilon_expr_substitute(
-      param.sign() * Li_impl(weights_to_dots(param.weights())),
+      param.sign() * Li_impl(weights_to_dots(param.foreweight(), param.weights())),
       param.points()
     ).annotate(to_string(param));
 }
 
 
 EpsilonCoExpr CoLiVec(
+    int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
-  return CoLiVec(LiParam(weights, points));
+  return CoLiVec(LiParam(foreweight, weights, points));
 }
 
 EpsilonCoExpr CoLiVec(const LiParam& param) {
-  const std::vector<int> dots = weights_to_dots(param.weights());
+  const std::vector<int> dots = weights_to_dots(param.foreweight(), param.weights());
   const int total_weight = dots.size() - 2;
   CHECK_EQ(total_weight, param.total_weight());
 
@@ -310,13 +316,14 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
           for (int i = 1; i <= as_cross_ratios.depth(); ++i) {
             points.push_back({i});
           }
-          LiParam as_variables(as_cross_ratios.weights(), std::move(points));
+          LiParam as_variables(
+            as_cross_ratios.foreweight(), as_cross_ratios.weights(), std::move(points));
           const EpsilonExpr epsilon_expr = LiVec(as_variables);
           return epsilon_expr_to_theta_expr(epsilon_expr, as_cross_ratios.ratios());
         },
       }, term);
   });
-  return ret;
+  return ret.copy_annotations(expr);
 }
 
 // TODO: Unite common logic with epsilon_coexpr_to_theta_coexpr

@@ -15,6 +15,9 @@ static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
 std::string Formatter::sub_num(const std::string& main, const std::vector<int>& indices) {
   return sub(main, ints_to_strings(indices));
 }
+std::string Formatter::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
+  return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
+}
 
 
 class PlainTextFormatter : public Formatter {
@@ -44,7 +47,17 @@ class PlainTextFormatter : public Formatter {
   }
 
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    CHECK(!indices.empty());
     return absl::StrCat(main, "_", str_join(indices, "_"));
+  }
+  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+    CHECK(!main.empty());
+    return absl::StrCat(
+      left_index.empty() ? "" : absl::StrCat(left_index, "_"),
+      main,
+      right_indices.empty() ? "" : absl::StrCat("_", str_join(right_indices, "_"))
+    );
   }
 
   virtual std::string Formatter::var(int idx) {
@@ -88,7 +101,18 @@ class LatexFormatter : public Formatter {
   }
 
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    CHECK(!indices.empty());
     return absl::StrCat(main, "_{", str_join(indices, ","), "}");
+  }
+  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+    CHECK(!main.empty());
+    // TODO: Cleaner solution, e.g. \tensor
+    return absl::StrCat(
+      left_index.empty() ? "" : absl::StrCat("{}_{", left_index, "}"),
+      main,
+      right_indices.empty() ? "" : absl::StrCat("_{", str_join(right_indices, ","), "}")
+    );
   }
 
   virtual std::string Formatter::var(int idx) {
