@@ -12,6 +12,11 @@ void EXPECT_EXPR_EQ(const LinearT& lhs, const LinearT& rhs) {
 }
 
 template<typename LinearT>
+void EXPECT_EXPR_ZERO(const LinearT& expr) {
+  EXPECT_TRUE(expr.zero()) << "Expression " << expr;
+}
+
+template<typename LinearT>
 void EXPECT_EXPR_EQ_AFTER_LYNDON(const LinearT& lhs, const LinearT& rhs) {
   const LinearT diff = lhs - rhs;
   const LinearT diff_lyndon = to_lyndon_basis(diff);

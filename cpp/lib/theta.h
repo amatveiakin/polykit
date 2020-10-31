@@ -257,6 +257,8 @@ ThetaExpr epsilon_expr_to_theta_expr(
 
 DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
+ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
+
 ThetaExpr update_foreweight(
     const ThetaExpr& expr,
     int new_foreweight);

@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "lib/cotheta.h"
 #include "test_util/matchers.h"
 
 
@@ -90,6 +91,50 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg4_Weight8) {
   );
 }
 #endif
+
+TEST(LiTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
+  const int foreweight = 2;  // Should be true for any foreweight
+  EXPECT_EXPR_ZERO(
+    theta_expr_keep_monsters(
+      + epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+        {CR(3,4,7,2)},
+        {CR(5,6,7,4)},
+      })
+      - epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+        {CR(3,6,7,2)},
+        {CR(3,4,5,6)},
+      })
+      + epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+        {CR(5,6,7,2)},
+        {CR(3,4,5,2)},
+      })
+      + epsilon_expr_to_theta_expr(LiVec(foreweight, {2}, {{1,2}}), {
+        {CR(5,6,7,2)},
+        {CR(3,4,5,2)},
+      })
+    )
+  );
+}
+
+// TODO:
+// TEST(CoLiTest, HandwrittenCoLiQuad_StartOdd_HasNoMonsters) {
+//   EXPECT_EXPR_ZERO(
+//     theta_expr_keep_monsters(
+//       + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+//         {CR(1,2,3,6)},
+//         {CR(3,4,5,6)},
+//       })
+//       - epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+//         {CR(1,2,5,6)},
+//         {CR(3,4,5,2)},
+//       })
+//       + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
+//         {CR(1,4,5,6)},
+//         {CR(1,2,3,4)},
+//       })
+//     )
+//   )
+// };
 
 TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
   const LiParam li_a(1, {1,1},{{1},{2}});

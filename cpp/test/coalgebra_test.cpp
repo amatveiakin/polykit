@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/iterated_integral.h"
+#include "lib/polylog.h"
 #include "test_util/matchers.h"
 
 
@@ -71,5 +72,30 @@ TEST(ComultiplyTest, Zero) {
       {2, 2}
     ),
     WordCoExpr{}
+  );
+}
+
+TEST(CoalgebraUtilTest, FilterCoexpr) {
+  EXPECT_EXPR_EQ(
+    filter_coexpr_predicate(
+      CoLi(1,5)({1},{2}),
+      0,
+      [](const EpsilonPack& pack) {
+        return std::visit(overloaded{
+          [](const std::vector<Epsilon>& product) {
+            return false;
+          },
+          [](const LiParam& formal_symbol) {
+            return formal_symbol.points().size() == 1 &&
+              formal_symbol.points().front().size() == 2 &&
+              formal_symbol.weights().front() >= 5;
+          },
+        }, pack);
+      }
+    ),
+    (
+      - coproduct(EFormalSymbolPositive(LiParam(1, {5}, {{1,2}})), EVar(1))
+      + coproduct(EFormalSymbolPositive(LiParam(1, {5}, {{1,2}})), EComplementIndexList({1}))
+    )
   );
 }

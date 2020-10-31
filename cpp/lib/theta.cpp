@@ -76,6 +76,21 @@ DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr) {
   });
 }
 
+ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr) {
+  return expr.filtered([](const ThetaPack& term) {
+    return std::visit(overloaded{
+      [](const std::vector<Theta>& term_product) -> bool {
+        return absl::c_any_of(term_product, [](const Theta& t) {
+          return !std::holds_alternative<Delta>(t);
+        });
+      },
+      [](const LiraParam& formal_symbol) -> bool {
+        FAIL("Unexpected formal symbol: " + to_string(formal_symbol));
+      },
+    }, term);
+  });
+}
+
 ThetaExpr update_foreweight(
     const ThetaExpr& expr,
     int new_foreweight) {
