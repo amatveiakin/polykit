@@ -17,5 +17,5 @@ WordExpr project_on(int axis, const DeltaExpr& expr) {
     }
     ret.add_to_key(word, coeff);
   });
-  return ret;
+  return ret.copy_annotations(expr);
 }

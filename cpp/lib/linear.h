@@ -344,8 +344,9 @@ public:
     annotations_ += BasicLinearAnnotation::single(annotation);
     return *this;
   }
-  Linear& copy_annotations(const Linear& other) {
-    annotations_ += other.annotations_;
+  template<typename SourceLinearT>
+  Linear& copy_annotations(const SourceLinearT& other) {
+    annotations_ += other.annotations();
     return *this;
   }
   Linear without_annotations() const {

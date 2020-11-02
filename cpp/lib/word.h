@@ -12,7 +12,7 @@
 #include "linear.h"
 
 
-// constexpr int kWordStorageSize = 16;  // TODO: revert
+// constexpr int kWordStorageSize = 16;
 constexpr int kWordStorageSize = 32;
 constexpr int kMaxWordSize = kWordStorageSize - 1;  // 1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
@@ -162,5 +162,28 @@ LinearT terms_with_min_distinct_elements(const LinearT& expr, int min_distinct) 
   static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
   return expr.filtered_key([&](const Word& key) {
     return distinct_chars(key) >= min_distinct;
+  });
+}
+
+inline Word word_to_template(const Word& word) {
+  Word ret;
+  absl::flat_hash_map<int, int> index_map;
+  int next_index = 0;
+  for (const int ch : word) {
+    if (!index_map.contains(ch)) {
+      index_map[ch] = next_index;
+      ++next_index;
+    }
+    ret.push_back(index_map[ch]);
+  }
+  return ret;
+}
+
+template<typename LinearT>
+LinearT terms_by_template(const LinearT& expr, const Word& proto_tmpl) {
+  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
+  const Word tmpl = word_to_template(proto_tmpl);
+  return expr.filtered_key([&](const Word& key) {
+    return word_to_template(key) == tmpl;
   });
 }

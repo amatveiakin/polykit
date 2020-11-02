@@ -5,15 +5,13 @@
 #include "algebra.h"
 
 
-namespace internal {
-
-static DeltaExpr I_3_point(const absl::Span<const int>& p) {
+static DeltaExpr I_3_point(const absl::Span<const X>& p) {
   CHECK_EQ(p.size(), 3);
   return D(p[2], p[1]) - D(p[1], p[0]);
 }
 
 // Optimization potential: Add cache
-DeltaExpr I_impl(const std::vector<int>& points) {
+static DeltaExpr I_impl(const std::vector<X>& points) {
   const int num_points = points.size();
   CHECK_GE(num_points, 3);
   DeltaExpr ret;
@@ -27,8 +25,10 @@ DeltaExpr I_impl(const std::vector<int>& points) {
       );
     }
   }
-  // TODO: Annotate in non-recursive part.
-  return ret.annotate(fmt::function_indexed_args("I", points));
+  return ret;
 }
 
-}  // namespace internal
+DeltaExpr IVec(const std::vector<X>& points) {
+  return I_impl(points).annotate(
+    fmt::function("I", mapped(points, [](X x){ return to_string(x); })));
+}

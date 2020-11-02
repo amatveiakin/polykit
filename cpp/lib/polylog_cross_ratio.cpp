@@ -48,13 +48,18 @@ static DeltaExpr Lido_impl(int weight, const std::vector<int>& points) {
 
 
 // Optimization potential: Add cache
-DeltaExpr Lido(int weight, const std::vector<int>& points) {
+DeltaExpr LidoVec(int weight, const std::vector<X>& points) {
   const int num_points = points.size();
   const auto asc_points = seq_incl(1, num_points);
   return delta_expr_substitute(
     Lido_impl(weight, asc_points),
     points
-  ).annotate(fmt::function_indexed_args(
-    fmt::sub_num("Lido", {weight}), points
+  ).annotate(fmt::function(
+    fmt::sub_num("Lido", {weight}),
+    mapped(points, [](X x){ return to_string(x); })
   ));
+}
+
+DeltaExpr LidoVec(int weight, const std::vector<int>& points) {
+  return LidoVec(weight, mapped(points, [](int p){ return X(p); }));
 }

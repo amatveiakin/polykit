@@ -4,7 +4,7 @@
 #include "util.h"
 
 
-inline DeltaExpr cross_ratio(int a, int b, int c, int d) {
+inline DeltaExpr cross_ratio(X a, X b, X c, X d) {
   return D(a, b) + D(c, d) - D(b, c) - D(d, a);
 }
 
@@ -19,20 +19,17 @@ DeltaExpr cross_ratio(const T& v) {
 }
 
 // 1 - cross_ratio(a, b, c, d)
-inline DeltaExpr neg_cross_ratio(int a, int b, int c, int d) {
+inline DeltaExpr neg_cross_ratio(X a, X b, X c, X d) {
   return cross_ratio(a, c, b, d);
 }
 
-DeltaExpr Lido(int weight, const std::vector<int>& points);
+DeltaExpr LidoVec(int weight, const std::vector<X>& points);
+DeltaExpr LidoVec(int weight, const std::vector<int>& points);
 
 namespace internal {
 template<typename... Args>
 DeltaExpr Lido_dispatch(int weight, Args... args) {
-  return Lido(weight, {args...});
-}
-template<>
-inline DeltaExpr Lido_dispatch(int weight, const std::vector<int>& points) {
-  return Lido(weight, points);
+  return LidoVec(weight, std::vector<X>{args...});
 }
 }  // namespace internal
 

@@ -38,6 +38,7 @@ TEST(LiQuadTest, CompareToLegacy_Arg6_Weight4) {
     Lido4(1,2,3,4,5,6)
   );
 }
+#if 0  // Large tests
 TEST(LiQuadTest, CompareToLegacy_Arg8_Weight3) {
   EXPECT_EXPR_EQ(
     theta_expr_to_delta_expr(eval_formal_symbols(
@@ -46,3 +47,4 @@ TEST(LiQuadTest, CompareToLegacy_Arg8_Weight3) {
     -Lido3(1,2,3,4,5,6,7,8)
   );
 }
+#endif

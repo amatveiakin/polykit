@@ -9,6 +9,7 @@
 #include "linear.h"
 #include "util.h"
 #include "word.h"
+#include "x.h"
 
 
 // TODO: Implement integratability criterion
@@ -17,11 +18,18 @@
 class Delta {
 public:
   Delta() {}
-  Delta(int a, int b) : a_(a), b_(b) {
-    CHECK_GE(a_, 1);
-    CHECK_GE(b_, 1);
-    if (a_ > b_) {
-      std::swap(a_, b_);
+  Delta(X a, X b) {
+    if (a == Inf || b == Inf) {
+      a_ = 0;
+      b_ = 0;
+    } else {
+      a_ = a.var();
+      b_ = b.var();
+      CHECK_GE(a_, 1);
+      CHECK_GE(b_, 1);
+      if (a_ > b_) {
+        std::swap(a_, b_);
+      }
     }
   }
 
@@ -64,6 +72,7 @@ public:
   }
 
   int to_alphabet(const Delta& d) const {
+    CHECK(!d.is_nil());
     CHECK_LE(d.b(), kMaxDimension);
     const int za = d.a() - 1;
     const int zb = d.b() - 1;
@@ -118,7 +127,7 @@ struct DeltaExprParam {
 
 using DeltaExpr = Linear<internal::DeltaExprParam>;
 
-inline DeltaExpr D(int a, int b) {
+inline DeltaExpr D(X a, X b) {
   Delta d(a, b);
   return d.is_nil() ? DeltaExpr() : DeltaExpr::single({d});
 }
@@ -126,4 +135,4 @@ inline DeltaExpr D(int a, int b) {
 
 DeltaExpr delta_expr_substitute(
     const DeltaExpr& expr,
-    const std::vector<int>& new_points);
+    const std::vector<X>& new_points);
