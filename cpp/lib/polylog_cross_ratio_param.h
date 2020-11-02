@@ -71,18 +71,13 @@ inline std::string to_string(const CrossRatio& ratio) {
 class CompoundRatio {
 public:
   CompoundRatio() {}
-  CompoundRatio(std::vector<Delta> numerator, std::vector<Delta> denominator)
-    : numerator_(std::move(numerator)), denominator_(std::move(denominator)) {
+  CompoundRatio(std::vector<std::vector<int>> loops)
+    : loops_(std::move(loops)) {
     normalize();
   }
 
-  static CompoundRatio from_cross_ratio(const CrossRatio ratio) {
-    const auto& v = ratio.indices();
-    static_assert(kCrossRatioElements == 4);
-    return CompoundRatio(
-      {Delta(v[0], v[1]), Delta(v[2], v[3])},
-      {Delta(v[1], v[2]), Delta(v[3], v[0])}
-    );
+  static CompoundRatio from_cross_ratio(const CrossRatio& ratio) {
+    return CompoundRatio({std::vector<int>{ratio.indices().begin(), ratio.indices().end()}});
   }
   static CompoundRatio from_cross_ratio_product(const std::vector<CrossRatio>& ratios) {
     CompoundRatio ret;
@@ -92,78 +87,58 @@ public:
     return ret;
   }
 
-  template<typename T>
-  static CompoundRatio from_serialized(absl::Span<const T> data) {
-    CHECK(data.size() % 4 == 0);
-    const int n = data.size() / 2;
-    std::vector<Delta> numerator, denominator;
-    for (int i = 0; i < n; i += 2) {
-      numerator.push_back(Delta(data[i], data[i+1]));
+  static CompoundRatio from_compressed(Decompressor& decompressor) {
+    std::vector<std::vector<int>> loops;
+    const std::vector<int> size_vec = decompressor.next_segment();
+    CHECK_EQ(size_vec.size(), 1);
+    const int size = size_vec.front();
+    for (int i = 0; i < size; ++i) {
+      loops.push_back(decompressor.next_segment());
     }
-    for (int i = n; i < 2*n; i += 2) {
-      denominator.push_back(Delta(data[i], data[i+1]));
-    }
-    return CompoundRatio(std::move(numerator), std::move(denominator));
+    return CompoundRatio(std::move(loops));
   }
-  std::vector<int> serialized() const {
-    std::vector<int> ret;
-    // No need to mark segments split because enumerator and denominator are
-    // always the same length.
-    for (const Delta& d : numerator_) {
-      ret.push_back(d.a());
-      ret.push_back(d.b());
+  void compress(Compressor& compressor) const {
+    compressor.add_segment({int(loops_.size())});
+    for (const auto& l : loops_) {
+      compressor.add_segment(l);
     }
-    for (const Delta& d : denominator_) {
-      ret.push_back(d.a());
-      ret.push_back(d.b());
-    }
-    return ret;
   }
 
-  void add(CompoundRatio ratio) {
-    append_vector(numerator_, std::move(ratio.numerator_));
-    append_vector(denominator_, std::move(ratio.denominator_));
+  void add(const CompoundRatio& ratio) {
+    append_vector(loops_, ratio.loops_);
     normalize();
   }
   void add(const CrossRatio& ratio) {
     add(CompoundRatio::from_cross_ratio(ratio));
   }
 
-  const std::vector<Delta>& numerator()   const { return numerator_; }
-  const std::vector<Delta>& denominator() const { return denominator_; }
+  std::vector<std::vector<int>> loops() const { return loops_; };
 
   void normalize();
 
   std::optional<CompoundRatio> one_minus() const;
 
   void check() const {
-    CHECK_EQ(numerator_.size(), denominator_.size());
-    CHECK_GE(numerator_.size(), kMinCompoundRatioComponents);
+    CHECK(!loops_.empty());
+    CHECK(loops_.front().size() % 2 == 0);
+    CHECK_GE(loops_.front().size(), kMinCompoundRatioComponents);
   }
 
-  auto as_tie() const { return std::tie(numerator_, denominator_); }
-
-  bool operator==(const CompoundRatio& other) const { return as_tie() == other.as_tie(); }
-  bool operator< (const CompoundRatio& other) const { return as_tie() <  other.as_tie(); }
+  bool operator==(const CompoundRatio& other) const { return loops_ == other.loops_; }
+  bool operator< (const CompoundRatio& other) const { return loops_ <  other.loops_; }
 
 private:
-  // TODO: Store as non-overlaping loops instead (e.g. [1,2,3,4,5,6][7,8,9,10])
-  std::vector<Delta> numerator_;
-  std::vector<Delta> denominator_;
+  std::vector<std::vector<int>> loops_;
 };
 
 inline std::string to_string(const CompoundRatio& ratio) {
-  std::string ret;
-  for (const Delta& d : ratio.numerator()) {
-    if (!ret.empty()) {
-      ret += fmt::dot();
+  return str_join(
+    ratio.loops(),
+    "",
+    [](const std::vector<int>& loop) {
+      return absl::StrCat("[", str_join(loop, ","), "]");
     }
-    ret += absl::StrCat("[", d.a(), ",", d.b(), "]");
-  }
-  for (const Delta& d : ratio.denominator()) {
-    ret += absl::StrCat("/[", d.a(), ",", d.b(), "]");
-  }
-  return ret;
+  );
 }
 
 

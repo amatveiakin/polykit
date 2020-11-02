@@ -7,6 +7,7 @@
 #include "absl/algorithm/container.h"
 
 #include "check.h"
+#include "cross_ratio.h"
 #include "epsilon.h"
 #include "format.h"
 #include "multiword.h"
@@ -78,10 +79,9 @@ inline ThetaStorageType theta_to_key(const Theta& t) {
       return Word({delta_alphabet_mapping.to_alphabet(d)});
     },
     [](const ThetaComplement& complement) {
-      // TODO: Compress
-      const auto serialized = complement.ratio().serialized();
-      CHECK_GT(serialized.size(), 1);
-      return Word(serialized.begin(), serialized.end());
+      Compressor compressor;
+      complement.ratio().compress(compressor);
+      return Word(std::move(compressor).result());
     },
   }, t);
 }
@@ -90,7 +90,10 @@ inline Theta key_to_theta(ThetaStorageType key) {
   if (key.size() == 1) {
     return delta_alphabet_mapping.from_alphabet(key.front());
   } else {
-    return ThetaComplement(CompoundRatio::from_serialized(key.span()));
+    Decompressor decompressor(key.span());
+    Theta ret = ThetaComplement(CompoundRatio::from_compressed(decompressor));
+    CHECK(decompressor.done());
+    return ret;
   }
 }
 
@@ -194,6 +197,18 @@ struct ThetaExprParam {
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
 
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<CompoundRatio>& compound_ratios);
+
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& cross_ratios);
+
+ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
+
+DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
+
 // Whether expr is one w.r.t. shuffle multiplication.
 inline bool theta_pack_is_unity(const ThetaPack& pack) {
   const auto* as_product = std::get_if<std::vector<Theta>>(&pack);
@@ -209,9 +224,11 @@ inline ThetaExpr TUnity() {
 }
 
 inline ThetaExpr TRatio(const CompoundRatio& ratio) {
-  auto to_theta = [](const Delta& d) { return std::vector<Theta>{d}; };
-  return ThetaExpr::from_collection(mapped(ratio.numerator(), to_theta)) -
-         ThetaExpr::from_collection(mapped(ratio.denominator(), to_theta));
+  ThetaExpr ret;
+  for (const std::vector<int>& l : ratio.loops()) {
+    ret += delta_expr_to_theta_expr(cross_ratio(l));
+  }
+  return ret;
 }
 
 inline ThetaExpr TRatio(const CrossRatio& ratio) {
@@ -246,16 +263,6 @@ inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) {
 inline bool operator<(const Theta& lhs, const Theta& rhs) {
   return internal::theta_to_key(lhs) < internal::theta_to_key(rhs);
 }
-
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<CompoundRatio>& compound_ratios);
-
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& cross_ratios);
-
-DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
 ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
 

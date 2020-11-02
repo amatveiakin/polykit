@@ -11,7 +11,7 @@ public:
   static constexpr int kInf = 1000;
 
   constexpr X() {}
-  constexpr X(int idx) : idx_(idx) {
+  constexpr X(int idx) : idx_(idx) {  // TODO: explicit
     CHECK_LT(0, idx_);
     CHECK_LE(idx_, kMaxVariableIndex);
   }

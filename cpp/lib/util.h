@@ -119,6 +119,12 @@ void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
   absl::c_move(src, dst.begin() + old_size);
 }
 
+template<typename T>
+std::vector<T> sorted(std::vector<T> v) {
+  absl::c_sort(v);
+  return v;
+}
+
 template<typename First, typename Second>
 std::vector<std::pair<First, Second>> zip(
     const std::vector<First>& first,

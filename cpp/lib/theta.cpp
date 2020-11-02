@@ -59,6 +59,14 @@ ThetaExpr epsilon_expr_to_theta_expr(
     mapped(cross_ratios, CompoundRatio::from_cross_ratio_product));
 }
 
+ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr) {
+  return expr.mapped<ThetaExpr>([](const std::vector<Delta>& term) -> ThetaPack {
+    return mapped(term, [](const Delta& d) -> Theta {
+      return d;
+    });
+  });
+}
+
 DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr) {
   return expr.mapped<DeltaExpr>([&](const ThetaPack& term) -> std::vector<Delta> {
     return std::visit(overloaded{

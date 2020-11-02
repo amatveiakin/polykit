@@ -4,77 +4,75 @@
 #include "util.h"
 
 
-void CompoundRatio::normalize() {
-  check();
-  absl::c_sort(numerator_);
-  absl::c_sort(denominator_);
-  auto num_it = numerator_.begin();
-  auto denom_it = denominator_.begin();
-  while (num_it != numerator_.end() && denom_it != denominator_.end()) {
-    if (*num_it == *denom_it) {
-      num_it = numerator_.erase(num_it);
-      denom_it = denominator_.erase(denom_it);
-    } else if (*num_it < *denom_it) {
-      ++num_it;
-    } else {
-      ++denom_it;
+static void normalize_loop(std::vector<int>& loop) {
+  CHECK(loop.size() % 2 == 0);
+  int min_value = std::numeric_limits<int>::max();
+  int min_pos = -1;
+  for (int i = 0; i < loop.size(); i += 2) {
+    if (loop[i] < min_value) {
+      min_value = loop[i];
+      min_pos = i;
     }
   }
+  absl::c_rotate(loop, loop.begin() + min_pos);
+}
+
+void CompoundRatio::normalize() {
+  check();
+  bool simplification_found = false;
+  do {
+    simplification_found = false;
+    for (int i = 0; i < loops_.size(); ++i) {
+      for (int j = i+1; j < loops_.size(); ++j) {
+        std::vector<int> a = loops_[i];
+        std::vector<int> b = loops_[j];
+        std::vector<int> common;
+        const int an = a.size();
+        const int bn = b.size();
+        absl::c_set_intersection(sorted(a), sorted(b), std::back_inserter(common));
+        const int num_common = common.size();
+        CHECK_LE(num_common, 2);
+        if (num_common == 2) {
+          simplification_found = true;
+          int c1 = common[0];
+          int c2 = common[1];
+          if (a[(absl::c_find(a, c2) - a.begin() + 1) % an] != c1) {
+            std::swap(c1, c2);
+          }
+          const int ap1 = absl::c_find(a, c1) - a.begin();
+          const int ap2 = (ap1 + an - 1) % an;
+          const int bp1 = absl::c_find(b, c1) - b.begin();
+          const int bp2 = (bp1 + 1) % bn;
+          CHECK_EQ(a[ap2], c2) << list_to_string(a) << " + " << list_to_string(b);
+          CHECK_EQ(b[bp2], c2) << list_to_string(a) << " + " << list_to_string(b);
+          if (bp1 < bp2) {
+            a.insert(a.begin() + ap1, b.begin(), b.begin() + bp1);
+            a.insert(a.begin() + ap1, b.begin() + bp2 + 1, b.end());
+          } else {
+            a.insert(a.begin() + ap1, b.begin() + bp2 + 1, b.begin() + bp1);
+          }
+          loops_[i] = a;
+          loops_.erase(loops_.begin() + j);
+        }
+      }
+    }
+  } while (simplification_found);
+  for (auto& l : loops_) {
+    normalize_loop(l);
+  }
+  absl::c_sort(loops_);
   check();
 }
 
-// TODO: Generalize this to other cross ratio equations.
-// TODO: Find a clearer way to compute this.
-// TODO: Test this.
+// TODO: Are there no other equations?
 std::optional<CompoundRatio> CompoundRatio::one_minus() const {
-  const auto strictly_increasing = [](const std::array<int, 4>& arr) -> bool {
-    for (int i = 0; i < arr.size() - 1; ++i) {
-      if (arr[i] >= arr[i+1]) {
-        return false;
-      }
+  if (loops_.size() == 1) {
+    const std::vector<int>& l = loops_.front();
+    if (l.size() == 4) {
+      return CompoundRatio({{l[0], l[2], l[1], l[3]}});
     }
-    return true;
-  };
-  // Will overcount in case of two common elements, but that doesn't matter.
-  // We only need "one" vs "not one".
-  const auto common_elements = [](Delta x, Delta y) -> int {
-    return (x.a() == y.a()) + (x.a() == y.b()) +
-            (x.b() == y.a()) + (x.b() == y.b());
-  };
-  const auto delta_replace = [](Delta x, Delta r) -> Delta {
-    if (x.a() == r.a()) {
-      return Delta(r.b(), x.b());
-    } else if (x.a() == r.b()) {
-      return Delta(r.a(), x.b());
-    } else if (x.b() == r.a()) {
-      return Delta(x.a(), r.b());
-    } else if (x.b() == r.b()) {
-      return Delta(x.a(), r.a());
-    } else {
-      FAIL("No match");
-    }
-  };
-
-  check();
-  if (numerator_.size() != 2) {
-    return std::nullopt;
   }
-  const auto& p = numerator_;
-  const auto& q = denominator_;
-  std::array sp{p[0].a(), p[0].b(), p[1].a(), p[1].b()};
-  std::array sq{q[0].a(), q[0].b(), q[1].a(), q[1].b()};
-  absl::c_sort(sp);
-  absl::c_sort(sq);
-  if (sp != sq || !strictly_increasing(sp) || !strictly_increasing(sq) ||
-      common_elements(p[0], q[0]) != 1) {
-    return std::nullopt;
-  }
-  CHECK_EQ(common_elements(p[0], q[1]), 1);
-  CHECK_EQ(common_elements(p[1], q[0]), 1);
-  CHECK_EQ(common_elements(p[1], q[1]), 1);
-  // Verified: this is a cross-ratio. Now use the formula:
-  //   1 - [a,b,c,d] = [a,c,b,d]
-  return CompoundRatio({delta_replace(p[0], q[0]), delta_replace(p[1], q[0])}, q);
+  return std::nullopt;
 }
 
 
@@ -83,7 +81,7 @@ Word lira_param_to_key(const LiraParam& param) {
   compressor.add_segment({param.foreweight()});
   compressor.add_segment(param.weights());
   for (const auto& r : param.ratios()) {
-    compressor.add_segment(r.serialized());
+    r.compress(compressor);
   }
   return Word(std::move(compressor).result());
 }
@@ -95,8 +93,7 @@ LiraParam key_to_lira_param(const Word& word) {
   std::vector<int> weights = decompressor.next_segment();
   std::vector<CompoundRatio> ratios;
   while (!decompressor.done()) {
-    ratios.push_back(CompoundRatio::from_serialized(
-      absl::MakeConstSpan(decompressor.next_segment())));
+    ratios.push_back(CompoundRatio::from_compressed(decompressor));
   }
   return LiraParam(foreweight.front(), std::move(weights), std::move(ratios));
 }
