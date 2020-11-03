@@ -5,8 +5,6 @@
 #include "test_util/matchers.h"
 
 
-using StringExpr = Linear<SimpleLinearParam<std::string>>;
-
 std::string concat_strings(std::string a, std::string b) {
   return std::move(a) + std::move(b);
 }

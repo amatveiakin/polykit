@@ -114,3 +114,11 @@ ThetaExpr update_foreweight(
     }
   });
 }
+
+StringExpr count_functions(const ThetaExpr& expr) {
+  StringExpr ret;
+  expr.foreach([&](const std::variant<std::vector<Theta>, LiraParam>& term, int coeff) {
+    ret.add_to(lira_param_function_name(std::get<LiraParam>(term)), std::abs(coeff));
+  });
+  return ret;
+}

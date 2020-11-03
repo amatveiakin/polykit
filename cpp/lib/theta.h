@@ -269,3 +269,5 @@ ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
 ThetaExpr update_foreweight(
     const ThetaExpr& expr,
     int new_foreweight);
+
+StringExpr count_functions(const ThetaExpr& expr);

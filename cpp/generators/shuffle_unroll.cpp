@@ -4,8 +4,6 @@
 #include "lib/shuffle.h"
 
 
-using StringExpr = Linear<SimpleLinearParam<std::string>>;
-
 std::string shuffle_unrolled(int n, int m) {
   constexpr int kThreshold = 100;
   Word u, v;

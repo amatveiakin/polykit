@@ -1,0 +1,7 @@
+
+C:\Danya\cpp>bazel build -c opt --config=msvc :workspace   && bazel-bin\workspace
+# 4 terms, |coeff| = 173:
++105 1_Li_1_1_1_1
+ +36 1_Li_1_1_2
+ +28 1_Li_1_2_1
+  +4 1_Li_1_3

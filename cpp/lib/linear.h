@@ -429,3 +429,5 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
   os.flush();
   return os;
 }
+
+using StringExpr = Linear<SimpleLinearParam<std::string>>;

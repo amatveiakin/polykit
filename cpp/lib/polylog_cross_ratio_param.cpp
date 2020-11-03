@@ -98,9 +98,13 @@ LiraParam key_to_lira_param(const Word& word) {
   return LiraParam(foreweight.front(), std::move(weights), std::move(ratios));
 }
 
+std::string lira_param_function_name(const LiraParam& param) {
+  return fmt::lrsub_num(param.foreweight(), "Li", param.weights());
+}
+
 std::string to_string(const LiraParam& param) {
   return fmt::function(
-    fmt::lrsub_num(param.foreweight(), "Li", param.weights()),
+    lira_param_function_name(param),
     mapped(param.ratios(), [](const CompoundRatio& ratio){
       return to_string(ratio);
     }),

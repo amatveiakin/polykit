@@ -174,4 +174,5 @@ private:
 
 Word lira_param_to_key(const LiraParam& params);
 LiraParam key_to_lira_param(const Word& word);
+std::string lira_param_function_name(const LiraParam& param);
 std::string to_string(const LiraParam& params);
