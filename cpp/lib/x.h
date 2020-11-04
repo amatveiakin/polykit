@@ -6,13 +6,11 @@
 
 class X {
 public:
-  // TODO: Reduce kMaxVariableIndex to 15 (it seems that sometimes
-  // compressed pair is written here, but it shouldn't happen).
-  static constexpr int kMaxVariableIndex = 255;
+  static constexpr int kMaxVariableIndex = 15;  // max 4-bit unsigned int value
   static constexpr int kInf = 1000;
 
   constexpr X() {}
-  constexpr X(int idx) : idx_(idx) {  // TODO: explicit
+  constexpr X(int idx) : idx_(idx) {
     CHECK_LT(0, idx_);
     CHECK_LE(idx_, kMaxVariableIndex);
   }

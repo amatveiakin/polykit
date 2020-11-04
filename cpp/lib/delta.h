@@ -57,7 +57,7 @@ inline std::string to_string(const Delta& d) {
 
 class DeltaAlphabetMapping {
 public:
-  static constexpr int kMaxDimension = 20;
+  static constexpr int kMaxDimension = X::kMaxVariableIndex;
 
   DeltaAlphabetMapping() {
     static constexpr int kAlphabetSize = kMaxDimension * (kMaxDimension - 1) / 2;
