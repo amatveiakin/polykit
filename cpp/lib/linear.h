@@ -13,6 +13,8 @@
 #include "util.h"
 
 
+constexpr int kLinearMaxLinesToPrint = 1000;
+
 template<typename T>
 struct SimpleLinearParam {
   using ObjectT = T;
@@ -242,7 +244,13 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
     max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
   });
   std::sort(dump.begin(), dump.end());
+  int line = 0;
   for (const auto& [obj, coeff] : dump) {
+    ++line;
+    if (line > kLinearMaxLinesToPrint) {
+      os << fmt::box("...");
+      return os;
+    }
     // TODO: Add an option for this.
     //
     // std::string coeff_str = fmt::coeff(coeff);
