@@ -154,6 +154,14 @@ public:
     return ret;
   }
 
+  BasicLinear termwise_abs() const {
+    BasicLinear ret;
+    foreach_key([&](const auto& key, int coeff) {
+      ret.add_to_key(key, std::abs(coeff));
+    });
+    return ret;
+  }
+
   BasicLinear operator+(const BasicLinear& other) const {
     BasicLinear ret = *this;
     ret += other;
@@ -335,6 +343,10 @@ public:
   template<typename F>
   Linear filtered_key(F func) const {
     return Linear(main_.filtered_key(func), annotations_);
+  }
+
+  Linear termwise_abs() const {
+    return Linear(main_.termwise_abs(), annotations_);
   }
 
   const BasicLinearMain& main() const { return main_; };
