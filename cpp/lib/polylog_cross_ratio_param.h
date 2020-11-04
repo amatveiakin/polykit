@@ -64,7 +64,7 @@ inline CrossRatio CR(int a, int b, int c, int d) {
 }
 
 inline std::string to_string(const CrossRatio& ratio) {
-  return absl::StrCat("[", str_join(ratio.indices(), ","), "]");
+  return fmt::brackets(str_join(ratio.indices(), ","));
 }
 
 
@@ -136,7 +136,7 @@ inline std::string to_string(const CompoundRatio& ratio) {
     ratio.loops(),
     "",
     [](const std::vector<int>& loop) {
-      return absl::StrCat("[", str_join(loop, ","), "]");
+      return fmt::brackets(str_join(loop, ","));
     }
   );
 }

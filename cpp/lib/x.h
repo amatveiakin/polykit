@@ -1,6 +1,7 @@
 #pragma once
 
 #include "check.h"
+#include "format.h"
 
 
 class X {
@@ -39,5 +40,5 @@ private:
 static constexpr X Inf = X::Inf();
 
 inline std::string to_string(const X& x) {
-  return (x == Inf) ? "Inf" : to_string(x.var());
+  return (x == Inf) ? fmt::inf() : to_string(x.var());
 }

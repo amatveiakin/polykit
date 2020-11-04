@@ -80,8 +80,7 @@ static std::optional<std::string> product_annotation(
       return fmt::function(ann.name, args);
     },
     [&](const ProductAnnotationOperator& ann) {
-      // TODO: Inproduct `fmt::braces` and use it here
-      return absl::StrCat("(", str_join(args, ann.op), ")");
+      return absl::StrCat(fmt::parens(str_join(args, ann.op)));
     },
   }, annotation);
 }

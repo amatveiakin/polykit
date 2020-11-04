@@ -21,6 +21,7 @@ std::string Formatter::lrsub_num(int left_index, const std::string& main, const 
 
 
 class PlainTextFormatter : public Formatter {
+  virtual std::string inf() { return "Inf"; }
   virtual std::string unity() { return "<1>"; }
   virtual std::string dot() { return "."; }
   virtual std::string tensor_prod() { return " * "; }
@@ -28,8 +29,21 @@ class PlainTextFormatter : public Formatter {
   virtual std::string coprod_hopf() { return "  @  "; }
   virtual std::string comult() { return "&"; }
 
-  virtual std::string box(const std::string& s) {
-    return absl::StrCat(s, "\n");
+  virtual std::string box(const std::string& expr) {
+    return absl::StrCat(expr, "\n");
+  }
+
+  virtual std::string parens(const std::string& expr) {
+    return absl::StrCat("(", expr, ")");
+  }
+  virtual std::string brackets(const std::string& expr) {
+    return absl::StrCat("[", expr, "]");
+  }
+  virtual std::string braces(const std::string& expr) {
+    return absl::StrCat("{", expr, "}");
+  }
+  virtual std::string chevrons(const std::string& expr) {
+    return absl::StrCat("<", expr, ">");
   }
 
   virtual std::string coeff(int v) {
@@ -65,7 +79,7 @@ class PlainTextFormatter : public Formatter {
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
     const auto separator = (hspacing == HSpacing::dense ? "," : ", ");
-    return absl::StrCat(name, "(", str_join(args, separator), ")");
+    return name + parens(str_join(args, separator));
   }
   virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
     return function(name, ints_to_strings(indices), hspacing);
@@ -75,15 +89,30 @@ class PlainTextFormatter : public Formatter {
 
 class LatexFormatter : public Formatter {
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
-  virtual std::string unity() { return "\\langle 1 \\rangle"; }
+  virtual std::string inf() { return "\\infty"; }
+  virtual std::string unity() { return chevrons("1"); }
   virtual std::string dot() { return ""; }
   virtual std::string tensor_prod() { return " \\otimes "; }
   virtual std::string coprod_lie() { return " \\ \\wedge\\  "; }
   virtual std::string coprod_hopf() { return " \\ \\boxtimes\\  "; }
   virtual std::string comult() { return " \\triangle "; }
 
-  virtual std::string box(const std::string& s) {
-    return absl::StrCat(s, "\\\\\n");
+  virtual std::string box(const std::string& expr) {
+    return absl::StrCat(expr, "\\\\\n");
+  }
+
+  // Note: could use \left and \right if necessary.
+  virtual std::string parens(const std::string& expr) {
+    return absl::StrCat("(", expr, ")");
+  }
+  virtual std::string brackets(const std::string& expr) {
+    return absl::StrCat("[", expr, "]");
+  }
+  virtual std::string braces(const std::string& expr) {
+    return absl::StrCat("\\{", expr, "\\}");
+  }
+  virtual std::string chevrons(const std::string& expr) {
+    return absl::StrCat("\\langle", expr, "\\rangle");
   }
 
   virtual std::string coeff(int v) {
@@ -120,7 +149,7 @@ class LatexFormatter : public Formatter {
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) {
     // TODO: Fix: operatorname is applied to sub-indices
-    return absl::StrCat("\\operatorname{", name, "}(", str_join(args, ","), ")");
+    return absl::StrCat("\\operatorname{", name, "}", parens(str_join(args, ",")));
   }
   virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
     return function(name, mapped(indices, [&](int x){ return var(x); }), hspacing);
