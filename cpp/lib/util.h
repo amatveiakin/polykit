@@ -125,6 +125,14 @@ std::vector<T> sorted(std::vector<T> v) {
   return v;
 }
 
+template<int N, typename T>
+std::array<T, N> as_array(std::vector<T> v) {
+  CHECK_EQ(v.size(), N);
+  std::array<T, N> ret;
+  absl::c_move(v, ret.begin());
+  return ret;
+}
+
 template<typename First, typename Second>
 std::vector<std::pair<First, Second>> zip(
     const std::vector<First>& first,

@@ -1,5 +1,7 @@
 #include "delta.h"
 
+#include "absl/container/flat_hash_set.h"
+
 #include "util.h"
 
 
@@ -42,6 +44,30 @@ DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr) {
   return expr.filtered([&](const std::vector<Delta>& term) {
     const auto term_sorted = sorted(term);
     return absl::c_adjacent_find(term_sorted) != term_sorted.end();
+  });
+}
+
+
+DeltaExpr terms_containing_num_variables(const DeltaExpr& expr, int num_variables) {
+  return expr.filtered([&](const std::vector<Delta>& term) {
+    std::vector<int> elements;
+    for (const Delta& d : term) {
+      elements.push_back(d.a());
+      elements.push_back(d.b());
+    }
+    absl::c_sort(elements);
+    const int unique_elements =
+      std::unique(elements.begin(), elements.end()) - elements.begin();
+    return unique_elements == num_variables;
+  });
+}
+
+DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vector<int>& indices) {
+  absl::flat_hash_set<int> indices_set(indices.begin(), indices.end());
+  return expr.filtered([&](const std::vector<Delta>& term) {
+    return absl::c_all_of(term, [&](const Delta& d) {
+      return indices_set.count(d.a()) > 0 && indices_set.count(d.b()) > 0;
+    });
   });
 }
 

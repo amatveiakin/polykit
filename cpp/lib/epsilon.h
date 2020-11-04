@@ -133,7 +133,7 @@ inline Epsilon key_to_epsilon(EpsilonStorageType key) {
   } else if (type == kEpsilonTypeComplement) {
     return EpsilonComplement(std::bitset<kMaxComplementVariables>(data));
   } else {
-    FAIL(absl::StrCat("Bad Epsilon type: ", type));
+    FATAL(absl::StrCat("Bad Epsilon type: ", type));
   }
 }
 
@@ -177,7 +177,7 @@ inline EpsilonPack key_to_epsilon_pack(const Word& key) {
     case kEpsilonPackTypeFormalSymbol:
       return key_to_li_param(Word(data));
   }
-  FAIL(absl::StrCat("Bad EpsilonPack type = ", type, "; key = ", to_string(key)));
+  FATAL(absl::StrCat("Bad EpsilonPack type = ", type, "; key = ", to_string(key)));
 }
 
 struct EpsilonExprParam {

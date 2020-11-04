@@ -25,3 +25,14 @@ TEST(LidoTest, Lido4_6) {
     + W({3, 4, 5, 6})
   );
 }
+
+TEST(LidoTest, LidoSymmEquation) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + LidoSymm2(1,2,3,4,5,6)
+    + LidoSymm2(2,3,4,5,6,1)
+  );
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + LidoSymm3(1,2,3,4,5,6)
+    - LidoSymm3(2,3,4,5,6,1)
+  );
+}

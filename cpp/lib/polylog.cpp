@@ -187,7 +187,7 @@ static EpsilonExpr Li_3_point(const absl::Span<const int>& p) {
            + EComplementRangeInclusive(b+1, c)
            - EComplementRangeInclusive(a+1, b);
   } else {
-    FAIL(absl::StrCat("Bad num_vars: ", num_vars));
+    FATAL(absl::StrCat("Bad num_vars: ", num_vars));
   }
 }
 

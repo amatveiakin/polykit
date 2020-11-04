@@ -140,4 +140,8 @@ DeltaExpr delta_expr_substitute(
 DeltaExpr sort_term_multiples(const DeltaExpr& expr);
 DeltaExpr terms_with_unique_muptiples(const DeltaExpr& expr);
 DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr);
+
+DeltaExpr terms_containing_num_variables(const DeltaExpr& expr, int num_variables);
+DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vector<int>& indices);
+
 DeltaExpr keep_connected_graphs(const DeltaExpr& expr);

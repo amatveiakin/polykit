@@ -9,3 +9,8 @@ template<typename... Args>
 DeltaExpr I(Args... args) {
   return IVec({args...});
 }
+
+template<typename... Args>
+DeltaExpr Corr(Args... args) {
+  return IVec({Inf, args...});
+}

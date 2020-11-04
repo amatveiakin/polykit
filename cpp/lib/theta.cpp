@@ -78,7 +78,7 @@ DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr) {
         });
       },
       [](const LiraParam& formal_symbol) -> std::vector<Delta> {
-        FAIL("Unexpected formal symbol: " + to_string(formal_symbol));
+        FATAL("Unexpected formal symbol: " + to_string(formal_symbol));
       },
     }, term);
   });
@@ -93,7 +93,7 @@ ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr) {
         });
       },
       [](const LiraParam& formal_symbol) -> bool {
-        FAIL("Unexpected formal symbol: " + to_string(formal_symbol));
+        FATAL("Unexpected formal symbol: " + to_string(formal_symbol));
       },
     }, term);
   });
@@ -110,7 +110,7 @@ ThetaExpr update_foreweight(
       CHECK_EQ(param.foreweight(), 1);
       return LiraParam(new_foreweight, param.weights(), param.ratios());
     } else {
-      FAIL("Expected a unity or a formal symbol, got " + to_string(term));
+      FATAL("Expected a unity or a formal symbol, got " + to_string(term));
     }
   });
 }

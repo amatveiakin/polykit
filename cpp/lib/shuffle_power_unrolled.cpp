@@ -303,7 +303,7 @@ WordExpr shuffle_power_unrolled(Word word, int pow) {  switch (word.size()) {
     }
     break;
   }
-  FAIL(absl::StrCat(
+  FATAL(absl::StrCat(
       "Shuffle power unroll doesn't exit for word = ",
       to_string(word), "; power = ", pow));
   }

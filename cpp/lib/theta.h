@@ -157,7 +157,7 @@ inline ThetaPack key_to_theta_pack(const MultiWord& key) {
       return key_to_lira_param(Word(*data_range.begin()));
     }
   }
-  FAIL(absl::StrCat("Bad ThetaPack type = ", type, "; key = ", to_string(key)));
+  FATAL(absl::StrCat("Bad ThetaPack type = ", type, "; key = ", to_string(key)));
 }
 
 struct ThetaExprParam {

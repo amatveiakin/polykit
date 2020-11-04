@@ -19,7 +19,8 @@ TEST(OuterProductTest, TwoExpressions) {
       +  StringExpr::single("c")
       +3*StringExpr::single("d")
       ,
-      concat_strings
+      concat_strings,
+      AnnNone()
     ),
     (
       +  StringExpr::single("ac")
@@ -43,7 +44,8 @@ TEST(OuterProductTest, ThreeExpressions) {
       +  StringExpr::single("f")
       }
       ,
-      concat_strings
+      concat_strings,
+      AnnNone()
     ),
     (
       +2*StringExpr::single("ace")

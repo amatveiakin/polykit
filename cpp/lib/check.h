@@ -9,7 +9,7 @@
 #include "string_basic.h"
 
 
-inline void FAIL [[noreturn]] (const std::string& msg = {}) {
+inline void FATAL [[noreturn]] (const std::string& msg = {}) {
   std::cerr << "Assertion failed";
   if (!msg.empty()) {
     std::cerr << ": " << msg;

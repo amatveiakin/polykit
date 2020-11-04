@@ -15,6 +15,9 @@ public:
     CHECK_LT(0, idx_);
     CHECK_LE(idx_, kMaxVariableIndex);
   }
+  static constexpr X Var(int idx) {
+    return X(idx);
+  }
   static constexpr X Inf() {
     X x;
     x.idx_ = kInf;

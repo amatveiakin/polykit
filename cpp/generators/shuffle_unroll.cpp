@@ -123,7 +123,7 @@ void generate_shuffle_power_unrolled() {
   }
   std::cout << "  }";
   std::cout << R"(
-  FAIL(absl::StrCat(
+  FATAL(absl::StrCat(
       "Shuffle power unroll doesn't exit for word = ",
       to_string(word), "; power = ", pow));
   )";

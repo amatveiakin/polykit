@@ -74,7 +74,7 @@ static std::optional<std::string> product_annotation(
     expressions, &short_linear_description<LinearT>);
   return std::visit(overloaded{
     [](const ProductAnnotationNone&) -> std::string {
-      FAIL("ProductAnnotationNone");
+      FATAL("ProductAnnotationNone");
     },
     [&](const ProductAnnotationFunction& ann) {
       return fmt::function(ann.name, args);
@@ -114,7 +114,7 @@ LinearProdT outer_product(
       ret.add_to_key(ret_key, lhs_coeff * rhs_coeff);
     });
   });
-  return LinearProdT(ret).maybe_annotate(product_annotation(annotation, lhs, rhs));
+  return LinearProdT(ret).maybe_annotate(internal::product_annotation(annotation, lhs, rhs));
 }
 
 template<typename LinearT, typename MonomProdF>
@@ -129,7 +129,7 @@ LinearT outer_product(
   for (const LinearT& expr : expressions.subspan(1)) {
     ret = outer_product<LinearT>(ret, expr, monom_key_product, AnnNone());
   }
-  return ret.maybe_annotate(product_annotation(annotation, expressions));
+  return ret.maybe_annotate(internal::product_annotation(annotation, expressions));
 }
 
 
@@ -151,7 +151,7 @@ LinearT outer_product_expanding(
       ret += (lhs_coeff * rhs_coeff) * prod.template cast_to<LinearT>();
     });
   });
-  return LinearT(ret).maybe_annotate(product_annotation(annotation, lhs, rhs));
+  return LinearT(ret).maybe_annotate(internal::product_annotation(annotation, lhs, rhs));
 }
 
 template<typename LinearT, typename MonomProdF>
@@ -166,7 +166,7 @@ LinearT outer_product_expanding(
   for (const LinearT& expr : expressions.subspan(1)) {
     ret = outer_product_expanding(ret, expr, monom_key_product, AnnNone());
   }
-  return ret.maybe_annotate(product_annotation(annotation, expressions));
+  return ret.maybe_annotate(internal::product_annotation(annotation, expressions));
 }
 
 

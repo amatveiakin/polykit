@@ -61,5 +61,22 @@ DeltaExpr LidoVec(int weight, const std::vector<X>& points) {
 }
 
 DeltaExpr LidoVec(int weight, const std::vector<int>& points) {
-  return LidoVec(weight, mapped(points, [](int p){ return X(p); }));
+  return LidoVec(weight, mapped(points, X::Var));
+}
+
+DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points) {
+  auto [x1, x2, x3, x4, x5, x6] = as_array<6>(points);
+  return (
+    + LidoVec(weight, {x1,x2,x3,x4,x5,x6})
+    - LidoVec(weight, {x1,x2,x3,x4})
+    - LidoVec(weight, {x3,x4,x5,x6})
+    - LidoVec(weight, {x5,x6,x1,x2})
+  ).without_annotations().annotate(fmt::function(
+    fmt::sub_num("LidoSymm", {weight}),
+    mapped(points, [](X x){ return to_string(x); })
+  ));
+}
+
+DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points) {
+  return LidoSymmVec(weight, mapped(points, X::Var));
 }
