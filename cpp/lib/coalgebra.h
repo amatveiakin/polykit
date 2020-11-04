@@ -110,7 +110,9 @@ CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
       prod.append_segment(u);
       prod.append_segment(v);
       return prod;
-    });
+    },
+    AnnOperator(is_lie_algebra ? fmt::coprod_lie() : fmt::coprod_hopf())
+  );
   return is_lie_algebra ? normalize_coproduct(ret) : ret;
 }
 

@@ -1,7 +1,5 @@
 #include "mystic_algebra.h"
 
-#include <sstream>
-
 #include "algebra.h"
 #include "epsilon.h"
 #include "polylog.h"
@@ -82,47 +80,17 @@ static EpsilonExpr monom_key_mystic_product(
     EpsilonExpr::Param::key_to_object(rhs_key));
 }
 
-// TODO: Move to util and apply to other porducts
-template<typename LinearT>
-static std::string short_linear_description(const LinearT& expr) {
-  const auto& annotations = expr.annotations();
-  if (annotations.size() == 0) {
-    return "<0>";
-  } else if (annotations.size() == 1) {
-    std::stringstream ss;
-    ss << annotations;
-    return trimed(ss.str());
-  } else {
-    return absl::StrCat("<", annotations.size(), " ",
-        en_plural(annotations.size(), "term"), ">");
-  }
-}
-template<typename LinearT>
-static std::string product_annotation(
-    const std::string& product_name,
-    const absl::Span<const LinearT>& expressions) {
-  return absl::StrCat(product_name,
-    "(", str_join(expressions, ", ", &short_linear_description<LinearT>), ")");
-}
-template<typename LinearT>
-static std::string product_annotation(
-    const std::string& product_name,
-    const LinearT& lhs,
-    const LinearT& rhs) {
-  return product_annotation(product_name, absl::MakeConstSpan({lhs, rhs}));
-}
-
 EpsilonExpr mystic_product(
     const EpsilonExpr& lhs,
     const EpsilonExpr& rhs) {
-  return outer_product_expanding(lhs, rhs, monom_key_mystic_product)
-      .annotate(product_annotation("mystic", lhs, rhs));
+  return outer_product_expanding(lhs, rhs, monom_key_mystic_product,
+    AnnFunction("mystic"));
 }
 
 EpsilonExpr mystic_product(
     const absl::Span<const EpsilonExpr>& expressions) {
-  return outer_product_expanding(expressions, monom_key_mystic_product)
-      .annotate(product_annotation("mystic", expressions));
+  return outer_product_expanding(expressions, monom_key_mystic_product,
+    AnnFunction("mystic"));
 }
 
 EpsilonCoExpr mystic_product(
@@ -142,8 +110,9 @@ EpsilonCoExpr mystic_product(
         monom_mystic_product(lhs_term[0], rhs_term[0]),
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );
-    }
-  ).annotate(product_annotation("mystic", lhs, rhs));
+    },
+    AnnFunction("mystic")
+  );
 }
 
 
@@ -195,6 +164,6 @@ static ThetaExpr monom_key_quasi_shuffle_product(
 
 ThetaExpr theta_expr_quasi_shuffle_product(
     const absl::Span<const ThetaExpr>& expressions) {
-  // TODO: annotations
-  return outer_product_expanding(expressions, monom_key_quasi_shuffle_product);
+  return outer_product_expanding(expressions, monom_key_quasi_shuffle_product,
+    AnnFunction("quasishuffle"));
 }

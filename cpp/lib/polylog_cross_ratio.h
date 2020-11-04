@@ -14,6 +14,7 @@ DeltaExpr Lido_dispatch(int weight, Args... args) {
 }
 }  // namespace internal
 
+template<typename... Args> inline DeltaExpr Lido1(Args... args) { return internal::Lido_dispatch(1, args...); }
 template<typename... Args> inline DeltaExpr Lido2(Args... args) { return internal::Lido_dispatch(2, args...); }
 template<typename... Args> inline DeltaExpr Lido3(Args... args) { return internal::Lido_dispatch(3, args...); }
 template<typename... Args> inline DeltaExpr Lido4(Args... args) { return internal::Lido_dispatch(4, args...); }

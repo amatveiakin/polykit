@@ -364,6 +364,12 @@ public:
     annotations_ += BasicLinearAnnotation::single(annotation);
     return *this;
   }
+  Linear& maybe_annotate(const std::optional<std::string>& annotation) {
+    if (annotation.has_value()) {
+      annotate(annotation.value());
+    }
+    return *this;
+  }
   template<typename SourceLinearT>
   Linear& copy_annotations(const SourceLinearT& other) {
     annotations_ += other.annotations();

@@ -25,7 +25,8 @@ LinearT shuffle_product_expr(
   return outer_product_expanding<LinearT>(
     lhs.template mapped_key<LinearT>(LinearT::Param::shuffle_preprocess),
     rhs.template mapped_key<LinearT>(LinearT::Param::shuffle_preprocess),
-    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product)
+    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product),
+    AnnFunction("shuffle")
   ).template mapped_key<LinearT>(LinearT::Param::shuffle_postprocess);
 }
 
@@ -38,6 +39,7 @@ LinearT shuffle_product_expr(
         return expr.template mapped_key<LinearT>(LinearT::Param::shuffle_preprocess);
       })
     ),
-    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product)
+    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product),
+    AnnFunction("shuffle")
   ).template mapped_key<LinearT>(LinearT::Param::shuffle_postprocess);
 }

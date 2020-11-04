@@ -340,7 +340,8 @@ ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
       multipliers[1],
       [](const MultiWord& lhs, const MultiWord& rhs) {
         return std::array{lhs, rhs};
-      }
+      },
+      AnnOperator(fmt::coprod_hopf())
     );
   });
   return ret;
