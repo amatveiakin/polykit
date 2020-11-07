@@ -3,18 +3,22 @@
 #include "absl/strings/str_cat.h"
 
 #include "algebra.h"
-#include "call_cache.h"
 #include "check.h"
 
 
-static DeltaExpr Lido_4_point(const std::vector<int>& p) {
+struct Point {
+  int idx = 0;
+  bool odd = true;
+};
+
+static DeltaExpr Lido_4_point(const std::vector<Point>& p) {
   CHECK_EQ(p.size(), 4);
-  return p[0] % 2 == 1
-    ?  neg_cross_ratio(p[0], p[1], p[2], p[3])
-    : -neg_cross_ratio(p[1], p[2], p[3], p[0]);
+  return p[0].odd
+    ?  neg_cross_ratio(p[0].idx, p[1].idx, p[2].idx, p[3].idx)
+    : -neg_cross_ratio(p[1].idx, p[2].idx, p[3].idx, p[0].idx);
 }
 
-static DeltaExpr Lido_impl(int weight, const std::vector<int>& points) {
+static DeltaExpr Lido_impl(int weight, const std::vector<Point>& points) {
   const int num_points = points.size();
   CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of Lido points: " << num_points;
   const int min_weight = (num_points - 2) / 2;
@@ -37,7 +41,7 @@ static DeltaExpr Lido_impl(int weight, const std::vector<int>& points) {
     }
   } else {
     DeltaExpr ret = tensor_product(
-      cross_ratio(points),
+      cross_ratio(mapped(points, [](Point p) { return p.idx; })),
       Lido_impl(weight - 1, points)
     );
     if (num_points > 4) {
@@ -49,17 +53,15 @@ static DeltaExpr Lido_impl(int weight, const std::vector<int>& points) {
 
 DeltaExpr LidoVec(int weight, const std::vector<X>& points) {
   const int num_points = points.size();
-  const auto asc_points = seq_incl(1, num_points);
-  static CallCache<DeltaExpr, int, std::vector<int>> call_cache;
-  // TODO: Debug delta_expr_substitute performance. It takes about 2/3
-  // of total execution time, which is nuts.
-  return delta_expr_substitute(
-    call_cache.apply(&Lido_impl, weight, asc_points),
-    points
-  ).annotate(fmt::function(
-    fmt::sub_num("Lido", {weight}),
-    mapped(points, [](X x){ return to_string(x); })
-  ));
+  std::vector<Point> tagged_points;
+  for (int i = 0; i < points.size(); ++i) {
+    tagged_points.push_back({points[i].var(), (i+1) % 2 == 1});
+  }
+  return Lido_impl(weight, tagged_points)
+    .annotate(fmt::function(
+      fmt::sub_num("Lido", {weight}),
+      mapped(points, [](X x){ return to_string(x); })
+    ));
 }
 
 DeltaExpr LidoVec(int weight, const std::vector<int>& points) {
