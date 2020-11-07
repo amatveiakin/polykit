@@ -1,12 +1,94 @@
-# TODO: Split targets
 cc_library(
-    name = "polylog_lib",
-    hdrs = glob(["lib/*.h"]),
-    srcs = glob(["lib/*.cpp"]),
+    name = "base",
+    hdrs = [
+        "lib/bit.h",
+        "lib/call_cache.h",
+        "lib/check.h",
+        "lib/compression.h",
+        "lib/format.h",
+        "lib/hash.h",
+        "lib/profiler.h",
+        "lib/sequence_iteration.h",
+        "lib/string.h",
+        "lib/string_basic.h",
+        "lib/util.h",
+    ],
+    srcs = [
+        "lib/compression.cpp",
+        "lib/format.cpp",
+        "lib/sequence_iteration.cpp",
+    ],
     deps = [
+        "@absl//absl/algorithm:container",
+        "@absl//absl/algorithm:algorithm",
+        "@absl//absl/types:span",
+        "@absl//absl/strings:strings",
+    ],
+)
+
+cc_library(
+    name = "math",
+    hdrs = [
+        "lib/algebra.h",
+        "lib/coalgebra.h",
+        "lib/cotheta.h",
+        "lib/cross_ratio.h",
+        "lib/delta.h",
+        "lib/epsilon.h",
+        "lib/linear.h",
+        "lib/lyndon.h",
+        "lib/multiword.h",
+        "lib/polylog_cross_ratio_param.h",
+        "lib/polylog_param.h",
+        "lib/projection.h",
+        "lib/quasi_shuffle.h",
+        "lib/shuffle.h",
+        "lib/shuffle_unrolled.h",
+        "lib/theta.h",
+        "lib/word.h",
+        "lib/x.h",
+    ],
+    srcs = [
+        "lib/cotheta.cpp",
+        "lib/delta.cpp",
+        "lib/epsilon.cpp",
+        "lib/polylog_cross_ratio_param.cpp",
+        "lib/polylog_param.cpp",
+        "lib/projection.cpp",
+        "lib/shuffle.cpp",
+        "lib/shuffle_power_unrolled.cpp",
+        "lib/shuffle_unrolled.cpp",
+        "lib/theta.cpp",
+        "lib/word.cpp",
+    ],
+    deps = [
+        "@absl//absl/strings:strings",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
+        ":base",
+    ],
+)
+
+cc_library(
+    name = "polylog",
+    hdrs = [
+        "lib/iterated_integral.h",
+        "lib/mystic_algebra.h",
+        "lib/polylog.h",
+        "lib/polylog_cross_ratio.h",
+        "lib/polylog_quadrangle.h",
+    ],
+    srcs = [
+        "lib/iterated_integral.cpp",
+        "lib/mystic_algebra.cpp",
+        "lib/polylog.cpp",
+        "lib/polylog_cross_ratio.cpp",
+        "lib/polylog_quadrangle.cpp",
+    ],
+    deps = [
         "@absl//absl/strings:strings",
+        ":base",
+        ":math",
     ],
 )
 
@@ -19,12 +101,13 @@ cc_library(
     ],
 )
 
+# TODO: Split test targets
 cc_test(
-    name = "polylog_lib_test",
+    name = "all_tests",
     srcs = glob(["test/*.cpp"]),
     deps = [
         "@googletest//:gtest_main",
-        ":polylog_lib",
+        ":polylog",
         ":test_util",
     ],
 )
@@ -33,7 +116,7 @@ cc_binary(
     name = "shuffle_unroll",
     srcs = ["generators/shuffle_unroll.cpp"],
     deps = [
-        ":polylog_lib",
+        ":math",
     ]
 )
 
@@ -41,7 +124,9 @@ cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [
-        ":polylog_lib",
+        ":base",
+        ":math",
+        ":polylog",
         "@absl//absl/debugging:failure_signal_handler",
         "@absl//absl/debugging:symbolize",
     ]

@@ -1,1 +1,1 @@
-bazel test --config=msvc --test_output=errors :polylog_lib_test
+bazel test --config=msvc --test_output=errors :all_tests
