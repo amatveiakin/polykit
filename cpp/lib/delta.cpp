@@ -11,21 +11,42 @@ DeltaAlphabetMapping delta_alphabet_mapping;
 DeltaExpr delta_expr_substitute(
     const DeltaExpr& expr,
     const std::vector<X>& new_points) {
+  constexpr int kMaxChar = std::numeric_limits<unsigned char>::max();
+  constexpr int kNoReplacement = kMaxChar;
+  constexpr int kNil = kMaxChar - 1;
+  std::array<unsigned char, kMaxChar> replacements;
+  replacements.fill(kNoReplacement);
+  const int num_src_vars = new_points.size();
+  for (int a = 1; a <= num_src_vars; ++a) {
+    for (int b = a+1; b <= num_src_vars; ++b) {
+      const Delta before = Delta(a, b);
+      const Delta after = Delta(new_points[a-1], new_points[b-1]);
+      const unsigned char key_before = delta_alphabet_mapping.to_alphabet(before);
+      if (after.is_nil()) {
+        replacements.at(key_before) = kNil;
+      } else {
+        const unsigned char key_after = delta_alphabet_mapping.to_alphabet(after);
+        CHECK(key_after != kNoReplacement);
+        CHECK(key_after != kNil);
+        replacements.at(key_before) = key_after;
+      }
+    }
+  }
   DeltaExpr ret;
-  expr.foreach([&](const std::vector<Delta>& term_old, int coeff) {
-    std::vector<Delta> term_new;
-    for (const Delta& d_old : term_old) {
-      Delta d_new(new_points.at(d_old.a() - 1), new_points.at(d_old.b() - 1));
-      if (d_new.is_nil()) {
+  expr.foreach_key([&](const Word& term_old, int coeff) {
+    Word term_new;
+    for (unsigned char ch : term_old) {
+      unsigned char ch_new = replacements.at(ch);
+      CHECK(ch_new != kNoReplacement);
+      if (ch_new == kNil) {
         return;
       }
-      term_new.push_back(d_new);
+      term_new.push_back(ch_new);
     }
-    ret.add_to(term_new, coeff);
+    ret.add_to_key(term_new, coeff);
   });
   return ret;
 }
-
 
 DeltaExpr sort_term_multiples(const DeltaExpr& expr) {
   return expr.mapped<DeltaExpr>([&](const std::vector<Delta>& term) {

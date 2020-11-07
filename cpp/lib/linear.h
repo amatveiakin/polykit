@@ -13,7 +13,7 @@
 #include "util.h"
 
 
-constexpr int kLinearMaxLinesToPrint = 1000;
+constexpr int kLinearMaxLinesToPrint = 300;
 
 template<typename T>
 struct SimpleLinearParam {
@@ -81,7 +81,12 @@ public:
     add_to_key(ParamT::object_to_key(obj), x);
   }
   void add_to_key(const StorageT& key, int x) {
-    set_coeff_for_key(key, coeff_for_key(key) + x);
+    // Equivalent to `set_coeff_for_key(key, coeff_for_key(key) + x);` but faster.
+    int& value = data_[key];
+    value += x;
+    if (value == 0) {
+      data_.erase(key);
+    }
   }
   std::pair<ObjectT, int> element() const {
     auto key_coeff = element_key();
@@ -331,6 +336,7 @@ public:
   void foreach_key(F func) const { return main_.foreach_key(func); }
 
 
+  // TODO: Allow empty template args meaning "same type"
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
     return NewLinearT(main_.template mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);

@@ -8,6 +8,7 @@
 #include <vector>
 
 
-std::vector<std::vector<int>> all_squences(int alphabet_size, int length);
-std::vector<std::vector<int>> increasing_squences(int alphabet_size, int length);
-std::vector<std::vector<int>> increasing_squences(int alphabet_size);
+std::vector<std::vector<int>> all_sequences(int alphabet_size, int length);
+std::vector<std::vector<int>> increasing_sequences(int alphabet_size, int length);
+std::vector<std::vector<int>> nondecreasing_sequences(int alphabet_size, int length);
+std::vector<std::vector<int>> increasing_sequences(int alphabet_size);

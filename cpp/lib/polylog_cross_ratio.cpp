@@ -3,6 +3,7 @@
 #include "absl/strings/str_cat.h"
 
 #include "algebra.h"
+#include "call_cache.h"
 #include "check.h"
 
 
@@ -46,13 +47,14 @@ static DeltaExpr Lido_impl(int weight, const std::vector<int>& points) {
   }
 }
 
-
-// Optimization potential: Add cache
 DeltaExpr LidoVec(int weight, const std::vector<X>& points) {
   const int num_points = points.size();
   const auto asc_points = seq_incl(1, num_points);
+  static CallCache<DeltaExpr, int, std::vector<int>> call_cache;
+  // TODO: Debug delta_expr_substitute performance. It takes about 2/3
+  // of total execution time, which is nuts.
   return delta_expr_substitute(
-    Lido_impl(weight, asc_points),
+    call_cache.apply(&Lido_impl, weight, asc_points),
     points
   ).annotate(fmt::function(
     fmt::sub_num("Lido", {weight}),

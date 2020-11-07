@@ -125,6 +125,12 @@ std::vector<T> sorted(std::vector<T> v) {
   return v;
 }
 
+template<typename T>
+int num_distinct_elements(std::vector<T> v) {
+  absl::c_sort(v);
+  return std::unique(v.begin(), v.end()) - v.begin();
+}
+
 template<int N, typename T>
 std::array<T, N> as_array(std::vector<T> v) {
   CHECK_EQ(v.size(), N);

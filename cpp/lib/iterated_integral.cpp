@@ -32,3 +32,25 @@ DeltaExpr IVec(const std::vector<X>& points) {
   return I_impl(points).annotate(
     fmt::function("I", mapped(points, [](X x){ return to_string(x); })));
 }
+
+// TODO: Move to util
+// TODO: Optimize: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+std::vector<X> lexicographically_minimal_rotation(std::vector<X> v) {
+  std::vector<X> min = v;
+  for (int i = 1; i < v.size(); ++i) {
+    absl::c_rotate(v, v.begin() + 1);
+    if (v < min) {
+      min = v;
+    }
+  }
+  return min;
+}
+
+DeltaExpr CorrVec(const std::vector<X>& points) {
+  return I_impl(concat({Inf}, points)).annotate(
+    fmt::function("Corr", mapped(
+      lexicographically_minimal_rotation(points),
+      [](X x){ return to_string(x); })
+    )
+  );
+}

@@ -243,7 +243,7 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
       epsilon_expr_substitute(rhs, param.points())
     );
   };
-  for (const std::vector<int>& seq_prototype : increasing_squences(dots.size() - 2)) {
+  for (const std::vector<int>& seq_prototype : increasing_sequences(dots.size() - 2)) {
     if (seq_prototype.empty()) {
       continue;
     }

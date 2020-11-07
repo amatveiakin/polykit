@@ -3,6 +3,8 @@
 #include "word.h"
 
 
+#define UNROLL_SHUFFLE
+
 // Gives a small boost to shuffle (and thus Lyndon) speed,
 // but increases compilation time.
 // Zero return value means unroll doesn't exist.

@@ -12,8 +12,9 @@
 #include "linear.h"
 
 
-// constexpr int kWordStorageSize = 16;
-constexpr int kWordStorageSize = 32;
+// constexpr int kWordStorageSize = 8;
+constexpr int kWordStorageSize = 16;  // reasonable default
+// constexpr int kWordStorageSize = 32;
 constexpr int kMaxWordSize = kWordStorageSize - 1;  // 1 for length
 constexpr int kWordAlphabetSize = std::numeric_limits<unsigned char>::max() + 1;
 
@@ -158,6 +159,14 @@ inline int distinct_chars(Word word) {
 }
 
 template<typename LinearT>
+LinearT terms_with_exact_distinct_elements(const LinearT& expr, int num_distinct) {
+  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
+  return expr.filtered_key([&](const Word& key) {
+    return distinct_chars(key) == num_distinct;
+  });
+}
+
+template<typename LinearT>
 LinearT terms_with_min_distinct_elements(const LinearT& expr, int min_distinct) {
   static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
   return expr.filtered_key([&](const Word& key) {
@@ -187,3 +196,7 @@ LinearT terms_by_template(const LinearT& expr, const Word& proto_tmpl) {
     return word_to_template(key) == tmpl;
   });
 }
+
+WordExpr word_expr_substitute(
+    const WordExpr& expr,
+    const std::vector<int>& new_points);

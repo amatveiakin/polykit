@@ -4,10 +4,10 @@
 #include <climits>
 #include <variant>
 
-#include "lib/bit.h"
-#include "lib/check.h"
-#include "lib/polylog_param.h"
-#include "lib/word.h"
+#include "bit.h"
+#include "check.h"
+#include "polylog_param.h"
+#include "word.h"
 
 
 using EpsilonStorageType = unsigned char;

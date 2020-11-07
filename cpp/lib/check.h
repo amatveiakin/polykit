@@ -30,8 +30,8 @@ struct CheckResult {
   CheckResult(bool ok_arg) : ok(ok_arg) {}
   CheckResult(const CheckResult&) = delete;
   CheckResult& operator=(const CheckResult&) = delete;
-  CheckResult(CheckResult&&) = delete;
-  CheckResult& operator=(CheckResult&&) = delete;
+  CheckResult(CheckResult&&) = default;
+  CheckResult& operator=(CheckResult&&) = default;
   ~CheckResult() {
     if (!ok) {
       std::cerr << std::endl;
