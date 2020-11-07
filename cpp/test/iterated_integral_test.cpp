@@ -27,3 +27,10 @@ TEST(CorrTest, ArgsCanBeShifted_4) {
     );
   }
 }
+
+TEST(CorrTest, BuiltinProjection) {
+  EXPECT_EXPR_EQ(
+    project_on_x2(CorrVec({1,2,3,4})),
+    CorrVecPr({1,2,3,4}, project_on_x2)
+  );
+}

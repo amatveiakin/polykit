@@ -21,8 +21,15 @@ inline int neg_one_pow(int power) {
   return 1 - power % 2 * 2;
 }
 
+class IntegerDivisionError : public std::runtime_error {
+public:
+  IntegerDivisionError() : std::runtime_error("Integer division error") {}
+};
+
 inline int div_int(int a, int b) {
-  CHECK_EQ(a % b, 0);
+  if (a % b != 0) {
+    throw IntegerDivisionError();
+  }
   return a / b;
 }
 
@@ -42,6 +49,15 @@ inline std::vector<int> seq_incl(int from, int to) {
   absl::c_iota(ret, from);
   return ret;
 }
+
+// Equivalent of std::identity from C++20
+struct identity_function_t {
+  template<class T>
+  constexpr T&& operator()(T&& t) const noexcept {
+    return std::forward<T>(t);
+  }
+};
+constexpr identity_function_t identity_function;
 
 template<typename T>
 std::vector<T> concat(std::vector<T> a, std::vector<T> b) {
@@ -103,6 +119,17 @@ auto mapped_array(const std::array<In, N>& src, F&& func) {
   std::array<std::invoke_result_t<F, In>, N> dst;
   absl::c_transform(src, dst.begin(), func);
   return dst;
+}
+
+template<typename T, typename F>
+std::vector<T> filtered(std::vector<T> src, F&& func) {
+  src.erase(
+    std::remove_if(src.begin(), src.end(), [&](const T& element) {
+      return !func(element);
+    }),
+    src.end()
+  );
+  return src;
 }
 
 template<typename T>

@@ -7,9 +7,23 @@
 DeltaExpr LidoVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoVec(int weight, const std::vector<int>& points);
 
+// Assuming projector is indeed a projection, this is equivalent to
+//   projector(LidoVec(...))
+// but faster.
+WordExpr LidoVecPr(
+    int weight, const std::vector<X>& points,
+    std::function<WordExpr(DeltaExpr)> projector);
+
 // Only 6 point are supported for now
 DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points);
+
+// Assuming projector is indeed a projection, this is equivalent to
+//   projector(LidoSymmVec(...))
+// but faster.
+WordExpr LidoSymmVecPr(
+    int weight, const std::vector<X>& points,
+    std::function<WordExpr(DeltaExpr)> projector);
 
 namespace internal {
 template<typename... Args>

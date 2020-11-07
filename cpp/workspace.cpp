@@ -66,63 +66,79 @@ auto sum_looped(
   return ret;
 }
 
-DeltaExpr LiSon(int x1, int x2, int x3, int x4, int x5, int x6) {
-  return
-    +2*Corr(x1,x1,x1,x2,x4,x6)
-     + Corr(x1,x1,x2,x2,x3,x6)
-     + Corr(x1,x1,x2,x2,x4,x5)
-    +2*Corr(x1,x1,x2,x3,x4,x6)
-     + Corr(x1,x1,x2,x3,x6,x6)
-     + Corr(x1,x1,x2,x4,x4,x5)
-    +2*Corr(x1,x1,x2,x4,x5,x6)
-     + Corr(x1,x1,x3,x4,x4,x6)
-     + Corr(x1,x1,x3,x4,x6,x6)
-     + Corr(x1,x1,x4,x4,x5,x6)
-     + Corr(x1,x1,x4,x5,x6,x6)
-    +2*Corr(x1,x2,x2,x2,x3,x5)
-     + Corr(x1,x2,x2,x3,x3,x6)
-    +2*Corr(x1,x2,x2,x3,x4,x5)
-    +2*Corr(x1,x2,x2,x3,x5,x6)
-     + Corr(x1,x2,x2,x4,x5,x5)
-    +2*Corr(x1,x2,x3,x3,x4,x6)
-     + Corr(x1,x2,x3,x3,x6,x6)
-    +2*Corr(x1,x2,x3,x4,x4,x5)
-    +2*Corr(x1,x2,x3,x4,x5,x6)
-    +2*Corr(x1,x2,x3,x5,x6,x6)
-     + Corr(x1,x2,x4,x4,x5,x5)
-    +2*Corr(x1,x2,x4,x5,x5,x6)
-     + Corr(x1,x3,x3,x4,x4,x6)
-     + Corr(x1,x3,x3,x4,x6,x6)
-    +2*Corr(x1,x3,x4,x4,x4,x5)
-    +2*Corr(x1,x3,x4,x4,x5,x6)
-    +2*Corr(x1,x3,x4,x5,x6,x6)
-    +2*Corr(x1,x3,x5,x6,x6,x6)
-     + Corr(x1,x4,x4,x5,x5,x6)
-     + Corr(x1,x4,x5,x5,x6,x6)
-     + Corr(x2,x2,x3,x3,x4,x5)
-     + Corr(x2,x2,x3,x3,x5,x6)
-     + Corr(x2,x2,x3,x4,x5,x5)
-     + Corr(x2,x2,x3,x5,x5,x6)
-    +2*Corr(x2,x3,x3,x3,x4,x6)
-     + Corr(x2,x3,x3,x4,x4,x5)
-    +2*Corr(x2,x3,x3,x4,x5,x6)
-     + Corr(x2,x3,x3,x5,x6,x6)
-     + Corr(x2,x3,x4,x4,x5,x5)
-    +2*Corr(x2,x3,x4,x5,x5,x6)
-     + Corr(x2,x3,x5,x5,x6,x6)
-    +2*Corr(x2,x4,x5,x5,x5,x6)
-  ;
+std::vector<int> odd_elements(std::vector<int> v) {
+  return filtered(std::move(v), [](int x) { return x % 2 == 1; });
+}
+std::vector<int> even_elements(std::vector<int> v) {
+  return filtered(std::move(v), [](int x) { return x % 2 == 0; });
 }
 
-DeltaExpr LydoSymm7(int x1, int x2, int x3, int x4, int x5, int x6, int x7, int x8) {
-  return
-    + Lido7(x1,x2,x3,x4,x5,x6,x7,x8)
-    - Lido7(x1,x2,x3,x4,x5,x6)
-    - Lido7(x3,x4,x5,x6,x7,x8)
-    - Lido7(x5,x6,x7,x8,x1,x2)
-    - Lido7(x7,x8,x1,x2,x3,x4)
-  ;
+DeltaExpr CorrBundle(int num_args, int num_vars, int num_distinct_vars, std::pair<int, int> coeffs = {1, 1}) {
+  CHECK_LE(num_distinct_vars, num_args);
+  CHECK_LE(num_distinct_vars, num_vars);
+  DeltaExpr ret;
+  for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
+    const auto args = mapped(w, [](int x) { return x + 1; });
+    const auto args_odd = odd_elements(args);
+    const auto args_even = even_elements(args);
+    const int num_odd = args_odd.size();
+    const int num_even = args_even.size();
+    const int num_distinct = num_distinct_elements(args);
+    CHECK(num_vars % 2 == 0);
+    const bool has_all_odd  = num_distinct_elements(args_odd)  == num_vars / 2;
+    const bool has_all_even = num_distinct_elements(args_even) == num_vars / 2;
+    if (num_odd == num_even && num_distinct == num_distinct_vars) {
+      const int coeff = has_all_odd || has_all_even ? coeffs.first : coeffs.second;
+      ret += coeff * CorrVec(mapped(args, [](int x) { return X(x); }));
+    }
+  }
+  return ret;
 }
+
+DeltaExpr CorrBundleAlt(int num_args, int num_vars, int num_distinct_vars) {
+  CHECK_LE(num_distinct_vars, num_args);
+  CHECK_LE(num_distinct_vars, num_vars);
+  DeltaExpr ret;
+  for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
+    const auto args = mapped(w, [](int x) { return x + 1; });
+    const auto args_odd = odd_elements(args);
+    const auto args_even = even_elements(args);
+    const int num_odd = args_odd.size();
+    const int num_even = args_even.size();
+    const int num_distinct = num_distinct_elements(args);
+    if (num_distinct == num_distinct_vars) {
+      const int coeff = (num_odd == num_even) ? 1 : -1;
+      ret += coeff * CorrVec(mapped(args, [](int x) { return X(x); }));
+    }
+  }
+  return ret;
+}
+
+DeltaExpr CorrBundleEven(int num_args, int num_vars, int num_distinct_vars, std::tuple<int, int, int, int> coeffs = {1, -1, 1, -1}) {
+  CHECK_LE(num_distinct_vars, num_args);
+  CHECK_LE(num_distinct_vars, num_vars);
+  DeltaExpr ret;
+  for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
+    const auto args = mapped(w, [](int x) { return x + 1; });
+    const auto args_odd = odd_elements(args);
+    const auto args_even = even_elements(args);
+    const int num_odd = args_odd.size();
+    const int num_even = args_even.size();
+    const int num_distinct = num_distinct_elements(args);
+    CHECK(num_vars % 2 == 0);
+    const bool has_all_odd  = num_distinct_elements(args_odd)  == num_vars / 2;
+    const bool has_all_even = num_distinct_elements(args_even) == num_vars / 2;
+    if (num_distinct == num_distinct_vars && std::abs(num_odd - num_even) == 1) {
+      const int coeff =
+        (has_all_odd || has_all_even)
+        ? ((num_odd > num_even) ? std::get<0>(coeffs) : std::get<1>(coeffs))
+        : ((num_odd > num_even) ? std::get<2>(coeffs) : std::get<3>(coeffs));
+      ret += coeff * CorrVec(mapped(args, [](int x) { return X(x); }));
+    }
+  }
+  return ret;
+}
+
 
 int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -130,345 +146,361 @@ int main(int argc, char *argv[]) {
 
   Profiler profiler;
 
-  // std::cout << "Corr " << to_lyndon_basis(Corr(1,1,2,3,5,6)) << "\n";
-  // auto expr = Lido5(1,2,3,4,5,6);
-  // auto expr = Lido5(1,2,3,4,5,6) - Corr(1,2,3,4,5,6);
-  // auto expr = (
-  //   + LidoSymm4(1,2,3,4,5,6)
-  //   + Corr(1,2,3,4,5)
-  //   - Corr(1,2,3,4,6)
-  //   + Corr(1,2,3,5,6)
-  //   - Corr(1,2,4,5,6)
-  //   + Corr(1,3,4,5,6)
-  //   - Corr(2,3,4,5,6)
-  //   - CorrLoop(1,2,2,3,4)
-  //   - CorrLoop(1,2,2,5,6)
-  // ).without_annotations();
-
-  // auto expr = (
-  //   + Corr(1,1,2,3,4,5)
-  //   + Corr(1,2,2,3,4,5)
-  //   + Corr(1,2,3,3,4,5)
-  //   + Corr(1,2,3,4,4,5)
-  //   + Corr(1,2,3,4,5,5)
-  // );
-
-  // auto expr = (
-  //   + Corr(1,1,2,3,4)
-  //   + Corr(1,2,2,3,4)
-  //   + Corr(1,2,3,3,4)
-  //   + Corr(1,2,3,4,4)
-  // );
-
-  // auto expr = (
-  //   + Corr(1,1,1,2,3)
-  //   + Corr(1,1,2,2,3)
-  //   + Corr(1,1,2,3,3)
-  //   + Corr(1,2,2,2,3)
-  //   + Corr(1,2,2,3,3)
-  //   + Corr(1,2,3,3,3)
-  // );
-
-  // auto expr = (
-  //   + Corr(1,1,1,2,3)
-  //   - Corr(1,2,2,2,3)
-  //   - Corr(1,2,2,3,3)
-  //   - Corr(1,2,3,3,3)
-  // );
-
-  // auto expr = (
-  //   + Corr(1,2,3,4,4,4)
-  //   - Corr(1,1,1,2,3,4)
-  //   - Corr(1,1,2,2,3,4)
-  //   - Corr(1,1,2,3,3,4)
-  //   - Corr(1,2,2,2,3,4)
-  //   - Corr(1,2,2,3,3,4)
-  //   - Corr(1,2,3,3,3,4)
-  // );
 
   // auto expr =
-  //   - Lido5(1,2,3,4,5,6)
-  //   + Corr(1,2,3,4,5,6)
-  //   + sum_looped(&CorrVec, 6, {1,1,2,4,5,6}, Sign::plus)
-  //   + sum_looped(&CorrVec, 6, {1,1,2,3,4,6}, Sign::plus)
-  // ;
+  //   +2*Lido5(1,2,3,4)
+  //   +  Corr(1,1,2,2,3,4)
+  //   +  Corr(1,1,2,3,4,4)
+  //   +  Corr(1,2,2,3,3,4)
+  //   +  Corr(1,2,3,3,4,4)
+  // ;   // only 2 vars in projection on x1
 
-  // std::cout << to_lyndon_basis(project_on_x1(Corr(1,1,2,2,4,5))) << "\n";
-  // std::cout << to_lyndon_basis(project_on_x1(Corr(1,1,2,4,4,5))) << "\n";
-  // std::cout << to_lyndon_basis(project_on_x1(Corr(1,2,2,4,5,5))) << "\n";
-  // std::cout << to_lyndon_basis(project_on_x1(Corr(1,2,4,4,5,5))) << "\n";
-  // return 0;
 
   // auto expr =
-  //   -2 * Lido5(1,2,3,4,5,6)
-  //   +2 * Corr(1,2,3,4,5,6)
-  //   +2 * sum_looped(&CorrVec, 6, {1,1,2,4,5,6}, Sign::plus)
-  //   +2 * sum_looped(&CorrVec, 6, {1,1,2,3,4,6}, Sign::plus)
-  //   +2 * sum_looped(&CorrVec, 6, {1,2,2,2,3,5}, Sign::plus)
-  //   + sum_looped(&CorrVec, 6, {1,1,2,2,4,5}, Sign::plus)
-  //   + Corr(1,1,2,4,4,5)
-  //   + Corr(2,2,3,5,5,6)
-  //   + Corr(3,3,4,6,6,1)
-  //   + Corr(1,2,2,4,5,5)
-  //   + Corr(2,3,3,5,6,6)
-  //   + Corr(3,4,4,6,1,1)
-  //   + sum_looped(&CorrVec, 6, {1,1,2,2,3,6}, Sign::plus, Loop::half)
-  //   + sum_looped(&CorrVec, 6, {1,1,2,3,6,6}, Sign::plus, Loop::half)
-  //   + sum_looped(&CorrVec, 6, {1,2,2,3,3,6}, Sign::plus, Loop::half)
-  //   + sum_looped(&CorrVec, 6, {1,2,3,3,6,6}, Sign::plus, Loop::half)
+  //   - Lido3(1,2,3,4)
+  //   + Corr(1,2,3,4)
+  //   + Corr(1,2,2,3)
+  //   + Corr(2,3,3,4)
+  //   + Corr(3,4,4,1)
+  //   + Corr(4,1,1,2)
+  // ;  // Total zero
+
+
+  // auto expr =
+  //   +6*Lido5(1,2,3,4)
+  //   +3*Corr(1,1,2,2,3,4)
+  //   +3*Corr(1,1,2,3,4,4)
+  //   +3*Corr(1,2,2,3,3,4)
+  //   +3*Corr(1,2,3,3,4,4)
+  //   +2*Corr(1,1,1,2,2,4)
+  //   +2*Corr(1,1,1,2,4,4)
+  //   +2*Corr(1,1,2,2,2,3)
+  //   +2*Corr(1,1,3,4,4,4)
+  //   +2*Corr(1,2,2,2,3,3)
+  //   +2*Corr(1,3,3,4,4,4)
+  //   +2*Corr(2,2,3,3,3,4)
+  //   +2*Corr(2,3,3,3,4,4)
+  // ;  // Total zero
+
+
+  // auto expr =
+  //   -30*Lido7(1,2,3,4)
+  //   +5*Corr(1,1,1,2,2,3,4,4)
+  //   +5*Corr(1,1,1,2,2,2,3,4)
+  //   +5*Corr(1,1,1,2,3,4,4,4)
+  //   +5*Corr(1,1,2,2,2,3,3,4)
+  //   +5*Corr(1,1,2,3,3,4,4,4)
+  //   +5*Corr(1,1,2,2,3,3,4,4)
+  //   +5*Corr(1,2,2,2,3,3,3,4)
+  //   +5*Corr(1,2,2,3,3,3,4,4)
+  //   +5*Corr(1,2,3,3,3,4,4,4)
+  //   +3*Corr(1,1,1,1,2,2,2,4)
+  //   +3*Corr(1,1,1,1,2,2,4,4)
+  //   +3*Corr(1,1,1,1,2,4,4,4)
+  //   +3*Corr(1,1,1,2,2,2,2,3)
+  //   +3*Corr(1,1,1,3,4,4,4,4)
+  //   +3*Corr(1,1,2,2,2,2,3,3)
+  //   +3*Corr(1,1,3,3,4,4,4,4)
+  //   +3*Corr(1,2,2,2,2,3,3,3)
+  //   +3*Corr(1,3,3,3,4,4,4,4)
+  //   +3*Corr(2,2,2,3,3,3,3,4)
+  //   +3*Corr(2,2,3,3,3,3,4,4)
+  //   +3*Corr(2,3,3,3,3,4,4,4)
+  // ;  // Total zero
+
+
+  // auto expr =
+  //   + Lido4(1,2,3,4,5,6)
+  //   - I(1,2,3,4,5,6)
+  //   - I(3,4,5,6,1,2)
+  //   - I(5,6,1,2,3,4)
+  //   + I(2,2,2,3,5,1)
+  //   + I(4,4,4,5,1,3)
+  //   + I(6,6,6,1,3,5)
+  //   - I(1,1,2,4,4,5)
+  //   - I(3,3,4,6,6,1)
+  //   - I(5,5,6,2,2,3)
+  //   + I(1,2,2,4,5,5)
+  //   + I(3,4,4,6,1,1)
+  //   + I(5,6,6,2,3,3)
+  // ;  // Kills 4 vars (after projecting on x1) and half of 3 vars
+
+
+  // auto expr =
+  //   +6*LidoSymm4(1,2,3,4,5,6)
+  //   +6*CorrBundleEven(5, 6, 5)
+  //   +3*CorrBundleEven(5, 6, 4, {2,-2,1,-1})
+  //   +2*CorrBundleEven(5, 6, 3)
+  // ;  // Total zero
+
+
+  // auto expr =
+  //   -6*LidoSymm5(1,2,3,4,5,6)
+  //   +6*CorrBundle(6, 6, 6)
+  //   +6*CorrBundle(6, 6, 5)
+  //   +3*CorrBundle(6, 6, 4, {2,1})
+  //   +2*CorrBundle(6, 6, 3)
+  // ;  // Total zero
+
+
+  // auto expr =
+  //   +60*LidoSymm7(1,2,3,4,5,6)
+  //   +30*CorrBundle(8, 6, 6)
+  //   +20*CorrBundle(8, 6, 5)
+  //   +5 *CorrBundle(8, 6, 4, {3,2})
+  //   +6 *CorrBundle(8, 6, 3)
   // ;
+
+
+  // auto expr =
+  //   + LidoSymm3(1,2,3,4,5,6)
+  //   + CorrBundleAlt(4, 6, 4)
+  //   + CorrBundle(4, 6, 3)
+  // ;
+
+
+  // auto expr =
+  //   +2*LidoSymm5(1,2,3,4,5,6,7,8)
+  //   +2*CorrBundleAlt(6, 8, 6)
+  //   +2*CorrBundleAlt(6, 8, 5)
+  // ;  // <= 4 vars when projected on x1
+
+
+  // auto expr =
+  //   -2*LidoSymm7(1,2,3,4,5,6,7,8)
+  //   +2*Corr(1,2,3,4,5,6,7,8)
+  //   +2*CorrBundle(8, 8, 7)
+  //   +  CorrBundle(8, 8, 6, {2,1})
+  // ;
+
+  // auto expr =
+  //   -2*LidoSymmVecPr(7, {1,2,3,4,5,6,7,8}, project_on_x1)
+  //   + project_on_x1(
+  //     +2*Corr(1,2,3,4,5,6,7,8)
+  //     +2*CorrBundle(8, 8, 7)
+  //     +  CorrBundle(8, 8, 6, {2,1})
+  //   )
+  // ;
+
+/*
+  auto Corr = [](auto... args) {
+    return CorrVecPr({args...}, project_on_x1);
+  };
 
   auto expr =
-    -2 * Lido5(1,2,3,4,5,6)
-    +2 * Corr(1,2,3,4,5,6)
-    +2 * sum_looped(&CorrVec, 6, {1,1,2,4,5,6}, Sign::plus)
-    +2 * sum_looped(&CorrVec, 6, {1,1,2,3,4,6}, Sign::plus)
-    +2 * sum_looped(&CorrVec, 6, {1,2,2,2,3,5}, Sign::plus)
-    + sum_looped(&CorrVec, 6, {1,1,2,2,4,5}, Sign::plus)
-    + sum_looped(&CorrVec, 6, {1,1,2,4,4,5}, Sign::plus, Loop::half)
-    + sum_looped(&CorrVec, 6, {1,2,2,4,5,5}, Sign::plus, Loop::half)
-    + sum_looped(&CorrVec, 6, {1,1,2,2,3,6}, Sign::plus, Loop::half)
-    + sum_looped(&CorrVec, 6, {1,1,2,3,6,6}, Sign::plus, Loop::half)
-    + sum_looped(&CorrVec, 6, {1,2,2,3,3,6}, Sign::plus, Loop::half)
-    + sum_looped(&CorrVec, 6, {1,2,3,3,6,6}, Sign::plus, Loop::half)
-  ;  // Has at most 3 vars per term
+    // -2*LidoSymmVecPr(7, {1,2,3,4,5,6,7,8}, project_on_x1)
+    -2*LidoVecPr(7, {1,2,3,4,5,6,7,8}, project_on_x1)
+    // -2*LidoSymmPr7(1,2,3,4,5,6,7,8)
 
-  // auto expr =
-  //   -2 * LidoSymm5(1,2,3,4,5,6)
-  //   + LiSon(1,2,3,4,5,6)
-  //   + Corr(1,1,2,2,3,4)
-  //   + Corr(1,1,2,2,5,6)
-  //   + Corr(1,1,2,3,4,4)
-  //   + Corr(1,1,2,5,6,6)
-  //   + Corr(1,2,2,3,3,4)
-  //   + Corr(1,2,2,5,5,6)
-  //   + Corr(1,2,3,3,4,4)
-  //   + Corr(1,2,5,5,6,6)
-  //   + Corr(3,3,4,4,5,6)
-  //   + Corr(3,3,4,5,6,6)
-  //   + Corr(3,4,4,5,5,6)
-  //   + Corr(3,4,5,5,6,6)
-  // ;
+    +2*Corr(1,2,3,4,5,6,7,8)
 
-  // std::cout << to_lyndon_basis(project_on_x1(
-  //   + LydoSymm7(1,2,3,4,5,6,7,8)
-  //   - LydoSymm7(2,3,4,5,6,7,8,1)
-  // ));
-  // return 0;
+    +2*Corr(1,1,2,3,4,5,6,8)
+    +2*Corr(1,1,2,3,4,6,7,8)
+    +2*Corr(1,1,2,4,5,6,7,8)
+    +2*Corr(1,2,2,3,4,5,6,7)
+    +2*Corr(1,2,2,3,4,5,7,8)
+    +2*Corr(1,2,2,3,5,6,7,8)
+    +2*Corr(1,2,3,3,4,5,6,8)
+    +2*Corr(1,2,3,3,4,6,7,8)
+    +2*Corr(1,2,3,4,4,5,6,7)
+    +2*Corr(1,2,3,4,4,5,7,8)
+    +2*Corr(1,2,3,4,5,5,6,8)
+    +2*Corr(1,2,3,4,5,6,6,7)
+    +2*Corr(1,2,3,4,5,7,8,8)
+    +2*Corr(1,2,3,4,6,7,7,8)
+    +2*Corr(1,2,3,5,6,6,7,8)
+    +2*Corr(1,2,3,5,6,7,8,8)
+    +2*Corr(1,2,4,5,5,6,7,8)
+    +2*Corr(1,2,4,5,6,7,7,8)
+    +2*Corr(1,3,4,4,5,6,7,8)
+    +2*Corr(1,3,4,5,6,6,7,8)
+    +2*Corr(1,3,4,5,6,7,8,8)
+    +2*Corr(2,3,3,4,5,6,7,8)
+    +2*Corr(2,3,4,5,5,6,7,8)
+    +2*Corr(2,3,4,5,6,7,7,8)
 
-  // auto expr =
-  //   // -2*LidoVecPr(7, {1,2,3,4,5,6,7,8}, project_on_x1)
-  //   + project_on_x1 (
-  //     -2*LydoSymm7(1,2,3,4,5,6,7,8)
-
-  //     +2*Corr(1,2,3,4,5,6,7,8)
-
-  //     +2*Corr(1,1,2,3,4,5,6,8)
-  //     +2*Corr(1,1,2,3,4,6,7,8)
-  //     +2*Corr(1,1,2,4,5,6,7,8)
-  //     +2*Corr(1,2,2,3,4,5,6,7)
-  //     +2*Corr(1,2,2,3,4,5,7,8)
-  //     +2*Corr(1,2,2,3,5,6,7,8)
-  //     +2*Corr(1,2,3,3,4,5,6,8)
-  //     +2*Corr(1,2,3,3,4,6,7,8)
-  //     +2*Corr(1,2,3,4,4,5,6,7)
-  //     +2*Corr(1,2,3,4,4,5,7,8)
-  //     +2*Corr(1,2,3,4,5,5,6,8)
-  //     +2*Corr(1,2,3,4,5,6,6,7)
-  //     +2*Corr(1,2,3,4,5,7,8,8)
-  //     +2*Corr(1,2,3,4,6,7,7,8)
-  //     +2*Corr(1,2,3,5,6,6,7,8)
-  //     +2*Corr(1,2,3,5,6,7,8,8)
-  //     +2*Corr(1,2,4,5,5,6,7,8)
-  //     +2*Corr(1,2,4,5,6,7,7,8)
-  //     +2*Corr(1,3,4,4,5,6,7,8)
-  //     +2*Corr(1,3,4,5,6,6,7,8)
-  //     +2*Corr(1,3,4,5,6,7,8,8)
-  //     +2*Corr(2,3,3,4,5,6,7,8)
-  //     +2*Corr(2,3,4,5,5,6,7,8)
-  //     +2*Corr(2,3,4,5,6,7,7,8)
-
-  //     +2*Corr(1,1,1,2,3,4,6,8)
-  //     +2*Corr(1,1,1,2,4,5,6,8)
-  //     +2*Corr(1,1,1,2,4,6,7,8)
-  //     +  Corr(1,1,2,2,3,4,5,6)
-  //     +  Corr(1,1,2,2,3,4,5,8)
-  //     +  Corr(1,1,2,2,3,4,6,7)
-  //     +  Corr(1,1,2,2,3,4,7,8)
-  //     +  Corr(1,1,2,2,3,5,6,8)
-  //     +  Corr(1,1,2,2,3,6,7,8)
-  //     +  Corr(1,1,2,2,4,5,6,7)
-  //     +  Corr(1,1,2,2,4,5,7,8)
-  //     +  Corr(1,1,2,2,5,6,7,8)
-  //     +  Corr(1,1,2,3,3,4,6,8)
-  //     +  Corr(1,1,2,3,4,4,5,6)
-  //     +  Corr(1,1,2,3,4,4,5,8)
-  //     +  Corr(1,1,2,3,4,4,6,7)
-  //     +  Corr(1,1,2,3,4,4,7,8)
-  //     +  Corr(1,1,2,3,4,5,6,6)
-  //     +  Corr(1,1,2,3,4,5,8,8)
-  //     +  Corr(1,1,2,3,4,6,6,7)
-  //     +  Corr(1,1,2,3,4,7,8,8)
-  //     +  Corr(1,1,2,3,5,6,6,8)
-  //     +  Corr(1,1,2,3,5,6,8,8)
-  //     +  Corr(1,1,2,3,6,6,7,8)
-  //     +  Corr(1,1,2,3,6,7,8,8)
-  //     +  Corr(1,1,2,4,4,5,6,7)
-  //     +  Corr(1,1,2,4,4,5,7,8)
-  //     +  Corr(1,1,2,4,5,5,6,8)
-  //     +  Corr(1,1,2,4,5,6,6,7)
-  //     +  Corr(1,1,2,4,5,7,8,8)
-  //     +  Corr(1,1,2,4,6,7,7,8)
-  //     +  Corr(1,1,2,5,6,6,7,8)
-  //     +  Corr(1,1,2,5,6,7,8,8)
-  //     +  Corr(1,1,3,4,4,5,6,8)
-  //     +  Corr(1,1,3,4,4,6,7,8)
-  //     +  Corr(1,1,3,4,5,6,6,8)
-  //     +  Corr(1,1,3,4,5,6,8,8)
-  //     +  Corr(1,1,3,4,6,6,7,8)
-  //     +  Corr(1,1,3,4,6,7,8,8)
-  //     +  Corr(1,1,4,4,5,6,7,8)
-  //     +  Corr(1,1,4,5,6,6,7,8)
-  //     +  Corr(1,1,4,5,6,7,8,8)
-  //     +2*Corr(1,2,2,2,3,4,5,7)
-  //     +2*Corr(1,2,2,2,3,5,6,7)
-  //     +2*Corr(1,2,2,2,3,5,7,8)
-  //     +  Corr(1,2,2,3,3,4,5,6)
-  //     +  Corr(1,2,2,3,3,4,5,8)
-  //     +  Corr(1,2,2,3,3,4,6,7)
-  //     +  Corr(1,2,2,3,3,4,7,8)
-  //     +  Corr(1,2,2,3,3,5,6,8)
-  //     +  Corr(1,2,2,3,3,6,7,8)
-  //     +  Corr(1,2,2,3,4,4,5,7)
-  //     +  Corr(1,2,2,3,4,5,5,6)
-  //     +  Corr(1,2,2,3,4,5,5,8)
-  //     +  Corr(1,2,2,3,4,6,7,7)
-  //     +  Corr(1,2,2,3,4,7,7,8)
-  //     +  Corr(1,2,2,3,5,5,6,8)
-  //     +  Corr(1,2,2,3,5,6,6,7)
-  //     +  Corr(1,2,2,3,5,7,8,8)
-  //     +  Corr(1,2,2,3,6,7,7,8)
-  //     +  Corr(1,2,2,4,5,5,6,7)
-  //     +  Corr(1,2,2,4,5,5,7,8)
-  //     +  Corr(1,2,2,4,5,6,7,7)
-  //     +  Corr(1,2,2,4,5,7,7,8)
-  //     +  Corr(1,2,2,5,5,6,7,8)
-  //     +  Corr(1,2,2,5,6,7,7,8)
-  //     +2*Corr(1,2,3,3,3,4,6,8)
-  //     +  Corr(1,2,3,3,4,4,5,6)
-  //     +  Corr(1,2,3,3,4,4,5,8)
-  //     +  Corr(1,2,3,3,4,4,6,7)
-  //     +  Corr(1,2,3,3,4,4,7,8)
-  //     +  Corr(1,2,3,3,4,5,6,6)
-  //     +  Corr(1,2,3,3,4,5,8,8)
-  //     +  Corr(1,2,3,3,4,6,6,7)
-  //     +  Corr(1,2,3,3,4,7,8,8)
-  //     +  Corr(1,2,3,3,5,6,6,8)
-  //     +  Corr(1,2,3,3,5,6,8,8)
-  //     +  Corr(1,2,3,3,6,6,7,8)
-  //     +  Corr(1,2,3,3,6,7,8,8)
-  //     +2*Corr(1,2,3,4,4,4,5,7)
-  //     +  Corr(1,2,3,4,4,5,5,6)
-  //     +  Corr(1,2,3,4,4,5,5,8)
-  //     +  Corr(1,2,3,4,4,6,7,7)
-  //     +  Corr(1,2,3,4,4,7,7,8)
-  //     +  Corr(1,2,3,4,5,5,6,6)
-  //     +  Corr(1,2,3,4,5,5,8,8)
-  //     +  Corr(1,2,3,4,6,6,7,7)
-  //     +  Corr(1,2,3,4,7,7,8,8)
-  //     +  Corr(1,2,3,5,5,6,6,8)
-  //     +  Corr(1,2,3,5,5,6,8,8)
-  //     +2*Corr(1,2,3,5,6,6,6,7)
-  //     +2*Corr(1,2,3,5,7,8,8,8)
-  //     +  Corr(1,2,3,6,6,7,7,8)
-  //     +  Corr(1,2,3,6,7,7,8,8)
-  //     +  Corr(1,2,4,4,5,5,6,7)
-  //     +  Corr(1,2,4,4,5,5,7,8)
-  //     +  Corr(1,2,4,4,5,6,7,7)
-  //     +  Corr(1,2,4,4,5,7,7,8)
-  //     +2*Corr(1,2,4,5,5,5,6,8)
-  //     +  Corr(1,2,4,5,5,6,6,7)
-  //     +  Corr(1,2,4,5,5,7,8,8)
-  //     +  Corr(1,2,4,5,6,6,7,7)
-  //     +  Corr(1,2,4,5,7,7,8,8)
-  //     +2*Corr(1,2,4,6,7,7,7,8)
-  //     +  Corr(1,2,5,5,6,6,7,8)
-  //     +  Corr(1,2,5,5,6,7,8,8)
-  //     +  Corr(1,2,5,6,6,7,7,8)
-  //     +  Corr(1,2,5,6,7,7,8,8)
-  //     +  Corr(1,3,3,4,4,5,6,8)
-  //     +  Corr(1,3,3,4,4,6,7,8)
-  //     +  Corr(1,3,3,4,5,6,6,8)
-  //     +  Corr(1,3,3,4,5,6,8,8)
-  //     +  Corr(1,3,3,4,6,6,7,8)
-  //     +  Corr(1,3,3,4,6,7,8,8)
-  //     +2*Corr(1,3,4,4,4,5,6,7)
-  //     +2*Corr(1,3,4,4,4,5,7,8)
-  //     +  Corr(1,3,4,4,5,5,6,8)
-  //     +  Corr(1,3,4,4,5,6,6,7)
-  //     +  Corr(1,3,4,4,5,7,8,8)
-  //     +  Corr(1,3,4,4,6,7,7,8)
-  //     +  Corr(1,3,4,5,5,6,6,8)
-  //     +  Corr(1,3,4,5,5,6,8,8)
-  //     +2*Corr(1,3,4,5,6,6,6,7)
-  //     +2*Corr(1,3,4,5,7,8,8,8)
-  //     +  Corr(1,3,4,6,6,7,7,8)
-  //     +  Corr(1,3,4,6,7,7,8,8)
-  //     +2*Corr(1,3,5,6,6,6,7,8)
-  //     +  Corr(1,3,5,6,6,7,8,8)
-  //     +2*Corr(1,3,5,6,7,8,8,8)
-  //     +  Corr(1,4,4,5,5,6,7,8)
-  //     +  Corr(1,4,4,5,6,7,7,8)
-  //     +  Corr(1,4,5,5,6,6,7,8)
-  //     +  Corr(1,4,5,5,6,7,8,8)
-  //     +  Corr(1,4,5,6,6,7,7,8)
-  //     +  Corr(1,4,5,6,7,7,8,8)
-  //     +  Corr(2,2,3,3,4,5,6,7)
-  //     +  Corr(2,2,3,3,4,5,7,8)
-  //     +  Corr(2,2,3,3,5,6,7,8)
-  //     +  Corr(2,2,3,4,5,5,6,7)
-  //     +  Corr(2,2,3,4,5,5,7,8)
-  //     +  Corr(2,2,3,4,5,6,7,7)
-  //     +  Corr(2,2,3,4,5,7,7,8)
-  //     +  Corr(2,2,3,5,5,6,7,8)
-  //     +  Corr(2,2,3,5,6,7,7,8)
-  //     +2*Corr(2,3,3,3,4,5,6,8)
-  //     +2*Corr(2,3,3,3,4,6,7,8)
-  //     +  Corr(2,3,3,4,4,5,6,7)
-  //     +  Corr(2,3,3,4,4,5,7,8)
-  //     +  Corr(2,3,3,4,5,5,6,8)
-  //     +  Corr(2,3,3,4,5,6,6,7)
-  //     +  Corr(2,3,3,4,5,7,8,8)
-  //     +  Corr(2,3,3,4,6,7,7,8)
-  //     +  Corr(2,3,3,5,6,6,7,8)
-  //     +  Corr(2,3,3,5,6,7,8,8)
-  //     +  Corr(2,3,4,4,5,5,6,7)
-  //     +  Corr(2,3,4,4,5,5,7,8)
-  //     +  Corr(2,3,4,4,5,6,7,7)
-  //     +  Corr(2,3,4,4,5,7,7,8)
-  //     +2*Corr(2,3,4,5,5,5,6,8)
-  //     +  Corr(2,3,4,5,5,6,6,7)
-  //     +  Corr(2,3,4,5,5,7,8,8)
-  //     +  Corr(2,3,4,5,6,6,7,7)
-  //     +  Corr(2,3,4,5,7,7,8,8)
-  //     +2*Corr(2,3,4,6,7,7,7,8)
-  //     +  Corr(2,3,5,5,6,6,7,8)
-  //     +  Corr(2,3,5,5,6,7,8,8)
-  //     +  Corr(2,3,5,6,6,7,7,8)
-  //     +  Corr(2,3,5,6,7,7,8,8)
-  //     +2*Corr(2,4,5,5,5,6,7,8)
-  //     +  Corr(2,4,5,5,6,7,7,8)
-  //     +2*Corr(2,4,5,6,7,7,7,8)
-  //     +  Corr(3,3,4,4,5,6,7,8)
-  //     +  Corr(3,3,4,5,6,6,7,8)
-  //     +  Corr(3,3,4,5,6,7,8,8)
-  //     +  Corr(3,4,4,5,5,6,7,8)
-  //     +  Corr(3,4,4,5,6,7,7,8)
-  //     +  Corr(3,4,5,5,6,6,7,8)
-  //     +  Corr(3,4,5,5,6,7,8,8)
-  //     +  Corr(3,4,5,6,6,7,7,8)
-  //     +  Corr(3,4,5,6,7,7,8,8)
-  //   );
+    +2*Corr(1,1,1,2,3,4,6,8)
+    +2*Corr(1,1,1,2,4,5,6,8)
+    +2*Corr(1,1,1,2,4,6,7,8)
+    +  Corr(1,1,2,2,3,4,5,6)
+    +  Corr(1,1,2,2,3,4,5,8)
+    +  Corr(1,1,2,2,3,4,6,7)
+    +  Corr(1,1,2,2,3,4,7,8)
+    +  Corr(1,1,2,2,3,5,6,8)
+    +  Corr(1,1,2,2,3,6,7,8)
+    +  Corr(1,1,2,2,4,5,6,7)
+    +  Corr(1,1,2,2,4,5,7,8)
+    +  Corr(1,1,2,2,5,6,7,8)
+    +2*Corr(1,1,2,3,3,4,6,8)
+    +  Corr(1,1,2,3,4,4,5,6)
+    +  Corr(1,1,2,3,4,4,5,8)
+    +  Corr(1,1,2,3,4,4,6,7)
+    +  Corr(1,1,2,3,4,4,7,8)
+    +  Corr(1,1,2,3,4,5,6,6)
+    +  Corr(1,1,2,3,4,5,8,8)
+    +  Corr(1,1,2,3,4,6,6,7)
+    +  Corr(1,1,2,3,4,7,8,8)
+    +  Corr(1,1,2,3,5,6,6,8)
+    +  Corr(1,1,2,3,5,6,8,8)
+    +  Corr(1,1,2,3,6,6,7,8)
+    +  Corr(1,1,2,3,6,7,8,8)
+    +  Corr(1,1,2,4,4,5,6,7)
+    +  Corr(1,1,2,4,4,5,7,8)
+    +2*Corr(1,1,2,4,5,5,6,8)
+    +  Corr(1,1,2,4,5,6,6,7)
+    +  Corr(1,1,2,4,5,7,8,8)
+    +2*Corr(1,1,2,4,6,7,7,8)
+    +  Corr(1,1,2,5,6,6,7,8)
+    +  Corr(1,1,2,5,6,7,8,8)
+    +  Corr(1,1,3,4,4,5,6,8)
+    +  Corr(1,1,3,4,4,6,7,8)
+    +  Corr(1,1,3,4,5,6,6,8)
+    +  Corr(1,1,3,4,5,6,8,8)
+    +  Corr(1,1,3,4,6,6,7,8)
+    +  Corr(1,1,3,4,6,7,8,8)
+    +  Corr(1,1,4,4,5,6,7,8)
+    +  Corr(1,1,4,5,6,6,7,8)
+    +  Corr(1,1,4,5,6,7,8,8)
+    +2*Corr(1,2,2,2,3,4,5,7)
+    +2*Corr(1,2,2,2,3,5,6,7)
+    +2*Corr(1,2,2,2,3,5,7,8)
+    +  Corr(1,2,2,3,3,4,5,6)
+    +  Corr(1,2,2,3,3,4,5,8)
+    +  Corr(1,2,2,3,3,4,6,7)
+    +  Corr(1,2,2,3,3,4,7,8)
+    +  Corr(1,2,2,3,3,5,6,8)
+    +  Corr(1,2,2,3,3,6,7,8)
+    +2*Corr(1,2,2,3,4,4,5,7)
+    +  Corr(1,2,2,3,4,5,5,6)
+    +  Corr(1,2,2,3,4,5,5,8)
+    +  Corr(1,2,2,3,4,6,7,7)
+    +  Corr(1,2,2,3,4,7,7,8)
+    +  Corr(1,2,2,3,5,5,6,8)
+    +2*Corr(1,2,2,3,5,6,6,7)
+    +2*Corr(1,2,2,3,5,7,8,8)
+    +  Corr(1,2,2,3,6,7,7,8)
+    +  Corr(1,2,2,4,5,5,6,7)
+    +  Corr(1,2,2,4,5,5,7,8)
+    +  Corr(1,2,2,4,5,6,7,7)
+    +  Corr(1,2,2,4,5,7,7,8)
+    +  Corr(1,2,2,5,5,6,7,8)
+    +  Corr(1,2,2,5,6,7,7,8)
+    +2*Corr(1,2,3,3,3,4,6,8)
+    +  Corr(1,2,3,3,4,4,5,6)
+    +  Corr(1,2,3,3,4,4,5,8)
+    +  Corr(1,2,3,3,4,4,6,7)
+    +  Corr(1,2,3,3,4,4,7,8)
+    +  Corr(1,2,3,3,4,5,6,6)
+    +  Corr(1,2,3,3,4,5,8,8)
+    +  Corr(1,2,3,3,4,6,6,7)
+    +  Corr(1,2,3,3,4,7,8,8)
+    +  Corr(1,2,3,3,5,6,6,8)
+    +  Corr(1,2,3,3,5,6,8,8)
+    +  Corr(1,2,3,3,6,6,7,8)
+    +  Corr(1,2,3,3,6,7,8,8)
+    +2*Corr(1,2,3,4,4,4,5,7)
+    +  Corr(1,2,3,4,4,5,5,6)
+    +  Corr(1,2,3,4,4,5,5,8)
+    +  Corr(1,2,3,4,4,6,7,7)
+    +  Corr(1,2,3,4,4,7,7,8)
+    +  Corr(1,2,3,4,5,5,6,6)
+    +  Corr(1,2,3,4,5,5,8,8)
+    +  Corr(1,2,3,4,6,6,7,7)
+    +  Corr(1,2,3,4,7,7,8,8)
+    +  Corr(1,2,3,5,5,6,6,8)
+    +  Corr(1,2,3,5,5,6,8,8)
+    +2*Corr(1,2,3,5,6,6,6,7)
+    +2*Corr(1,2,3,5,7,8,8,8)
+    +  Corr(1,2,3,6,6,7,7,8)
+    +  Corr(1,2,3,6,7,7,8,8)
+    +  Corr(1,2,4,4,5,5,6,7)
+    +  Corr(1,2,4,4,5,5,7,8)
+    +  Corr(1,2,4,4,5,6,7,7)
+    +  Corr(1,2,4,4,5,7,7,8)
+    +2*Corr(1,2,4,5,5,5,6,8)
+    +  Corr(1,2,4,5,5,6,6,7)
+    +  Corr(1,2,4,5,5,7,8,8)
+    +  Corr(1,2,4,5,6,6,7,7)
+    +  Corr(1,2,4,5,7,7,8,8)
+    +2*Corr(1,2,4,6,7,7,7,8)
+    +  Corr(1,2,5,5,6,6,7,8)
+    +  Corr(1,2,5,5,6,7,8,8)
+    +  Corr(1,2,5,6,6,7,7,8)
+    +  Corr(1,2,5,6,7,7,8,8)
+    +  Corr(1,3,3,4,4,5,6,8)
+    +  Corr(1,3,3,4,4,6,7,8)
+    +  Corr(1,3,3,4,5,6,6,8)
+    +  Corr(1,3,3,4,5,6,8,8)
+    +  Corr(1,3,3,4,6,6,7,8)
+    +  Corr(1,3,3,4,6,7,8,8)
+    +2*Corr(1,3,4,4,4,5,6,7)
+    +2*Corr(1,3,4,4,4,5,7,8)
+    +  Corr(1,3,4,4,5,5,6,8)
+    +2*Corr(1,3,4,4,5,6,6,7)
+    +2*Corr(1,3,4,4,5,7,8,8)
+    +  Corr(1,3,4,4,6,7,7,8)
+    +  Corr(1,3,4,5,5,6,6,8)
+    +  Corr(1,3,4,5,5,6,8,8)
+    +2*Corr(1,3,4,5,6,6,6,7)
+    +2*Corr(1,3,4,5,7,8,8,8)
+    +  Corr(1,3,4,6,6,7,7,8)
+    +  Corr(1,3,4,6,7,7,8,8)
+    +2*Corr(1,3,5,6,6,6,7,8)
+    +2*Corr(1,3,5,6,6,7,8,8)
+    +2*Corr(1,3,5,6,7,8,8,8)
+    +  Corr(1,4,4,5,5,6,7,8)
+    +  Corr(1,4,4,5,6,7,7,8)
+    +  Corr(1,4,5,5,6,6,7,8)
+    +  Corr(1,4,5,5,6,7,8,8)
+    +  Corr(1,4,5,6,6,7,7,8)
+    +  Corr(1,4,5,6,7,7,8,8)
+    +  Corr(2,2,3,3,4,5,6,7)
+    +  Corr(2,2,3,3,4,5,7,8)
+    +  Corr(2,2,3,3,5,6,7,8)
+    +  Corr(2,2,3,4,5,5,6,7)
+    +  Corr(2,2,3,4,5,5,7,8)
+    +  Corr(2,2,3,4,5,6,7,7)
+    +  Corr(2,2,3,4,5,7,7,8)
+    +  Corr(2,2,3,5,5,6,7,8)
+    +  Corr(2,2,3,5,6,7,7,8)
+    +2*Corr(2,3,3,3,4,5,6,8)
+    +2*Corr(2,3,3,3,4,6,7,8)
+    +  Corr(2,3,3,4,4,5,6,7)
+    +  Corr(2,3,3,4,4,5,7,8)
+    +2*Corr(2,3,3,4,5,5,6,8)
+    +  Corr(2,3,3,4,5,6,6,7)
+    +  Corr(2,3,3,4,5,7,8,8)
+    +2*Corr(2,3,3,4,6,7,7,8)
+    +  Corr(2,3,3,5,6,6,7,8)
+    +  Corr(2,3,3,5,6,7,8,8)
+    +  Corr(2,3,4,4,5,5,6,7)
+    +  Corr(2,3,4,4,5,5,7,8)
+    +  Corr(2,3,4,4,5,6,7,7)
+    +  Corr(2,3,4,4,5,7,7,8)
+    +2*Corr(2,3,4,5,5,5,6,8)
+    +  Corr(2,3,4,5,5,6,6,7)
+    +  Corr(2,3,4,5,5,7,8,8)
+    +  Corr(2,3,4,5,6,6,7,7)
+    +  Corr(2,3,4,5,7,7,8,8)
+    +2*Corr(2,3,4,6,7,7,7,8)
+    +  Corr(2,3,5,5,6,6,7,8)
+    +  Corr(2,3,5,5,6,7,8,8)
+    +  Corr(2,3,5,6,6,7,7,8)
+    +  Corr(2,3,5,6,7,7,8,8)
+    +2*Corr(2,4,5,5,5,6,7,8)
+    +2*Corr(2,4,5,5,6,7,7,8)
+    +2*Corr(2,4,5,6,7,7,7,8)
+    +  Corr(3,3,4,4,5,6,7,8)
+    +  Corr(3,3,4,5,6,6,7,8)
+    +  Corr(3,3,4,5,6,7,8,8)
+    +  Corr(3,4,4,5,5,6,7,8)
+    +  Corr(3,4,4,5,6,7,7,8)
+    +  Corr(3,4,5,5,6,6,7,8)
+    +  Corr(3,4,5,5,6,7,8,8)
+    +  Corr(3,4,5,6,6,7,7,8)
+    +  Corr(3,4,5,6,7,7,8,8)
+  ;
+*/
 
   // for (int i = 0; i < 3; ++i) {
   //   Profiler prof;
@@ -484,78 +516,8 @@ int main(int argc, char *argv[]) {
   //   std::cout << "Unique hashes: " << num_distinct_elements(hashes) << "\n";
   // }
   // return 0;
+  // auto expr = DeltaExpr{};
 
-  std::set<std::string> existing_args;
-  expr.annotations().foreach([&](const std::string& annotation, int) {
-    existing_args.insert(annotation);
-  });
-
-  std::set<std::string> missing_args;
-  for (const auto& w : nondecreasing_sequences(8, 8)) {
-    const auto args = mapped(w, [](int x) { return x + 1; });
-    int num_odd = 0;
-    int num_even = 0;
-    for (const int a : args) {
-      if (a % 2 == 0) {
-        num_even++;
-      } else {
-        num_odd++;
-      }
-    }
-
-    const int num_distinct = num_distinct_elements(args);
-
-    bool has_three_in_row = false;
-    int last_arg = -1;
-    int same_in_row = 0;
-    for (const int a : args) {
-      if (a == last_arg) {
-        ++same_in_row;
-        if (same_in_row == 3) {
-          has_three_in_row = true;
-        }
-      } else {
-        last_arg = a;
-        same_in_row = 1;
-      }
-    }
-
-    if (num_even == num_odd && num_distinct == 6) {
-      const std::string annotation = "Corr(" + str_join(args, ",") + ")";
-      if (existing_args.count(annotation) == 0) {
-        missing_args.insert(annotation);
-        // std::cout << (has_three_in_row ? "+2*" : "+  ") << annotation << "\n";
-      }
-    }
-  }
-  std::cout << "\n";
-
-  // auto expr =
-  //   - Lido7(1,2,3,4,5,6,7,8)
-  //   + Corr(1,2,3,4,5,6,7,8)
-  //   + CorrLoop(1,1,2,4,5,6,7,8)
-  //   + CorrLoop(1,1,2,3,4,6,7,8)
-  //   + CorrLoop(1,1,2,3,4,5,6,8)
-  // ;
-
-  // auto expr =
-  //   +6 * Lido5(1,2,3,4)
-  //   +3 * sum_looped(&CorrVec, 4, {1,1,2,2,3,4}, Sign::plus)
-  //   +2 * sum_looped(&CorrVec, 4, {1,2,2,2,3,3}, Sign::plus)
-  //   +2 * sum_looped(&CorrVec, 4, {1,1,2,2,2,3}, Sign::plus)
-  // ;   // Total zero
-
-  // auto expr =
-  //   +2 * Lido4(1,2,3,4)
-  //   +1 * sum_looped(&CorrVec, 4, {1,2,3,4,4}, Sign::alternating)
-  //   +2 * sum_looped(&CorrVec, 4, {1,2,2,2,3}, Sign::alternating)
-  // ;   // Total zero
-
-  // auto expr =
-  //   + Lido4(1,2,3,4)
-  //   + Corr(1,2,3,4,4)
-  //   + Corr(1,2,2,3,4)
-  // ;
 
   profiler.finish("expr");
 
@@ -575,9 +537,9 @@ int main(int argc, char *argv[]) {
   // for (int i = 3; i <= 6; ++i) {
   //   std::cout << i << " vars " << terms_containing_num_variables(src, i).without_annotations() << "\n";
   // }
-  // for (int i = 3; i <= 8; ++i) {
-  //   std::cout << i << " vars " << terms_with_exact_distinct_elements(src, i).without_annotations() << "\n";
-  // }
+  for (int i = 2; i <= 8; ++i) {
+    std::cout << i << " vars " << terms_with_exact_distinct_elements(src, i).without_annotations() << "\n";
+  }
   // std::cout << contains_only_variables(src, {1,2,3,4,5}) << "\n";
   // std::cout << keep_connected_graphs(src) << "\n";
 

@@ -184,6 +184,11 @@ public:
     ret *= scalar;
     return ret;
   }
+  BasicLinear dived_int(int scalar) const {
+    BasicLinear ret = *this;
+    ret.div_int(scalar);
+    return ret;
+  }
 
   BasicLinear& operator+=(const BasicLinear& other) {
     for (const auto& [key, coeff]: other.data_) {
@@ -272,6 +277,11 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
 }
 
 using BasicLinearAnnotation = BasicLinear<SimpleLinearParam<std::string>>;
+
+inline BasicLinearAnnotation annotation_unknown(std::string reason = "") {
+  std::string suffix = reason.empty() ? "" : absl::StrCat(" (", reason, ")");
+  return BasicLinearAnnotation::single("<???>" + suffix);
+}
 
 
 template<typename ParamT>
@@ -407,6 +417,11 @@ public:
     ret *= scalar;
     return ret;
   }
+  Linear dived_int(int scalar) const {
+    Linear ret = *this;
+    ret.div_int(scalar);
+    return ret;
+  }
 
   Linear& operator+=(const Linear& other) {
     main_ += other.main_;
@@ -425,6 +440,12 @@ public:
   }
   void div_int(int scalar) {
     main_.div_int(scalar);
+    try {
+      annotations_.div_int(scalar);
+    } catch (IntegerDivisionError error) {
+      // TODO: Store this separately
+      annotations_ = annotation_unknown(error.what());
+    }
   }
 
   bool operator==(const Linear& other) const {
