@@ -449,7 +449,7 @@ public:
   }
 
   bool operator==(const Linear& other) const {
-    return main_ == other.main_ && annotations_ == other.annotations_;
+    return main_ == other.main_;
   }
   bool operator!=(const Linear& other) const {
     return !(*this == other);
