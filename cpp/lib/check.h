@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "absl/base/optimization.h"
 #include "string_basic.h"
 
 
@@ -33,7 +34,7 @@ struct CheckResult {
   CheckResult(CheckResult&&) = default;
   CheckResult& operator=(CheckResult&&) = default;
   ~CheckResult() {
-    if (!ok) {
+    if (ABSL_PREDICT_FALSE(!ok)) {
       std::cerr << std::endl;
       abort();
     }
@@ -46,43 +47,43 @@ inline std::ostream& assertion_failed(CheckLocation loc) {
 }
 
 inline CheckResult check(CheckLocation loc, bool ok) {
-  if (!ok) assertion_failed(loc);
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc);
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_eq(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x == y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " == " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " == " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_ne(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x != y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " != " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " != " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_lt(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x < y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " < " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " < " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_le(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x <= y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " <= " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " <= " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_gt(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x > y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " > " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " > " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 template<typename X, typename Y>
 CheckResult check_ge(CheckLocation loc, const X& x, const Y& y) {
   const bool ok = x >= y;
-  if (!ok) assertion_failed(loc) << to_string(x) << " >= " << to_string(y) << "\n";
+  if (ABSL_PREDICT_FALSE(!ok)) assertion_failed(loc) << to_string(x) << " >= " << to_string(y) << "\n";
   return CheckResult(ok);
 }
 }  // namespace internal
