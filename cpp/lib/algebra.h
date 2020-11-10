@@ -42,17 +42,17 @@ namespace internal {
 template<typename LinearT>
 static std::string short_linear_description(const LinearT& expr) {
   const auto& annotations = expr.annotations();
-  if (annotations.size() == 0) {
+  if (annotations.empty() || annotations.has_errors()) {
     return "<?>";
-  } else if (annotations.size() == 1) {
+  } else if (annotations.expression.size() == 1) {
     // TODO: Get this clearer
     std::stringstream ss;
-    ss << annotations;
+    ss << annotations.expression;
     // TODO: Tidy up: remove leading `+`, etc.
     return trimed(ss.str());
   } else {
-    return absl::StrCat("<", annotations.size(), " ",
-        en_plural(annotations.size(), "term"), ">");
+    return absl::StrCat("<", annotations.expression.size(), " ",
+        en_plural(annotations.expression.size(), "term"), ">");
   }
 }
 
@@ -65,7 +65,7 @@ static std::optional<std::string> product_annotation(
   }
   const bool has_annotations = absl::c_any_of(
     expressions,
-    [](const auto& expr) { return !expr.annotations().zero(); }
+    [](const auto& expr) { return !expr.annotations().empty(); }
   );
   if (!has_annotations) {
     return std::nullopt;

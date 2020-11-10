@@ -76,10 +76,7 @@ DeltaExpr terms_containing_num_variables(const DeltaExpr& expr, int num_variable
       elements.push_back(d.a());
       elements.push_back(d.b());
     }
-    absl::c_sort(elements);
-    const int unique_elements =
-      std::unique(elements.begin(), elements.end()) - elements.begin();
-    return unique_elements == num_variables;
+    return num_distinct_elements(elements) == num_variables;
   });
 }
 

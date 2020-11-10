@@ -276,11 +276,24 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
   return os;
 }
 
+
 using BasicLinearAnnotation = BasicLinear<SimpleLinearParam<std::string>>;
 
-inline BasicLinearAnnotation annotation_unknown(std::string reason = "") {
-  std::string suffix = reason.empty() ? "" : absl::StrCat(" (", reason, ")");
-  return BasicLinearAnnotation::single("<???>" + suffix);
+// Stores information about the functions that created a linear expression.
+struct LinearAnnotation {
+  BasicLinearAnnotation expression;
+  std::vector<std::string> errors;
+
+  bool empty() const { return expression.zero() && errors.empty(); }
+  bool has_errors() const { return !errors.empty(); }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) {
+  os << annotations.expression;
+  for (const auto& err : annotations.errors) {  // TODO: !!!
+    os << fmt::coeff(1) << "<?> " << err << "\n";
+  }
+  return os;
 }
 
 
@@ -295,7 +308,7 @@ public:
   Linear() {}
 
   // TODO: debug `template<typename OtherParamT> friend class Linear<OtherParamT>` and move to private
-  Linear(BasicLinearMain main, BasicLinearAnnotation annotations)
+  Linear(BasicLinearMain main, LinearAnnotation annotations)
     : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
   static Linear single(const ObjectT& obj) {
@@ -327,6 +340,7 @@ public:
   }
 
   bool zero() const { return main_.zero(); }  // TODO: rename to `is_zero`
+  bool blank() const { return main_.zero() && annotations_.empty(); }  // TODO: rename to `is_blank`
   int size() const { return main_.size(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
@@ -374,10 +388,10 @@ public:
   }
 
   const BasicLinearMain& main() const { return main_; };
-  const BasicLinearAnnotation& annotations() const { return annotations_; };
+  const LinearAnnotation& annotations() const { return annotations_; };
 
   Linear& annotate(const std::string& annotation) {
-    annotations_ += BasicLinearAnnotation::single(annotation);
+    annotations_.expression += BasicLinearAnnotation::single(annotation);
     return *this;
   }
   Linear& maybe_annotate(const std::optional<std::string>& annotation) {
@@ -388,7 +402,7 @@ public:
   }
   template<typename SourceLinearT>
   Linear& copy_annotations(const SourceLinearT& other) {
-    annotations_ += other.annotations();
+    add_annotations(other, 1);
     return *this;
   }
   Linear without_annotations() const {
@@ -399,7 +413,7 @@ public:
     return *this;
   }
   Linear operator-() const {
-    return Linear() - *this;
+    return -1 * (*this);
   }
 
   Linear operator+(const Linear& other) const {
@@ -425,26 +439,25 @@ public:
 
   Linear& operator+=(const Linear& other) {
     main_ += other.main_;
-    annotations_ += other.annotations_;
+    add_annotations(other, 1);
     return *this;
   }
   Linear& operator-=(const Linear& other) {
     main_ -= other.main_;
-    annotations_ -= other.annotations_;
+    add_annotations(other, -1);
     return *this;
   }
   Linear& operator*=(int scalar) {
     main_ *= scalar;
-    annotations_ *= scalar;
+    annotations_.expression *= scalar;
     return *this;
   }
   void div_int(int scalar) {
     main_.div_int(scalar);
     try {
-      annotations_.div_int(scalar);
+      annotations_.expression.div_int(scalar);
     } catch (IntegerDivisionError error) {
-      // TODO: Store this separately
-      annotations_ = annotation_unknown(error.what());
+      annotations_ = {{}, {error.what()}};
     }
   }
 
@@ -456,8 +469,26 @@ public:
   }
 
 private:
+  template<typename SourceLinearT>
+  void add_annotations(const SourceLinearT& other, int coeff) {
+    if (other.blank()) {
+      return;
+    }
+    if (blank()) {
+      annotations_ = other.annotations();
+      return;
+    }
+    annotations_.expression += coeff * other.annotations().expression;
+    append_vector(annotations_.errors, other.annotations().errors);
+    if (annotations_.empty() != other.annotations().empty()) {
+      annotations_.errors.push_back("");  // will display simply "<?>"
+    }
+    absl::c_sort(annotations_.errors);
+    keep_unique(annotations_.errors);
+  }
+
   BasicLinearMain main_;
-  BasicLinearAnnotation annotations_;
+  LinearAnnotation annotations_;
 };
 
 template<typename ParamT>
@@ -475,9 +506,10 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
   } else {
     os << "\n" << fmt::coeff(0) << "\n";
   }
-  if (!linear.annotations().zero()) {
+  const auto& annotations = linear.annotations();
+  if (!annotations.empty()) {
     os << "~~~\n";
-    os << linear.annotations();
+    os << annotations;
   }
   os.flush();
   return os;

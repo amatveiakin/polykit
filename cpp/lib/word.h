@@ -197,6 +197,7 @@ LinearT terms_by_template(const LinearT& expr, const Word& proto_tmpl) {
   });
 }
 
+// TODO: How much sense does it make? substitution and projection are not commutative
 WordExpr word_expr_substitute(
     const WordExpr& expr,
     const std::vector<int>& new_points);

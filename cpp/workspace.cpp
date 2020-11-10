@@ -3,6 +3,7 @@
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
+#include "absl/container/flat_hash_set.h"
 
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
@@ -139,12 +140,184 @@ DeltaExpr CorrBundleEven(int num_args, int num_vars, int num_distinct_vars, std:
   return ret;
 }
 
+DeltaExpr DreamCorrBundle(int num_args, int num_vars) {
+  DeltaExpr ret;
+  const int total_odd_vars = (num_vars + 1) / 2;
+  for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
+    const auto args = mapped(w, [](int x) { return x + 1; });
+    const auto odd_args = odd_elements(args);
+    if (odd_args.size() == num_distinct_elements(odd_args)) {
+      const int missing_odd = total_odd_vars - odd_args.size();
+      const int coeff = neg_one_pow(missing_odd + num_args);
+      ret += coeff * CorrVec(mapped(args, [](int x) { return X(x); }));
+    }
+  }
+  return ret;
+}
+
+bool contains_var_from_each_pair(const std::vector<int>& args, int num_vars) {
+  absl::flat_hash_set<int> args_set(args.begin(), args.end());
+  CHECK(num_vars % 2 == 0);
+  for (int var = 1; var <= num_vars; var += 2) {
+    if (!(args_set.contains(var) || args_set.contains(var+1))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+DeltaExpr SupremeCorrBundle(int num_args, int num_vars) {
+  DeltaExpr ret;
+  const int total_odd_vars = (num_vars + 1) / 2;
+  for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
+    const auto args = mapped(w, [](int x) { return x + 1; });
+    if (!contains_var_from_each_pair(args, num_vars)) {
+      continue;
+    }
+    const auto odd_args = odd_elements(args);
+    if (odd_args.size() == num_distinct_elements(odd_args)) {
+      const int missing_odd = total_odd_vars - odd_args.size();
+      const int coeff = neg_one_pow(missing_odd + num_args);
+      ret += coeff * CorrVec(mapped(args, [](int x) { return X(x); }));
+    }
+  }
+  return ret;
+}
+
+// Doesn't work :(
+// DeltaExpr LidoSymm4_10(int x1, int x2, int x3, int x4, int x5, int x6, int x7, int x8, int x9, int x10) {
+//   return
+//     + 2 * Lido4(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)
+//     + (
+//       - LidoSymm4(x1,x2,x3,x4,x5,x6,x7,x8)
+//       - LidoSymm4(x3,x4,x5,x6,x7,x8,x9,x10)
+//       - LidoSymm4(x5,x6,x7,x8,x9,x10,x1,x2)
+//       - LidoSymm4(x7,x8,x9,x10,x1,x2,x3,x4)
+//       - LidoSymm4(x9,x10,x1,x2,x3,x4,x5,x6)
+//       - Lido4(x1,x2,x3,x4,x5,x6,x7,x8)
+//       - Lido4(x3,x4,x5,x6,x7,x8,x9,x10)
+//       - Lido4(x5,x6,x7,x8,x9,x10,x1,x2)
+//       - Lido4(x7,x8,x9,x10,x1,x2,x3,x4)
+//       - Lido4(x9,x10,x1,x2,x3,x4,x5,x6)
+//     )
+//   ;
+// }
 
 int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
   Profiler profiler;
+
+  // for (int weight = 1; weight <= 6; weight++) {
+  //   for (int num_args = 4; num_args <= 12; num_args += 2) {
+  //     auto large_args = seq_incl(1, num_args);
+  //     --large_args.back();
+  //     auto lhs = word_expr_substitute(
+  //       project_on_x1(DreamCorrBundle(weight + 1, num_args)),
+  //       large_args
+  //     );
+  //     auto rhs = project_on_x1(DreamCorrBundle(weight + 1, num_args - 2));
+  //     std::cout << "weight = " << weight << ", num_args = " << num_args << ": ";
+  //     std::cout << (lhs + rhs).without_annotations();
+  //   }
+  // }
+
+  // auto lhs = LidoSymm4(1,2,3,4,5,6);
+  // auto colhs = comultiply(lhs, {2,2});
+  // auto corhs =
+  //   + coproduct(Lido2(1,2,3,4), Lido2(1,4,5,6))
+  //   - coproduct(Lido2(2,3,4,5), Lido2(2,5,6,1))
+  //   + coproduct(Lido2(3,4,5,6), Lido2(3,6,1,2))
+  // ;
+  // std::cout << colhs - corhs << "\n";
+
+  // auto lhs = LidoSymm5(1,2,3,4,5,6);
+  // auto colhs = comultiply(lhs, {2,3});
+  // auto corhs =
+  //   + coproduct(Lido3(1,2,3,4), Lido2(1,4,5,6))
+  //   + coproduct(Lido3(2,3,4,5), Lido2(2,5,6,1))
+  //   + coproduct(Lido3(3,4,5,6), Lido2(3,6,1,2))
+  //   + coproduct(Lido3(4,5,6,1), Lido2(4,1,2,3))
+  //   + coproduct(Lido3(5,6,1,2), Lido2(5,2,3,4))
+  //   + coproduct(Lido3(6,1,2,3), Lido2(6,3,4,5))
+  // ;
+  // std::cout << colhs - corhs << "\n";
+
+  // auto lhs = LidoSymm6(1,2,3,4,5,6);
+  // auto colhs = comultiply(lhs, {3,3});
+  // auto corhs =
+  //   + coproduct(Lido3(1,2,3,4), Lido3(1,4,5,6))
+  //   - coproduct(Lido3(2,3,4,5), Lido3(2,5,6,1))
+  //   + coproduct(Lido3(3,4,5,6), Lido3(3,6,1,2))
+  // ;
+  // std::cout << colhs - corhs << "\n";
+
+  // auto lhs = LidoSymm5(1,2,3,4,5,6,7,8);
+  // profiler.finish("lhs");
+  // auto colhs = comultiply(lhs, {2,3});
+  // profiler.finish("colhs");
+  // auto corhs =
+  //   + coproduct(Lido2(1,2,3,4), LidoSymm3(1,4,5,6,7,8))
+  //   + coproduct(Lido2(2,3,4,5), LidoSymm3(2,5,6,7,8,1))
+  //   + coproduct(Lido2(3,4,5,6), LidoSymm3(3,6,7,8,1,2))
+  //   + coproduct(Lido2(4,5,6,7), LidoSymm3(4,7,8,1,2,3))
+  //   + coproduct(Lido2(5,6,7,8), LidoSymm3(5,8,1,2,3,4))
+  //   + coproduct(Lido2(6,7,8,1), LidoSymm3(6,1,2,3,4,5))
+  //   + coproduct(Lido2(7,8,1,2), LidoSymm3(7,2,3,4,5,6))
+  //   + coproduct(Lido2(8,1,2,3), LidoSymm3(8,3,4,5,6,7))
+  //   + coproduct(Lido3(1,2,3,4), LidoSymm2(1,4,5,6,7,8))
+  //   + coproduct(Lido3(2,3,4,5), LidoSymm2(2,5,6,7,8,1))
+  //   + coproduct(Lido3(3,4,5,6), LidoSymm2(3,6,7,8,1,2))
+  //   + coproduct(Lido3(4,5,6,7), LidoSymm2(4,7,8,1,2,3))
+  //   + coproduct(Lido3(5,6,7,8), LidoSymm2(5,8,1,2,3,4))
+  //   + coproduct(Lido3(6,7,8,1), LidoSymm2(6,1,2,3,4,5))
+  //   + coproduct(Lido3(7,8,1,2), LidoSymm2(7,2,3,4,5,6))
+  //   + coproduct(Lido3(8,1,2,3), LidoSymm2(8,3,4,5,6,7))
+  // ;
+  // profiler.finish("corhs");
+  // auto diff = colhs - corhs;
+  // profiler.finish("diff");
+
+  // // StringExpr forms;  // sanity check
+  // // diff.foreach_key([&](MultiWord w, int) {
+  // //   CHECK_EQ(w.num_segments(), 2);
+  // //   forms += StringExpr::single(absl::StrCat("<", w.segment(0).size(), ", ", w.segment(1).size(), ">"));
+  // // });
+
+  // std::cout << "\n";
+  // std::cout << diff << "\n";
+
+
+
+
+
+  // auto lhs = LidoSymm2(1,2,3,4,5,6);
+  // auto co_lhs = comultiply<DeltaCoExpr>(lhs, {1,1});
+  // auto co_rhs =
+  //   + coproduct(
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {1,2,3,4}),
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {1,4,5,6})
+  //   )
+  //   + coproduct(
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {3,4,5,6}),
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {3,6,1,2})
+  //   )
+  //   + coproduct(
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {5,6,1,2}),
+  //     delta_expr_substitute(DreamCorrBundle(2, 4), {5,2,3,4})
+  //   )
+  // ;
+  // std::cout << co_lhs << "\n";
+  // std::cout << co_rhs << "\n";
+  // std::cout << co_lhs - co_rhs << "\n";
+
+  // auto expr =
+  //   + sum_looped(&CorrVec, 4, {1,1,1,2,3,4}, Sign::plus)
+  //   + sum_looped(&CorrVec, 4, {1,1,2,2,3,4}, Sign::plus)
+  //   + Corr(1,1,2,3,3,4)
+  //   + Corr(2,2,3,4,4,1)
+  // ;  // Total zero
 
 
   // auto expr =
@@ -207,6 +380,179 @@ int main(int argc, char *argv[]) {
   //   +3*Corr(2,2,3,3,3,3,4,4)
   //   +3*Corr(2,3,3,3,3,4,4,4)
   // ;  // Total zero
+
+
+  // auto expr =
+  //   - Lido5(1,2,3,4)
+  //   + Corr(1,3,4,4,4,4)
+  //   + Corr(1,2,3,4,4,4)
+  //   + Corr(1,2,2,3,4,4)
+  //   + Corr(1,2,2,2,3,4)
+  //   + Corr(1,2,2,2,2,3)
+  // ;  // Kills everything that contains 1 and 3 simultaneously
+
+
+  // auto expr =
+  //   - Lido5(1,2,3,4)
+  //   + Corr(1,3,4,4,4,4)
+  //   + Corr(1,2,3,4,4,4)
+  //   + Corr(1,2,2,3,4,4)
+  //   + Corr(1,2,2,2,3,4)
+  //   + Corr(1,2,2,2,2,3)
+  //   - Corr(1,2,4,4,4,4)
+  //   - Corr(1,2,2,4,4,4)
+  //   - Corr(1,2,2,2,4,4)
+  //   - Corr(1,2,2,2,2,4)
+  //   - Corr(2,3,4,4,4,4)
+  //   - Corr(2,2,3,4,4,4)
+  //   - Corr(2,2,2,3,4,4)
+  //   - Corr(2,2,2,2,3,4)
+  // ;  // Total zero
+
+
+/*
+  auto expr =
+    - LidoSymm5(1,2,3,4,5,6)
+
+    + DreamCorrBundle(6, 6)
+
+    - Corr(1,2,2,2,2,3)
+    - Corr(1,2,2,2,3,4)
+    - Corr(1,2,2,2,3,6)
+    - Corr(1,2,2,3,4,4)
+    - Corr(1,2,2,3,4,6)
+    - Corr(1,2,2,3,6,6)
+    - Corr(1,2,3,4,4,4)
+    - Corr(1,2,3,4,4,6)
+    - Corr(1,2,3,4,6,6)
+    - Corr(1,2,3,6,6,6)
+    - Corr(1,3,4,4,4,4)
+    - Corr(1,3,4,4,4,6)
+    - Corr(1,3,4,4,6,6)
+    - Corr(1,3,4,6,6,6)
+    - Corr(1,3,6,6,6,6)
+
+    - Corr(1,2,2,2,2,5)
+    - Corr(1,2,2,2,4,5)
+    - Corr(1,2,2,4,4,5)
+    - Corr(1,2,4,4,4,5)
+    - Corr(1,4,4,4,4,5)
+    - Corr(1,2,2,2,5,6)
+    - Corr(1,2,2,4,5,6)
+    - Corr(1,2,4,4,5,6)
+    - Corr(1,4,4,4,5,6)
+    - Corr(1,2,2,5,6,6)
+    - Corr(1,2,4,5,6,6)
+    - Corr(1,4,4,5,6,6)
+    - Corr(1,2,5,6,6,6)
+    - Corr(1,4,5,6,6,6)
+    - Corr(1,5,6,6,6,6)
+
+    + Corr(1,2,2,2,4,6)
+    + Corr(1,2,2,4,4,6)
+    + Corr(1,2,2,4,6,6)
+    + Corr(1,2,4,4,4,6)
+    + Corr(1,2,4,4,6,6)
+    + Corr(1,2,4,6,6,6)
+
+    + Corr(1,2,2,2,2,4)
+    + Corr(1,2,2,2,2,6)
+    + Corr(1,2,2,2,4,4)
+    + Corr(1,2,2,2,6,6)
+    + Corr(1,2,2,4,4,4)
+    + Corr(1,2,2,6,6,6)
+    + Corr(1,2,4,4,4,4)
+    + Corr(1,2,6,6,6,6)
+    + Corr(1,4,4,4,4,6)
+    + Corr(1,4,4,4,6,6)
+    + Corr(1,4,4,6,6,6)
+    + Corr(1,4,6,6,6,6)
+  ;
+*/
+
+
+
+  auto expr =
+    - Lido3(1,2,3,4)
+    + SupremeCorrBundle(4, 4)
+  ;
+
+  // auto expr =
+  //   - Lido5(1,2,3,4,5,6)
+  //   + SupremeCorrBundle(6, 6)
+  // ;
+
+  // auto expr =
+  //   - Lido6(1,2,3,4,5,6)
+  //   + SupremeCorrBundle(7, 6)
+  // ;
+
+  // auto expr =
+  //   - Lido5(1,2,3,4,5,6,7,8)
+  //   + SupremeCorrBundle(6, 8)
+  // ;
+
+  // auto expr =
+  //   - Lido5(1,2,3,4,5,6,7,8,9,10)
+  //   + SupremeCorrBundle(6, 10)
+  // ;
+
+
+
+  // auto expr =
+  //   - Lido1(1,2,3,4)
+  //   + DreamCorrBundle(2, 4)
+  // ;  // NOT zero
+
+  // auto expr =
+  //   - Lido3(1,2,3,4)
+  //   + DreamCorrBundle(4, 4)
+  // ;
+
+  // auto expr =
+  //   - Lido4(1,2,3,4)
+  //   + DreamCorrBundle(5, 4)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm2(1,2,3,4,5,6)
+  //   + DreamCorrBundle(3, 6)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm3(1,2,3,4,5,6)
+  //   + DreamCorrBundle(4, 6)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm4(1,2,3,4,5,6)
+  //   + DreamCorrBundle(5, 6)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm5(1,2,3,4,5,6)
+  //   + DreamCorrBundle(6, 6)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm7(1,2,3,4,5,6)
+  //   + DreamCorrBundle(8, 6)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm5(1,2,3,4,5,6,7,8)
+  //   + DreamCorrBundle(6, 8)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm6(1,2,3,4,5,6,7,8)
+  //   + DreamCorrBundle(7, 8)
+  // ;
+
+  // auto expr =
+  //   - LidoSymm7(1,2,3,4,5,6,7,8)
+  //   + DreamCorrBundle(8, 8)
+  // ;
 
 
   // auto expr =
@@ -519,6 +865,7 @@ int main(int argc, char *argv[]) {
   // auto expr = DeltaExpr{};
 
 
+
   profiler.finish("expr");
 
   // auto lyndon = to_lyndon_basis(expr);
@@ -537,9 +884,9 @@ int main(int argc, char *argv[]) {
   // for (int i = 3; i <= 6; ++i) {
   //   std::cout << i << " vars " << terms_containing_num_variables(src, i).without_annotations() << "\n";
   // }
-  for (int i = 2; i <= 8; ++i) {
-    std::cout << i << " vars " << terms_with_exact_distinct_elements(src, i).without_annotations() << "\n";
-  }
+  // for (int i = 2; i <= 8; ++i) {
+  //   std::cout << i << " vars " << terms_with_exact_distinct_elements(src, i).without_annotations() << "\n";
+  // }
   // std::cout << contains_only_variables(src, {1,2,3,4,5}) << "\n";
   // std::cout << keep_connected_graphs(src) << "\n";
 
@@ -548,4 +895,5 @@ int main(int argc, char *argv[]) {
   //   std::cout << " + " << s << "\n";
   // }
   // std::cout << "\n";
+
 }

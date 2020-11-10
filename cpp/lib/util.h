@@ -42,6 +42,12 @@ inline int factorial(int n) {
   return ret;
 }
 
+template<typename T>
+void sort_two(T& a, T& b) {
+  if (a > b) {
+    std::swap(a, b);
+  }
+}
 
 inline std::vector<int> seq_incl(int from, int to) {
   ++to;
@@ -150,6 +156,11 @@ template<typename T>
 std::vector<T> sorted(std::vector<T> v) {
   absl::c_sort(v);
   return v;
+}
+
+template<typename T>
+void keep_unique(std::vector<T>& v) {
+  v.erase(std::unique(v.begin(), v.end()), v.end());
 }
 
 template<typename T>

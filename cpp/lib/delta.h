@@ -27,9 +27,7 @@ public:
       b_ = b.var();
       CHECK_GE(a_, 1);
       CHECK_GE(b_, 1);
-      if (a_ > b_) {
-        std::swap(a_, b_);
-      }
+      sort_two(a_, b_);
     }
   }
 

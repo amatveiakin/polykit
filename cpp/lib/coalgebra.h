@@ -128,7 +128,7 @@ inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
 }
 
 
-// TODO: Should the be exposed publicly?
+// TODO: Should this be exposed publicly?
 template<typename CoExprT>
 CoExprT normalize_coproduct(const CoExprT& expr) {
   static_assert(std::is_same_v<typename CoExprT::StorageT, MultiWord>);
@@ -139,7 +139,18 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
     const auto& key1 = key.segment(0);
     const auto& key2 = key.segment(1);
     if (key1.size() == key2.size()) {
-      if (key1 < key2) {
+      if (key1 == key2) {
+        // zero: through away
+      } else if (key1 < key2) {
+        ret += coeff * CoExprT::single_key(key);
+      } else {
+        MultiWord key_swapped;
+        key_swapped.append_segment(key2);
+        key_swapped.append_segment(key1);
+        ret -= coeff * CoExprT::single_key(key_swapped);
+      }
+    } else {
+      if (key1.size() < key2.size()) {
         ret += coeff * CoExprT::single_key(key);
       } else {
         MultiWord key_swapped;
@@ -163,6 +174,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   }
   const int weight = expr.weight();
   CHECK_EQ(form.first + form.second, weight);
+  sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
 
   CoExprT ret;
   expr.foreach_key([&](const Word& word, int coeff) {
@@ -173,7 +185,6 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
       to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split))))
     );
     if (form.first != form.second) {
-      // TODO: Consider moving this logic to coproduct/normalize_coproduct
       const int split = form.second;
       ret -= coeff * coproduct<CoExprT>(
         to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split)))),

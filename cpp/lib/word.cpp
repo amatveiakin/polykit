@@ -10,5 +10,5 @@ WordExpr word_expr_substitute(
       ret.push_back(new_points.at(ch - 1));
     }
     return ret;
-  });
+  }).without_annotations();
 }
