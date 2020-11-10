@@ -36,6 +36,8 @@ DeltaExpr LidoSymm_dispatch(int weight, Args... args) {
 }
 }  // namespace internal
 
+// TODO: Make sure that the names of these helper functions coincide with the annotations produced
+
 template<typename... Args> inline DeltaExpr Lido1(Args... args) { return internal::Lido_dispatch(1, args...); }
 template<typename... Args> inline DeltaExpr Lido2(Args... args) { return internal::Lido_dispatch(2, args...); }
 template<typename... Args> inline DeltaExpr Lido3(Args... args) { return internal::Lido_dispatch(3, args...); }

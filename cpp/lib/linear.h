@@ -13,8 +13,6 @@
 #include "util.h"
 
 
-constexpr int kLinearMaxLinesToPrint = 300;
-
 template<typename T>
 struct SimpleLinearParam {
   using ObjectT = T;
@@ -254,24 +252,19 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
     max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
   });
   std::sort(dump.begin(), dump.end());
-  int line = 0;
-  for (const auto& [obj, coeff] : dump) {
-    ++line;
-    if (line > kLinearMaxLinesToPrint) {
-      os << fmt::box("...");
-      return os;
+  const int line_limit = *current_formatting_config().expression_line_limit;
+  if (line_limit > 0) {
+    int line = 0;
+    for (const auto& [obj, coeff] : dump) {
+      ++line;
+      if (line > line_limit) {
+        os << fmt::box("...");
+        return os;
+      }
+      // TODO: Fix how padding works for parsable expressions
+      os << pad_left(fmt::coeff(coeff), max_coeff_length);
+      os << fmt::box(ParamT::object_to_string(obj));
     }
-    // TODO: Add an option for this.
-    //
-    // std::string coeff_str = fmt::coeff(coeff);
-    // CHECK(coeff > 0);
-    // if (std::abs(coeff) > 1) {
-    //   CHECK(coeff_str.back() == ' ');
-    //   coeff_str.back() = '*';
-    // }
-    // os << "    " << pad_left(coeff_str, max_coeff_length);
-    os << pad_left(fmt::coeff(coeff), max_coeff_length);
-    os << fmt::box(ParamT::object_to_string(obj));
   }
   return os;
 }
@@ -498,16 +491,27 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
+  const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.zero()) {
     const int size = linear.size();
     os << "# " << size << " " << en_plural(size, "term");
-    os << ", |coeff| = " << linear.l1_norm() << ":\n";
-    os << linear.main();
+    os << ", |coeff| = " << linear.l1_norm();
+    if (line_limit > 0) {
+      os << ":\n" << linear.main();
+    } else {
+      os << "\n";
+    }
   } else {
-    os << "\n" << fmt::coeff(0) << "\n";
+    if (line_limit > 0) {
+      os << "\n";
+    }
+    os << fmt::coeff(0) << "\n";
   }
   const auto& annotations = linear.annotations();
-  if (!annotations.empty()) {
+  if (!annotations.empty() &&
+      *current_formatting_config().expression_include_annotations) {
+    ScopedFormatting sf(FormattingConfig()
+      .set_expression_line_limit(FormattingConfig::kNoLineLimit));
     os << "~~~\n";
     os << annotations;
   }
@@ -516,3 +520,55 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
 }
 
 using StringExpr = Linear<SimpleLinearParam<std::string>>;
+
+
+template<typename ParamT>
+struct PrintableLinear {
+  Linear<ParamT> expression;
+  FormattingConfig formatting_config;
+};
+
+template<typename ParamT>
+PrintableLinear<ParamT> decorate_linear(
+    Linear<ParamT> expression,
+    FormattingConfig formatting_config) {
+  return PrintableLinear<ParamT>{std::move(expression), std::move(formatting_config)};
+}
+
+template<typename ParamT>
+PrintableLinear<ParamT> decorate_linear(
+    PrintableLinear<ParamT> printable_expression,
+    const FormattingConfig& formatting_config) {
+  printable_expression.formatting_config.apply_overrides(formatting_config);
+  return printable_expression;
+}
+
+template<typename ParamT>
+std::ostream& operator<<(std::ostream& os, const PrintableLinear<ParamT>& printable_linear) {
+  ScopedFormatting sf(printable_linear.formatting_config);
+  return os << printable_linear.expression;
+}
+
+namespace prnt {
+
+template<typename T>
+auto header_only(T expression) {
+  return decorate_linear(std::move(expression), FormattingConfig()
+    .set_expression_line_limit(0)
+    .set_expression_include_annotations(false)
+  );
+}
+
+template<typename T>
+auto line_limit(int limit, T expression) {
+  return decorate_linear(std::move(expression), FormattingConfig()
+    .set_expression_line_limit(limit)
+  );
+}
+
+template<typename T>
+auto no_line_limit(T expression) {
+  return line_limit(FormattingConfig::kNoLineLimit, expression);
+}
+
+}  // namespace prn

@@ -45,10 +45,9 @@ static std::string short_linear_description(const LinearT& expr) {
   if (annotations.empty() || annotations.has_errors()) {
     return "<?>";
   } else if (annotations.expression.size() == 1) {
-    // TODO: Get this clearer
+    ScopedFormatting sf(FormattingConfig().set_compact_expression(true));
     std::stringstream ss;
     ss << annotations.expression;
-    // TODO: Tidy up: remove leading `+`, etc.
     return trimed(ss.str());
   } else {
     return absl::StrCat("<", annotations.expression.size(), " ",
@@ -80,7 +79,7 @@ static std::optional<std::string> product_annotation(
       return fmt::function(ann.name, args);
     },
     [&](const ProductAnnotationOperator& ann) {
-      return absl::StrCat(fmt::parens(str_join(args, ann.op)));
+      return fmt::parens(str_join(args, ann.op));
     },
   }, annotation);
 }

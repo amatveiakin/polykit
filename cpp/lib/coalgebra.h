@@ -160,7 +160,7 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
       }
     }
   });
-  return ret;
+  return ret.copy_annotations(expr);
 }
 
 
@@ -192,7 +192,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
       );
     }
   });
-  return ret;
+  return ret.copy_annotations(expr);
 }
 
 // Explicit rules allow to omit template types when calling the function.

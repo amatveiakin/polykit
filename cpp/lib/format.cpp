@@ -7,20 +7,69 @@
 #include "absl/strings/str_cat.h"
 
 
+static const FormattingConfig default_formatting_config = FormattingConfig()
+  .set_formatter(Formatter::plain_text)
+  .set_expression_line_limit(100)
+  .set_expression_include_annotations(true)
+  .set_parsable_expression(false)
+  .set_compact_expression(false)
+;
+
+static thread_local std::vector<FormattingConfig> formatting_config_stack;
+static thread_local FormattingConfig aggregated_formatting_config = default_formatting_config;
+
+FormattingConfig current_formatting_config() {
+  return aggregated_formatting_config;
+}
+
+template<typename T>
+static void apply_field_override(
+    std::optional<T>& dst, const std::optional<T>& src) {
+  if (src.has_value()) {
+    dst = src;
+  }
+}
+
+void FormattingConfig::apply_overrides(const FormattingConfig& src) {
+  apply_field_override(formatter, src.formatter);
+  apply_field_override(expression_line_limit, src.expression_line_limit);
+  apply_field_override(expression_include_annotations, src.expression_include_annotations);
+  apply_field_override(parsable_expression, src.parsable_expression);
+  apply_field_override(compact_expression, src.compact_expression);
+}
+
+static void recompute_formatting_config() {
+  aggregated_formatting_config = default_formatting_config;
+  for (const auto& config : formatting_config_stack) {
+    aggregated_formatting_config.apply_overrides(config);
+  }
+}
+
+ScopedFormatting::ScopedFormatting(FormattingConfig config) {
+  formatting_config_stack.push_back(config);
+  recompute_formatting_config();
+}
+
+ScopedFormatting::~ScopedFormatting() {
+  formatting_config_stack.pop_back();
+  recompute_formatting_config();
+}
+
+
 static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
   return mapped(v, [](int x){ return absl::StrCat(x); });
 }
 
 
-std::string Formatter::sub_num(const std::string& main, const std::vector<int>& indices) {
+std::string AbstractFormatter::sub_num(const std::string& main, const std::vector<int>& indices) {
   return sub(main, ints_to_strings(indices));
 }
-std::string Formatter::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
+std::string AbstractFormatter::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
   return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
 }
 
 
-class PlainTextFormatter : public Formatter {
+class PlainTextFormatter : public AbstractFormatter {
   virtual std::string inf() { return "Inf"; }
   virtual std::string unity() { return "<1>"; }
   virtual std::string dot() { return "."; }
@@ -47,16 +96,28 @@ class PlainTextFormatter : public Formatter {
   }
 
   virtual std::string coeff(int v) {
-    if (v == 0) {
-      return " 0 ";
-    } else if (v == 1) {
-      return " + ";
-    } else if (v == -1) {
-      return " - ";
-    } else if (v > 0) {
-      return absl::StrCat("+", v, " ");
+    if (*current_formatting_config().parsable_expression) {
+      // Allows to copy annotations from the output and use them in code.
+      // Should not start with whitespace, because that would mess up identation.
+      // Note: not using `tensor_prod()` here, because logically this is not
+      // tensor product.
+      if      (v == 0)  { return "0 *"; }
+      else if (v == 1)  { return "+  "; }
+      else if (v == -1) { return "-  "; }
+      else if (v > 0)   { return absl::StrCat("+", v, "*"); }
+      else              { return absl::StrCat(v, "*"); }
+    } else if (*current_formatting_config().compact_expression) {
+      if      (v == 0)  { return "0 "; }
+      else if (v == 1)  { return ""; }
+      else if (v == -1) { return "-"; }
+      else if (v > 0)   { return absl::StrCat(v, " "); }
+      else              { return absl::StrCat(v, " "); }
     } else {
-      return absl::StrCat(v, " ");
+      if      (v == 0)  { return " 0 "; }
+      else if (v == 1)  { return " + "; }
+      else if (v == -1) { return " - "; }
+      else if (v > 0)   { return absl::StrCat("+", v, " "); }
+      else              { return absl::StrCat(v, " "); }
     }
   }
 
@@ -74,7 +135,7 @@ class PlainTextFormatter : public Formatter {
     );
   }
 
-  virtual std::string Formatter::var(int idx) {
+  virtual std::string AbstractFormatter::var(int idx) {
     return absl::StrCat("x", idx);
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
@@ -87,7 +148,7 @@ class PlainTextFormatter : public Formatter {
 };
 
 
-class LatexFormatter : public Formatter {
+class LatexFormatter : public AbstractFormatter {
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
   virtual std::string inf() { return "\\infty"; }
   virtual std::string unity() { return chevrons("1"); }
@@ -116,16 +177,18 @@ class LatexFormatter : public Formatter {
   }
 
   virtual std::string coeff(int v) {
-    if (v == 0) {
-      return "0";
-    } else if (v == 1) {
-      return "+";
-    } else if (v == -1) {
-      return "-";
-    } else if (v > 0) {
-      return absl::StrCat("+", v);
+    if (*current_formatting_config().compact_expression) {
+      if      (v == 0)  { return "0"; }
+      else if (v == 1)  { return ""; }
+      else if (v == -1) { return "-"; }
+      else if (v > 0)   { return absl::StrCat(v); }
+      else              { return absl::StrCat(v); }
     } else {
-      return absl::StrCat(v);
+      if      (v == 0)  { return "0"; }
+      else if (v == 1)  { return "+"; }
+      else if (v == -1) { return "-"; }
+      else if (v > 0)   { return absl::StrCat("+", v); }
+      else              { return absl::StrCat(v); }
     }
   }
 
@@ -144,7 +207,7 @@ class LatexFormatter : public Formatter {
     );
   }
 
-  virtual std::string Formatter::var(int idx) {
+  virtual std::string AbstractFormatter::var(int idx) {
     return sub_num("x", {idx});
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) {
@@ -157,5 +220,13 @@ class LatexFormatter : public Formatter {
 };
 
 
-Formatter* formatter = new PlainTextFormatter;
-// Formatter* formatter = new LatexFormatter;
+static AbstractFormatter* plain_text_formatter = new PlainTextFormatter;
+static AbstractFormatter* latex_formatter = new LatexFormatter;
+
+AbstractFormatter* current_formatter() {
+  switch (*current_formatting_config().formatter) {
+    case Formatter::plain_text: return plain_text_formatter;
+    case Formatter::latex:      return latex_formatter;
+  }
+  FATAL("Unknown formatter");
+}
