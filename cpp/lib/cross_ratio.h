@@ -22,3 +22,8 @@ DeltaExpr cross_ratio(const T& v) {
 inline DeltaExpr neg_cross_ratio(X a, X b, X c, X d) {
   return cross_ratio(a, c, b, d);
 }
+
+// 1 - 1 / cross_ratio(a, b, c, d)
+inline DeltaExpr neg_inv_cross_ratio(X a, X b, X c, X d) {
+  return cross_ratio(a, c, d, b);
+}

@@ -113,12 +113,30 @@ int main(int argc, char *argv[]) {
   // std::cout << co_lhs - co_rhs << "\n";
 
 
+  auto lhs = to_lyndon_basis(
+    theta_expr_to_delta_expr(eval_formal_symbols(
+      LiQuad(1, {1,2,3,4,5,6}, LiFirstPoint::even))
+    )
+  );
+  auto rhs = to_lyndon_basis(
+    LidoNeg2(1,2,3,4,5,6)
+  );
+  auto diff = lhs - rhs;
+
+  profiler.finish("all");
+  std::cout << "\n";
+
+  std::cout << lhs << "\n";
+  std::cout << rhs << "\n";
+  std::cout << diff << "\n";
+
 
   // profiler.finish("expr");
 
-  // auto lyndon = to_lyndon_basis(expr);
+  // auto lyndon = to_lyndon_basis(diff);
   // profiler.finish("lyndon");
   // std::cout << "\n";
+  // std::cout << lyndon << "\n";
   // print_sorted_by_num_distinct_variables(std::cout, lyndon);
 
   // auto lyndon = to_lyndon_basis(project_on_x1(expr));
