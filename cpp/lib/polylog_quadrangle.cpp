@@ -75,7 +75,10 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
 
 ThetaExpr LiQuad(int foreweight, const std::vector<int>& points, LiFirstPoint first_point) {
   return update_foreweight(
-    LiQuadImpl(points, first_point == LiFirstPoint::even),
+    (
+      neg_one_pow(div_int(points.size(), 2) + 1)  // sync with Lido and LidoNeg
+      * LiQuadImpl(points, first_point == LiFirstPoint::even)
+    ),
     foreweight
   ).annotate(
     fmt::function_indexed_args(fmt::lrsub_num(foreweight, "LiQuad", {}), points)

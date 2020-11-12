@@ -31,22 +31,13 @@ int main(int argc, char *argv[]) {
   Profiler profiler;
 
 
-  auto lhs = to_lyndon_basis(
-    theta_expr_to_delta_expr(eval_formal_symbols(
-      LiQuad(1, {1,2,3,4,5,6}, LiFirstPoint::even))
-    )
-  );
-  auto rhs = to_lyndon_basis(
-    LidoNeg2(1,2,3,4,5,6)
-  );
-  auto diff = lhs - rhs;
+  // auto diff = -lhs + rhs;
+  // profiler.finish("all");
+  // std::cout << "\n";
 
-  profiler.finish("all");
-  std::cout << "\n";
-
-  std::cout << lhs << "\n";
-  std::cout << rhs << "\n";
-  std::cout << diff << "\n";
+  // std::cout << lhs << "\n";
+  // std::cout << rhs << "\n";
+  // std::cout << diff << "\n";
 
 
   // profiler.finish("expr");

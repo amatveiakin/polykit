@@ -4,6 +4,10 @@
 #include "delta.h"
 
 
+// TODO: Declare a span type that would accept both std::vector<X>
+// and std::vector<int>. This would allow to call these function
+// with either vector type OR an initializer list (not possible now).
+
 DeltaExpr LidoVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoVec(int weight, const std::vector<int>& points);
 

@@ -58,7 +58,7 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight4) {
   );
 }
 
-#if 0  // Slow tests
+#if RUN_LARGE_TESTS
 TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight6) {
   EXPECT_EXPR_EQ(
     + Li(2,2,2)({1},{2},{3})

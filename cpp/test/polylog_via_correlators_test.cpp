@@ -25,6 +25,24 @@ TEST(LidoViaCorrTest, EqualsToClassicDefinition) {
                               project_on_x1(LidoViaCorr(3, 8)));
 }
 
+TEST(LidoNegViaCorrTest, EqualsToClassicDefinition) {
+  // Should be true for any weight and number of args.
+  // Note. Projections are used to speed up lyndon.
+
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg1(1,2,3,4), LidoNegViaCorr(1, 4));
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg2(1,2,3,4), LidoNegViaCorr(2, 4));
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg3(1,2,3,4), LidoNegViaCorr(3, 4));
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg4(1,2,3,4), LidoNegViaCorr(4, 4));
+  EXPECT_EXPR_EQ_AFTER_LYNDON(project_on_x1(LidoNeg5(1,2,3,4)),
+                              project_on_x1(LidoNegViaCorr(5, 4)));
+
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg2(1,2,3,4,5,6), LidoNegViaCorr(2, 6));
+  EXPECT_EXPR_EQ_AFTER_LYNDON(LidoNeg3(1,2,3,4,5,6), LidoNegViaCorr(3, 6));
+
+  EXPECT_EXPR_EQ_AFTER_LYNDON(project_on_x1(LidoNeg3(1,2,3,4,5,6,7,8)),
+                              project_on_x1(LidoNegViaCorr(3, 8)));
+}
+
 TEST(LidoSymmViaCorrTest, EqualsToClassicDefinition) {
   // Note:
   //   Lido_w(1,2,3,4) == LidoSymmViaCorr(w, 4)
@@ -47,11 +65,43 @@ TEST(LidoSymmViaCorrTest, GluingTwoArgsReducesWeight) {
       --large_args.back();
       EXPECT_EXPR_EQ_AFTER_LYNDON(
         delta_expr_substitute(
-          LidoSymmViaCorr(weight + 1, num_args),
+          LidoSymmViaCorr(weight, num_args),
           mapped(large_args, X::Var)
         ),
-        -LidoSymmViaCorr(weight + 1, num_args - 2)
+        -LidoSymmViaCorr(weight, num_args - 2)
       );
     }
   }
 }
+
+
+#if 0
+  for (int weight = 1; weight <= 5; weight++) {
+    for (int num_args = 4; num_args <= 10; num_args += 2) {
+      if (weight * 2 + 2 < num_args) {
+        continue;
+      }
+      std::cout << "weight " << weight << ", num_args " << num_args << ": ";
+      std::cout << prnt::header_only(
+        to_lyndon_basis(
+          - LidoVec(weight, seq_incl(1, num_args))
+          + LidoViaCorr(weight, num_args)
+        )
+      );
+    }
+  }
+  for (int weight = 1; weight <= 5; weight++) {
+    for (int num_args = 4; num_args <= 10; num_args += 2) {
+      if (weight * 2 + 2 < num_args) {
+        continue;
+      }
+      std::cout << "weight " << weight << ", num_args " << num_args << ": ";
+      std::cout << prnt::header_only(
+        to_lyndon_basis(
+          - LidoNegVec(weight, seq_incl(1, num_args))
+          + LidoNegViaCorr(weight, num_args)
+        )
+      );
+    }
+  }
+#endif

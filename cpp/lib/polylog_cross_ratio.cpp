@@ -74,6 +74,10 @@ static ResultT Lido_generic_wrapper(
     const std::vector<X>& points,
     const LidoNodeT& lido_node_func,
     const ProjectorT& projector) {
+  if (points.size() == 2) {
+    CHECK_GE(weight, 1);
+    return weight == 1 ? projector(D(points[0], points[1])) : ResultT{};
+  }
   const int num_points = points.size();
   std::vector<Point> tagged_points;
   for (int i = 0; i < points.size(); ++i) {
@@ -115,8 +119,10 @@ static ResultT LidoNeg_wrapper(
     int weight,
     const std::vector<X>& points,
     const ProjectorT& projector) {
-  return Lido_generic_wrapper<ResultT>(weight, points, lido_neg_node_func, projector)
-    .annotate(fmt::function(
+  return (
+      neg_one_pow(weight) *
+      Lido_generic_wrapper<ResultT>(weight, points, lido_neg_node_func, projector)
+    ).annotate(fmt::function(
       fmt::sub_num("LidoNeg", {weight}),
       mapped(points, [](X x){ return to_string(x); })
     ));
