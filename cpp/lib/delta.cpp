@@ -8,6 +8,16 @@
 DeltaAlphabetMapping delta_alphabet_mapping;
 
 
+static int num_distinct_variables(const std::vector<Delta>& term) {
+  std::vector<int> elements;
+  for (const Delta& d : term) {
+    elements.push_back(d.a());
+    elements.push_back(d.b());
+  }
+  return num_distinct_elements(elements);
+}
+
+
 DeltaExpr delta_expr_substitute(
     const DeltaExpr& expr,
     const std::vector<X>& new_points) {
@@ -69,14 +79,9 @@ DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr) {
 }
 
 
-DeltaExpr terms_containing_num_variables(const DeltaExpr& expr, int num_variables) {
+DeltaExpr terms_with_num_distinct_variables(const DeltaExpr& expr, int num_variables) {
   return expr.filtered([&](const std::vector<Delta>& term) {
-    std::vector<int> elements;
-    for (const Delta& d : term) {
-      elements.push_back(d.a());
-      elements.push_back(d.b());
-    }
-    return num_distinct_elements(elements) == num_variables;
+    return num_distinct_variables(term) == num_variables;
   });
 }
 
@@ -126,8 +131,33 @@ static bool graph_is_connected(const std::vector<Delta>& graph) {
   return true;
 }
 
-DeltaExpr keep_connected_graphs(const DeltaExpr& expr) {
+DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr) {
   return expr.filtered([&](const std::vector<Delta>& term) {
     return graph_is_connected(term);
   });
+}
+
+void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr) {
+  if (expr.zero()) {
+    os << expr;
+    return;
+  }
+  std::map<int, DeltaExpr> num_vars_to_expr;
+  expr.foreach([&](const auto& term, int coeff) {
+    num_vars_to_expr[num_distinct_variables(term)].add_to(term, coeff);
+  });
+  bool first = true;
+  for (const auto& [num_vars, expr] : num_vars_to_expr) {
+    if (!first) {
+      os << "---\n";
+    }
+    first = false;
+    os << num_vars << " vars " << expr;
+  }
+  // TODO: Factor out function for printing annotation that would encapsulate:
+  // separator; checking `expression_include_annotations`; removing (or setting
+  // custom) line limit, etc.
+  if (*current_formatting_config().expression_include_annotations) {
+    os << "~~~\n" << expr.annotations();
+  }
 }

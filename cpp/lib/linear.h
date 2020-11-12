@@ -304,6 +304,7 @@ public:
   Linear(BasicLinearMain main, LinearAnnotation annotations)
     : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
+  // TODO: Replace "[+-]=.*::single" with `add_to`
   static Linear single(const ObjectT& obj) {
     Linear ret;
     ret.main_ = BasicLinearMain::single(obj);

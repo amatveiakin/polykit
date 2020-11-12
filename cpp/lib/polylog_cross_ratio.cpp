@@ -85,7 +85,7 @@ template<typename ResultT, typename ProjectorT>
 static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const ProjectorT& projector) {
   ResultT ret;
   if (points.size() == 6) {
-    auto [x1, x2, x3, x4, x5, x6] = as_array<6>(points);
+    auto [x1, x2, x3, x4, x5, x6] = to_array<6>(points);
     ret =
       + Lido_wrapper<ResultT>(weight, {x1,x2,x3,x4,x5,x6}, projector)
       - Lido_wrapper<ResultT>(weight, {x1,x2,x3,x4}, projector)
@@ -93,7 +93,7 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
       - Lido_wrapper<ResultT>(weight, {x5,x6,x1,x2}, projector)
     ;
   } else if (points.size() == 8) {
-    auto [x1, x2, x3, x4, x5, x6, x7, x8] = as_array<8>(points);
+    auto [x1, x2, x3, x4, x5, x6, x7, x8] = to_array<8>(points);
     ret =
       + Lido_wrapper<ResultT>(weight, {x1,x2,x3,x4,x5,x6,x7,x8}, projector)
       - (

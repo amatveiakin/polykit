@@ -68,6 +68,7 @@ inline std::string to_string(const CrossRatio& ratio) {
 }
 
 
+// TODO: Fix duplicate variables
 class CompoundRatio {
 public:
   CompoundRatio() {}

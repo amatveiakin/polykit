@@ -7,6 +7,7 @@ cc_library(
         "lib/compression.h",
         "lib/format.h",
         "lib/hash.h",
+        "lib/metaprogramming.h",
         "lib/profiler.h",
         "lib/sequence_iteration.h",
         "lib/string.h",
@@ -44,6 +45,7 @@ cc_library(
         "lib/quasi_shuffle.h",
         "lib/shuffle.h",
         "lib/shuffle_unrolled.h",
+        "lib/summation.h",
         "lib/theta.h",
         "lib/word.h",
         "lib/x.h",
@@ -77,6 +79,7 @@ cc_library(
         "lib/polylog.h",
         "lib/polylog_cross_ratio.h",
         "lib/polylog_quadrangle.h",
+        "lib/polylog_via_correlators.h",
     ],
     srcs = [
         "lib/iterated_integral.cpp",
@@ -84,6 +87,7 @@ cc_library(
         "lib/polylog.cpp",
         "lib/polylog_cross_ratio.cpp",
         "lib/polylog_quadrangle.cpp",
+        "lib/polylog_via_correlators.cpp",
     ],
     deps = [
         "@absl//absl/strings:strings",

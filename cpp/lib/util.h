@@ -138,6 +138,13 @@ std::vector<T> filtered(std::vector<T> src, F&& func) {
   return src;
 }
 
+inline std::vector<int> odd_elements(std::vector<int> v) {
+  return filtered(std::move(v), [](int x) { return x % 2 == 1; });
+}
+inline std::vector<int> even_elements(std::vector<int> v) {
+  return filtered(std::move(v), [](int x) { return x % 2 == 0; });
+}
+
 template<typename T>
 std::vector<T> rotated_vector(std::vector<T> v, int n) {
   n = pos_mod(n, v.size());
@@ -170,10 +177,17 @@ int num_distinct_elements(std::vector<T> v) {
 }
 
 template<int N, typename T>
-std::array<T, N> as_array(std::vector<T> v) {
+std::array<T, N> to_array(std::vector<T> v) {
   CHECK_EQ(v.size(), N);
   std::array<T, N> ret;
   absl::c_move(v, ret.begin());
+  return ret;
+}
+
+template<typename T, int N>
+std::vector<T> to_vector(std::array<T, N> v) {
+  std::vector<T> ret;
+  absl::c_move(v, std::back_inserter(ret));
   return ret;
 }
 
