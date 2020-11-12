@@ -53,17 +53,6 @@ TEST(ComultiplyTest, Form_2_2) {
   );
 }
 
-TEST(ComultiplyTest, I_6) {
-  EXPECT_EXPR_EQ(
-    comultiply(I(1,2,3,4,5,6), {2, 2}),
-    (
-      + coproduct(I(1,2,3,4), I(1,4,5,6))
-      + coproduct(I(2,3,4,5), I(1,2,5,6))
-      + coproduct(I(3,4,5,6), I(1,2,3,6))
-    )
-  );
-}
-
 TEST(ComultiplyTest, Zero) {
   EXPECT_EXPR_EQ(
     comultiply(
