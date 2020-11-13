@@ -249,7 +249,9 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
-    max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
+    if (*current_formatting_config().formatter != Formatter::unicode) {
+      max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
+    }
   });
   std::sort(dump.begin(), dump.end());
   const int line_limit = *current_formatting_config().expression_line_limit;

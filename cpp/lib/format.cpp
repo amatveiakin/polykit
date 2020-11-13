@@ -2,13 +2,16 @@
 
 #include "format.h"
 
-#include "util.h"
+#include <regex>
 
 #include "absl/strings/str_cat.h"
+
+#include "util.h"
 
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_formatter(Formatter::plain_text)
+  .set_html_mode(false)
   .set_expression_line_limit(100)
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
@@ -32,6 +35,7 @@ static void apply_field_override(
 
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(formatter, src.formatter);
+  apply_field_override(html_mode, src.html_mode);
   apply_field_override(expression_line_limit, src.expression_line_limit);
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
@@ -69,6 +73,7 @@ std::string AbstractFormatter::lrsub_num(int left_index, const std::string& main
 }
 
 
+// TODO: Rename. Unicode is also, technically speaking, plain text.
 class PlainTextFormatter : public AbstractFormatter {
   virtual std::string inf() { return "Inf"; }
   virtual std::string unity() { return "<1>"; }
@@ -148,16 +153,134 @@ class PlainTextFormatter : public AbstractFormatter {
 };
 
 
+class UnicodeFormatter : public AbstractFormatter {
+  static constexpr char kNbsp[] = " ";
+  // static constexpr char kThinSpace[] = " ";
+  static constexpr char kThinNbsp[] = " ";
+  static constexpr char kMinusSign[] = "−";
+
+  virtual std::string inf() { return "∞"; }
+  virtual std::string unity() { return chevrons("1"); }
+  virtual std::string dot() { return "⋅"; }
+  virtual std::string tensor_prod() { return "⊗"; }
+  virtual std::string coprod_lie() { return hspace("∧"); }
+  virtual std::string coprod_hopf() { return hspace("☒"); }
+  virtual std::string comult() { return "△"; }
+
+  std::string hspace(const std::string& expr) {  // TODO: Consider promoting to AbstractFormatter
+    return absl::StrCat(kNbsp, expr, kNbsp);
+  }
+  virtual std::string box(const std::string& expr) {
+    return *current_formatting_config().html_mode
+      ? absl::StrCat(expr, " <br>\n")
+      : absl::StrCat(expr, "\n");
+  }
+
+  virtual std::string parens(const std::string& expr) {
+    return absl::StrCat("(", expr, ")");
+  }
+  virtual std::string brackets(const std::string& expr) {
+    return absl::StrCat("[", expr, "]");
+  }
+  virtual std::string braces(const std::string& expr) {
+    return absl::StrCat("{", expr, "}");
+  }
+  virtual std::string chevrons(const std::string& expr) {
+    return absl::StrCat("⟨", expr, "⟩");
+  }
+
+  // TODO: Check how well std::regex_replace actually supports unicode.
+  // TODO: Fix all minuses! Should this functions be used more often?
+  std::string fix_minus(const std::string& expr) {
+    return std::regex_replace(expr, std::regex("-"), kMinusSign);
+  }
+  // std::string number(int v) {
+  //   return fix_minus(absl::StrCat(v));
+  // }
+
+  virtual std::string coeff(int v) {
+    if (*current_formatting_config().compact_expression) {
+      if      (v == 0)  { return "0"; }
+      else if (v == 1)  { return ""; }
+      else if (v == -1) { return kMinusSign; }
+      else if (v > 0)   { return absl::StrCat(v); }
+      else              { return fix_minus(absl::StrCat(v)); }
+    } else {
+      if      (v == 0)  { return absl::StrCat("0", kThinNbsp); }
+      else if (v == 1)  { return absl::StrCat("+", kThinNbsp); }
+      else if (v == -1) { return absl::StrCat(kMinusSign, kThinNbsp); }
+      else if (v > 0)   { return absl::StrCat("+", v, kThinNbsp); }
+      else              { return fix_minus(absl::StrCat(v, kThinNbsp)); }
+    }
+  }
+
+  static std::string char_to_subscript(char ch) {
+    switch (ch) {
+      case '+': return "₊";
+      case '-': return "₋";
+      case '0': return "₀";
+      case '1': return "₁";
+      case '2': return "₂";
+      case '3': return "₃";
+      case '4': return "₄";
+      case '5': return "₅";
+      case '6': return "₆";
+      case '7': return "₇";
+      case '8': return "₈";
+      case '9': return "₉";
+    }
+    FATAL(absl::StrCat("There is no known subscript for '", std::string(1, ch), "'"));
+  }
+  static std::string string_to_subscript(const std::string& str) {
+    CHECK_EQ(str.size(), 1) << str
+      << "Unicode formatter doesn't support multi-character subscripts: there are "
+      << "no subscript commas in Unicode, so there is no way to separate the indices.";
+    std::string ret;
+    for (const char ch : str) {
+      ret += char_to_subscript(ch);
+    }
+    return ret;
+  }
+  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    CHECK(!indices.empty());
+    return absl::StrCat(main, str_join(indices, "", string_to_subscript));
+  }
+  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+    CHECK(!main.empty());
+    return absl::StrCat(
+      string_to_subscript(left_index),
+      main,
+      str_join(right_indices, "", string_to_subscript)
+    );
+  }
+
+  virtual std::string AbstractFormatter::var(int idx) {
+    return sub_num("x", {idx});
+  }
+  virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
+    const auto separator = (hspacing == HSpacing::dense ? "," : absl::StrCat(",", kThinNbsp));
+    return name + parens(str_join(args, separator));
+  }
+  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
+    return function(name, ints_to_strings(indices), hspacing);
+  }
+};
+
+
 class LatexFormatter : public AbstractFormatter {
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
   virtual std::string inf() { return "\\infty"; }
   virtual std::string unity() { return chevrons("1"); }
   virtual std::string dot() { return ""; }
   virtual std::string tensor_prod() { return " \\otimes "; }
-  virtual std::string coprod_lie() { return " \\ \\wedge\\  "; }
-  virtual std::string coprod_hopf() { return " \\ \\boxtimes\\  "; }
+  virtual std::string coprod_lie() { return hspace("\\wedge"); }
+  virtual std::string coprod_hopf() { return hspace("\\boxtimes"); }
   virtual std::string comult() { return " \\triangle "; }
 
+  std::string hspace(const std::string& expr) {
+    return absl::StrCat("\\ ", expr, "\\ ");
+  }
   virtual std::string box(const std::string& expr) {
     return absl::StrCat(expr, "\\\\\n");
   }
@@ -221,11 +344,13 @@ class LatexFormatter : public AbstractFormatter {
 
 
 static AbstractFormatter* plain_text_formatter = new PlainTextFormatter;
+static AbstractFormatter* unicode_formatter = new UnicodeFormatter;
 static AbstractFormatter* latex_formatter = new LatexFormatter;
 
 AbstractFormatter* current_formatter() {
   switch (*current_formatting_config().formatter) {
     case Formatter::plain_text: return plain_text_formatter;
+    case Formatter::unicode:    return unicode_formatter;
     case Formatter::latex:      return latex_formatter;
   }
   FATAL("Unknown formatter");

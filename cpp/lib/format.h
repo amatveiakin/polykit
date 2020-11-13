@@ -9,6 +9,7 @@
 
 enum class Formatter {
   plain_text,
+  unicode,
   latex,
 };
 
@@ -19,12 +20,14 @@ struct FormattingConfig {
   static constexpr int kNoLineLimit = std::numeric_limits<int>::max();
 
   std::optional<Formatter> formatter;
+  std::optional<bool> html_mode;  // only for `unicode` formatter
   std::optional<int> expression_line_limit;
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
 
   FormattingConfig& set_formatter(Formatter v) { formatter = v; return *this; }
+  FormattingConfig& set_html_mode(bool v) { html_mode = v; return *this; }
   FormattingConfig& set_expression_line_limit(int v) { expression_line_limit = v; return *this; }
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
