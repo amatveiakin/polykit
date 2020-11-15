@@ -1,1 +1,1 @@
-bazel build -c opt --config=msvc :workspace && bazel-bin\workspace
+bazel run -c opt --config=msvc :workspace

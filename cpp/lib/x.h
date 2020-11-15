@@ -29,7 +29,11 @@ public:
   }
 
   bool operator==(const X& other) const { return idx_ == other.idx_; }
+  bool operator!=(const X& other) const { return idx_ != other.idx_; }
   bool operator< (const X& other) const { return idx_ <  other.idx_; }
+  bool operator<=(const X& other) const { return idx_ <= other.idx_; }
+  bool operator> (const X& other) const { return idx_ >  other.idx_; }
+  bool operator>=(const X& other) const { return idx_ >= other.idx_; }
 
 private:
   int idx_ = 0;

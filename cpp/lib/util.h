@@ -50,6 +50,7 @@ void sort_two(T& a, T& b) {
 }
 
 inline std::vector<int> seq_incl(int from, int to) {
+  CHECK_LE(from, to);
   ++to;
   std::vector<int> ret(to - from);
   absl::c_iota(ret, from);
@@ -103,7 +104,7 @@ std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& i
   std::vector<T> ret;
   ret.reserve(indices.size());
   for (int idx : indices) {
-    ret.push_back(v[idx]);
+    ret.push_back(v.at(idx));
   }
   return ret;
 }

@@ -4,9 +4,11 @@ cc_library(
         "lib/bit.h",
         "lib/call_cache.h",
         "lib/check.h",
+        "lib/circular_view.h",
         "lib/compression.h",
         "lib/format.h",
         "lib/hash.h",
+        "lib/lexicographical.h",
         "lib/metaprogramming.h",
         "lib/profiler.h",
         "lib/sequence_iteration.h",
@@ -32,6 +34,7 @@ cc_library(
     hdrs = [
         "lib/algebra.h",
         "lib/coalgebra.h",
+        "lib/corr_expression.h",
         "lib/cotheta.h",
         "lib/cross_ratio.h",
         "lib/delta.h",
@@ -51,6 +54,7 @@ cc_library(
         "lib/x.h",
     ],
     srcs = [
+        "lib/corr_expression.cpp",
         "lib/cotheta.cpp",
         "lib/delta.cpp",
         "lib/epsilon.cpp",

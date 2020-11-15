@@ -192,7 +192,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
       );
     }
   });
-  return ret.copy_annotations(expr);
+  return ret.copy_annotations(expr);  // TODO: Add comult sign
 }
 
 // Explicit rules allow to omit template types when calling the function.

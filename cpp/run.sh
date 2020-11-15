@@ -1,1 +1,1 @@
-bazel build -c opt --config=clang :workspace && bazel-bin/workspace
+bazel run -c opt --config=clang :workspace

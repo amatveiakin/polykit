@@ -3,6 +3,7 @@
 #include "absl/types/span.h"
 
 #include "algebra.h"
+#include "lexicographical.h"
 
 
 static DeltaExpr I_3_point(const absl::Span<const X>& p) {
@@ -42,19 +43,6 @@ WordExpr IVecPr(
     const std::vector<X>& points,
     std::function<WordExpr(DeltaExpr)> projector) {
   return IVec_wrapper<WordExpr>(points, projector);
-}
-
-// TODO: Move to util
-// TODO: Optimize: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
-std::vector<X> lexicographically_minimal_rotation(std::vector<X> v) {
-  std::vector<X> min = v;
-  for (int i = 1; i < v.size(); ++i) {
-    absl::c_rotate(v, v.begin() + 1);
-    if (v < min) {
-      min = v;
-    }
-  }
-  return min;
 }
 
 template<typename ResultT, typename ProjectorT>
