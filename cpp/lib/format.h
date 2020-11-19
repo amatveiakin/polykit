@@ -1,16 +1,27 @@
 #pragma once
 
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <vector>
 
 #include "string.h"
 
+#include "absl/strings/str_cat.h"
 
-enum class Formatter {
-  plain_text,
+
+enum class Formatter {  // TODO: Rename to `encoder` (?)
+  ascii,
   unicode,
   latex,
+};
+
+// Ignored by LaTeX formatter, except for `plain_text`.
+enum class RichTextFormat {
+  native,
+  plain_text,  // disables all rich text options
+  console,
+  html,
 };
 
 // Defines how expressions are printed. nullopt is used for overriding
@@ -20,14 +31,14 @@ struct FormattingConfig {
   static constexpr int kNoLineLimit = std::numeric_limits<int>::max();
 
   std::optional<Formatter> formatter;
-  std::optional<bool> html_mode;  // only for `unicode` formatter
+  std::optional<RichTextFormat> rich_text_format;
   std::optional<int> expression_line_limit;
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
 
   FormattingConfig& set_formatter(Formatter v) { formatter = v; return *this; }
-  FormattingConfig& set_html_mode(bool v) { html_mode = v; return *this; }
+  FormattingConfig& set_rich_text_format(RichTextFormat v) { rich_text_format = v; return *this; }
   FormattingConfig& set_expression_line_limit(int v) { expression_line_limit = v; return *this; }
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
@@ -38,9 +49,47 @@ struct FormattingConfig {
 
 FormattingConfig current_formatting_config();
 
-struct ScopedFormatting {
+class ScopedFormatting {
+public:
   ScopedFormatting(FormattingConfig config);
   ~ScopedFormatting();
+};
+
+
+enum class TextColor {
+  normal         = 0,
+  black          = 30,
+  red            = 31,
+  green          = 32,
+  yellow         = 33,
+  blue           = 34,
+  magenta        = 35,
+  cyan           = 36,
+  white          = 37,
+  bright_black   = 90,
+  bright_red     = 91,
+  bright_green   = 92,
+  bright_yellow  = 93,
+  bright_blue    = 94,
+  bright_magenta = 95,
+  bright_cyan    = 96,
+  bright_white   = 97,
+};
+
+// TODO: Add optionals similarly to FormattingConfig when there are more options.
+struct RichTextOptions {
+  TextColor text_color = TextColor::normal;
+
+  RichTextOptions& set_text_color(TextColor v) { text_color = v; return *this; }
+};
+
+class ScopedRichTextOptions {
+public:
+  ScopedRichTextOptions(std::ostream& os, const RichTextOptions& options);
+  ~ScopedRichTextOptions();
+
+private:
+  std::ostream* stream;
 };
 
 
@@ -54,7 +103,7 @@ public:
   virtual ~AbstractFormatter() {}
 
   virtual std::string inf() = 0;
-  virtual std::string unity() = 0;
+  virtual std::string unity();
   virtual std::string dot() = 0;
   virtual std::string tensor_prod() = 0;
   virtual std::string coprod_lie() = 0;
@@ -94,6 +143,16 @@ public:
       const std::string& name,
       const std::vector<int>& indices,
       HSpacing hspacing) = 0;
+
+  // Usage:
+  //   * Each begin_rich_text call must be followed by exactly one end_rich_text call.
+  //   * Calls to begin_rich_text/end_rich_text can be nested, e.g. begin, begin, end, end.
+  //   * RichTextFormat must stay the same as long as there are open rich text segments.
+  // Warning: Never write `absl::StrCat(begin_rich_text, ..., end_rich_text)`,
+  // as function parameter evaluation order is unspecified in C++. In contrast,
+  // `begin_rich_text + ... + end_rich_text` is fine (since C++17).
+  virtual std::string begin_rich_text(const RichTextOptions& options);
+  virtual std::string end_rich_text();
 };
 
 AbstractFormatter* current_formatter();
@@ -166,6 +225,14 @@ inline std::string function_indexed_args(
     const std::vector<int>& indices,
     HSpacing hspacing = HSpacing::dense) {
   return current_formatter()->function_indexed_args(name, indices, hspacing);
+}
+
+inline std::string colored(const std::string& expr, TextColor text_color) {
+  std::string ret;
+  ret += current_formatter()->begin_rich_text(RichTextOptions().set_text_color(text_color));
+  ret += expr;
+  ret += current_formatter()->end_rich_text();
+  return ret;
 }
 
 }  // namespace fmt

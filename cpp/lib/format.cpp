@@ -10,16 +10,31 @@
 
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
-  .set_formatter(Formatter::plain_text)
-  .set_html_mode(false)
+  .set_formatter(Formatter::ascii)
+  .set_rich_text_format(RichTextFormat::native)
   .set_expression_line_limit(100)
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
   .set_compact_expression(false)
 ;
 
+
 static thread_local std::vector<FormattingConfig> formatting_config_stack;
 static thread_local FormattingConfig aggregated_formatting_config = default_formatting_config;
+
+// This is marked as thread-local to avoid nasty race consitions, but
+// in reality only writing to console from one thread is supported.
+static thread_local std::vector<RichTextOptions> console_rich_text_options_stack;
+
+std::string get_command_for_console_rich_text_options() {
+  const RichTextOptions& options = console_rich_text_options_stack.empty()
+    ? RichTextOptions()
+    : console_rich_text_options_stack.back();
+  return options.text_color == TextColor::normal
+    ? "\033[0m"
+    : absl::StrCat("\033[", static_cast<int>(options.text_color), "m");
+}
+
 
 FormattingConfig current_formatting_config() {
   return aggregated_formatting_config;
@@ -35,7 +50,7 @@ static void apply_field_override(
 
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(formatter, src.formatter);
-  apply_field_override(html_mode, src.html_mode);
+  apply_field_override(rich_text_format, src.rich_text_format);
   apply_field_override(expression_line_limit, src.expression_line_limit);
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
@@ -59,11 +74,22 @@ ScopedFormatting::~ScopedFormatting() {
   recompute_formatting_config();
 }
 
+ScopedRichTextOptions::ScopedRichTextOptions(std::ostream& os, const RichTextOptions& options) {
+  stream = &os;
+  (*stream) << current_formatter()->begin_rich_text(options);
+}
+
+ScopedRichTextOptions::~ScopedRichTextOptions() {
+  (*stream) << current_formatter()->end_rich_text();
+}
+
 
 static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
   return mapped(v, [](int x){ return absl::StrCat(x); });
 }
 
+
+std::string AbstractFormatter::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
 
 std::string AbstractFormatter::sub_num(const std::string& main, const std::vector<int>& indices) {
   return sub(main, ints_to_strings(indices));
@@ -72,11 +98,39 @@ std::string AbstractFormatter::lrsub_num(int left_index, const std::string& main
   return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
 }
 
+std::string AbstractFormatter::begin_rich_text(const RichTextOptions& options) {
+  switch (*current_formatting_config().rich_text_format) {
+    case RichTextFormat::native:
+    case RichTextFormat::plain_text:
+      return {};
+    case RichTextFormat::console:
+      console_rich_text_options_stack.push_back(options);
+      return get_command_for_console_rich_text_options();
+    case RichTextFormat::html:
+      // TOOD: implement
+      return {};
+  }
+  FATAL("Illegal rich_text_format");
+}
 
-// TODO: Rename. Unicode is also, technically speaking, plain text.
-class PlainTextFormatter : public AbstractFormatter {
+std::string AbstractFormatter::end_rich_text() {
+  switch (*current_formatting_config().rich_text_format) {
+    case RichTextFormat::native:
+    case RichTextFormat::plain_text:
+      return {};
+    case RichTextFormat::console:
+      console_rich_text_options_stack.pop_back();
+      return get_command_for_console_rich_text_options();
+    case RichTextFormat::html:
+      // TOOD: implement
+      return {};
+  }
+  FATAL("Illegal rich_text_format");
+}
+
+
+class AsciiFormatter : public AbstractFormatter {
   virtual std::string inf() { return "Inf"; }
-  virtual std::string unity() { return "<1>"; }
   virtual std::string dot() { return "."; }
   virtual std::string tensor_prod() { return " * "; }
   virtual std::string coprod_lie() { return "  ^  "; }
@@ -160,7 +214,6 @@ class UnicodeFormatter : public AbstractFormatter {
   static constexpr char kMinusSign[] = "−";
 
   virtual std::string inf() { return "∞"; }
-  virtual std::string unity() { return chevrons("1"); }
   virtual std::string dot() { return "⋅"; }
   virtual std::string tensor_prod() { return "⊗"; }
   virtual std::string coprod_lie() { return hspace("∧"); }
@@ -171,7 +224,7 @@ class UnicodeFormatter : public AbstractFormatter {
     return absl::StrCat(kNbsp, expr, kNbsp);
   }
   virtual std::string box(const std::string& expr) {
-    return *current_formatting_config().html_mode
+    return *current_formatting_config().rich_text_format == RichTextFormat::html
       ? absl::StrCat(expr, " <br>\n")
       : absl::StrCat(expr, "\n");
   }
@@ -206,9 +259,9 @@ class UnicodeFormatter : public AbstractFormatter {
       else if (v > 0)   { return absl::StrCat(v); }
       else              { return fix_minus(absl::StrCat(v)); }
     } else {
-      if      (v == 0)  { return absl::StrCat("0", kThinNbsp); }
-      else if (v == 1)  { return absl::StrCat("+", kThinNbsp); }
-      else if (v == -1) { return absl::StrCat(kMinusSign, kThinNbsp); }
+      if      (v == 0)  { return absl::StrCat(" 0", kThinNbsp); }
+      else if (v == 1)  { return absl::StrCat(" +", kThinNbsp); }
+      else if (v == -1) { return absl::StrCat(" ", kMinusSign, kThinNbsp); }
       else if (v > 0)   { return absl::StrCat("+", v, kThinNbsp); }
       else              { return fix_minus(absl::StrCat(v, kThinNbsp)); }
     }
@@ -340,16 +393,31 @@ class LatexFormatter : public AbstractFormatter {
   virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
     return function(name, mapped(indices, [&](int x){ return var(x); }), hspacing);
   }
+
+  virtual std::string begin_rich_text(const RichTextOptions& options) {
+    if (*current_formatting_config().rich_text_format == RichTextFormat::plain_text) {
+      return {};
+    }
+    // TODO: implement
+    return {};
+  }
+  virtual std::string end_rich_text() {
+    if (*current_formatting_config().rich_text_format == RichTextFormat::plain_text) {
+      return {};
+    }
+    // TODO: implement
+    return {};
+  }
 };
 
 
-static AbstractFormatter* plain_text_formatter = new PlainTextFormatter;
+static AbstractFormatter* ascii_formatter = new AsciiFormatter;
 static AbstractFormatter* unicode_formatter = new UnicodeFormatter;
 static AbstractFormatter* latex_formatter = new LatexFormatter;
 
 AbstractFormatter* current_formatter() {
   switch (*current_formatting_config().formatter) {
-    case Formatter::plain_text: return plain_text_formatter;
+    case Formatter::ascii:      return ascii_formatter;
     case Formatter::unicode:    return unicode_formatter;
     case Formatter::latex:      return latex_formatter;
   }
