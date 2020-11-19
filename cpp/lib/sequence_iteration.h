@@ -1,4 +1,4 @@
-// TODO: More options. As sparate functions or united single umbrella with
+// TODO: More options. As separate functions or united single umbrella with
 // params like "are elements unique", "should elements be increasing".
 // Optimization potential: use generator style instead of actually
 // building a vector.

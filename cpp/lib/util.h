@@ -51,9 +51,15 @@ void sort_two(T& a, T& b) {
 
 inline std::vector<int> seq_incl(int from, int to) {
   CHECK_LE(from, to);
-  ++to;
-  std::vector<int> ret(to - from);
+  std::vector<int> ret(to - from + 1);
   absl::c_iota(ret, from);
+  return ret;
+}
+
+template<int From, int To>
+inline std::array<int, To - From + 1> seq_incl_array() {
+  std::array<int, To - From + 1> ret;
+  absl::c_iota(ret, From);
   return ret;
 }
 
@@ -109,6 +115,20 @@ std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& i
   return ret;
 }
 
+template<typename T, int N, int M>
+std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int, M>& indices) {
+  std::array<T, M> ret;
+  for (int i = 0; i < indices.size(); ++i) {
+    ret[i] = v.at(indices[i]);
+  }
+  return ret;
+}
+
+template<typename T, int N>
+std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& indices) {
+  return choose_indices(v, indices);
+}
+
 template<typename In, typename F>
 auto mapped(const absl::Span<const In>& src, F&& func) {
   std::vector<std::invoke_result_t<F, In>> dst(src.size());
@@ -146,6 +166,18 @@ inline std::vector<int> even_elements(std::vector<int> v) {
   return filtered(std::move(v), [](int x) { return x % 2 == 0; });
 }
 
+template<typename Container, typename T>
+bool contains_naive(const Container& c, const T& value) {
+  return absl::c_find(c, value) != c.end();
+}
+
+template<typename Container, typename T>
+int element_index(const Container& c, const T& value) {
+  const auto it = absl::c_find(c, value);
+  CHECK(it != c.end()) << list_to_string(c) << " does not contain " << value;
+  return it - c.begin();
+}
+
 template<typename T>
 std::vector<T> rotated_vector(std::vector<T> v, int n) {
   n = pos_mod(n, v.size());
@@ -160,10 +192,16 @@ void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
   absl::c_move(src, dst.begin() + old_size);
 }
 
-template<typename T>
-std::vector<T> sorted(std::vector<T> v) {
-  absl::c_sort(v);
-  return v;
+template<typename Container>
+Container sorted(Container c) {
+  absl::c_sort(c);
+  return c;
+}
+
+template<typename Container>
+Container reversed(Container c) {
+  absl::c_reverse(c);
+  return c;
 }
 
 template<typename T>
@@ -171,8 +209,8 @@ void keep_unique(std::vector<T>& v) {
   v.erase(std::unique(v.begin(), v.end()), v.end());
 }
 
-template<typename T>
-int num_distinct_elements(std::vector<T> v) {
+template<typename Container>
+int num_distinct_elements(Container v) {
   absl::c_sort(v);
   return std::unique(v.begin(), v.end()) - v.begin();
 }
@@ -192,39 +230,17 @@ std::vector<T> to_vector(std::array<T, N> v) {
   return ret;
 }
 
-template<typename First, typename Second>
-std::vector<std::pair<First, Second>> zip(
-    const std::vector<First>& first,
-    const std::vector<Second>& second) {
-  CHECK_EQ(first.size(), second.size());
-  std::vector<std::pair<First, Second>> ret;
-  for (int i = 0; i < first.size(); ++i) {
-    ret.push_back({first[i], second[i]});
-  }
+template<typename T>
+std::vector<T> set_intersection(const std::vector<T>& a, const std::vector<T>& b) {
+  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
+  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
+  std::vector<T> ret;
+  absl::c_set_intersection(a, b, std::back_inserter(ret));
   return ret;
 }
 
-template<typename First, typename Second, typename F>
-auto mapped_zip(
-    const std::vector<First>& first,
-    const std::vector<Second>& second,
-    F&& func) {
-  CHECK_EQ(first.size(), second.size());
-  std::vector<std::invoke_result_t<F, First, Second>> ret;
-  for (int i = 0; i < first.size(); ++i) {
-    ret.push_back(func(first[i], second[i]));
-  }
-  return ret;
-}
-
-template<typename First, typename Second>
-std::pair<std::vector<First>, std::vector<Second>> unzip(
-    const std::vector<std::pair<First, Second>>& both) {
-  std::vector<First> first;
-  std::vector<Second> second;
-  for (const auto& element : both) {
-    first.push_back(element.first);
-    second.push_back(element.second);
-  }
-  return {std::move(first), std::move(second)};
+template<typename T>
+int set_intersection_size(const std::vector<T>& a, const std::vector<T>& b) {
+  // Optimization potential: Use a fake iterators that counts instead of back_inserter.
+  return set_intersection(a, b).size();
 }

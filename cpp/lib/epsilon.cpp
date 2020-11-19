@@ -52,7 +52,7 @@ EpsilonExpr epsilon_expr_substitute(
             }
           }
           return EFormalSymbolPositive(LiParam(
-            formal_symbol.foreweight(), formal_symbol.weights(), new_points));
+            formal_symbol.foreweight(), formal_symbol.weights(), std::move(new_points)));
         },
       }, term);
   });

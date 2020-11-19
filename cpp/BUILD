@@ -15,6 +15,7 @@ cc_library(
         "lib/string.h",
         "lib/string_basic.h",
         "lib/util.h",
+        "lib/zip.h",
     ],
     srcs = [
         "lib/compression.cpp",

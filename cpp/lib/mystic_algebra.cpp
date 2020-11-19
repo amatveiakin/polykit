@@ -4,6 +4,7 @@
 #include "epsilon.h"
 #include "polylog.h"
 #include "quasi_shuffle.h"
+#include "zip.h"
 
 
 constexpr int kForeweight = 1;

@@ -42,6 +42,8 @@ public:
   }
   Word(std::initializer_list<int> data)
     : Word(data.begin(), data.end()) {}
+  explicit Word(absl::Span<const int> data)
+    : Word(data.begin(), data.end()) {}
   explicit Word(absl::Span<const unsigned char> data)
     : Word(data.begin(), data.end()) {}
 
