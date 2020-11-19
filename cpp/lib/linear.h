@@ -30,6 +30,8 @@ struct SimpleLinearParam {
   // TODO: Try to find clearer structure that doesn't require shuffle_preprocess/shuffle_postprocess
 };
 
+struct LinearNoContext {};
+
 
 template<typename ParamT>
 class BasicLinear {
@@ -243,8 +245,11 @@ BasicLinear<ParamT> operator*(int scalar, const BasicLinear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT>
-std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
+template<typename ParamT, typename ContextT>
+std::ostream& to_ostream(
+    std::ostream& os,
+    const BasicLinear<ParamT>& linear,
+    const ContextT& context) {
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
@@ -265,10 +270,19 @@ std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
       }
       // TODO: Fix how padding works for parsable expressions
       os << pad_left(fmt::coeff(coeff), max_coeff_length);
-      os << fmt::box(ParamT::object_to_string(obj));
+      if constexpr (std::is_same_v<ContextT, LinearNoContext>) {
+        os << fmt::box(ParamT::object_to_string(obj));
+      } else {
+        os << fmt::box(ParamT::object_to_string(obj, context));
+      }
     }
   }
   return os;
+}
+
+template<typename ParamT>
+std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
+  return to_ostream(os, linear, LinearNoContext{});
 }
 
 
@@ -285,7 +299,7 @@ struct LinearAnnotation {
 
 inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) {
   os << annotations.expression;
-  for (const auto& err : annotations.errors) {  // TODO: !!!
+  for (const auto& err : annotations.errors) {
     os << fmt::coeff(1) << "<?> " << err << "\n";
   }
   return os;
@@ -492,15 +506,19 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT>
-std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
+template<typename ParamT, typename ContextT>
+std::ostream& to_ostream(
+    std::ostream& os,
+    const Linear<ParamT>& linear,
+    const ContextT& context) {
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.zero()) {
     const int size = linear.size();
     os << "# " << size << " " << en_plural(size, "term");
     os << ", |coeff| = " << linear.l1_norm();
     if (line_limit > 0) {
-      os << ":\n" << linear.main();
+      os << ":\n";
+      to_ostream(os, linear.main(), context);
     } else {
       os << "\n";
     }
@@ -521,6 +539,12 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
   os.flush();
   return os;
 }
+
+template<typename ParamT>
+std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
+  return to_ostream(os, linear, LinearNoContext{});
+}
+
 
 using StringExpr = Linear<SimpleLinearParam<std::string>>;
 
