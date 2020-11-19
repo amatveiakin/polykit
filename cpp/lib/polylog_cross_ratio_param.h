@@ -77,6 +77,10 @@ public:
     normalize();
   }
 
+  static CompoundRatio unity() {
+    return CompoundRatio();
+  }
+
   static CompoundRatio from_cross_ratio(const CrossRatio& ratio) {
     return CompoundRatio({std::vector<int>{ratio.indices().begin(), ratio.indices().end()}});
   }
@@ -91,19 +95,22 @@ public:
   static CompoundRatio from_compressed(Decompressor& decompressor) {
     std::vector<std::vector<int>> loops;
     const std::vector<int> size_vec = decompressor.next_segment();
-    CHECK_EQ(size_vec.size(), 1);
-    const int size = size_vec.front();
+    CHECK_EQ(size_vec.size(), kSizeBump);
+    const int size = size_vec.front() - 1;
     for (int i = 0; i < size; ++i) {
       loops.push_back(decompressor.next_segment());
     }
     return CompoundRatio(std::move(loops));
   }
   void compress(Compressor& compressor) const {
-    compressor.add_segment({int(loops_.size())});
+    // Compressor doesn't support zeroes
+    compressor.add_segment({int(loops_.size()) + kSizeBump});
     for (const auto& l : loops_) {
       compressor.add_segment(l);
     }
   }
+
+  bool is_unity() const { return loops_.empty(); };
 
   void add(const CompoundRatio& ratio) {
     append_vector(loops_, ratio.loops_);
@@ -113,33 +120,43 @@ public:
     add(CompoundRatio::from_cross_ratio(ratio));
   }
 
-  std::vector<std::vector<int>> loops() const { return loops_; };
+  const std::vector<std::vector<int>>& loops() const { return loops_; };
 
   void normalize();
 
   std::optional<CompoundRatio> one_minus() const;
 
   void check() const {
-    CHECK(!loops_.empty());
-    CHECK(loops_.front().size() % 2 == 0);
-    CHECK_GE(loops_.front().size(), kMinCompoundRatioComponents);
+    for (const auto& points : loops_) {
+      CHECK(points.size() % 2 == 0);
+      CHECK_GE(points.size(), kMinCompoundRatioComponents);
+    }
   }
 
   bool operator==(const CompoundRatio& other) const { return loops_ == other.loops_; }
   bool operator< (const CompoundRatio& other) const { return loops_ <  other.loops_; }
 
+  template <typename H>
+  friend H AbslHashValue(H h, const CompoundRatio& ratio) {
+    return H::combine(std::move(h), ratio.loops_);
+  }
+
 private:
+  static constexpr int kSizeBump = 1;
+
   std::vector<std::vector<int>> loops_;
 };
 
 inline std::string to_string(const CompoundRatio& ratio) {
-  return str_join(
-    ratio.loops(),
-    "",
-    [](const std::vector<int>& loop) {
-      return fmt::brackets(str_join(loop, ","));
-    }
-  );
+  return ratio.is_unity()
+    ? fmt::unity()
+    : str_join(
+        ratio.loops(),
+        "",
+        [](const std::vector<int>& loop) {
+          return fmt::brackets(str_join(loop, ","));
+        }
+      );
 }
 
 
@@ -166,6 +183,11 @@ public:
 
   bool operator==(const LiraParam& other) const { return as_tie() == other.as_tie(); }
   bool operator< (const LiraParam& other) const { return as_tie() <  other.as_tie(); }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const LiraParam& param) {
+    return H::combine(std::move(h), param.foreweight_, param.weights_, param.ratios_);
+  }
 
 private:
   int foreweight_ = 0;
