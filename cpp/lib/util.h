@@ -106,6 +106,16 @@ std::vector<T> removed_index(std::vector<T> v, int index) {
 }
 
 template<typename T>
+std::vector<T> removed_indices(std::vector<T> v, std::vector<int> indices) {
+  absl::c_sort(indices);
+  // Optimization potential: O(N) solution.
+  for (auto it = indices.rbegin(); it != indices.rend(); ++it) {
+    v.erase(v.begin() + *it);
+  }
+  return v;
+}
+
+template<typename T>
 std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& indices) {
   std::vector<T> ret;
   ret.reserve(indices.size());

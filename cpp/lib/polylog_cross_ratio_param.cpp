@@ -4,7 +4,15 @@
 #include "util.h"
 
 
-static void normalize_loop(std::vector<int>& loop) {
+// TODO: Set this to true, fix `CompoundRatio::normalize` and remove the flag.
+static constexpr bool kAggressiveCrossRatioNormalization = false;
+// static constexpr bool kAggressiveCrossRatioNormalization = true;
+
+
+// Note: this is not 100% potent, e.g. for a simple cross-ratio this
+// reduces posibility space two-fold while it can be reduced four-fold.
+template<typename Container>
+static void normalize_loop(Container& loop) {
   CHECK(loop.size() % 2 == 0);
   int min_value = std::numeric_limits<int>::max();
   int min_pos = -1;
@@ -17,8 +25,38 @@ static void normalize_loop(std::vector<int>& loop) {
   absl::c_rotate(loop, loop.begin() + min_pos);
 }
 
+void CrossRatio::normalize() {
+  if (kAggressiveCrossRatioNormalization) {
+    const int min_pos = absl::c_min_element(indices_) - indices_.begin();
+    switch (min_pos) {
+      case 0:
+        break;
+      case 1:
+        std::swap(indices_[0], indices_[1]);
+        std::swap(indices_[2], indices_[3]);
+        break;
+      case 2:
+        std::swap(indices_[0], indices_[2]);
+        std::swap(indices_[1], indices_[3]);
+        break;
+      case 3:
+        std::swap(indices_[0], indices_[3]);
+        std::swap(indices_[1], indices_[2]);
+        break;
+      default:
+        FATAL("Invalid min element position");
+    }
+  } else {
+    normalize_loop(indices_);
+  }
+}
+
 void CompoundRatio::normalize() {
   check();
+  if (kAggressiveCrossRatioNormalization) {
+    // Not implemented yet
+    return;
+  }
   bool simplification_found = false;
   do {
     simplification_found = false;

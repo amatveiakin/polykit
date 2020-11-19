@@ -182,8 +182,7 @@ class AsciiFormatter : public AbstractFormatter {
 
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
     CHECK(!main.empty());
-    CHECK(!indices.empty());
-    return absl::StrCat(main, "_", str_join(indices, "_"));
+    return indices.empty() ? main : absl::StrCat(main, "_", str_join(indices, "_"));
   }
   virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
     CHECK(!main.empty());
@@ -296,7 +295,6 @@ class UnicodeFormatter : public AbstractFormatter {
   }
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
     CHECK(!main.empty());
-    CHECK(!indices.empty());
     return absl::StrCat(main, str_join(indices, "", string_to_subscript));
   }
   virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
@@ -370,8 +368,7 @@ class LatexFormatter : public AbstractFormatter {
 
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
     CHECK(!main.empty());
-    CHECK(!indices.empty());
-    return absl::StrCat(main, "_{", str_join(indices, ","), "}");
+    return indices.empty() ? main : absl::StrCat(main, "_{", str_join(indices, ","), "}");
   }
   virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
     CHECK(!main.empty());

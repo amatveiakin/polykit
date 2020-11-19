@@ -15,47 +15,60 @@
 
 
 constexpr int kCrossRatioElements = 4;
-constexpr int kRatioMaxIndex = kCompressionMaxValue;
-
-// It's not impossible in general to have a CompoundRatio of the form
-// (a - d) / (c - d), but in practice we have at least a cross ratio.
-constexpr int kMinCompoundRatioComponents = 2;
-
-class CompoundRatio;
 
 // Represents a cross ratio [a,b,c,d] = ([a,b] * [c,d]) / ([b,c] * [d,a])
+//
+// Note: if this is going to be compressed (e.g. put into LiraParam),
+//   indices should not exceed kCompressionMaxValue.
+//
 class CrossRatio {
 public:
   CrossRatio() {
     indices_.fill(0);
   }
-  CrossRatio(std::array<int, kCrossRatioElements> indices)
+  explicit CrossRatio(std::array<int, kCrossRatioElements> indices)
       : indices_(std::move(indices)) {
     CHECK(is_valid()) << list_to_string(indices_);
+    normalize();
   }
-  CrossRatio(absl::Span<const int> indices) {
+  explicit CrossRatio(absl::Span<const int> indices) {
     CHECK_EQ(indices.size(), kCrossRatioElements);
     absl::c_copy(indices, indices_.begin());
     CHECK(is_valid()) << list_to_string(indices_);
+    normalize();
   }
 
   static CrossRatio one_minus(const CrossRatio& other) {
-    const auto& v = other.indices_;
-    return CrossRatio(std::array{v[0], v[2], v[1], v[3]});
+    return CrossRatio(permute(other.indices_, {0,2,1,3}));
+  }
+  static CrossRatio inverse(const CrossRatio& other) {
+    return CrossRatio(permute(other.indices_, {0,3,2,1}));
   }
 
   bool is_valid() const {
-    return absl::c_all_of(indices_, [](int idx) {
-      return 1 <= idx && idx <= kRatioMaxIndex;
-    });
+    return absl::c_all_of(indices_, [](int idx) { return idx >= 1; });
   }
+
+  int operator[](int idx) const { return indices_[idx]; }
+  int at        (int idx) const { return indices_.at(idx); }
 
   const std::array<int, kCrossRatioElements>& indices() const { return indices_; }
 
   bool operator==(const CrossRatio& other) const { return indices_ == other.indices_; }
+  bool operator!=(const CrossRatio& other) const { return indices_ != other.indices_; }
   bool operator< (const CrossRatio& other) const { return indices_ <  other.indices_; }
+  bool operator<=(const CrossRatio& other) const { return indices_ <= other.indices_; }
+  bool operator> (const CrossRatio& other) const { return indices_ >  other.indices_; }
+  bool operator>=(const CrossRatio& other) const { return indices_ >= other.indices_; }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const CrossRatio& ratio) {
+    return H::combine(std::move(h), ratio.indices_);
+  }
 
 private:
+  void normalize();
+
   std::array<int, kCrossRatioElements> indices_;
 };
 
@@ -67,6 +80,10 @@ inline std::string to_string(const CrossRatio& ratio) {
   return fmt::brackets(str_join(ratio.indices(), ","));
 }
 
+
+// Generally speaking, it's possible to have a CompoundRatio of the form
+// (a - d) / (c - d), but in practice we have at least a cross ratio.
+constexpr int kMinCompoundRatioComponents = 2;
 
 // TODO: Fix duplicate variables
 class CompoundRatio {
