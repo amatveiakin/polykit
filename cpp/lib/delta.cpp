@@ -59,7 +59,7 @@ DeltaExpr delta_expr_substitute(
 }
 
 DeltaExpr sort_term_multiples(const DeltaExpr& expr) {
-  return expr.mapped<DeltaExpr>([&](const std::vector<Delta>& term) {
+  return expr.mapped([&](const std::vector<Delta>& term) {
     return sorted(term);
   });
 }

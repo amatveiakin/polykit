@@ -126,6 +126,11 @@ public:
     });
     return ret;
   }
+
+  template<typename F>
+  BasicLinear mapped(F func) const {
+    return mapped<BasicLinear>(func);
+  }
   template<typename NewBasicLinearT, typename F>
   NewBasicLinearT mapped_key(F func) const {
     NewBasicLinearT ret;
@@ -134,6 +139,11 @@ public:
     });
     return ret;
   }
+  template<typename F>
+  BasicLinear mapped_key(F func) const {
+    return mapped_key<BasicLinear>(func);
+  }
+
   template<typename NewBasicLinearT>
   NewBasicLinearT cast_to() const {
     static_assert(std::is_same_v<typename NewBasicLinearT::StorageT, StorageT>);
@@ -370,15 +380,24 @@ public:
   void foreach_key(F func) const { return main_.foreach_key(func); }
 
 
-  // TODO: Allow empty template args meaning "same type"
+  // TODO: Add mapped_expanding and rewrite foreach-based implementations; double-check annotations
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
     return NewLinearT(main_.template mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);
+  }
+  template<typename F>
+  Linear mapped(F func) const {
+    return mapped<Linear>(func);
   }
   template<typename NewLinearT, typename F>
   NewLinearT mapped_key(F func) const {
     return NewLinearT(main_.template mapped_key<typename NewLinearT::BasicLinearMain>(func), annotations_);
   }
+  template<typename F>
+  Linear mapped_key(F func) const {
+    return mapped_key<Linear>(func);
+  }
+
   template<typename NewLinearT>
   NewLinearT cast_to() const {
     return NewLinearT(main_.template cast_to<typename NewLinearT::BasicLinearMain>(), annotations_);

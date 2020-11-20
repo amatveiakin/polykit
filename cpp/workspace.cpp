@@ -541,7 +541,7 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
   //   * xyz == zyx
   //   * xyz + yxz + yzx == 0
   // First, apply the first one:
-  LiraExpr expr_symm = expr.mapped<LiraExpr>([](const LiraParamOnes& formal_symbol) {
+  LiraExpr expr_symm = expr.mapped([](const LiraParamOnes& formal_symbol) {
     auto ratios = formal_symbol.ratios();
     CHECK_EQ(ratios.size(), 3);
     sort_two(ratios[0], ratios[2]);

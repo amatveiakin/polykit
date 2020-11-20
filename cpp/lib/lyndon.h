@@ -46,7 +46,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
   static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
   bool finished = false;
   LinearT expr = expression.without_annotations()
-      .template mapped_key<LinearT>(LinearT::Param::shuffle_preprocess);
+      .mapped_key(LinearT::Param::shuffle_preprocess);
   while (!finished) {
     LinearT expr_new;
     finished = true;
@@ -71,6 +71,6 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     });
     expr = std::move(expr_new);
   };
-  expr = expr.template mapped_key<LinearT>(LinearT::Param::shuffle_postprocess);
+  expr = expr.mapped_key(LinearT::Param::shuffle_postprocess);
   return expr.copy_annotations(expression);
 }
