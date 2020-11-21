@@ -535,6 +535,59 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
 using LiraExpr = Linear<LiraExprParam>;
 
 
+int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
+  std::vector<std::array<int, 4>> ratios_sorted;
+  for (const auto& r : ratios) {
+    if (!r.is_unity()) {
+      ratios_sorted.push_back(sorted(r.as_ratio().indices()));
+    }
+  };
+  return num_distinct_elements(ratios);
+}
+
+int num_ratio_points(const std::vector<CrossRatio>& ratios) {
+  absl::flat_hash_set<int> all_points;
+  for (const auto& r : ratios) {
+    all_points.insert(r.indices().begin(), r.indices().end());
+  }
+  return all_points.size();
+}
+
+// TODO: Check if this is a valid criterion
+// Optimiation potential: try to avoid exponential explosion
+bool are_ratios_independent(const std::vector<CrossRatio>& ratios) {
+  if (num_ratio_points(ratios) < ratios.size() + 3) {
+    return false;
+  }
+  if (ratios.size() > 1) {
+    for (int i = 0; i < ratios.size(); ++i) {
+      if (!are_ratios_independent(removed_index(ratios, i))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+
+LiraExpr to_lyndon_basis_2(const LiraExpr& expr) {
+  LiraExpr ret;
+  expr.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+    const auto& ratios = formal_symbol.ratios();
+    CHECK_EQ(ratios.size(), 2);
+    if (ratios[0] == ratios[1]) {
+      // skip
+    } else if (ratios[0] < ratios[1]) {
+      // already ok
+      ret.add_to(formal_symbol, coeff);
+    } else {
+      // swap:  ba -> ab
+      ret.add_to(LiraParamOnes({ratios[1], ratios[0]}), -coeff);
+    }
+  });
+  return ret;
+}
+
 LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
   LiraExpr ret;
   // There are two equations in case of three ratios:
@@ -548,7 +601,7 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
     return LiraParamOnes(ratios);
   });
   expr_symm.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
-    const auto ratios = formal_symbol.ratios();
+    const auto& ratios = formal_symbol.ratios();
     CHECK_EQ(ratios.size(), 3);
     const int distinct = num_distinct_elements(ratios);
     LiraExpr replacement;
@@ -611,21 +664,60 @@ LiraExpr without_unities(const LiraExpr& expr) {
   });
 }
 
-// Applies this rule:
-//   {x,y,z} = -{1/x,1/y,1/z}
+LiraExpr keep_distinct_ratios(const LiraExpr& expr) {
+  return expr.filtered([](const LiraParamOnes& formal_symbol) {
+    return num_distinct_ratio_variables(formal_symbol.ratios()) ==
+        formal_symbol.ratios().size();
+  });
+}
+
+LiraExpr keep_independent_ratios(const LiraExpr& expr) {
+  return expr.filtered([](const LiraParamOnes& formal_symbol) {
+    std::vector<CrossRatio> ratios;
+    for (const auto& r : formal_symbol.ratios()) {
+      if (r.is_unity()) {
+        return false;
+      }
+      ratios.push_back(r.as_ratio());
+    }
+    return are_ratios_independent(ratios);
+  });
+}
+
+// Applies rule:
+//   {x_1, ..., x_n} = (-1)^n * {1/x_1, ..., 1/x_n}
 LiraExpr normalize_inverse(const LiraExpr& expr) {
   LiraExpr ret;
   expr.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+    static auto is_normal = [](const RatioOrUnity& r) {
+      return r.is_unity() || r.as_ratio()[1] <= r.as_ratio()[3];
+    };
     auto ratios = formal_symbol.ratios();
-    CHECK_EQ(ratios.size(), 3);
-    const auto& marker = ratios[2];  // nore: any ratio would do, but this was experimentally shown to work better with Lyndon
-    if (!marker.is_unity() && marker.as_ratio()[1] > marker.as_ratio()[3]) {
+    // Idea: choose a marker independently from position, so that the choice
+    //   wouldn't be affected by Lyndon.
+    // Note: if ratios.size() is odd, this would work as well:
+    //   const int normal_ratios = absl::c_count_if(ratios, is_normal);
+    //   if (normal_ratios <= ratios.size() / 2) { ... }
+    const auto marker_it = absl::c_max_element(
+      ratios,
+      [](const RatioOrUnity& r1, const RatioOrUnity& r2) {
+        if (r2.is_unity()) {
+          return false;
+        }
+        if (r1.is_unity()) {
+          return true;
+        }
+        return sorted(r1.as_ratio().indices()) < sorted(r2.as_ratio().indices());
+      }
+    );
+    CHECK(marker_it != ratios.end());
+    if (is_normal(*marker_it)) {
       for (auto& r : ratios) {
         if (!r.is_unity()) {
           r = CrossRatio::inverse(r.as_ratio());
         }
       }
-      ret.add_to(LiraParamOnes(ratios), -coeff);
+      ret.add_to(LiraParamOnes(ratios), neg_one_pow(ratios.size()) * coeff);
     } else {
       ret.add_to(formal_symbol, coeff);
     }
@@ -853,19 +945,11 @@ public:
     node->split(points, &splitting_tree_);
     expr_ = lira_expr_substitute(orig_expr_, &splitting_tree_);
     expr_ = without_unities(expr_);
-    // TODO: Make this deterministic and non-iterative
-    int last_norm = 0;
-    int iter = 0;
-    do {
-      iter++;
-      if (iter > 10) {
-        std::cout << "WARNING: Max normalization iterations reached\n";
-        break;
-      }
-      last_norm = expr_.l1_norm();
-      expr_ = normalize_inverse(expr_);
-      expr_ = to_lyndon_basis_3_soft(expr_);
-    } while (expr_.l1_norm() < last_norm);
+    // expr_ = keep_distinct_ratios(expr_);
+    // expr_ = keep_independent_ratios(expr_);
+    expr_ = normalize_inverse(expr_);
+    expr_ = to_lyndon_basis_2(expr_);
+    // expr_ = to_lyndon_basis_3_soft(expr_);
     return *this;
   }
 
@@ -919,11 +1003,13 @@ int main(int argc, char *argv[]) {
 
   ScopedFormatting sf(FormattingConfig()
     .set_formatter(Formatter::unicode)
+    // .set_rich_text_format(RichTextFormat::plain_text)
     .set_rich_text_format(RichTextFormat::console)
     .set_expression_line_limit(FormattingConfig::kNoLineLimit)
   );
 
-  const int num_points = 9;
+  const int num_points = 7;
+  const int num_args = num_points / 2 - 1;
   auto source = sum_looped_vec(
     [&](const std::vector<X>& args) {
       return LiQuad(
@@ -937,23 +1023,27 @@ int main(int argc, char *argv[]) {
 
   auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
 
-/*
+
+
   StringExpr stats;
 
   auto analyze_snowpal = [&](const Snowpal& snowpal) {
-    absl::flat_hash_set<CrossRatio> ratios;
+    absl::flat_hash_set<std::array<int, 4>> ratios;
     snowpal.expr().foreach([&](const LiraParamOnes& formal_symbol, int) {
       for (const RatioOrUnity& r : formal_symbol.ratios()) {
         if (!r.is_unity()) {
-          ratios.insert(sorted(r.as_ratio()));
+          ratios.insert(sorted(r.as_ratio().indices()));
         }
       }
     });
     stats.add_to(absl::StrCat("vars ", absl::Dec(ratios.size(), absl::kZeroPad2)), 1);
-    if (ratios.size() == 3) {
+    if (ratios.size() == num_args) {
+    // if (num_args <= ratios.size() && ratios.size() <= num_args + 2) {
       std::cout << snowpal << "\n";
     }
   };
+
+
 
   // The expression is symmetric w.r.t to rotations, so let's fix one arg.
   // This still doesn't cover all symmetries.
@@ -969,29 +1059,79 @@ int main(int argc, char *argv[]) {
   //   }
   // }
 
-  const int a = 1;
-  const int b = 4;
-  for (int b = 2; b <= num_points; ++b) {
-    for (int c = 2; c <= num_points; ++c) {
-      for (int d = c+1; d <= num_points; ++d) {
-        for (int e = 2; e <= num_points; ++e) {
-          for (int f = e+1; f <= num_points; ++f) {
-            for (int g = f+1; g <= num_points; ++g) {
-              try {
-                Snowpal snowpal(expr, num_points);
-                snowpal.add_ball({a, b}).add_ball({c, d}).add_ball({e, f, g});
-                analyze_snowpal(snowpal);
-              } catch (const IllegalTreeCutException&) {}
-            }
-          }
-        }
-      }
-    }
-  }
+  // const int a = 1;
+  // for (int b = a+1; b <= num_points; ++b) {
+  //   for (int c = b+1; c <= num_points; ++c) {
+  //     for (int d = c+1; d <= num_points; ++d) {
+  //       for (int e = 2; e <= num_points; ++e) {
+  //         for (int f = e+1; f <= num_points; ++f) {
+  //           try {
+  //             Snowpal snowpal(expr, num_points);
+  //             snowpal.add_ball({a, b, c, d}).add_ball({e, f});
+  //             analyze_snowpal(snowpal);
+  //           } catch (const IllegalTreeCutException&) {}
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // const int a = 1;
+  // for (int b = a+1; b <= num_points; ++b) {
+  //   for (int c = b+1; c <= num_points; ++c) {
+  //     for (int d = 2; d <= num_points; ++d) {
+  //       for (int e = d+1; e <= num_points; ++e) {
+  //         for (int f = e+1; f <= num_points; ++f) {
+  //           try {
+  //             Snowpal snowpal(expr, num_points);
+  //             snowpal.add_ball({a, b, c}).add_ball({d, e, f});
+  //             analyze_snowpal(snowpal);
+  //           } catch (const IllegalTreeCutException&) {}
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // const int a = 1;
   // const int b = 4;
-  // // for (int b = 2; b <= num_points; ++b) {
+  // for (int b = 2; b <= num_points; ++b) {
+  //   for (int c = 2; c <= num_points; ++c) {
+  //     for (int d = c+1; d <= num_points; ++d) {
+  //       for (int e = 2; e <= num_points; ++e) {
+  //         for (int f = e+1; f <= num_points; ++f) {
+  //           for (int g = f+1; g <= num_points; ++g) {
+  //             try {
+  //               Snowpal snowpal(expr, num_points);
+  //               snowpal.add_ball({a, b}).add_ball({c, d}).add_ball({e, f, g});
+  //               analyze_snowpal(snowpal);
+  //             } catch (const IllegalTreeCutException&) {}
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // const int a = 1;
+  // for (int b = 2; b <= num_points; ++b) {
+  //   for (int c = 2; c <= num_points; ++c) {
+  //     for (int d = c+1; d <= num_points; ++d) {
+  //       for (int e = 2; e <= num_points; ++e) {
+  //         for (int f = e+1; f <= num_points; ++f) {
+  //           try {
+  //             Snowpal snowpal(expr, num_points);
+  //             snowpal.add_ball({a, b}).add_ball({c, d}).add_ball({e, f});
+  //             analyze_snowpal(snowpal);
+  //           } catch (const IllegalTreeCutException&) {}
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // const int a = 1;
+  // for (int b = 3; b <= num_points; ++b) {
   //   for (int c = 2; c <= num_points; ++c) {
   //     for (int d = c+1; d <= num_points; ++d) {
   //       for (int e = 2; e <= num_points; ++e) {
@@ -1009,17 +1149,38 @@ int main(int argc, char *argv[]) {
   //       }
   //     }
   //   }
-  // // }
+  // }
 
-  // Snowpal snowpal(expr, num_points);
-  // snowpal.add_ball({1,4}).add_ball({2,8}).add_ball({6,7}).add_ball({5,9});
-  // analyze_snowpal(snowpal);
+  for (int num_groups = 1; num_groups <= num_points / 2; ++num_groups) {  // group = 2 or more elements
+    for (const auto& seq : all_sequences(num_groups + 1, num_points - 1)) {
+      // Group 0 means "no group". Point 1 is always in group 1. Because symmetry.
+      std::vector<std::vector<int>> groups(num_groups);
+      groups[1 - 1].push_back(1);
+      for (int i = 0; i < seq.size(); ++i) {
+        const int point = i + 2;  // numeration starts from 1; skip point 1 (see above)
+        const int group = seq[i];
+        if (group > 0) {
+          groups.at(group - 1).push_back(point);
+        }
+      }
+      if (absl::c_any_of(groups, [](const auto& gr) { return gr.size() < 2; })) {
+        continue;
+      }
+      try {
+        Snowpal snowpal(expr, num_points);
+        for (const auto& gr : groups) {
+          snowpal.add_ball(gr);
+        }
+        analyze_snowpal(snowpal);
+      } catch (const IllegalTreeCutException&) {}
+    }
+  }
 
   std::cout << stats;
-*/
 
 
 
+/*
   constexpr char kInvalidInput[] = "Invalid input: ";
   std::cout << "Functional\n" << source.annotations() << "\n";
   while (true) {
@@ -1044,6 +1205,8 @@ int main(int argc, char *argv[]) {
       trim(input);
       if (input.empty()) {
         continue;
+      } else if (input == "q" || input == "quit") {
+        return 0;
       } else if (input == "r" || input == "reset") {
         break;
       } else if (input == "b" || input == "back") {
@@ -1089,6 +1252,7 @@ int main(int argc, char *argv[]) {
       }
     }
   }
+*/
 
 
   // Snowpal snowpal(expr, 7);
@@ -1099,17 +1263,21 @@ int main(int argc, char *argv[]) {
   // snowpal.add_ball({1,3,5}).add_ball({2,7});  // => {1,x} == 0
   // snowpal.add_ball({1,3,5});  // could be explored more
   // snowpal.add_ball({1,3}).add_ball({2,7});  // => {x,y} + {1/(1-y),1-1/x)} == 0
-  // snowpal.add_ball({1,3}).add_ball({2,5});  // => {x,y} + {x/(x-1),y} == 0
+  // snowpal.add_ball({1,3}).add_ball({2,5});  // => {x,y} + {x/(x-1),y} == 0   ???
 
 
   // {1,3,6}{2,5,8}{4,7}  -- one var, first arg changes
   // {1,2,5}{3,6,9}
   // {1,3,5}{2,6,7}       -- two vars
   // {1,3,6}{2,4,9}{5,7}  -- close to (<1>, <1>, var)
-  // {1,3,4,8}            -- {x,y,z} + {1/x,1/y,1/z} == 0
-  // {1,2,4,6}            -- {x,y,z} + {1/z,1/y,1/x} == 0  (note: this is the one above + shuffle)
+  // {1,3,4,8}            -- {x, y, z} + {1/x, 1/y, 1/z} == 0
+  // {1,2,4,6}            -- {x, y, z} + {1/z, 1/y, 1/x} == 0  (note: this is the one above + shuffle)
   // {1,2,4,7}{3,6}       -- two vars
 
   // Below are equation modulo <1>
-  // {1,3}{5,8}{2,4,9}    -- {x,y,z} + {x/(x-1), 1-y, z/(z-1)} == 0
+  // {1,3}{5,8}{2,4,9}    -- {x, y, z} + {1-x, y/(y-1), 1-z} == 0
+
+  // BAD: uses dependent variables
+  // {1,4,6,8}{3,9}       -- {x, y, z} + {x, y, 1-z} == {with <= 2 args}
+  // {1,3,5,7}{2,8}       -- {x, y, z} + {x/(x-1), y, z} == {with <= 2 args}
 }
