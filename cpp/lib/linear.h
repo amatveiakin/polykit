@@ -33,6 +33,14 @@ struct SimpleLinearParam {
 struct LinearNoContext {};
 
 
+template<typename, typename = void>
+struct is_linear : std::false_type {};
+template<typename T>
+struct is_linear<T, std::void_t<typename T::ObjectT, typename T::StorageT, typename T::BasicLinearMain>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_linear_v = is_linear<T>::value;
+
+
 template<typename ParamT>
 class BasicLinear {
 public:
@@ -379,8 +387,6 @@ public:
   template<typename F>
   void foreach_key(F func) const { return main_.foreach_key(func); }
 
-
-  // TODO: Add mapped_expanding and rewrite foreach-based implementations; double-check annotations
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
     return NewLinearT(main_.template mapped<typename NewLinearT::BasicLinearMain>(func), annotations_);
@@ -396,6 +402,33 @@ public:
   template<typename F>
   Linear mapped_key(F func) const {
     return mapped_key<Linear>(func);
+  }
+
+  // Note that there is a difference in result type deduction between `mapped`
+  // and `mapped_expanding`:
+  //   * `mapped` needs an explicit result type specification; it assumes that
+  //     result type is the same as the source type if the template parameter
+  //     is not specified.
+  //   * `mapped_expanding` deduces result type from the functor.
+  template<typename F>
+  auto mapped_expanding(F func) const {
+    using ResultT = std::invoke_result_t<F, ObjectT>;
+    static_assert(is_linear_v<ResultT>, "mapped_expanding functor must return a Linear expression");
+    ResultT ret;
+    foreach([&](const auto& obj, int coeff) {
+      ret += coeff * func(obj);
+    });
+    return ret;
+  }
+  template<typename F>
+  auto mapped_key_expanding(F func) const {
+    using ResultT = std::invoke_result_t<F, StorageT>;
+    static_assert(is_linear_v<ResultT>, "mapped_expanding functor must return a Linear expression");
+    ResultT ret;
+    foreach_key([&](const auto& key, int coeff) {
+      ret += coeff * func(key);
+    });
+    return ret;
   }
 
   template<typename NewLinearT>

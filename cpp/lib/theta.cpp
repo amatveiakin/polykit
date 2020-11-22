@@ -6,49 +6,45 @@
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios) {
-  ThetaExpr ret;
-  expr.foreach([&](const EpsilonPack& term, int coeff) {
+  return expr.mapped_expanding([&](const EpsilonPack& term) {
     if (epsilon_pack_is_unity(term)) {
-      ret += coeff * TUnity();
-      return;
+      return TUnity();
     }
-    ret += coeff *
-      std::visit(overloaded{
-        [&](const std::vector<Epsilon>& term_product) {
-          return tensor_product(absl::MakeConstSpan(mapped(
-            absl::MakeConstSpan(term_product),
-            [&](const Epsilon& e) -> ThetaExpr {
-              return std::visit(overloaded{
-                [&](const EpsilonVariable& v) {
-                  return TRatio(compound_ratios.at(v.idx() - 1));
-                },
-                [&](const EpsilonComplement& v) {
-                  CompoundRatio ratio_prod;
-                  for (int idx = 0; idx < kMaxComplementVariables; ++idx) {
-                    if (v.indices()[idx]) {
-                      ratio_prod.add(compound_ratios.at(idx - 1));
-                    }
+    return std::visit(overloaded{
+      [&](const std::vector<Epsilon>& term_product) {
+        return tensor_product(absl::MakeConstSpan(mapped(
+          absl::MakeConstSpan(term_product),
+          [&](const Epsilon& e) -> ThetaExpr {
+            return std::visit(overloaded{
+              [&](const EpsilonVariable& v) {
+                return TRatio(compound_ratios.at(v.idx() - 1));
+              },
+              [&](const EpsilonComplement& v) {
+                CompoundRatio ratio_prod;
+                for (int idx = 0; idx < kMaxComplementVariables; ++idx) {
+                  if (v.indices()[idx]) {
+                    ratio_prod.add(compound_ratios.at(idx - 1));
                   }
-                  return TComplement(std::move(ratio_prod));
-                },
-              }, e);
-            }
-          )));
-        },
-        [&](const LiParam& formal_symbol) {
-          std::vector<CompoundRatio> symbol_ratios;
-          for (const std::vector<int>& point_arg: formal_symbol.points()) {
-            symbol_ratios.push_back({});
-            for (const int p : point_arg) {
-              symbol_ratios.back().add(compound_ratios.at(p - 1));
-            }
+                }
+                return TComplement(std::move(ratio_prod));
+              },
+            }, e);
           }
-          return TFormalSymbol(LiraParam(
-            formal_symbol.foreweight(), formal_symbol.weights(), symbol_ratios));
-        },
-      }, term);
-  });
-  return ret;
+        )));
+      },
+      [&](const LiParam& formal_symbol) {
+        std::vector<CompoundRatio> symbol_ratios;
+        for (const std::vector<int>& point_arg: formal_symbol.points()) {
+          symbol_ratios.push_back({});
+          for (const int p : point_arg) {
+            symbol_ratios.back().add(compound_ratios.at(p - 1));
+          }
+        }
+        return TFormalSymbol(LiraParam(
+          formal_symbol.foreweight(), formal_symbol.weights(), symbol_ratios));
+      },
+    }, term);
+  }).without_annotations();
 }
 
 ThetaExpr epsilon_expr_to_theta_expr(
@@ -116,9 +112,11 @@ ThetaExpr update_foreweight(
 }
 
 StringExpr count_functions(const ThetaExpr& expr) {
-  StringExpr ret;
-  expr.foreach([&](const std::variant<std::vector<Theta>, LiraParam>& term, int coeff) {
-    ret.add_to(lira_param_function_name(std::get<LiraParam>(term)), std::abs(coeff));
-  });
-  return ret;
+  return expr
+    .termwise_abs()
+    .mapped<StringExpr>(
+      [&](const std::variant<std::vector<Theta>, LiraParam>& term) {
+        return lira_param_function_name(std::get<LiraParam>(term));
+      }
+    ).without_annotations();
 }

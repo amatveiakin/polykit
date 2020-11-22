@@ -2,8 +2,7 @@
 
 
 WordExpr project_on(int axis, const DeltaExpr& expr) {
-  WordExpr ret;
-  expr.foreach([&](const std::vector<Delta>& deltas, int coeff) {
+  return expr.mapped_expanding([&](const std::vector<Delta>& deltas) {
     Word word;
     for (const Delta& d : deltas) {
       CHECK(!d.is_nil());
@@ -12,10 +11,9 @@ WordExpr project_on(int axis, const DeltaExpr& expr) {
       } else if (d.b() == axis) {
         word.push_back(d.a());
       } else {
-        return;
+        return WordExpr{};
       }
     }
-    ret.add_to_key(word, coeff);
+    return WordExpr::single(word);
   });
-  return ret.copy_annotations(expr);
 }

@@ -571,25 +571,23 @@ bool are_ratios_independent(const std::vector<CrossRatio>& ratios) {
 
 
 LiraExpr to_lyndon_basis_2(const LiraExpr& expr) {
-  LiraExpr ret;
-  expr.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+  return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
     const auto& ratios = formal_symbol.ratios();
     CHECK_EQ(ratios.size(), 2);
     if (ratios[0] == ratios[1]) {
       // skip
+      return LiraExpr{};
     } else if (ratios[0] < ratios[1]) {
       // already ok
-      ret.add_to(formal_symbol, coeff);
+      return LiraExpr::single(formal_symbol);
     } else {
       // swap:  ba -> ab
-      ret.add_to(LiraParamOnes({ratios[1], ratios[0]}), -coeff);
+      return -LiraExpr::single(LiraParamOnes({ratios[1], ratios[0]}));
     }
   });
-  return ret;
 }
 
 LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
-  LiraExpr ret;
   // There are two equations in case of three ratios:
   //   * xyz == zyx
   //   * xyz + yxz + yzx == 0
@@ -600,7 +598,7 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
     sort_two(ratios[0], ratios[2]);
     return LiraParamOnes(ratios);
   });
-  expr_symm.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+  return expr_symm.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
     const auto& ratios = formal_symbol.ratios();
     CHECK_EQ(ratios.size(), 3);
     const int distinct = num_distinct_elements(ratios);
@@ -614,12 +612,12 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
       //             needs shuffle: (b)(ac) = bac + abc + acb
 
       if (ratios[1] >= ratios[0]) {
-        ret.add_to(LiraParamOnes(ratios), coeff);
+        return LiraExpr::single(LiraParamOnes(ratios));
       } else {
         auto ratios1 = choose_indices(ratios, {1,0,2});
         auto ratios2 = choose_indices(ratios, {1,2,0});
-        replacement.add_to(LiraParamOnes(ratios1), -coeff);
-        replacement.add_to(LiraParamOnes(ratios2), -coeff);
+        replacement.add_to(LiraParamOnes(ratios1), -1);
+        replacement.add_to(LiraParamOnes(ratios2), -1);
       }
     } else if (distinct == 2) {
       //  aab  abb  aba  bab  baa  bba  -- original expr
@@ -631,29 +629,28 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
       //                           (b)(ab) = bab + 2*abb
 
       if (ratios[0] != ratios[2]) {
-        ret.add_to(LiraParamOnes(ratios), coeff);
+        return LiraExpr::single(LiraParamOnes(ratios));
       } else if (ratios[1] >= ratios[0]) {
         auto ratios1 = choose_indices(ratios, {0,2,1});
-        replacement.add_to(LiraParamOnes(ratios1), -2 * coeff);
+        replacement.add_to(LiraParamOnes(ratios1), -2);
       } else {
         auto ratios1 = choose_indices(ratios, {1,0,2});
-        replacement.add_to(LiraParamOnes(ratios1), -2 * coeff);
+        replacement.add_to(LiraParamOnes(ratios1), -2);
       }
     } else if (distinct == 1) {
       // skip: zero
+      return LiraExpr{};
     } else {
       FATAL(absl::StrCat("Bad number of distinct elements: ", distinct));
     }
-    if (!replacement.zero()) {
-      // Note: for a proper Lyndon basis, use replacement unconditionally.
-      if ((expr_symm + replacement).l1_norm() <= expr_symm.l1_norm()) {
-        ret += replacement;
-      } else {
-        ret.add_to(LiraParamOnes(ratios), coeff);
-      }
+    CHECK(!replacement.zero());
+    // Note: for a proper Lyndon basis, use replacement unconditionally.
+    if ((expr_symm + replacement).l1_norm() <= expr_symm.l1_norm()) {
+      return replacement;
+    } else {
+      return LiraExpr::single(LiraParamOnes(ratios));
     }
   });
-  return ret;
 }
 
 LiraExpr without_unities(const LiraExpr& expr) {
@@ -687,8 +684,7 @@ LiraExpr keep_independent_ratios(const LiraExpr& expr) {
 // Applies rule:
 //   {x_1, ..., x_n} = (-1)^n * {1/x_1, ..., 1/x_n}
 LiraExpr normalize_inverse(const LiraExpr& expr) {
-  LiraExpr ret;
-  expr.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+  return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
     static auto is_normal = [](const RatioOrUnity& r) {
       return r.is_unity() || r.as_ratio()[1] <= r.as_ratio()[3];
     };
@@ -717,12 +713,11 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
           r = CrossRatio::inverse(r.as_ratio());
         }
       }
-      ret.add_to(LiraParamOnes(ratios), neg_one_pow(ratios.size()) * coeff);
+      return neg_one_pow(ratios.size()) * LiraExpr::single(LiraParamOnes(ratios));
     } else {
-      ret.add_to(formal_symbol, coeff);
+      return LiraExpr::single(formal_symbol);
     }
   });
-  return ret;
 }
 
 
@@ -802,43 +797,40 @@ RatioSubstitutionResult ratio_substitute(
 
 
 LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr) {
-  LiraExpr ret;
-  expr.foreach([&](const ThetaPack& term, int coeff) {
-    std::visit(overloaded{
-      [&](const std::vector<Theta>& term_product) {
+  return expr.mapped_expanding([&](const ThetaPack& term) {
+    return std::visit(overloaded{
+      [&](const std::vector<Theta>& term_product) -> LiraExpr {
         FATAL("Unexpected std::vector<Theta> when converting to LiraExpr");
       },
       [&](const LiraParam& formal_symbol) {
         if (absl::c_all_of(formal_symbol.weights(), [](int w) { return w == 1; })) {
           CHECK_EQ(formal_symbol.foreweight(), formal_symbol.weights().size());
           LiraParamOnes new_formal_symbol(mapped(formal_symbol.ratios(), to_cross_ratio_or_unity));
-          ret.add_to(new_formal_symbol, coeff);
+          return LiraExpr::single(new_formal_symbol);
         } else {
           // ignore all products
+          return LiraExpr{};
         }
       },
     }, term);
   });
-  return ret;
 }
 
 LiraExpr lira_expr_substitute(
     const LiraExpr& expr,
     SplittingTree* tree) {
-  LiraExpr ret;
-  expr.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+  return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
     std::vector<RatioOrUnity> new_ratios;
     for (const RatioOrUnity& ratio: formal_symbol.ratios()) {
       auto ratio_subst = ratio_substitute(ratio, tree);
       if (std::holds_alternative<RatioOrUnity>(ratio_subst)) {
         new_ratios.push_back(std::get<RatioOrUnity>(ratio_subst));
       } else {
-        return;
+        return LiraExpr{};
       }
     }
-    ret += coeff * LiraExpr::single(LiraParamOnes(std::move(new_ratios)));
+    return LiraExpr::single(LiraParamOnes(std::move(new_ratios)));
   });
-  return ret;
 }
 
 template<typename Container>
