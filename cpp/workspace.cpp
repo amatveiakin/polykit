@@ -96,15 +96,17 @@ inline std::string ratio_to_string(
 
 
 
+using Ratio = CrossRatioN;
+
 class RatioOrUnity {
 public:
   RatioOrUnity() {}
-  RatioOrUnity(CrossRatio r) : data_(std::move(r)) {}
+  RatioOrUnity(Ratio r) : data_(std::move(r)) {}
 
   static RatioOrUnity unity() { return RatioOrUnity(); }
 
   bool is_unity() const { return !data_.has_value(); }
-  const CrossRatio& as_ratio() const { return data_.value(); }
+  const Ratio& as_ratio() const { return data_.value(); }
 
   bool operator==(const RatioOrUnity& other) const { return data_ == other.data_; }
   bool operator!=(const RatioOrUnity& other) const { return data_ != other.data_; }
@@ -119,12 +121,12 @@ public:
   }
 
 private:
-  std::optional<CrossRatio> data_;
+  std::optional<Ratio> data_;
 };
 
-CrossRatio to_cross_ratio(const CompoundRatio& compound_ratio) {
+Ratio to_cross_ratio(const CompoundRatio& compound_ratio) {
   CHECK_EQ(compound_ratio.loops().size(), 1) << "Only cross ratios are supported";
-  return CrossRatio(to_array<4>(compound_ratio.loops().front()));
+  return Ratio(to_array<4>(compound_ratio.loops().front()));
 }
 
 RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
@@ -136,7 +138,7 @@ RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
 CompoundRatio to_compound_ratio(const RatioOrUnity& r) {
   return r.is_unity()
     ? CompoundRatio::unity()
-    : CompoundRatio::from_cross_ratio(r.as_ratio());
+    : CompoundRatio::from_cross_ratio(CrossRatio(r.as_ratio().indices()));
 }
 
 std::string to_string(const RatioOrUnity& r) {
@@ -151,8 +153,8 @@ public:
 struct ShortFormRatio {
   std::string letter;
   int node_index;
-  CrossRatio normal_form;
-  absl::flat_hash_map<CrossRatio, int> usage_stats;
+  Ratio normal_form;
+  absl::flat_hash_map<Ratio, int> usage_stats;
 };
 
 class ShortFormRatioStorage {
@@ -163,7 +165,7 @@ public:
     }
   }
 
-  std::optional<ShortFormRatio> get_short_form_ratio(CrossRatio ratio) const {
+  std::optional<ShortFormRatio> get_short_form_ratio(Ratio ratio) const {
     const auto it = ratios_.find(sorted(ratio.indices()));
     if (it != ratios_.end()) {
       return it->second;
@@ -171,7 +173,7 @@ public:
     return absl::nullopt;
   }
 
-  void record_usage_stats(CrossRatio usage) {
+  void record_usage_stats(Ratio usage) {
     const auto it = ratios_.find(sorted(usage.indices()));
     if (it != ratios_.end()) {
       it->second.usage_stats[usage]++;
@@ -182,7 +184,7 @@ public:
     for (auto& [key, ratio] : ratios_) {
       if (!ratio.usage_stats.empty()) {
         int max_usage = 0;
-        CrossRatio max_usage_form;
+        Ratio max_usage_form;
         for (const auto& [form, usage_count] : ratio.usage_stats) {
           CHECK_GT(usage_count, 0);
           if (usage_count > max_usage) {
@@ -190,7 +192,7 @@ public:
             max_usage_form = form;
           }
         }
-        const CrossRatio new_normal_form = max_usage_form;
+        const Ratio new_normal_form = max_usage_form;
         CHECK(sorted(ratio.normal_form.indices()) == sorted(new_normal_form.indices()));
         ratio.normal_form = new_normal_form;
       }
@@ -366,7 +368,7 @@ public:
           ret.push_back(ShortFormRatio{
             fmt::sub_num(letter, missing),
             node->node_index,
-            CrossRatio(mapped_array(to_array<4>(points), [&](int nbr_idx) {
+            Ratio(mapped_array(to_array<4>(points), [&](int nbr_idx) {
               return make_metavar(node->node_index, nbr_idx);
             }))
           });
@@ -441,7 +443,7 @@ bool is_grandparent(const SplittingTree::Node* parent, const SplittingTree::Node
 }
 
 
-std::string short_form_to_string_impl(const ShortFormRatio& tmpl, CrossRatio value) {
+std::string short_form_to_string_impl(const ShortFormRatio& tmpl, Ratio value) {
   const std::string letter = tmpl.letter;
   auto is_permutation = [&](std::array<int, 4> permutation) {
     return permute(tmpl.normal_form.indices(), permutation) == value.indices();
@@ -455,7 +457,7 @@ std::string short_form_to_string_impl(const ShortFormRatio& tmpl, CrossRatio val
   FATAL(absl::StrCat("Unknown permutation ", to_string(value), " of ", to_string(tmpl.normal_form)));
 }
 
-std::string short_form_to_string(const ShortFormRatio& tmpl, CrossRatio value) {
+std::string short_form_to_string(const ShortFormRatio& tmpl, Ratio value) {
   return fmt::colored(short_form_to_string_impl(tmpl, value), TextColor::bright_yellow);
 }
 
@@ -545,7 +547,7 @@ int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
   return num_distinct_elements(ratios);
 }
 
-int num_ratio_points(const std::vector<CrossRatio>& ratios) {
+int num_ratio_points(const std::vector<Ratio>& ratios) {
   absl::flat_hash_set<int> all_points;
   for (const auto& r : ratios) {
     all_points.insert(r.indices().begin(), r.indices().end());
@@ -555,7 +557,7 @@ int num_ratio_points(const std::vector<CrossRatio>& ratios) {
 
 // TODO: Check if this is a valid criterion
 // Optimiation potential: try to avoid exponential explosion
-bool are_ratios_independent(const std::vector<CrossRatio>& ratios) {
+bool are_ratios_independent(const std::vector<Ratio>& ratios) {
   if (num_ratio_points(ratios) < ratios.size() + 3) {
     return false;
   }
@@ -670,7 +672,7 @@ LiraExpr keep_distinct_ratios(const LiraExpr& expr) {
 
 LiraExpr keep_independent_ratios(const LiraExpr& expr) {
   return expr.filtered([](const LiraParamOnes& formal_symbol) {
-    std::vector<CrossRatio> ratios;
+    std::vector<Ratio> ratios;
     for (const auto& r : formal_symbol.ratios()) {
       if (r.is_unity()) {
         return false;
@@ -710,7 +712,7 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
     if (is_normal(*marker_it)) {
       for (auto& r : ratios) {
         if (!r.is_unity()) {
-          r = CrossRatio::inverse(r.as_ratio());
+          r = Ratio::inverse(r.as_ratio());
         }
       }
       return neg_one_pow(ratios.size()) * LiraExpr::single(LiraParamOnes(ratios));
@@ -777,7 +779,7 @@ RatioSubstitutionResult ratio_substitute(
       auto new_points = mapped_array(old_points, [&](int p) {
         return central_node->metavar_for_point(p);
       });
-      return RatioOrUnity(CrossRatio(new_points));
+      return RatioOrUnity(Ratio(new_points));
     },
     [&](std::array<int, 2> bad_pair) -> RatioSubstitutionResult {
       const int dist = std::abs(

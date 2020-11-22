@@ -16,33 +16,46 @@
 
 constexpr int kCrossRatioElements = 4;
 
+// TODO: Try to keep only CrossRatioNormalization::full
+enum class CrossRatioNormalization {
+  // Performs one kind of normalization: shift by two.
+  // Reduces the number of possible permutation from 24 to 12.
+  rotation_only,
+
+  // Puts the smallest element in front.
+  // Reduces the number of possible permutation from 24 to 6,
+  // which is the theoretical minimum
+  full,
+};
+
 // Represents a cross ratio [a,b,c,d] = ([a,b] * [c,d]) / ([b,c] * [d,a])
 //
 // Note: if this is going to be compressed (e.g. put into LiraParam),
 //   indices should not exceed kCompressionMaxValue.
 //
-class CrossRatio {
+template<CrossRatioNormalization Normalization>
+class CrossRatioTmpl {
 public:
-  CrossRatio() {
+  CrossRatioTmpl() {
     indices_.fill(0);
   }
-  explicit CrossRatio(std::array<int, kCrossRatioElements> indices)
+  explicit CrossRatioTmpl(std::array<int, kCrossRatioElements> indices)
       : indices_(std::move(indices)) {
     CHECK(is_valid()) << list_to_string(indices_);
     normalize();
   }
-  explicit CrossRatio(absl::Span<const int> indices) {
+  explicit CrossRatioTmpl(absl::Span<const int> indices) {
     CHECK_EQ(indices.size(), kCrossRatioElements);
     absl::c_copy(indices, indices_.begin());
     CHECK(is_valid()) << list_to_string(indices_);
     normalize();
   }
 
-  static CrossRatio one_minus(const CrossRatio& other) {
-    return CrossRatio(permute(other.indices_, {0,2,1,3}));
+  static CrossRatioTmpl one_minus(const CrossRatioTmpl& other) {
+    return CrossRatioTmpl(permute(other.indices_, {0,2,1,3}));
   }
-  static CrossRatio inverse(const CrossRatio& other) {
-    return CrossRatio(permute(other.indices_, {0,3,2,1}));
+  static CrossRatioTmpl inverse(const CrossRatioTmpl& other) {
+    return CrossRatioTmpl(permute(other.indices_, {0,3,2,1}));
   }
 
   bool is_valid() const {
@@ -54,15 +67,15 @@ public:
 
   const std::array<int, kCrossRatioElements>& indices() const { return indices_; }
 
-  bool operator==(const CrossRatio& other) const { return indices_ == other.indices_; }
-  bool operator!=(const CrossRatio& other) const { return indices_ != other.indices_; }
-  bool operator< (const CrossRatio& other) const { return indices_ <  other.indices_; }
-  bool operator<=(const CrossRatio& other) const { return indices_ <= other.indices_; }
-  bool operator> (const CrossRatio& other) const { return indices_ >  other.indices_; }
-  bool operator>=(const CrossRatio& other) const { return indices_ >= other.indices_; }
+  bool operator==(const CrossRatioTmpl& other) const { return indices_ == other.indices_; }
+  bool operator!=(const CrossRatioTmpl& other) const { return indices_ != other.indices_; }
+  bool operator< (const CrossRatioTmpl& other) const { return indices_ <  other.indices_; }
+  bool operator<=(const CrossRatioTmpl& other) const { return indices_ <= other.indices_; }
+  bool operator> (const CrossRatioTmpl& other) const { return indices_ >  other.indices_; }
+  bool operator>=(const CrossRatioTmpl& other) const { return indices_ >= other.indices_; }
 
   template <typename H>
-  friend H AbslHashValue(H h, const CrossRatio& ratio) {
+  friend H AbslHashValue(H h, const CrossRatioTmpl& ratio) {
     return H::combine(std::move(h), ratio.indices_);
   }
 
@@ -71,6 +84,9 @@ private:
 
   std::array<int, kCrossRatioElements> indices_;
 };
+
+using CrossRatio = CrossRatioTmpl<CrossRatioNormalization::rotation_only>;
+using CrossRatioN = CrossRatioTmpl<CrossRatioNormalization::full>;
 
 inline CrossRatio CR(int a, int b, int c, int d) {
   return CrossRatio(std::array{a, b, c, d});
