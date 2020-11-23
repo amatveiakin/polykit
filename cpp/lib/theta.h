@@ -7,7 +7,7 @@
 #include "absl/algorithm/container.h"
 
 #include "check.h"
-#include "cross_ratio.h"
+#include "delta_ratio.h"
 #include "epsilon.h"
 #include "format.h"
 #include "multiword.h"
@@ -20,9 +20,7 @@ using ThetaStorageType = Word;
 class ThetaComplement {
 public:
   ThetaComplement() {}
-  ThetaComplement(CompoundRatio ratio) : ratio_(std::move(ratio)) {
-    ratio_.check();
-  }
+  ThetaComplement(CompoundRatio ratio) : ratio_(std::move(ratio)) {}
 
   const CompoundRatio& ratio() const { return ratio_; }
 
@@ -239,8 +237,8 @@ inline ThetaExpr TRatio(std::initializer_list<int> indices) {
   return TRatio(CrossRatio(indices));
 }
 
-inline ThetaExpr TComplement(CompoundRatio ratio) {
-  auto one_minus_ratio = ratio.one_minus();
+inline ThetaExpr TComplement(const CompoundRatio& ratio) {
+  auto one_minus_ratio = CompoundRatio::one_minus(ratio);
   return one_minus_ratio.has_value()
     ? TRatio(std::move(one_minus_ratio.value()))
     : ThetaExpr::single(std::vector<Theta>{ThetaComplement(std::move(ratio))});

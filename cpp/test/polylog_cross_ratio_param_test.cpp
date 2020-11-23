@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "lib/cross_ratio.h"
+#include "lib/delta_ratio.h"
 #include "test_util/matchers.h"
 
 

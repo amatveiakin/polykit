@@ -29,6 +29,24 @@
 
 
 
+using Ratio = CrossRatioN;
+using RatioOrUnity = CrossRatioNOrUnity;
+
+Ratio R(int a, int b, int c, int d) {
+  return Ratio(std::array{a, b, c, d});
+}
+
+Ratio to_cross_ratio(const CompoundRatio& compound_ratio) {
+  CHECK_EQ(compound_ratio.loops().size(), 1) << "Only cross ratios are supported";
+  return Ratio(to_array<4>(compound_ratio.loops().front()));
+}
+
+RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
+  return compound_ratio.is_unity()
+    ? RatioOrUnity::unity()
+    : to_cross_ratio(compound_ratio);
+}
+
 
 constexpr auto kMetaVariablesColors = std::array{
   TextColor::bright_blue,
@@ -79,71 +97,14 @@ std::string var_to_string(int var, const MetaVarPrinter& metavar_to_string) {
 }
 
 template<typename MetaVarPrinter>
-inline std::string ratio_to_string(
-    const CompoundRatio& ratio, const MetaVarPrinter& metavar_to_string) {
-  return ratio.is_unity()
-    ? fmt::unity()
-    : str_join(
-        ratio.loops(),
-        "",
-        [&](const std::vector<int>& loop) {
-          return fmt::brackets(str_join(loop, ",", [&](int x) {
-            return var_to_string(x, metavar_to_string);
-          }));
-        }
-      );
-}
-
-
-
-using Ratio = CrossRatioN;
-
-class RatioOrUnity {
-public:
-  RatioOrUnity() {}
-  RatioOrUnity(Ratio r) : data_(std::move(r)) {}
-
-  static RatioOrUnity unity() { return RatioOrUnity(); }
-
-  bool is_unity() const { return !data_.has_value(); }
-  const Ratio& as_ratio() const { return data_.value(); }
-
-  bool operator==(const RatioOrUnity& other) const { return data_ == other.data_; }
-  bool operator!=(const RatioOrUnity& other) const { return data_ != other.data_; }
-  bool operator< (const RatioOrUnity& other) const { return data_ <  other.data_; }
-  bool operator<=(const RatioOrUnity& other) const { return data_ <= other.data_; }
-  bool operator> (const RatioOrUnity& other) const { return data_ >  other.data_; }
-  bool operator>=(const RatioOrUnity& other) const { return data_ >= other.data_; }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const RatioOrUnity& r) {
-    return H::combine(std::move(h), r.data_);
-  }
-
-private:
-  std::optional<Ratio> data_;
-};
-
-Ratio to_cross_ratio(const CompoundRatio& compound_ratio) {
-  CHECK_EQ(compound_ratio.loops().size(), 1) << "Only cross ratios are supported";
-  return Ratio(to_array<4>(compound_ratio.loops().front()));
-}
-
-RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
-  return compound_ratio.is_unity()
-    ? RatioOrUnity::unity()
-    : to_cross_ratio(compound_ratio);
-}
-
-CompoundRatio to_compound_ratio(const RatioOrUnity& r) {
+std::string ratio_to_string(const RatioOrUnity& r, const MetaVarPrinter& metavar_to_string) {
   return r.is_unity()
-    ? CompoundRatio::unity()
-    : CompoundRatio::from_cross_ratio(CrossRatio(r.as_ratio().indices()));
+    ? fmt::unity()
+    : fmt::brackets(str_join(r.as_ratio().indices(), ",", [&](int x) {
+        return var_to_string(x, metavar_to_string);
+      }));
 }
 
-std::string to_string(const RatioOrUnity& r) {
-  return to_string(to_compound_ratio(r));
-}
 
 class IllegalTreeCutException : public std::exception {
 public:
@@ -215,13 +176,12 @@ public:
     Node(Node* parent_arg, std::vector<int> points_arg, int node_index_arg)
       : parent(parent_arg), points(std::move(points_arg)), node_index(node_index_arg) {}
 
-    // TODO: Make this a tree function; always return Nodes by const pointer.
-    void split(const std::vector<int>& subpoints, SplittingTree* tree) {
+    void split(const std::vector<int>& subpoints, SplittingTree& tree) {
       CHECK(!subpoints.empty());
       CHECK(absl::c_is_sorted(subpoints));
       CHECK(absl::c_includes(points, subpoints)) << list_to_string(points)
         << " does not contain " << list_to_string(subpoints);
-      children.push_back(absl::make_unique<Node>(this, subpoints, tree->new_node_index()));
+      children.push_back(absl::make_unique<Node>(this, subpoints, tree.new_node_index()));
       std::vector<int> remaining_vars = complement_to_children();
       constexpr int kMinValency = 3;
       if (valency() < kMinValency || children.back()->valency() < kMinValency) {
@@ -319,23 +279,14 @@ public:
       }
       return nullptr;
     }
-
-    const Node* lowest_ancestor(const std::vector<int>& points_arg) const {
-      const Node* node = this;
-      CHECK(set_intersection_size(node->points, points_arg) > 0);
-      while (!absl::c_includes(node->points, points_arg)) {
-        CHECK(node->parent != nullptr);
-        node = node->parent;
-      }
-      return node;
-    }
   };
 
   SplittingTree(int num_variables)
     : root_(absl::make_unique<Node>(
         nullptr, seq_incl(1, num_variables), new_node_index())) {}
 
-  Node* root() { return root_.get(); }
+  Node*       root()       { return root_.get(); }
+  const Node* root() const { return root_.get(); }
 
   Node* node_for_points(const std::vector<int>& points) {
     SplittingTree::Node* current = root();
@@ -380,7 +331,11 @@ public:
   }
 
   std::vector<std::pair<int, std::vector<std::vector<int>>>> dump_nbr_indices() const {
-    return sorted(dump_nbr_indices_impl(root_.get()));
+    std::vector<std::pair<int, std::vector<std::vector<int>>>> ret;
+    foreach_node([&](const Node* node) {
+      ret.push_back({node->node_index, node->nbr_indices()});
+    });
+    return sorted(ret);
   }
 
   template<typename Func>
@@ -397,50 +352,9 @@ private:
     }
   }
 
-  std::vector<std::pair<int, std::vector<std::vector<int>>>> dump_nbr_indices_impl(Node* node) const {
-    std::vector<std::pair<int, std::vector<std::vector<int>>>> ret;
-    ret.push_back({node->node_index, node->nbr_indices()});
-    for (const auto& child : node->children) {
-      append_vector(ret, dump_nbr_indices_impl(child.get()));
-    }
-    return ret;
-  }
-
   int next_node_index_ = 0;
   std::unique_ptr<Node> root_;
 };
-
-// Optimization potential: log(N) algorithm
-const SplittingTree::Node* common_ancestor(
-    const SplittingTree::Node* u, const SplittingTree::Node* v) {
-  CHECK(u != nullptr);
-  CHECK(v != nullptr);
-  if (u == v) {
-    return u;  // shortcut for speed
-  }
-  absl::flat_hash_set<const SplittingTree::Node*> u_ancestors;
-  while (u != nullptr) {
-    u_ancestors.insert(u);
-    u = u->parent;
-  }
-  while (v != nullptr) {
-    if (u_ancestors.contains(v)) {
-      return v;
-    }
-    v = v->parent;
-  }
-  FATAL("No common ancestor");
-}
-
-bool is_grandparent(const SplittingTree::Node* parent, const SplittingTree::Node* child) {
-  while (child != nullptr) {
-    if (child == parent) {
-      return true;
-    }
-    child = child->parent;
-  }
-  return false;
-}
 
 
 std::string short_form_to_string_impl(const ShortFormRatio& tmpl, Ratio value) {
@@ -491,14 +405,6 @@ private:
   std::vector<RatioOrUnity> ratios_;
 };
 
-LiraParam to_lira_param(const LiraParamOnes& param) {
-  return LiraParam(
-    param.foreweight(),
-    param.weights(),
-    mapped(param.ratios(), to_compound_ratio)
-  );
-}
-
 
 
 struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
@@ -508,7 +414,7 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
   static std::string object_to_string(
       const LiraParamOnes& param, const ShortFormRatioStorage* short_forms) {
     return fmt::function(
-      lira_param_function_name(to_lira_param(param)),
+      lira_param_function_name(param.foreweight(), param.weights()),
       mapped(param.ratios(), [&](const RatioOrUnity& ratio) {
         if (ratio.is_unity()) {
           return fmt::unity();
@@ -520,13 +426,13 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
           auto short_form = short_forms->get_short_form_ratio(points);
           return short_form.has_value()
             ? short_form_to_string(*short_form, points)
-            : ratio_to_string(to_compound_ratio(ratio), metavar_to_string_by_name);
-          // auto full = ratio_to_string(to_compound_ratio(ratio), metavar_to_string_by_name);
+            : ratio_to_string(ratio, metavar_to_string_by_name);
+          // auto full = ratio_to_string(ratio, metavar_to_string_by_name);
           // return short_form.has_value()
           //   ? short_form_to_string(*short_form, points) + " " + full
           //   : full;
         } else {
-          return ratio_to_string(to_compound_ratio(ratio), metavar_to_string_by_name);
+          return ratio_to_string(ratio, metavar_to_string_by_name);
         }
       }),
       HSpacing::sparse
@@ -535,6 +441,10 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
 };
 
 using LiraExpr = Linear<LiraExprParam>;
+
+LiraExpr LiraE(std::vector<RatioOrUnity> ratios) {
+  return LiraExpr::single(LiraParamOnes(std::move(ratios)));
+}
 
 
 int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
@@ -765,14 +675,13 @@ std::variant<const SplittingTree::Node*, std::array<int, 2>> find_central_node(
 
 RatioSubstitutionResult ratio_substitute(
     const RatioOrUnity& ratio,
-    SplittingTree* tree) {
+    const SplittingTree& tree) {
   if (ratio.is_unity()) {
     return ratio;
   }
   const auto& old_points = ratio.as_ratio().indices();
-  // TODO: Avoid converting to vector
   const auto central_node_or_bad_pair =
-    find_central_node(to_vector(sorted(old_points)), tree->root());
+    find_central_node(to_vector(sorted(old_points)), tree.root());
   return std::visit(overloaded{
     [&](const SplittingTree::Node* central_node) -> RatioSubstitutionResult {
       CHECK_GE(central_node->valency(), 4);
@@ -820,7 +729,7 @@ LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr) {
 
 LiraExpr lira_expr_substitute(
     const LiraExpr& expr,
-    SplittingTree* tree) {
+    const SplittingTree& tree) {
   return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
     std::vector<RatioOrUnity> new_ratios;
     for (const RatioOrUnity& ratio: formal_symbol.ratios()) {
@@ -936,8 +845,8 @@ public:
     absl::c_sort(points);
     CHECK_EQ(points.size(), num_distinct_elements(points)) << list_to_string(points);
     auto* node = splitting_tree_.node_for_points(points);
-    node->split(points, &splitting_tree_);
-    expr_ = lira_expr_substitute(orig_expr_, &splitting_tree_);
+    node->split(points, splitting_tree_);
+    expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);
     expr_ = without_unities(expr_);
     // expr_ = keep_distinct_ratios(expr_);
     // expr_ = keep_independent_ratios(expr_);
