@@ -1,5 +1,6 @@
 #include <iostream>
 #include <regex>
+#include <fstream>
 #include <sstream>
 
 #include "absl/debugging/failure_signal_handler.h"
@@ -910,6 +911,16 @@ int main(int argc, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     .set_expression_line_limit(FormattingConfig::kNoLineLimit)
   );
+
+
+  for (int num_points = 4; num_points <= 12; num_points += 2) {
+    std::fstream(absl::StrCat("output/LiQuad_", num_points, "_odd.txt"), std::ios::out)
+      << LiQuad(1, seq_incl(1, num_points), LiFirstPoint::odd);
+    std::fstream(absl::StrCat("output/LiQuad_", num_points, "_even.txt"), std::ios::out)
+      << LiQuad(1, seq_incl(1, num_points), LiFirstPoint::even);
+  }
+  return 0;
+
 
   const int num_points = 7;
   const int num_args = num_points / 2 - 1;
