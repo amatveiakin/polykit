@@ -49,7 +49,7 @@ enum ThetaPackType {
 
 
 inline std::string to_string(const ThetaComplement& complement) {
-  return fmt::parens("1 - " + to_string(complement.ratio()));
+  return fmt::parens(fmt::diff("1", to_string(complement.ratio())));
 }
 
 inline std::string to_string(const Theta& t) {

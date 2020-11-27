@@ -46,6 +46,32 @@ void CrossRatioTmpl<CrossRatioNormalization::rotation_only>::normalize() {
   normalize_loop(indices_);
 }
 
+std::string dependent_cross_ratio_formula(
+    CrossRatioN initial, const std::string& notation, CrossRatioN value) {
+  auto is_permutation = [&](std::array<int, 4> permutation) {
+    return permute(initial.indices(), permutation) == value.indices();
+  };
+  if (is_permutation({0,1,2,3})) {
+    return notation;
+  }
+  if (is_permutation({0,2,1,3})) {
+    return fmt::diff("1", notation);
+  }
+  if (is_permutation({0,3,2,1})) {
+    return fmt::frac("1", notation);
+  }
+  if (is_permutation({0,2,3,1})) {
+    return fmt::diff("1", fmt::frac("1", notation));
+  }
+  if (is_permutation({0,1,3,2})) {
+    return fmt::frac(notation, fmt::frac_parens(fmt::diff(notation, "1", HSpacing::dense)));
+  }
+  if (is_permutation({0,3,1,2})) {
+    return fmt::frac("1", fmt::frac_parens(fmt::diff("1", notation, HSpacing::dense)));
+  }
+  FATAL(absl::StrCat("Unknown permutation ", to_string(value), " of ", to_string(initial)));
+}
+
 
 CompoundRatio CompoundRatio::from_compressed(Decompressor& decompressor) {
   std::vector<std::vector<int>> loops;

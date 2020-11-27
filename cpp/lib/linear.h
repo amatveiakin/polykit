@@ -272,6 +272,7 @@ std::ostream& to_ostream(
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
+    // TODO: Support Unicode using "figure space" (U+2007); add separate option to disable if necessary
     if (*current_formatting_config().formatter != Formatter::unicode) {
       max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
     }

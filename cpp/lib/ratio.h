@@ -93,6 +93,9 @@ std::string to_string(const CrossRatioTmpl<Normalization>& ratio) {
   return fmt::brackets(str_join(ratio.indices(), ","));
 }
 
+std::string dependent_cross_ratio_formula(
+    CrossRatioN initial, const std::string& notation, CrossRatioN value);
+
 
 template<CrossRatioNormalization Normalization>
 class CrossRatioOrUnityTmpl {

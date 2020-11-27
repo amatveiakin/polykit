@@ -358,22 +358,11 @@ private:
 };
 
 
-std::string short_form_to_string_impl(const ShortFormRatio& tmpl, Ratio value) {
-  const std::string letter = tmpl.letter;
-  auto is_permutation = [&](std::array<int, 4> permutation) {
-    return permute(tmpl.normal_form.indices(), permutation) == value.indices();
-  };
-  if (is_permutation({0,1,2,3})) { return absl::Substitute("$0", letter); }
-  if (is_permutation({0,2,1,3})) { return absl::Substitute("1 - $0", letter); }
-  if (is_permutation({0,3,2,1})) { return absl::Substitute("1/$0", letter); }
-  if (is_permutation({0,2,3,1})) { return absl::Substitute("1 - 1/$0", letter); }
-  if (is_permutation({0,1,3,2})) { return absl::Substitute("$0/($0-1)", letter); }
-  if (is_permutation({0,3,1,2})) { return absl::Substitute("1/(1-$0)", letter); }
-  FATAL(absl::StrCat("Unknown permutation ", to_string(value), " of ", to_string(tmpl.normal_form)));
-}
-
 std::string short_form_to_string(const ShortFormRatio& tmpl, Ratio value) {
-  return fmt::colored(short_form_to_string_impl(tmpl, value), TextColor::bright_yellow);
+  return fmt::colored(
+    dependent_cross_ratio_formula(tmpl.normal_form, tmpl.letter, value),
+    TextColor::bright_yellow  // Idea: color should depend on the group element order
+  );
 }
 
 
@@ -911,15 +900,6 @@ int main(int argc, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     .set_expression_line_limit(FormattingConfig::kNoLineLimit)
   );
-
-
-  for (int num_points = 4; num_points <= 12; num_points += 2) {
-    std::fstream(absl::StrCat("output/LiQuad_", num_points, "_odd.txt"), std::ios::out)
-      << LiQuad(1, seq_incl(1, num_points), LiFirstPoint::odd);
-    std::fstream(absl::StrCat("output/LiQuad_", num_points, "_even.txt"), std::ios::out)
-      << LiQuad(1, seq_incl(1, num_points), LiFirstPoint::even);
-  }
-  return 0;
 
 
   const int num_points = 7;

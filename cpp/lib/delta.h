@@ -48,7 +48,7 @@ private:
 };
 
 inline std::string to_string(const Delta& d) {
-  // return fmt::parens(absl::StrCat(fmt::var(d.a()), " - ", fmt::var(d.b())));
+  // return fmt::parens(fmt::diff(fmt::var(d.a()), fmt::var(d.b())));
   return fmt::brackets(absl::StrCat(d.a(), ",", d.b()));
 }
 

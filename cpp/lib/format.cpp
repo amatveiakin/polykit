@@ -90,9 +90,13 @@ static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
 
 
 std::string AbstractFormatter::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
+std::string AbstractFormatter::minus() { return "-"; }
 
 std::string AbstractFormatter::sub_num(const std::string& main, const std::vector<int>& indices) {
   return sub(main, ints_to_strings(indices));
+}
+std::string AbstractFormatter::super_num(const std::string& main, const std::vector<int>& indices) {
+  return super(main, ints_to_strings(indices));
 }
 std::string AbstractFormatter::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
   return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
@@ -137,6 +141,18 @@ class AsciiFormatter : public AbstractFormatter {
   virtual std::string coprod_hopf() { return "  @  "; }
   virtual std::string comult() { return "&"; }
 
+  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+    const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
+    return absl::StrCat(lhs, spacing, "+", spacing, rhs);
+  }
+  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+    const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
+    return absl::StrCat(lhs, spacing, "-", spacing, rhs);
+  }
+  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+    return absl::StrCat(numerator, "/", denominator);
+  }
+
   virtual std::string box(const std::string& expr) {
     return absl::StrCat(expr, "\n");
   }
@@ -152,6 +168,9 @@ class AsciiFormatter : public AbstractFormatter {
   }
   virtual std::string chevrons(const std::string& expr) {
     return absl::StrCat("<", expr, ">");
+  }
+  virtual std::string frac_parens(const std::string& expr) {
+    return parens(expr);
   }
 
   virtual std::string coeff(int v) {
@@ -193,6 +212,15 @@ class AsciiFormatter : public AbstractFormatter {
     );
   }
 
+  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    return indices.empty()
+      ? main
+      : indices.size() == 1
+        ? absl::StrCat(main, indices.front())
+        : absl::StrCat(main, "^", str_join(indices, "^"));
+  }
+
   virtual std::string AbstractFormatter::var(int idx) {
     return absl::StrCat("x", idx);
   }
@@ -214,12 +242,25 @@ class UnicodeFormatter : public AbstractFormatter {
 
   virtual std::string inf() { return "∞"; }
   virtual std::string dot() { return "⋅"; }
+  virtual std::string minus() { return kMinusSign; }
   virtual std::string tensor_prod() { return "⊗"; }
   virtual std::string coprod_lie() { return hspace("∧"); }
   virtual std::string coprod_hopf() { return hspace("☒"); }
   virtual std::string comult() { return "△"; }
 
-  std::string hspace(const std::string& expr) {  // TODO: Consider promoting to AbstractFormatter
+  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+    const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
+    return absl::StrCat(lhs, spacing, "+", spacing, rhs);
+  }
+  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+    const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
+    return absl::StrCat(lhs, spacing, kMinusSign, spacing, rhs);
+  }
+  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+    return absl::StrCat(numerator, "/", denominator);
+  }
+
+  std::string hspace(const std::string& expr) {
     return absl::StrCat(kNbsp, expr, kNbsp);
   }
   virtual std::string box(const std::string& expr) {
@@ -239,6 +280,9 @@ class UnicodeFormatter : public AbstractFormatter {
   }
   virtual std::string chevrons(const std::string& expr) {
     return absl::StrCat("⟨", expr, "⟩");
+  }
+  virtual std::string frac_parens(const std::string& expr) {
+    return parens(expr);
   }
 
   // TODO: Check how well std::regex_replace actually supports unicode.
@@ -283,6 +327,23 @@ class UnicodeFormatter : public AbstractFormatter {
     }
     FATAL(absl::StrCat("There is no known subscript for '", std::string(1, ch), "'"));
   }
+  static std::string char_to_superscript(char ch) {
+    switch (ch) {
+      case '+': return "⁺";
+      case '-': return "⁻";
+      case '0': return "⁰";
+      case '1': return "¹";
+      case '2': return "²";
+      case '3': return "³";
+      case '4': return "⁴";
+      case '5': return "⁵";
+      case '6': return "⁶";
+      case '7': return "⁷";
+      case '8': return "⁸";
+      case '9': return "⁹";
+    }
+    FATAL(absl::StrCat("There is no known superscript for '", std::string(1, ch), "'"));
+  }
   static std::string string_to_subscript(const std::string& str) {
     CHECK_EQ(str.size(), 1) << str
       << "Unicode formatter doesn't support multi-character subscripts: there are "
@@ -293,6 +354,17 @@ class UnicodeFormatter : public AbstractFormatter {
     }
     return ret;
   }
+  static std::string string_to_superscript(const std::string& str) {
+    CHECK_EQ(str.size(), 1) << str
+      << "Unicode formatter doesn't support multi-character superscripts: there are "
+      << "no superscript commas in Unicode, so there is no way to separate the indices.";
+    std::string ret;
+    for (const char ch : str) {
+      ret += char_to_superscript(ch);
+    }
+    return ret;
+  }
+
   virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
     CHECK(!main.empty());
     return absl::StrCat(main, str_join(indices, "", string_to_subscript));
@@ -304,6 +376,11 @@ class UnicodeFormatter : public AbstractFormatter {
       main,
       str_join(right_indices, "", string_to_subscript)
     );
+  }
+
+  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    return absl::StrCat(main, str_join(indices, "", string_to_superscript));
   }
 
   virtual std::string AbstractFormatter::var(int idx) {
@@ -322,12 +399,21 @@ class UnicodeFormatter : public AbstractFormatter {
 class LatexFormatter : public AbstractFormatter {
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
   virtual std::string inf() { return "\\infty"; }
-  virtual std::string unity() { return chevrons("1"); }
   virtual std::string dot() { return ""; }
   virtual std::string tensor_prod() { return " \\otimes "; }
   virtual std::string coprod_lie() { return hspace("\\wedge"); }
   virtual std::string coprod_hopf() { return hspace("\\boxtimes"); }
   virtual std::string comult() { return " \\triangle "; }
+
+  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) {
+    return absl::StrCat(lhs, "+", rhs);
+  }
+  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing) {
+    return absl::StrCat(lhs, "-", rhs);
+  }
+  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+    return absl::StrCat("\\frac{", numerator, "}{", denominator, "}");
+  }
 
   std::string hspace(const std::string& expr) {
     return absl::StrCat("\\ ", expr, "\\ ");
@@ -348,6 +434,9 @@ class LatexFormatter : public AbstractFormatter {
   }
   virtual std::string chevrons(const std::string& expr) {
     return absl::StrCat("\\langle", expr, "\\rangle");
+  }
+  virtual std::string frac_parens(const std::string& expr) {
+    return expr;
   }
 
   virtual std::string coeff(int v) {
@@ -380,6 +469,11 @@ class LatexFormatter : public AbstractFormatter {
     );
   }
 
+  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+    CHECK(!main.empty());
+    return indices.empty() ? main : absl::StrCat(main, "^{", str_join(indices, ","), "}");
+  }
+
   virtual std::string AbstractFormatter::var(int idx) {
     return sub_num("x", {idx});
   }
@@ -392,14 +486,14 @@ class LatexFormatter : public AbstractFormatter {
   }
 
   virtual std::string begin_rich_text(const RichTextOptions& options) {
-    if (*current_formatting_config().rich_text_format == RichTextFormat::plain_text) {
+    if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
     // TODO: implement
     return {};
   }
   virtual std::string end_rich_text() {
-    if (*current_formatting_config().rich_text_format == RichTextFormat::plain_text) {
+    if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
     // TODO: implement

@@ -86,7 +86,11 @@ inline std::string to_string(const EpsilonComplement& complement) {
       index_list.push_back(i);
     }
   }
-  return fmt::parens("1 - " + str_join(index_list, fmt::dot(), fmt::var));
+  return fmt::parens(fmt::diff(
+    "1",
+    str_join(index_list, fmt::dot(), fmt::var),
+    HSpacing::sparse
+  ));
 }
 
 inline std::string to_string(const Epsilon& e) {

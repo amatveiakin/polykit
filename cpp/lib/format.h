@@ -16,10 +16,20 @@ enum class Formatter {  // TODO: Rename to `encoder` (?)
   latex,
 };
 
-// Ignored by LaTeX formatter, except for `plain_text`.
+// `plain_text` always disables rich text formatting. Otherwise the
+// support is as follows:
+//
+//           |  Native    Console     HTML
+// ----------+------------------------------
+//   ASCII   |   no         YES       TBD
+//  Unicode  |   no         YES       TBD
+//   LaTeX   |   TBD        no        no
+//
+// If an option is not supported, the fallback is always `plain_text`.
+//
 enum class RichTextFormat {
   native,
-  plain_text,  // disables all rich text options
+  plain_text,
   console,
   html,
 };
@@ -104,11 +114,26 @@ public:
 
   virtual std::string inf() = 0;
   virtual std::string unity();
+  virtual std::string minus();
   virtual std::string dot() = 0;
   virtual std::string tensor_prod() = 0;
   virtual std::string coprod_lie() = 0;
   virtual std::string coprod_hopf() = 0;
   virtual std::string comult() = 0;
+
+  virtual std::string sum(
+      const std::string& lhs,
+      const std::string& rhs,
+      HSpacing hspacing) = 0;
+  virtual std::string diff(
+      const std::string& lhs,
+      const std::string& rhs,
+      HSpacing hspacing) = 0;
+  virtual std::string frac(
+      const std::string& numerator,
+      const std::string& denominator) = 0;
+  // Note: there is no function for product. Simply use an str_join
+  // with one of the product signs above.
 
   virtual std::string box(const std::string& expr) = 0;
 
@@ -116,6 +141,7 @@ public:
   virtual std::string brackets(const std::string& expr) = 0;
   virtual std::string braces(const std::string& expr) = 0;
   virtual std::string chevrons(const std::string& expr) = 0;
+  virtual std::string frac_parens(const std::string& expr) = 0;  // adds parens iff `fraq` is one-liner
 
   virtual std::string coeff(int v) = 0;
 
@@ -133,6 +159,13 @@ public:
       int left_index,
       const std::string& main,
       const std::vector<int>& right_indices);
+
+  virtual std::string super(
+      const std::string& main,
+      const std::vector<std::string>& indices) = 0;
+  virtual std::string super_num(
+      const std::string& main,
+      const std::vector<int>& indices);
 
   virtual std::string var(int idx) = 0;
   virtual std::string function(
@@ -162,15 +195,35 @@ namespace fmt {
 
 inline std::string inf() { return current_formatter()->inf(); }
 inline std::string unity() { return current_formatter()->unity(); }
+inline std::string minus() { return current_formatter()->minus(); }
 inline std::string dot() { return current_formatter()->dot(); }
 inline std::string tensor_prod() { return current_formatter()->tensor_prod(); }
 inline std::string coprod_lie() { return current_formatter()->coprod_lie(); }
 inline std::string coprod_hopf() { return current_formatter()->coprod_hopf(); }
 inline std::string comult() { return current_formatter()->comult(); }
 
+inline std::string sum(
+    const std::string& lhs,
+    const std::string& rhs,
+    HSpacing hspacing = HSpacing::sparse) {
+  return current_formatter()->sum(lhs, rhs, hspacing);
+}
+inline std::string diff(
+    const std::string& lhs,
+    const std::string& rhs,
+    HSpacing hspacing = HSpacing::sparse) {
+  return current_formatter()->diff(lhs, rhs, hspacing);
+}
+inline std::string frac(
+    const std::string& numerator,
+    const std::string& denominator) {
+  return current_formatter()->frac(numerator, denominator);
+}
+
 inline std::string box(const std::string& expr) {
   return current_formatter()->box(expr);
 }
+
 inline std::string parens(const std::string& expr) {
   return current_formatter()->parens(expr);
 }
@@ -182,6 +235,9 @@ inline std::string braces(const std::string& expr) {
 }
 inline std::string chevrons(const std::string& expr) {
   return current_formatter()->chevrons(expr);
+}
+inline std::string frac_parens(const std::string& expr) {
+  return current_formatter()->frac_parens(expr);
 }
 
 inline std::string coeff(int v) {
@@ -209,6 +265,17 @@ inline std::string lrsub_num(
     const std::string& main,
     const std::vector<int>& right_indices) {
   return current_formatter()->lrsub_num(left_index, main, right_indices);
+}
+
+inline std::string super(
+    const std::string& main,
+    const std::vector<std::string>& indices) {
+  return current_formatter()->super(main, indices);
+}
+inline std::string super_num(
+    const std::string& main,
+    const std::vector<int>& indices) {
+  return current_formatter()->super_num(main, indices);
 }
 
 inline std::string var(int idx) {
