@@ -221,7 +221,7 @@ class AsciiFormatter : public AbstractFormatter {
         : absl::StrCat(main, "^", str_join(indices, "^"));
   }
 
-  virtual std::string AbstractFormatter::var(int idx) {
+  virtual std::string var(int idx) {
     return absl::StrCat("x", idx);
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
@@ -383,7 +383,7 @@ class UnicodeFormatter : public AbstractFormatter {
     return absl::StrCat(main, str_join(indices, "", string_to_superscript));
   }
 
-  virtual std::string AbstractFormatter::var(int idx) {
+  virtual std::string var(int idx) {
     return sub_num("x", {idx});
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
@@ -474,7 +474,7 @@ class LatexFormatter : public AbstractFormatter {
     return indices.empty() ? main : absl::StrCat(main, "^{", str_join(indices, ","), "}");
   }
 
-  virtual std::string AbstractFormatter::var(int idx) {
+  virtual std::string var(int idx) {
     return sub_num("x", {idx});
   }
   virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) {

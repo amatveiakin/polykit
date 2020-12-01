@@ -23,7 +23,7 @@ public:
     return x;
   }
 
-  constexpr int var() const {
+  int var() const {
     CHECK_LE(idx_, kMaxVariableIndex);
     return idx_;
   }

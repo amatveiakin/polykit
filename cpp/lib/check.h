@@ -31,8 +31,8 @@ struct CheckResult {
   CheckResult(bool ok_arg) : ok(ok_arg) {}
   CheckResult(const CheckResult&) = delete;
   CheckResult& operator=(const CheckResult&) = delete;
-  CheckResult(CheckResult&&) = default;
-  CheckResult& operator=(CheckResult&&) = default;
+  CheckResult(CheckResult&&) = delete;
+  CheckResult& operator=(CheckResult&&) = delete;
   ~CheckResult() {
     if (ABSL_PREDICT_FALSE(!ok)) {
       std::cerr << std::endl;

@@ -125,7 +125,7 @@ std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& i
   return ret;
 }
 
-template<typename T, int N, int M>
+template<typename T, size_t N, size_t M>
 std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int, M>& indices) {
   std::array<T, M> ret;
   for (int i = 0; i < indices.size(); ++i) {
@@ -134,7 +134,7 @@ std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int,
   return ret;
 }
 
-template<typename T, int N>
+template<typename T, size_t N>
 std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& indices) {
   return choose_indices(v, indices);
 }
@@ -151,7 +151,7 @@ auto mapped(const std::vector<In>& src, F&& func) {
   return mapped(absl::MakeConstSpan(src), std::forward<F>(func));
 }
 
-template<typename In, int N, typename F>
+template<typename In, size_t N, typename F>
 auto mapped_array(const std::array<In, N>& src, F&& func) {
   std::array<std::invoke_result_t<F, In>, N> dst;
   absl::c_transform(src, dst.begin(), func);
@@ -225,7 +225,7 @@ int num_distinct_elements(Container v) {
   return std::unique(v.begin(), v.end()) - v.begin();
 }
 
-template<int N, typename T>
+template<size_t N, typename T>
 std::array<T, N> to_array(std::vector<T> v) {
   CHECK_EQ(v.size(), N);
   std::array<T, N> ret;
@@ -233,7 +233,7 @@ std::array<T, N> to_array(std::vector<T> v) {
   return ret;
 }
 
-template<typename T, int N>
+template<typename T, size_t N>
 std::vector<T> to_vector(std::array<T, N> v) {
   std::vector<T> ret;
   absl::c_move(v, std::back_inserter(ret));

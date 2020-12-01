@@ -109,7 +109,10 @@ std::string ratio_to_string(const RatioOrUnity& r, const MetaVarPrinter& metavar
 
 class IllegalTreeCutException : public std::exception {
 public:
-  IllegalTreeCutException(const std::string& what) : std::exception(what.c_str()) {}
+  IllegalTreeCutException(std::string msg) : msg_(msg) {}
+  const char* what() const noexcept override { return msg_.c_str(); }
+private:
+  std::string msg_;
 };
 
 struct ShortFormRatio {

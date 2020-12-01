@@ -13,7 +13,7 @@
 struct CorrFSymb {
   CorrFSymb() {}
   CorrFSymb(std::vector<int> points_arg)
-    : points(std::move(lexicographically_minimal_rotation(points_arg))) {}
+    : points(lexicographically_minimal_rotation(points_arg)) {}
 
   std::vector<int> points;
 

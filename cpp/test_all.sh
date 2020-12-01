@@ -1,1 +1,1 @@
-bazel test --config=clang --test_output=errors :polylog_lib_test
+bazel test --config=clang --test_output=errors :all_tests

@@ -78,7 +78,6 @@ static ResultT Lido_generic_wrapper(
     CHECK_GE(weight, 1);
     return weight == 1 ? projector(D(points[0], points[1])) : ResultT{};
   }
-  const int num_points = points.size();
   std::vector<Point> tagged_points;
   for (int i = 0; i < points.size(); ++i) {
     tagged_points.push_back({points[i].var(), (i+1) % 2 == 1});
