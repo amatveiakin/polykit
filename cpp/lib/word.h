@@ -40,7 +40,7 @@ public:
     }
     // std::copy(src_begin, src_end, begin());
   }
-  Word(std::initializer_list<int> data)
+  explicit Word(std::initializer_list<int> data)
     : Word(data.begin(), data.end()) {}
   explicit Word(absl::Span<const int> data)
     : Word(data.begin(), data.end()) {}
@@ -81,8 +81,11 @@ public:
   DataT::const_iterator begin() const { return data_.begin() + kDataStart; }
   DataT::const_iterator end() const { return begin() + size(); }
 
+  const unsigned char* data() const {
+    return data_.data() + kDataStart;
+  }
   absl::Span<const unsigned char> span() const {
-    return absl::Span(data_.data() + kDataStart, size());
+    return absl::Span(data(), size());
   }
 
   bool operator==(const Word& other) const {

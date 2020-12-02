@@ -8,16 +8,17 @@
 
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 // Such split always exists and is unique (Chen–Fox–Lyndon theorem).
-inline std::vector<Word> lyndon_factorize(const Word& word) {
+template<typename Container>
+inline std::vector<Container> lyndon_factorize(const Container& word) {
   const int n = word.size();
   int start = 0;
   int k = start;
   int m = start + 1;
-  std::vector<Word> ret;
+  std::vector<Container> ret;
   while (k < n) {
     if (m >= n || word[k] > word[m]) {
       const int l = m - k;
-      ret.push_back(Word(word.begin() + start, word.begin() + start + l));
+      ret.push_back(Container(word.begin() + start, word.begin() + start + l));
       start += l;
       k = start;
       m = start + 1;
@@ -30,7 +31,7 @@ inline std::vector<Word> lyndon_factorize(const Word& word) {
     }
   }
   if (start < n) {
-    ret.push_back(Word(word.begin() + start, word.end()));
+    ret.push_back(Container(word.begin() + start, word.end()));
   }
   return ret;
 }
@@ -43,14 +44,13 @@ inline std::vector<Word> lyndon_factorize(const Word& word) {
 //   Thus avoid processing the same Lyndon word twice.
 template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
-  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
   bool finished = false;
   LinearT expr = expression.without_annotations()
       .mapped_key(LinearT::Param::shuffle_preprocess);
   while (!finished) {
     LinearT expr_new;
     finished = true;
-    expr.foreach_key([&](const Word& word_orig, int coeff) {
+    expr.foreach_key([&](const auto& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
       CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
@@ -63,7 +63,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
       lyndon_expr.foreach_key([&denominator](const auto&, int coeff) {
         denominator *= factorial(coeff);
       });
-      LinearT shuffle_expr = shuffle_product(lyndon_words).cast_to<LinearT>();
+      LinearT shuffle_expr = shuffle_product<LinearT>(lyndon_words);
       shuffle_expr.div_int(denominator);
       CHECK_EQ(shuffle_expr.coeff_for_key(word_orig), 1);
       shuffle_expr.add_to_key(word_orig, -1);

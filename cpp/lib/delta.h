@@ -7,6 +7,7 @@
 #include "check.h"
 #include "format.h"
 #include "linear.h"
+#include "packed.h"
 #include "util.h"
 #include "word.h"
 #include "x.h"
@@ -85,23 +86,21 @@ private:
   std::vector<Delta> deltas_;
 };
 
-// TODO: Consider replacing with 4 bit + 4 bit mapping
+// TODO: Consider replacing with PArray<uint4_t, 2>
 extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
 namespace internal {
 struct DeltaExprParam {
   using ObjectT = std::vector<Delta>;
-  using StorageT = Word;
+  using StorageT = PVector<unsigned char, 10>;
   static StorageT object_to_key(const ObjectT& obj) {
-    Word ret;
-    for (const Delta& d : obj) {
-      ret.push_back(delta_alphabet_mapping.to_alphabet(d));
-    }
-    return ret;
+    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) -> unsigned char {
+      return delta_alphabet_mapping.to_alphabet(d);
+    });
   }
   static ObjectT key_to_object(const StorageT& key) {
-    return mapped(key.span(), [](int ch){
+    return mapped(key, [](int ch) {
       return delta_alphabet_mapping.from_alphabet(ch);
     });
   }
@@ -109,7 +108,7 @@ struct DeltaExprParam {
     return str_join(obj, fmt::tensor_prod());
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
-    return concat_words(lhs, rhs);
+    return concat(lhs, rhs);
   }
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();

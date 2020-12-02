@@ -67,23 +67,28 @@ public:
   MultiWord() {
     data_.fill(0);
   }
-  MultiWord(std::vector<std::vector<unsigned char>> segments) : MultiWord() {
-    for (const auto& s : segments) {
-      append_segment(s);
-    }
+  MultiWord(absl::Span<const std::vector<unsigned char>> segments) : MultiWord() {
+    for (const auto& s : segments) { append_segment(s); }
+  }
+  MultiWord(absl::Span<const absl::Span<const unsigned char>> segments) : MultiWord() {
+    for (const auto& s : segments) { append_segment(s); }
+  }
+  MultiWord(absl::Span<const absl::Span<const int>> segments) : MultiWord() {
+    for (const auto& s : segments) { append_segment(s); }
+  }
+  MultiWord(std::initializer_list<std::initializer_list<int>> segments) : MultiWord() {
+    for (const auto& s : segments) { append_segment(s); }
   }
 
   bool empty() const { return num_segments() == 0; }
   int num_segments() const { return data_[0]; }
+  int size() const { return num_segments(); }
 
   void append_segment(const absl::Span<const unsigned char>& w) {
-    const int segment_idx = num_segments();
-    write_num_segments(segment_idx + 1);
-    const int segment_start = get_segment_start(segment_idx);
-    const int segment_end = segment_start + w.size();
-    CHECK_LT(segment_end, kMultiWordStorageSize);
-    data_[kSegmentInfoStart + segment_idx] = segment_end;
-    std::copy(w.begin(), w.end(), data_.begin() + segment_start);
+    append_segment_impl(w);
+  }
+  void append_segment(const absl::Span<const int>& w) {
+    append_segment_impl(w);
   }
   void append_segment(const Word& w) {
     append_segment(w.span());
@@ -95,6 +100,7 @@ public:
     const int end = data_[kSegmentInfoStart + idx];
     return absl::MakeConstSpan(data_).subspan(start, end - start);
   }
+  SegmentRef operator[](int idx) const { return segment(idx); }
 
   const_iterator begin() const {
     return const_iterator(this, 0);
@@ -126,6 +132,17 @@ private:
   }
   int get_segment_start(int idx) const {
     return idx == 0 ? kDataStart : data_[kSegmentInfoStart + idx - 1];
+  }
+
+  template<typename T>
+  void append_segment_impl(const absl::Span<const T>& w) {
+    const int segment_idx = num_segments();
+    write_num_segments(segment_idx + 1);
+    const int segment_start = get_segment_start(segment_idx);
+    const int segment_end = segment_start + w.size();
+    CHECK_LT(segment_end, kMultiWordStorageSize);
+    data_[kSegmentInfoStart + segment_idx] = segment_end;
+    std::copy(w.begin(), w.end(), data_.begin() + segment_start);
   }
 
   // Data model

@@ -8,7 +8,7 @@
 
 TEST(ShuffleProductTest, ThreeExpressions) {
   EXPECT_EXPR_EQ(
-    shuffle_product({
+    shuffle_product<WordExpr, Word>({  // TODO: Avoid specifying monom type
       Word{0, 1, 0},
       Word{1, 0},
       Word{1 },

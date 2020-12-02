@@ -1,6 +1,7 @@
 #pragma once
 
 #include "absl/algorithm/container.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 
 #include "check.h"
@@ -72,8 +73,8 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
-template<typename T>
-std::vector<T> concat(std::vector<T> a, std::vector<T> b) {
+template<typename Container>
+Container concat(Container a, Container b) {
   a.insert(a.end(), std::move_iterator(b.begin()), std::move_iterator(b.end()));
   return a;
 }
@@ -139,16 +140,11 @@ std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& in
   return choose_indices(v, indices);
 }
 
-template<typename In, typename F>
-auto mapped(const absl::Span<const In>& src, F&& func) {
-  std::vector<std::invoke_result_t<F, In>> dst(src.size());
-  absl::c_transform(src, dst.begin(), func);
+template<typename Src, typename F>
+auto mapped(const Src& src, F&& func) {
+  std::vector<std::invoke_result_t<F, typename Src::value_type>> dst(src.size());
+  absl::c_transform(src, dst.begin(), std::forward<F>(func));
   return dst;
-}
-
-template<typename In, typename F>
-auto mapped(const std::vector<In>& src, F&& func) {
-  return mapped(absl::MakeConstSpan(src), std::forward<F>(func));
 }
 
 template<typename In, size_t N, typename F>

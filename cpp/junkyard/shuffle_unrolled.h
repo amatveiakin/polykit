@@ -3,7 +3,9 @@
 #include "word.h"
 
 
-#define UNROLL_SHUFFLE
+// TODO: Template version (limit to shorter words to reduce compilation time)
+//   OR explicitly instantiate frequent types in .cpp
+// #define UNROLL_SHUFFLE
 
 // Gives a small boost to shuffle (and thus Lyndon) speed,
 // but increases compilation time.

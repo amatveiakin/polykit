@@ -17,6 +17,7 @@
 #include "lib/lexicographical.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
+#include "lib/packed.h"
 #include "lib/polylog.h"
 #include "lib/polylog_cross_ratio.h"
 #include "lib/polylog_quadrangle.h"
@@ -895,7 +896,34 @@ int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
-  Profiler profiler;
+
+  unsigned int checksum = 0;
+  for (int iter = 0; iter < 5; ++iter) {
+    Profiler profiler;
+    DeltaExpr expr1 = Lido6(1,2,3,4,5,6,7,8,9,10);
+    profiler.finish("expr");
+    // DeltaExpr expr2 = to_lyndon_basis(Lido6(1,2,3,4,5,6));
+    // profiler.finish("lyndon");
+    // DeltaCoExpr expr3 = comultiply<DeltaCoExpr>(expr1, {3,3});
+    // profiler.finish("comultiply");
+    checksum += expr1.l1_norm();
+    // checksum += expr2.l1_norm();
+    // checksum += expr3.l1_norm();
+  }
+  std::cout << "\n";
+  std::cout << "checksum: " << checksum << "\n";
+
+
+  // std::cout << absl::InlinedVector<char, 5>().capacity() << "\n";
+  // std::cout << PVector<char, 5>().capacity() << "\n";
+  // std::cout << sizeof(PVector<char, 5>) << "\n";
+
+  return 0;
+
+
+
+
+
 
   ScopedFormatting sf(FormattingConfig()
     .set_formatter(Formatter::unicode)

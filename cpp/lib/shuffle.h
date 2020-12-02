@@ -12,10 +12,54 @@
 //   1 ⧢ v = v
 //   u ⧢ 1 = u
 //   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
-WordExpr shuffle_product(const Word& u, const Word& v);
+template<typename LinearT, typename MonomT>
+LinearT shuffle_product(const MonomT& u, const MonomT& v) {
+  if (u.empty() && v.empty()) {
+    return {};
+  }
+  if (u.empty()) {
+    return LinearT::single_key(v);
+  }
+  if (v.empty()) {
+    return LinearT::single_key(u);
+  }
+  // TODO: unrolling
+  const auto a = u.back();
+  const auto b = v.back();
+  MonomT u_trunc = u;
+  MonomT v_trunc = v;
+  u_trunc.pop_back();
+  v_trunc.pop_back();
+  LinearT ret;
+  shuffle_product<LinearT>(u, v_trunc).foreach_key([&](MonomT w, int coeff) {
+    w.push_back(b);
+    ret.add_to_key(w, coeff);
+  });
+  shuffle_product<LinearT>(u_trunc, v).foreach_key([&](MonomT w, int coeff) {
+    w.push_back(a);
+    ret.add_to_key(w, coeff);
+  });
+  return ret;
+}
 
 // Returns  w1 ⧢ w2 ⧢ ... ⧢ wn
-WordExpr shuffle_product(std::vector<Word> words);
+template<typename LinearT, typename MonomT>
+LinearT shuffle_product(std::vector<MonomT> words) {
+  if (words.size() == 0) {
+    return {};
+  } else if (words.size() == 1) {
+    return LinearT::single_key(words[0]);
+  } else if (words.size() == 2) {
+    return shuffle_product<LinearT>(words[0], words[1]);
+  } else {
+    MonomT w_tail = words.back();
+    words.pop_back();
+    const LinearT shuffle_product_head = shuffle_product<LinearT>(words);
+    return shuffle_product_head.mapped_key_expanding([&](MonomT w_head) {
+      return shuffle_product<LinearT>(w_head, w_tail);
+    });
+  }
+}
 
 
 template<typename LinearT>
@@ -25,7 +69,7 @@ LinearT shuffle_product_expr(
   return outer_product_expanding<LinearT>(
     lhs.mapped_key(LinearT::Param::shuffle_preprocess),
     rhs.mapped_key(LinearT::Param::shuffle_preprocess),
-    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product),
+    [](const auto& u, const auto& v) { return shuffle_product<LinearT>(u, v); },
     AnnFunction("shuffle")
   ).mapped_key(LinearT::Param::shuffle_postprocess);
 }
@@ -39,7 +83,7 @@ LinearT shuffle_product_expr(
         return expr.mapped_key(LinearT::Param::shuffle_preprocess);
       })
     ),
-    static_cast<WordExpr (*)(const Word&, const Word&)>(shuffle_product),
+    [](const auto& u, const auto& v) { return shuffle_product<LinearT>(u, v); },
     AnnFunction("shuffle")
   ).mapped_key(LinearT::Param::shuffle_postprocess);
 }

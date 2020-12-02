@@ -43,8 +43,8 @@ DeltaExpr delta_expr_substitute(
     }
   }
   DeltaExpr ret;
-  expr.foreach_key([&](const Word& term_old, int coeff) {
-    Word term_new;
+  expr.foreach_key([&](const DeltaExpr::StorageT& term_old, int coeff) {
+    DeltaExpr::StorageT term_new;
     for (unsigned char ch : term_old) {
       unsigned char ch_new = replacements.at(ch);
       CHECK(ch_new != kNoReplacement);

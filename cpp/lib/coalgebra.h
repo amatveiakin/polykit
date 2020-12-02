@@ -28,20 +28,13 @@ struct WordCoExprParam : SimpleLinearParam<MultiWord> {
 
 struct DeltaCoExprParam {
   using ObjectT = std::vector<std::vector<Delta>>;
-  using StorageT = MultiWord;
+  using PartStorageT = DeltaExprParam::StorageT;
+  using StorageT = PVector<PartStorageT, 2>;
   static StorageT object_to_key(const ObjectT& obj) {
-    MultiWord ret;
-    for (const std::vector<Delta>& deltas : obj) {
-      ret.append_segment(DeltaExprParam::object_to_key(deltas));
-    }
-    return ret;
+    return mapped_to_pvector<StorageT>(obj, DeltaExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
-    std::vector<std::vector<Delta>> ret;
-    for (auto it = key.begin(); it != key.end(); ++it) {
-      ret.push_back(DeltaExprParam::key_to_object(Word(*it)));
-    }
-    return ret;
+    return mapped(key, DeltaExprParam::key_to_object);
   }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
@@ -97,19 +90,15 @@ using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
 template<typename CoExprT, typename ExprT>
 CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
-  static_assert(std::is_same_v<typename ExprT::StorageT, Word>);
-  static_assert(std::is_same_v<typename CoExprT::StorageT, MultiWord>);
+  using CoMonomT = typename CoExprT::StorageT;
   constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
   const auto& lhs_fixed = is_lie_algebra ? to_lyndon_basis(lhs) : lhs;
   const auto& rhs_fixed = is_lie_algebra ? to_lyndon_basis(rhs) : rhs;
   auto ret = outer_product<CoExprT>(
     lhs_fixed,
     rhs_fixed,
-    [](const Word& u, const Word& v) {
-      MultiWord prod;
-      prod.append_segment(u);
-      prod.append_segment(v);
-      return prod;
+    [](const auto& u, const auto& v) {
+      return CoMonomT({u, v});
     },
     AnnOperator(is_lie_algebra ? fmt::coprod_lie() : fmt::coprod_hopf())
   );
@@ -131,32 +120,27 @@ inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
 // TODO: Should this be exposed publicly?
 template<typename CoExprT>
 CoExprT normalize_coproduct(const CoExprT& expr) {
-  static_assert(std::is_same_v<typename CoExprT::StorageT, MultiWord>);
   CHECK(CoExprT::Param::coproduct_is_lie_algebra);
+  using CoMonomT = typename CoExprT::StorageT;
   CoExprT ret;
-  expr.foreach_key([&](const MultiWord& key, int coeff) {
-    CHECK_EQ(key.num_segments(), 2);
-    const auto& key1 = key.segment(0);
-    const auto& key2 = key.segment(1);
+  // TODO: Rewrite using add_to_key
+  expr.foreach_key([&](const auto& key, int coeff) {
+    CHECK_EQ(key.size(), 2);
+    const auto& key1 = key[0];
+    const auto& key2 = key[1];
     if (key1.size() == key2.size()) {
       if (key1 == key2) {
         // zero: through away
       } else if (key1 < key2) {
         ret += coeff * CoExprT::single_key(key);
       } else {
-        MultiWord key_swapped;
-        key_swapped.append_segment(key2);
-        key_swapped.append_segment(key1);
-        ret -= coeff * CoExprT::single_key(key_swapped);
+        ret -= coeff * CoExprT::single_key(CoMonomT({key2, key1}));
       }
     } else {
       if (key1.size() < key2.size()) {
         ret += coeff * CoExprT::single_key(key);
       } else {
-        MultiWord key_swapped;
-        key_swapped.append_segment(key2);
-        key_swapped.append_segment(key1);
-        ret -= coeff * CoExprT::single_key(key_swapped);
+        ret -= coeff * CoExprT::single_key(CoMonomT({key2, key1}));
       }
     }
   });
@@ -176,19 +160,22 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   CHECK_EQ(form.first + form.second, weight);
   sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
 
+  using MonomT = typename ExprT::StorageT;
+  // TODO: Rewrite using mapped_expanding
   CoExprT ret;
-  expr.foreach_key([&](const Word& word, int coeff) {
+  expr.foreach_key([&](const MonomT& word, int coeff) {
     CHECK_EQ(word.size(), weight);
+    const auto span = absl::MakeConstSpan(word);
     const int split = form.first;
     ret += coeff * coproduct<CoExprT>(
-      to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(0, split)))),
-      to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split))))
+      to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(0, split)))),
+      to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(split))))
     );
     if (form.first != form.second) {
       const int split = form.second;
       ret -= coeff * coproduct<CoExprT>(
-        to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(split)))),
-        to_lyndon_basis(ExprT::single_key(Word(word.span().subspan(0, split))))
+        to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(split)))),
+        to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(0, split))))
       );
     }
   });
