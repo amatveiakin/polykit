@@ -177,10 +177,12 @@ public:
       const std::vector<int>& indices,
       HSpacing hspacing) = 0;
 
+  // TODO: CHECK conditions below.
   // Usage:
   //   * Each begin_rich_text call must be followed by exactly one end_rich_text call.
   //   * Calls to begin_rich_text/end_rich_text can be nested, e.g. begin, begin, end, end.
   //   * RichTextFormat must stay the same as long as there are open rich text segments.
+  //   * Formatter must stay the same as long as there are open rich text segments.
   // Warning: Never write `absl::StrCat(begin_rich_text, ..., end_rich_text)`,
   // as function parameter evaluation order is unspecified in C++. In contrast,
   // `begin_rich_text + ... + end_rich_text` is fine (since C++17).

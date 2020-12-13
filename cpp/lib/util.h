@@ -45,7 +45,7 @@ inline int factorial(int n) {
 
 template<typename T>
 void sort_two(T& a, T& b) {
-  if (a > b) {
+  if (b < a) {
     std::swap(a, b);
   }
 }

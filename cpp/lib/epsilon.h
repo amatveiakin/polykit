@@ -6,19 +6,20 @@
 
 #include "bit.h"
 #include "check.h"
+#include "packed.h"
 #include "polylog_param.h"
 #include "word.h"
 
 
-using EpsilonStorageType = unsigned char;
-
+// TODO: Move to internal (except max_variables)
 constexpr int kEpsilonControlBits = 1;
 constexpr int kEpsilonDataBits = 7;
+constexpr int kEpsilonTotalBits = kEpsilonControlBits + kEpsilonDataBits;
 constexpr int kMaxComplementVariables = kEpsilonDataBits;
 
-static_assert(
-  kEpsilonControlBits + kEpsilonDataBits <=  // 1 for the type bit
-  sizeof(EpsilonStorageType) * CHAR_BIT);
+static_assert(kEpsilonTotalBits <= sizeof(unsigned long) * CHAR_BIT);  // for std::bitset::to_ulong
+
+using EpsilonStorageType = std::bitset<kEpsilonTotalBits>;
 
 
 // Represents x_k
@@ -32,9 +33,8 @@ public:
   bool is_valid() const { return 1 <= idx_ && idx_ < (1 << kEpsilonDataBits); }
   int idx() const { return idx_; }
 
-  bool operator==(const EpsilonVariable& other) const {
-    return idx_ == other.idx_;
-  }
+  bool operator==(const EpsilonVariable& other) const { return idx_ == other.idx_; }
+  bool operator< (const EpsilonVariable& other) const { return idx_ <  other.idx_; }
 
 private:
   int idx_ = 0;
@@ -51,9 +51,8 @@ public:
   bool is_valid() const { return indices_.any(); }
   const std::bitset<kMaxComplementVariables>& indices() const { return indices_; }
 
-  bool operator==(const EpsilonComplement& other) const {
-    return indices_ == other.indices_;
-  }
+  bool operator==(const EpsilonComplement& other) const { return indices_ == other.indices_; }
+  bool operator< (const EpsilonComplement& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
 
 private:
   // TODO: Convert to 0-based and back.
@@ -108,6 +107,8 @@ inline std::string to_string(const EpsilonPack& pack) {
   }, pack);
 }
 
+#define OLD_EPSILON 0  // TODO: Make new EpsilonExpr performace comparable.
+#if OLD_EPSILON
 namespace internal {
 constexpr int kEpsilonTypeBit = kEpsilonDataBits;
 
@@ -226,6 +227,98 @@ struct EpsilonExprParam {
   }
 };
 }  // namespace internal
+#else
+
+namespace internal {
+constexpr int kEpsilonTypeBit = kEpsilonDataBits;
+
+constexpr int kEpsilonTypeVariable = 0;
+constexpr int kEpsilonTypeComplement = 1;
+
+inline EpsilonStorageType epsilon_to_key(const Epsilon& e) {
+  return std::visit(overloaded{
+    [](const EpsilonVariable& var) {
+      EpsilonStorageType ret;
+      ret.set(var.idx(), 1);
+      CHECK(ret[kEpsilonTypeBit] == static_cast<bool>(0));
+      ret[kEpsilonTypeBit] = kEpsilonTypeVariable;
+      return ret;
+    },
+    [](const EpsilonComplement& complement) {
+      EpsilonStorageType ret = convert_bitset<kEpsilonTotalBits>(complement.indices());
+      CHECK(ret[kEpsilonTypeBit] == static_cast<bool>(0));
+      ret[kEpsilonTypeBit] = kEpsilonTypeComplement;
+      return ret;
+    },
+  }, e);
+}
+
+inline Epsilon key_to_epsilon(EpsilonStorageType key) {
+  const int type = key[kEpsilonTypeBit];
+  key[kEpsilonTypeBit] = 0;
+  if (type == kEpsilonTypeVariable) {
+    return EpsilonVariable(which_power_of_two(key.to_ulong()));
+  } else if (type == kEpsilonTypeComplement) {
+    return EpsilonComplement(convert_bitset<kMaxComplementVariables>(key));
+  } else {
+    FATAL(absl::StrCat("Bad Epsilon type: ", type));
+  }
+}
+
+struct EpsilonExprParam {
+  using ObjectT = EpsilonPack;
+  using ProductT = PVector<EpsilonStorageType, 8>;
+  // Optimization potential: pack LiParam as well.
+  using StorageT = std::variant<ProductT, LiParam>;
+  using VectorT = ProductT;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return std::visit(overloaded{
+      [](const std::vector<Epsilon>& product) -> StorageT {
+        return mapped_to_pvector<ProductT>(product, epsilon_to_key);
+      },
+      [](const LiParam& formal_symbol) -> StorageT {
+        return formal_symbol;
+      },
+    }, obj);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return std::visit(overloaded{
+      [](const ProductT& product) -> ObjectT {
+        return mapped(product, key_to_epsilon);
+      },
+      [](const LiParam& formal_symbol) -> ObjectT {
+        return formal_symbol;
+      },
+    }, key);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return to_string(obj);
+  }
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    CHECK(std::holds_alternative<ProductT>(lhs) && std::holds_alternative<ProductT>(rhs))
+        << "Tensor product for formal symbols is not defined";
+    return concat(std::get<ProductT>(lhs), std::get<ProductT>(rhs));
+  }
+  static int object_to_weight(const ObjectT& obj) {
+    return std::visit(overloaded{
+      [](const std::vector<Epsilon>& product) -> int {
+        return product.size();
+      },
+      [](const LiParam& formal_symbol) -> int {
+        return formal_symbol.total_weight();
+      },
+    }, obj);
+  }
+  static VectorT key_to_vector(const StorageT& key) {
+    CHECK(std::holds_alternative<ProductT>(key)) << "Vector form is not defined for formal symbols";
+    return std::get<ProductT>(key);
+  }
+  static StorageT vector_to_key(const VectorT& vec) {
+    return vec;
+  }
+};
+}  // namespace internal
+#endif
 
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 
@@ -278,11 +371,6 @@ inline EpsilonExpr EFormalSymbolSigned(const LiParam& li_param) {
   return li_param.sign() * EFormalSymbolPositive(li_param);
 }
 
-
-// Optimization potential: make sure sorting always happens in key space.
-inline bool operator<(const Epsilon& lhs, const Epsilon& rhs) {
-  return internal::epsilon_to_key(lhs) < internal::epsilon_to_key(rhs);
-}
 
 EpsilonExpr epsilon_expr_substitute(
     const EpsilonExpr& expr,

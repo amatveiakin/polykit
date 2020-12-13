@@ -1,5 +1,5 @@
-// TODO: Normalization parameters describing what can be swapped.
-// Right now we apparently have Lie algebras here.
+// TODO: Leave only generic functionality here. Move expression defitions
+// to corresponding files.
 
 #pragma once
 
@@ -44,20 +44,18 @@ struct DeltaCoExprParam {
 
 struct EpsilonCoExprParam {
   using ObjectT = std::vector<EpsilonPack>;
-  using StorageT = MultiWord;
+  using PartStorageT = EpsilonExprParam::ProductT;
+  using StorageT = PVector<PartStorageT, 2>;  // TODO: ??? (see EFormalSymbolSigned in CoLiVec)
   static StorageT object_to_key(const ObjectT& obj) {
-    MultiWord ret;
-    for (const EpsilonPack& pack : obj) {
-      ret.append_segment(epsilon_pack_to_key(pack));
-    }
-    return ret;
+    return mapped_to_pvector<StorageT>(obj, [](const EpsilonPack& pack) {
+      auto ret = EpsilonExprParam::object_to_key(pack);
+      CHECK(std::holds_alternative<PartStorageT>(ret))
+          << "Coproduct for formal symbols is not defined";
+      return std::get<PartStorageT>(ret);
+    });
   }
   static ObjectT key_to_object(const StorageT& key) {
-    std::vector<EpsilonPack> ret;
-    for (auto it = key.begin(); it != key.end(); ++it) {
-      ret.push_back(key_to_epsilon_pack(Word(*it)));
-    }
-    return ret;
+    return mapped(key, EpsilonExprParam::key_to_object);
   }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_hopf());
@@ -92,8 +90,10 @@ template<typename CoExprT, typename ExprT>
 CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
   using CoMonomT = typename CoExprT::StorageT;
   constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
-  const auto& lhs_fixed = is_lie_algebra ? to_lyndon_basis(lhs) : lhs;
-  const auto& rhs_fixed = is_lie_algebra ? to_lyndon_basis(rhs) : rhs;
+  // TODO: Avoid converting to/from vector form back and forth.
+  // TODO[formal-symbol-coproduct]: Should allow formal symbol coproduct.
+  const auto& lhs_fixed = to_vector_expression(is_lie_algebra ? to_lyndon_basis(lhs) : lhs);
+  const auto& rhs_fixed = to_vector_expression(is_lie_algebra ? to_lyndon_basis(rhs) : rhs);
   auto ret = outer_product<CoExprT>(
     lhs_fixed,
     rhs_fixed,
@@ -161,21 +161,28 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
 
   using MonomT = typename ExprT::StorageT;
+  static auto make_copart = [](auto span) {
+    // TODO: Fix: Lyndon is repeated here and in coproduct!
+    return to_lyndon_basis(ExprT::single_key(
+      ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span))
+    ));
+  };
   // TODO: Rewrite using mapped_expanding
   CoExprT ret;
-  expr.foreach_key([&](const MonomT& word, int coeff) {
-    CHECK_EQ(word.size(), weight);
-    const auto span = absl::MakeConstSpan(word);
+  expr.foreach_key([&](const MonomT& monom, int coeff) {
+    const auto& monom_vec = ExprT::Param::key_to_vector(monom);
+    CHECK_EQ(monom_vec.size(), weight);
+    const auto span = absl::MakeConstSpan(monom_vec);
     const int split = form.first;
     ret += coeff * coproduct<CoExprT>(
-      to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(0, split)))),
-      to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(split))))
+      make_copart(span.subspan(0, split)),
+      make_copart(span.subspan(split))
     );
     if (form.first != form.second) {
       const int split = form.second;
       ret -= coeff * coproduct<CoExprT>(
-        to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(split)))),
-        to_lyndon_basis(ExprT::single_key(MonomT(span.subspan(0, split))))
+        make_copart(span.subspan(split)),
+        make_copart(span.subspan(0, split))
       );
     }
   });

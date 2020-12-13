@@ -45,25 +45,26 @@ inline std::vector<Container> lyndon_factorize(const Container& word) {
 template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
   bool finished = false;
-  LinearT expr = expression.without_annotations()
-      .mapped_key(LinearT::Param::shuffle_preprocess);
+  auto expr = to_vector_expression(expression.without_annotations());
+  using VectorLinearT = decltype(expr);
   while (!finished) {
-    LinearT expr_new;
+    VectorLinearT expr_new;
     finished = true;
+    // TODO: Rewrite using add_to_key or mapped_expanding
     expr.foreach_key([&](const auto& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
       CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
-        expr_new += coeff * LinearT::single_key(word_orig);
+        expr_new += coeff * VectorLinearT::single_key(word_orig);
         return;
       }
       finished = false;
-      const auto& lyndon_expr = LinearT::from_key_collection(lyndon_words);
+      const auto& lyndon_expr = VectorLinearT::from_key_collection(lyndon_words);
       int denominator = 1;
       lyndon_expr.foreach_key([&denominator](const auto&, int coeff) {
         denominator *= factorial(coeff);
       });
-      LinearT shuffle_expr = shuffle_product<LinearT>(lyndon_words);
+      auto shuffle_expr = shuffle_product(lyndon_words).template cast_to<VectorLinearT>();
       shuffle_expr.div_int(denominator);
       CHECK_EQ(shuffle_expr.coeff_for_key(word_orig), 1);
       shuffle_expr.add_to_key(word_orig, -1);
@@ -71,6 +72,6 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     });
     expr = std::move(expr_new);
   };
-  expr = expr.mapped_key(LinearT::Param::shuffle_postprocess);
-  return expr.copy_annotations(expression);
+  LinearT ret = from_vector_expression<LinearT>(expr);
+  return ret.copy_annotations(expression);
 }

@@ -140,18 +140,14 @@ namespace std {
 }
 
 namespace internal {
-struct WordExprParam : SimpleLinearParam<Word> {
+struct WordExprParam : SimpleLinearParam<Word>,
+                       IdentityVectorLinearParamMixin<Word> {
+  using ShuffleT = StorageT;
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat_words(lhs, rhs);
   }
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();
-  }
-  static StorageT shuffle_preprocess(const StorageT& key) {
-    return key;
-  }
-  static StorageT shuffle_postprocess(const StorageT& key) {
-    return key;
   }
 };
 }

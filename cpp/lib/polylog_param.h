@@ -32,6 +32,11 @@ public:
   bool operator==(const LiParam& other) const { return as_tie() == other.as_tie(); }
   bool operator< (const LiParam& other) const { return as_tie() <  other.as_tie(); }
 
+  template <typename H>
+  friend H AbslHashValue(H h, const LiParam& param) {
+    return H::combine(std::move(h), param.foreweight_, param.weights_, param.points_);
+  }
+
 private:
   int foreweight_ = 0;
   std::vector<int> weights_;

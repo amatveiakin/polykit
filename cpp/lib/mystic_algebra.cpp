@@ -74,8 +74,8 @@ static EpsilonExpr monom_mystic_product(
 }
 
 static EpsilonExpr monom_key_mystic_product(
-    const Word& lhs_key,
-    const Word& rhs_key) {
+    const EpsilonExpr::StorageT& lhs_key,
+    const EpsilonExpr::StorageT& rhs_key) {
   return monom_mystic_product(
     EpsilonExpr::Param::key_to_object(lhs_key),
     EpsilonExpr::Param::key_to_object(rhs_key));
@@ -99,7 +99,8 @@ EpsilonCoExpr mystic_product(
     const EpsilonCoExpr& rhs) {
   return outer_product_expanding(
     lhs, rhs,
-    [](const MultiWord& lhs_key, const MultiWord& rhs_key) -> EpsilonCoExpr {
+    [](const EpsilonCoExpr::StorageT& lhs_key,
+       const EpsilonCoExpr::StorageT& rhs_key) -> EpsilonCoExpr {
       // TODO: Optimize: Don't pack/unpack things meaninglessly.
       const std::vector<EpsilonPack> lhs_term =
           EpsilonCoExpr::Param::key_to_object(lhs_key);

@@ -21,14 +21,51 @@ struct SimpleLinearParam {
   static ObjectT key_to_object(const StorageT& key) { return key; }
   // can be overwritten if necessary
   static std::string object_to_string(const ObjectT& obj) { return to_string(obj); }
-  // left to define (optional; if missing the corresponding functionality will be unavailable):
-  // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
+
+  // === left to define (optional; if missing the corresponding functionality will be unavailable):
+
   // static int object_to_weight(const ObjectT& obj);
-  // static StorageT shuffle_preprocess(const StorageT& key);
-  // static StorageT shuffle_postprocess(const StorageT& key);
+
+  // TODO: remove monom_tensor_product, always use `concat` instead
+  // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
+
+  // using VectorT = ...;
+  // static VectorT key_to_vector(const StorageT& key);
+  // static StorageT vector_to_key(const VectorT& vec);
+  //
+  // TODO-s Regarding VectorT, key_to_vector, vector_to_key:
+  //   - Don't convert back and forth!
+  //   - Conversion functions must be defined iff  VectorT != StorageT.
+  //     It should be a compile-time error to have key_to_vector when VectorT == StorageT.
+  //     This will allow to reliably omit conversion when it's not needed.
+  //   - Consider alternative:
+  //     Introduce separate expression types (say, EpsilonPrime) which don't support
+  //     formal symbols and remove all the pre/post-processing machinery.
+  //   - Consider alternative:
+  //     Don't convert entire expression - convert only singular monoms.
+
   // static constexpr bool coproduct_is_lie_algebra = ...;
-  // TODO: Try to find clearer structure that doesn't require shuffle_preprocess/shuffle_postprocess
 };
+
+// TODO: Find a way to avoid repeating storage type when using this.
+template<typename StorageT>
+struct IdentityVectorLinearParamMixin {
+  using VectorT = StorageT;
+  // TODO: Why is `std::move` needed (suggested by clang)?
+  static const VectorT& key_to_vector(const StorageT& key) { return key; }
+  static VectorT key_to_vector(StorageT&& key) { return std::move(key); }
+  static const StorageT& vector_to_key(const VectorT& vec) { return vec; }
+  static StorageT vector_to_key(VectorT&& vec) { return std::move(vec); }
+};
+
+
+template<typename BaseParamT>
+struct VectorLinearParam : SimpleLinearParam<typename BaseParamT::VectorT> {
+  static std::string object_to_string(const typename BaseParamT::VectorT& vec) {
+    return BaseParamT::object_to_string(BaseParamT::key_to_object(BaseParamT::vector_to_key(vec)));
+  }
+};
+
 
 struct LinearNoContext {};
 
@@ -598,6 +635,23 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
   return to_ostream(os, linear, LinearNoContext{});
 }
 
+
+
+// Optimization potential: mark IdentityVectorLinearParamMixin as no-op and
+// return a reference to the original expression; but forbid dangling reference!
+template<typename LinearT>
+auto to_vector_expression(const LinearT& expr) {
+  return expr.template mapped_key<Linear<VectorLinearParam<typename LinearT::Param>>>([](auto vec) {
+    return LinearT::Param::key_to_vector(std::move(vec));
+  });
+}
+
+template<typename LinearT, typename VectorParamT>
+LinearT from_vector_expression(const Linear<VectorParamT>& expr) {
+  return expr.template mapped_key<LinearT>([](auto key) {
+    return LinearT::Param::vector_to_key(std::move(key));
+  });
+}
 
 using StringExpr = Linear<SimpleLinearParam<std::string>>;
 

@@ -91,7 +91,7 @@ extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
 namespace internal {
-struct DeltaExprParam {
+struct DeltaExprParam : IdentityVectorLinearParamMixin<PVector<unsigned char, 10>> {
   using ObjectT = std::vector<Delta>;
   using StorageT = PVector<unsigned char, 10>;
   static StorageT object_to_key(const ObjectT& obj) {
@@ -112,12 +112,6 @@ struct DeltaExprParam {
   }
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();
-  }
-  static StorageT shuffle_preprocess(const StorageT& key) {
-    return key;
-  }
-  static StorageT shuffle_postprocess(const StorageT& key) {
-    return key;
   }
 };
 }  // namespace internal

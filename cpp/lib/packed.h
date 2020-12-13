@@ -256,3 +256,24 @@ template<int N, typename In, typename F>
 auto mapped_to_pvector(const std::vector<In>& src, F&& func) {
   return mapped_to_pvector<N>(absl::MakeConstSpan(src), std::forward<F>(func));
 }
+
+
+namespace std {
+// TODO: Find a solution that doesn't require expanding std, or
+// at least move to an appropriate place.
+template<size_t N>
+bool operator<(const std::bitset<N>& a, const std::bitset<N>& b) {
+  if constexpr (N <= sizeof(unsigned long) * CHAR_BIT) {
+    return a.to_ulong() < b.to_ulong();
+  } else {
+    static_assert(N <= sizeof(unsigned long long) * CHAR_BIT, "Bitset too large");
+    return a.to_ullong() < b.to_ullong();
+  }
+}
+template<size_t N>
+bool operator>(const std::bitset<N>& a, const std::bitset<N>& b) { return b < a; }
+template<size_t N>
+bool operator<=(const std::bitset<N>& a, const std::bitset<N>& b) { return !(b < a); }
+template<size_t N>
+bool operator>=(const std::bitset<N>& a, const std::bitset<N>& b) { return !(a < b); }
+}  // namespace std

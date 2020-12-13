@@ -8,11 +8,11 @@
 
 TEST(ShuffleProductTest, ThreeExpressions) {
   EXPECT_EXPR_EQ(
-    shuffle_product<WordExpr, Word>({  // TODO: Avoid specifying monom type
+    shuffle_product<Word>({  // TODO: Avoid specifying monom type
       Word{0, 1, 0},
       Word{1, 0},
       Word{1 },
-    })
+    }).cast_to<WordExpr>()
     ,
      +2 * W({0, 1, 0, 1, 0, 1})
      +4 * W({0, 1, 0, 1, 1, 0})
