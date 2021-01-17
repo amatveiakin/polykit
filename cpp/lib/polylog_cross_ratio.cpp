@@ -7,7 +7,7 @@
 
 
 struct Point {
-  int idx = 0;
+  X x = 0;
   bool odd = true;
 };
 
@@ -18,15 +18,15 @@ struct Point {
 static DeltaExpr lido_pos_node_func(const std::vector<Point>& p) {
   CHECK_EQ(p.size(), 4);
   return p[0].odd
-    ?  neg_cross_ratio(p[0].idx, p[1].idx, p[2].idx, p[3].idx)
-    : -neg_cross_ratio(p[1].idx, p[2].idx, p[3].idx, p[0].idx);
+    ?  neg_cross_ratio(p[0].x, p[1].x, p[2].x, p[3].x)
+    : -neg_cross_ratio(p[1].x, p[2].x, p[3].x, p[0].x);
 }
 
 static DeltaExpr lido_neg_node_func(const std::vector<Point>& p) {
   CHECK_EQ(p.size(), 4);
   return p[0].odd
-    ?  neg_inv_cross_ratio(p[0].idx, p[1].idx, p[2].idx, p[3].idx)
-    : -neg_inv_cross_ratio(p[1].idx, p[2].idx, p[3].idx, p[0].idx);
+    ?  neg_inv_cross_ratio(p[0].x, p[1].x, p[2].x, p[3].x)
+    : -neg_inv_cross_ratio(p[1].x, p[2].x, p[3].x, p[0].x);
 }
 
 template<typename ResultT, typename LidoNodeT, typename ProjectorT>
@@ -58,7 +58,7 @@ static ResultT Lido_impl(
     }
   } else {
     ResultT ret = tensor_product(
-      projector(cross_ratio(mapped(points, [](Point p) { return p.idx; }))),
+      projector(cross_ratio(mapped(points, [](Point p) { return p.x; }))),
       Lido_impl<ResultT>(weight - 1, points, lido_node_func, projector)
     );
     if (num_points > 4) {
@@ -80,7 +80,7 @@ static ResultT Lido_generic_wrapper(
   }
   std::vector<Point> tagged_points;
   for (int i = 0; i < points.size(); ++i) {
-    tagged_points.push_back({points[i].var(), (i+1) % 2 == 1});
+    tagged_points.push_back({points[i], (i+1) % 2 == 1});
   }
   return Lido_impl<ResultT>(weight, tagged_points, lido_node_func, projector);
 }
