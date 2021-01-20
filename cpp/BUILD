@@ -85,6 +85,7 @@ cc_library(
         "lib/polylog_cross_ratio.h",
         "lib/polylog_quadrangle.h",
         "lib/polylog_via_correlators.h",
+        "lib/snowpal.h",
     ],
     srcs = [
         "lib/iterated_integral.cpp",
@@ -93,6 +94,7 @@ cc_library(
         "lib/polylog_cross_ratio.cpp",
         "lib/polylog_quadrangle.cpp",
         "lib/polylog_via_correlators.cpp",
+        "lib/snowpal.cpp",
     ],
     deps = [
         "@absl//absl/strings:strings",

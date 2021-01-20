@@ -236,6 +236,22 @@ std::vector<T> to_vector(std::array<T, N> v) {
   return ret;
 }
 
+template<typename Container>
+bool all_equal(const Container& c) {
+  return absl::c_adjacent_find(c, std::not_equal_to<>()) == c.end();
+}
+
+template<typename Container>
+std::vector<Container> all_permutations(const Container& c) {
+  std::vector<int> indices(c.size());
+  absl::c_iota(indices, 0);
+  std::vector<Container> ret;
+  do {
+    ret.push_back(choose_indices(c, indices));
+  } while (absl::c_next_permutation(indices));
+  return ret;
+}
+
 template<typename T>
 std::vector<T> set_intersection(const std::vector<T>& a, const std::vector<T>& b) {
   CHECK(absl::c_is_sorted(a)) << list_to_string(a);
