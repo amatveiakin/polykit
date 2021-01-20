@@ -419,7 +419,7 @@ public:
     foreach([&](const auto& obj, int coeff) {
       ret += coeff * func(obj);
     });
-    return ret;
+    return ret.copy_annotations(*this);
   }
   template<typename F>
   auto mapped_key_expanding(F func) const {
@@ -429,7 +429,7 @@ public:
     foreach_key([&](const auto& key, int coeff) {
       ret += coeff * func(key);
     });
-    return ret;
+    return ret.copy_annotations(*this);
   }
 
   template<typename NewLinearT>
