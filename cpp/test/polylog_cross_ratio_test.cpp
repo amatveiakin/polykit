@@ -62,6 +62,60 @@ TEST(LidoTest, LidoSymm_Arg8_AlternativeFormula) {
   );
 }
 
+TEST(LidoTest, Lido_Arg6_ShiftedDiffFormula) {
+  for (int w = 2; w <= 3; ++w) {
+    const int s = neg_one_pow(w);
+    EXPECT_EXPR_EQ_AFTER_LYNDON(
+      +  LidoVec(w, {1,2,3,4,5,6})
+      +s*LidoVec(w, {2,3,4,5,6,1})
+      ,
+      + LidoVec(w, {1,2,3,4})
+      - LidoVec(w, {3,4,5,2})
+      + LidoVec(w, {3,4,5,6})
+      - LidoVec(w, {5,6,1,4})
+      + LidoVec(w, {5,6,1,2})
+      - LidoVec(w, {1,2,3,6})
+    );
+  }
+}
+
+#if RUN_LARGE_TESTS
+TEST(LidoTest, Lido_Arg8_ShiftedDiffFormula) {
+  for (int w = 3; w <= 4; ++w) {
+    const int s = neg_one_pow(w);
+    EXPECT_EXPR_EQ_AFTER_LYNDON(
+      +  LidoVec(w, {1,2,3,4,5,6,7,8})
+      +s*LidoVec(w, {2,3,4,5,6,7,8,1})
+      ,
+      - LidoVec(w, {1,2,3,4,5,8})
+      + LidoVec(w, {1,2,3,4,5,6})
+      - LidoVec(w, {3,4,5,6,7,2})
+      + LidoVec(w, {3,4,5,6,7,8})
+      - LidoVec(w, {5,6,7,8,1,4})
+      + LidoVec(w, {5,6,7,8,1,2})
+      - LidoVec(w, {7,8,1,2,3,6})
+      + LidoVec(w, {7,8,1,2,3,4})
+      + LidoVec(w, {1,2,3,6})
+      - LidoVec(w, {1,2,3,8})
+      - LidoVec(w, {1,2,5,6})
+      + LidoVec(w, {1,2,5,8})
+      + LidoVec(w, {1,4,5,6})
+      - LidoVec(w, {1,4,5,8})
+      + LidoVec(w, {1,4,7,8})
+      - LidoVec(w, {1,6,7,8})
+      - LidoVec(w, {3,4,5,2})
+      + LidoVec(w, {3,4,7,2})
+      + LidoVec(w, {3,4,5,8})
+      - LidoVec(w, {3,4,7,8})
+      - LidoVec(w, {3,6,7,2})
+      + LidoVec(w, {3,6,7,8})
+      + LidoVec(w, {5,6,7,2})
+      - LidoVec(w, {5,6,7,4})
+    );
+  }
+}
+#endif
+
 TEST(LidoTest, LidoBuiltinProjection) {
   EXPECT_EXPR_EQ(
     project_on_x1(Lido3(1,2,3,4,5,6)),

@@ -4,12 +4,12 @@
 #include "delta.h"
 
 
-// TODO: Declare a span type that would accept both std::vector<X>
-// and std::vector<int>. This would allow to call these function
-// with either vector type OR an initializer list (not possible now).
+// TODO: Instead of all there overloads declare a span type that
+// accepts both std::vector<X> and std::vector<int>.
 
 DeltaExpr LidoVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoVec(int weight, const std::vector<int>& points);
+DeltaExpr LidoVec(int weight, std::initializer_list<int> points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoVec(...))
@@ -21,6 +21,7 @@ WordExpr LidoVecPr(
 
 DeltaExpr LidoNegVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoNegVec(int weight, const std::vector<int>& points);
+DeltaExpr LidoNegVec(int weight, std::initializer_list<int> points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoNegVec(...))
@@ -33,6 +34,7 @@ WordExpr LidoNegVecPr(
 // Only 6 and 8 point are supported for now
 DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points);
 DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points);
+DeltaExpr LidoSymmVec(int weight, std::initializer_list<int> points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoSymmVec(...))

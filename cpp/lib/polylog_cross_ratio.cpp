@@ -106,6 +106,10 @@ DeltaExpr LidoVec(int weight, const std::vector<int>& points) {
   return LidoVec(weight, mapped(points, X::Var));
 }
 
+DeltaExpr LidoVec(int weight, std::initializer_list<int> points) {
+  return LidoVec(weight, std::vector(points));
+}
+
 WordExpr LidoVecPr(
     int weight, const std::vector<X>& points,
     std::function<WordExpr(DeltaExpr)> projector) {
@@ -133,6 +137,10 @@ DeltaExpr LidoNegVec(int weight, const std::vector<X>& points) {
 
 DeltaExpr LidoNegVec(int weight, const std::vector<int>& points) {
   return LidoNegVec(weight, mapped(points, X::Var));
+}
+
+DeltaExpr LidoNegVec(int weight, std::initializer_list<int> points) {
+  return LidoNegVec(weight, std::vector(points));
 }
 
 WordExpr LidoNegVecPr(
@@ -194,6 +202,10 @@ DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points) {
 
 DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points) {
   return LidoSymmVec(weight, mapped(points, X::Var));
+}
+
+DeltaExpr LidoSymmVec(int weight, std::initializer_list<int> points) {
+  return LidoSymmVec(weight, std::vector(points));
 }
 
 WordExpr LidoSymmVecPr(
