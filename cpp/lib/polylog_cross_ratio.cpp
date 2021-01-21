@@ -170,24 +170,16 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
     auto [x1, x2, x3, x4, x5, x6, x7, x8] = to_array<8>(points);
     ret =
       + lido_base({x1,x2,x3,x4,x5,x6,x7,x8})
-      - (
-        + lido_base({x1,x2,x3,x4,x5,x6})
-        + lido_base({x3,x4,x5,x6,x7,x8})
-        + lido_base({x5,x6,x7,x8,x1,x2})
-        + lido_base({x7,x8,x1,x2,x3,x4})
-      )
-      + (
-        + lido_base({x1,x2,x3,x4})
-        + lido_base({x3,x4,x5,x6})
-        + lido_base({x5,x6,x7,x8})
-        + lido_base({x7,x8,x1,x2})
-      )
-      + (
-        + lido_base({x1,x2,x5,x6})
-        + lido_base({x3,x4,x7,x8})
-        + lido_base({x5,x6,x1,x2})
-        + lido_base({x7,x8,x3,x4})
-      ).dived_int(2)
+      - lido_base({x1,x2,x3,x4,x5,x6})
+      - lido_base({x3,x4,x5,x6,x7,x8})
+      - lido_base({x5,x6,x7,x8,x1,x2})
+      - lido_base({x7,x8,x1,x2,x3,x4})
+      + lido_base({x1,x2,x3,x4})
+      + lido_base({x3,x4,x5,x6})
+      + lido_base({x5,x6,x7,x8})
+      + lido_base({x7,x8,x1,x2})
+      + lido_base({x1,x2,x5,x6})
+      + lido_base({x3,x4,x7,x8})
     ;
   } else {
     FATAL(absl::StrCat("Unsupported number of arguments for LidoSymm: ", points.size()));
