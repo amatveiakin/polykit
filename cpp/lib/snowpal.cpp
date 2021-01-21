@@ -347,7 +347,7 @@ std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const Splitting
     }
   });
   short_forms.update_normal_forms();
-  to_ostream(os, expr, &short_forms);
+  to_ostream(os, expr, std::less<>{}, &short_forms);
   const auto nbr_indices_per_vertex = splitting_tree.dump_nbr_indices();
   if (nbr_indices_per_vertex.size() >= 2) {
     os << "^^^\n";

@@ -300,10 +300,11 @@ BasicLinear<ParamT> operator*(int scalar, const BasicLinear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT, typename ContextT>
+template<typename ParamT, typename CompareF, typename ContextT>
 std::ostream& to_ostream(
     std::ostream& os,
     const BasicLinear<ParamT>& linear,
+    const CompareF& sorting_cmp,
     const ContextT& context) {
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
   int max_coeff_length = 0;
@@ -314,7 +315,9 @@ std::ostream& to_ostream(
       max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
     }
   });
-  std::sort(dump.begin(), dump.end());
+  std::sort(dump.begin(), dump.end(), [&](const auto& a, const auto& b) {
+    return sorting_cmp(a.first, b.first);
+  });
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (line_limit > 0) {
     int line = 0;
@@ -338,7 +341,7 @@ std::ostream& to_ostream(
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
-  return to_ostream(os, linear, LinearNoContext{});
+  return to_ostream(os, linear, std::less<>{}, LinearNoContext{});
 }
 
 
@@ -354,7 +357,18 @@ struct LinearAnnotation {
 };
 
 inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) {
-  os << annotations.expression;
+  switch (*current_formatting_config().annotation_sorting) {
+    case AnnotationSorting::lexicographic:
+      to_ostream(os, annotations.expression, std::less<>{}, LinearNoContext{});
+      break;
+    case AnnotationSorting::length:
+      to_ostream(os, annotations.expression, [](const std::string& a, const std::string& b) {
+        const int a_length = -static_cast<int>(a.size());
+        const int b_length = -static_cast<int>(b.size());
+        return std::tie(a_length, a) < std::tie(b_length, b);
+      }, LinearNoContext{});
+      break;
+  }
   for (const auto& err : annotations.errors) {
     os << fmt::coeff(1) << "<?> " << err << "\n";
   }
@@ -596,10 +610,11 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT, typename ContextT>
+template<typename ParamT, typename CompareF, typename ContextT>
 std::ostream& to_ostream(
     std::ostream& os,
     const Linear<ParamT>& linear,
+    const CompareF& sorting_cmp,
     const ContextT& context) {
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.zero()) {
@@ -608,7 +623,7 @@ std::ostream& to_ostream(
     os << ", |coeff| = " << linear.l1_norm();
     if (line_limit > 0) {
       os << ":\n";
-      to_ostream(os, linear.main(), context);
+      to_ostream(os, linear.main(), sorting_cmp, context);
     } else {
       os << "\n";
     }
@@ -632,7 +647,7 @@ std::ostream& to_ostream(
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
-  return to_ostream(os, linear, LinearNoContext{});
+  return to_ostream(os, linear, std::less<>{}, LinearNoContext{});
 }
 
 

@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/projection.h"
+#include "lib/sequence_iteration.h"
 #include "test_util/helpers.h"
 #include "test_util/matchers.h"
 
@@ -114,6 +115,40 @@ TEST(LidoTest, Lido_Arg8_ShiftedDiffFormula) {
     );
   }
 }
+#endif
+
+class SubsetSumFormulaTest : public ::testing::TestWithParam<std::pair<int, int>> {
+public:
+  int weight() const { return GetParam().first; }
+  int total_points() const { return GetParam().second; }
+};
+
+TEST_P(SubsetSumFormulaTest, LidoSymm_SubsetSumFormula) {
+  DeltaExpr expr;
+  for (int num_args = 4; num_args <= total_points(); num_args += 2) {
+    for (const auto seq : increasing_sequences(total_points(), num_args)) {
+      const auto args = mapped(seq, [](int x) { return x + 1; });
+      const int sign_proto = absl::c_accumulate(args, 0) + num_args / 2;
+      const int sign = neg_one_pow(sign_proto);
+      expr += sign * LidoSymmVec(weight(), args);
+    }
+  }
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
+}
+
+INSTANTIATE_TEST_CASE_P(FastCases, SubsetSumFormulaTest, ::testing::Values(
+  std::pair{2, 5},
+  std::pair{2, 6},
+  std::pair{3, 6}
+));
+#if RUN_LARGE_TESTS
+INSTANTIATE_TEST_CASE_P(SlowCases, SubsetSumFormulaTest, ::testing::Values(
+  std::pair{3, 7},
+  std::pair{4, 7},
+  std::pair{3, 8},
+  std::pair{4, 8},
+  std::pair{5, 8}
+));
 #endif
 
 TEST(LidoTest, LidoBuiltinProjection) {

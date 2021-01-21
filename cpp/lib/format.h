@@ -34,6 +34,11 @@ enum class RichTextFormat {
   html,
 };
 
+enum class AnnotationSorting {
+  lexicographic,
+  length,
+};
+
 // Defines how expressions are printed. nullopt is used for overriding
 // and means "keep as is". It is guaranteed that in the config returned
 // by `current_formatting_config()` all values are non-null.
@@ -42,6 +47,7 @@ struct FormattingConfig {
 
   std::optional<Formatter> formatter;
   std::optional<RichTextFormat> rich_text_format;
+  std::optional<AnnotationSorting> annotation_sorting;
   std::optional<int> expression_line_limit;
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
@@ -49,6 +55,7 @@ struct FormattingConfig {
 
   FormattingConfig& set_formatter(Formatter v) { formatter = v; return *this; }
   FormattingConfig& set_rich_text_format(RichTextFormat v) { rich_text_format = v; return *this; }
+  FormattingConfig& set_annotation_sorting(AnnotationSorting v) { annotation_sorting = v; return *this; }
   FormattingConfig& set_expression_line_limit(int v) { expression_line_limit = v; return *this; }
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }

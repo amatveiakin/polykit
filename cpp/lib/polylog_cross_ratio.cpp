@@ -156,7 +156,9 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
     return Lido_generic_wrapper<ResultT>(weight, args, lido_pos_node_func, projector);
   };
   ResultT ret;
-  if (points.size() == 6) {
+  if (points.size() == 4) {
+    return Lido_wrapper<ResultT>(weight, points, projector);
+  } else if (points.size() == 6) {
     auto [x1, x2, x3, x4, x5, x6] = to_array<6>(points);
     ret =
       + lido_base({x1,x2,x3,x4,x5,x6})

@@ -12,6 +12,7 @@
 static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_formatter(Formatter::ascii)
   .set_rich_text_format(RichTextFormat::native)
+  .set_annotation_sorting(AnnotationSorting::lexicographic)
   .set_expression_line_limit(100)
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
@@ -51,6 +52,7 @@ static void apply_field_override(
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(formatter, src.formatter);
   apply_field_override(rich_text_format, src.rich_text_format);
+  apply_field_override(annotation_sorting, src.annotation_sorting);
   apply_field_override(expression_line_limit, src.expression_line_limit);
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
@@ -302,6 +304,7 @@ class UnicodeFormatter : public AbstractFormatter {
       else if (v > 0)   { return absl::StrCat(v); }
       else              { return fix_minus(absl::StrCat(v)); }
     } else {
+      // TODO: Use using "figure space" (U+2007) here.
       if      (v == 0)  { return absl::StrCat(" 0", kThinNbsp); }
       else if (v == 1)  { return absl::StrCat(" +", kThinNbsp); }
       else if (v == -1) { return absl::StrCat(" ", kMinusSign, kThinNbsp); }

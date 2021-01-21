@@ -38,5 +38,6 @@ int main(int argc, char *argv[]) {
   ScopedFormatting sf(FormattingConfig()
     .set_formatter(Formatter::unicode)
     .set_rich_text_format(RichTextFormat::console)
+    .set_annotation_sorting(AnnotationSorting::length)
   );
 }
