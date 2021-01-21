@@ -6,8 +6,6 @@
 #include "test_util/matchers.h"
 
 
-// TODO[formal-symbol-coproduct]: This should pass!
-#if 0
 TEST(MysticProductTest, CoLiShuffle_Arg2_Weight2) {
   EXPECT_EXPR_EQ(
     + CoLi(1,1)({1},{2})
@@ -77,5 +75,4 @@ TEST(MysticProductTest, CoLiShuffle_Arg4_Weight8) {
     )
   );
 }
-#endif
 #endif

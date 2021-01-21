@@ -44,15 +44,10 @@ struct DeltaCoExprParam {
 
 struct EpsilonCoExprParam {
   using ObjectT = std::vector<EpsilonPack>;
-  using PartStorageT = EpsilonExprParam::ProductT;
-  using StorageT = PVector<PartStorageT, 2>;  // TODO: ??? (see EFormalSymbolSigned in CoLiVec)
+  using PartStorageT = EpsilonExprParam::StorageT;
+  using StorageT = PVector<PartStorageT, 2>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, [](const EpsilonPack& pack) {
-      auto ret = EpsilonExprParam::object_to_key(pack);
-      CHECK(std::holds_alternative<PartStorageT>(ret))
-          << "Coproduct for formal symbols is not defined";
-      return std::get<PartStorageT>(ret);
-    });
+    return mapped_to_pvector<StorageT>(obj, EpsilonExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
     return mapped(key, EpsilonExprParam::key_to_object);
@@ -90,10 +85,8 @@ template<typename CoExprT, typename ExprT>
 CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
   using CoMonomT = typename CoExprT::StorageT;
   constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
-  // TODO: Avoid converting to/from vector form back and forth.
-  // TODO[formal-symbol-coproduct]: Should allow formal symbol coproduct.
-  const auto& lhs_fixed = to_vector_expression(is_lie_algebra ? to_lyndon_basis(lhs) : lhs);
-  const auto& rhs_fixed = to_vector_expression(is_lie_algebra ? to_lyndon_basis(rhs) : rhs);
+  const auto& lhs_fixed = is_lie_algebra ? to_lyndon_basis(lhs) : lhs;
+  const auto& rhs_fixed = is_lie_algebra ? to_lyndon_basis(rhs) : rhs;
   auto ret = outer_product<CoExprT>(
     lhs_fixed,
     rhs_fixed,
@@ -102,7 +95,11 @@ CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
     },
     AnnOperator(is_lie_algebra ? fmt::coprod_lie() : fmt::coprod_hopf())
   );
-  return is_lie_algebra ? normalize_coproduct(ret) : ret;
+  if constexpr (is_lie_algebra) {
+    return normalize_coproduct(ret);
+  } else {
+    return ret;  // `normalize_coproduct` might not compile here, thus `if constexpr`
+  }
 }
 
 // Explicit rules allow to omit template types when calling the function.
@@ -161,6 +158,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
 
   using MonomT = typename ExprT::StorageT;
+  // TODO: Make sure there is no converting to/from vector form back and forth.
   static auto make_copart = [](auto span) {
     // TODO: Fix: Lyndon is repeated here and in coproduct!
     return to_lyndon_basis(ExprT::single_key(

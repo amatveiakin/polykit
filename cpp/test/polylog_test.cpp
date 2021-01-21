@@ -136,8 +136,6 @@ TEST(LiTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
 //   )
 // };
 
-// TODO[formal-symbol-coproduct]: This should pass!
-#if 0
 TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
   const LiParam li_a(1, {1,1},{{1},{2}});
   const LiParam li_b(1, {1,1},{{2},{1}});
@@ -159,4 +157,3 @@ TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
     + coproduct(EFormalSymbolPositive(li_c), EUnity())
   );
 }
-#endif
