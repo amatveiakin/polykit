@@ -4,6 +4,7 @@
 
 #include "algebra.h"
 #include "check.h"
+#include "sequence_iteration.h"
 
 
 struct Point {
@@ -156,33 +157,23 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
     return Lido_generic_wrapper<ResultT>(weight, args, lido_pos_node_func, projector);
   };
   ResultT ret;
-  if (points.size() == 4) {
-    return Lido_wrapper<ResultT>(weight, points, projector);
-  } else if (points.size() == 6) {
-    auto [x1, x2, x3, x4, x5, x6] = to_array<6>(points);
-    ret =
-      + lido_base({x1,x2,x3,x4,x5,x6})
-      - lido_base({x1,x2,x3,x4})
-      - lido_base({x3,x4,x5,x6})
-      - lido_base({x5,x6,x1,x2})
-    ;
-  } else if (points.size() == 8) {
-    auto [x1, x2, x3, x4, x5, x6, x7, x8] = to_array<8>(points);
-    ret =
-      + lido_base({x1,x2,x3,x4,x5,x6,x7,x8})
-      - lido_base({x1,x2,x3,x4,x5,x6})
-      - lido_base({x3,x4,x5,x6,x7,x8})
-      - lido_base({x5,x6,x7,x8,x1,x2})
-      - lido_base({x7,x8,x1,x2,x3,x4})
-      + lido_base({x1,x2,x3,x4})
-      + lido_base({x3,x4,x5,x6})
-      + lido_base({x5,x6,x7,x8})
-      + lido_base({x7,x8,x1,x2})
-      + lido_base({x1,x2,x5,x6})
-      + lido_base({x3,x4,x7,x8})
-    ;
-  } else {
-    FATAL(absl::StrCat("Unsupported number of arguments for LidoSymm: ", points.size()));
+  const int num_points = points.size();
+  CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of Lido points: " << num_points;
+  const int num_pairs = num_points / 2;
+  for (const auto& seq : all_sequences(2, num_pairs)) {
+    const int num_pairs_included = absl::c_accumulate(seq, 0);
+    if (num_pairs_included < 2) {
+      continue;
+    }
+    const int sign = neg_one_pow(num_pairs - num_pairs_included);
+    std::vector<X> args;
+    for (int pair_idx = 0; pair_idx < seq.size(); ++pair_idx) {
+      if (seq[pair_idx]) {
+        args.push_back(points[2*pair_idx  ]);
+        args.push_back(points[2*pair_idx+1]);
+      }
+    }
+    ret += sign * lido_base(args);
   }
   return ret.annotate(fmt::function(
     fmt::sub_num("LidoSymm", {weight}),

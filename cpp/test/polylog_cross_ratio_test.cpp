@@ -45,8 +45,17 @@ TEST(LidoTest, LidoSymmEquation_Arg8) {
   );
 }
 
+#if RUN_LARGE_TESTS
+TEST(LidoTest, LidoSymmEquation_Arg10) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(project_on_x1(
+    + LidoSymm4(1,2,3,4,5,6,7,8,9,10)
+    + LidoSymm4(2,3,4,5,6,7,8,9,10,1)
+  ));
+}
+#endif
+
 TEST(LidoTest, LidoSymm_Arg8_AlternativeFormula) {
-  EXPECT_EXPR_EQ(
+  EXPECT_EXPR_EQ_AFTER_LYNDON(
     + LidoSymm3(1,2,3,4,5,6,7,8)
     ,
     + Lido3(1,2,3,4,5,6,7,8)
