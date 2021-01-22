@@ -158,6 +158,9 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
   };
   ResultT ret;
   const int num_points = points.size();
+  // Note: weight 1 can be defined as `Lido1(x1,x2,x3,x4) - Lido1(x1,x2) - Lido1(x3,x4)`.
+  // This is symmetric, but doesn't fit comultiplication formulae.
+  CHECK_GT(weight, 1) << "LydoSymm is not defined for weight 1";
   CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of Lido points: " << num_points;
   const int num_pairs = num_points / 2;
   for (const auto& seq : all_sequences(2, num_pairs)) {

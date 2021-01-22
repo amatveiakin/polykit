@@ -30,6 +30,25 @@ TEST(CoequationsTest, LidoSymm4_OldFormula) {
   );
 }
 
+#if RUN_LARGE_TESTS
+TEST(CoequationsTest, LidoSymm_Arg6) {
+  for (int wr = 2; wr <= 3; ++wr) {
+    EXPECT_EXPR_EQ(
+      comultiply(LidoSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
+      (
+        + sum_looped_vec([&](const std::vector<X>& args) {
+          return coproduct(
+            LidoVec    (1,  choose_indices_one_based(args, {1,2,3,4})),
+            LidoSymmVec(wr, choose_indices_one_based(args, {1,4,5,6}))
+          );
+        }, 6, {1,2,3,4,5,6}, (wr % 2 == 0 ? SumSign::plus : SumSign::alternating))
+        + coproduct(cross_ratio(std::vector{1,2,3,4,5,6}), LidoSymmVec(wr, {1,2,3,4,5,6}))
+      )
+    );
+  }
+}
+#endif
+
 TEST(CoequationsTest, Lido_Arg6) {
   for (int w = 1; w <= 2; ++w) {
     EXPECT_EXPR_EQ(

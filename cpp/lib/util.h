@@ -126,11 +126,30 @@ std::vector<T> choose_indices(const std::vector<T>& v, const std::vector<int>& i
   return ret;
 }
 
+template<typename T>
+std::vector<T> choose_indices_one_based(const std::vector<T>& v, const std::vector<int>& indices) {
+  std::vector<T> ret;
+  ret.reserve(indices.size());
+  for (int idx : indices) {
+    ret.push_back(v.at(idx - 1));
+  }
+  return ret;
+}
+
 template<typename T, size_t N, size_t M>
 std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int, M>& indices) {
   std::array<T, M> ret;
   for (int i = 0; i < indices.size(); ++i) {
     ret[i] = v.at(indices[i]);
+  }
+  return ret;
+}
+
+template<typename T, size_t N, size_t M>
+std::array<T, M> choose_indices_one_based(const std::array<T, N>& v, const std::array<int, M>& indices) {
+  std::array<T, M> ret;
+  for (int i = 0; i < indices.size(); ++i) {
+    ret[i] = v.at(indices[i] - 1);
   }
   return ret;
 }
