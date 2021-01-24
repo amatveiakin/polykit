@@ -297,7 +297,8 @@ public:
           auto points = removed_indices(seq_incl(1, valency), seq);
           auto missing = mapped(seq, [](int x) { return x + 1; });
           ret.push_back(ShortFormRatio{
-            fmt::sub_num(letter, missing),
+            // fmt::sub_num(letter, missing),
+            letter + str_join(missing, ""),
             node->node_index,
             Ratio(mapped_array(to_array<4>(points), [&](int nbr_idx) {
               return make_metavar(node->node_index, nbr_idx);
@@ -431,6 +432,8 @@ LiraExpr keep_independent_ratios(const LiraExpr& expr);
 //   {x_1, ..., x_n} = (-1)^n * {1/x_1, ..., 1/x_n}
 LiraExpr normalize_inverse(const LiraExpr& expr);
 
+LiraExpr fully_normalize_ratios(const LiraExpr& expr);
+
 
 using Substitution = std::array<const SplittingTree::Node*, 2>;
 
@@ -491,7 +494,8 @@ public:
     expr_ = without_unities(expr_);
     // expr_ = keep_distinct_ratios(expr_);
     // expr_ = keep_independent_ratios(expr_);
-    expr_ = normalize_inverse(expr_);
+    // expr_ = normalize_inverse(expr_);
+    expr_ = fully_normalize_ratios(expr_);
     expr_ = to_lyndon_basis_2(expr_);
     // expr_ = to_lyndon_basis_3_soft(expr_);
     return *this;

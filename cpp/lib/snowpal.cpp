@@ -249,6 +249,35 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
   });
 }
 
+template<typename ContainerT>
+int sort_with_sign(ContainerT& v) {
+  int sign = 1;
+  for (int i = 0; i < v.size(); ++i) {
+    for (int j = 0; j < v.size()-1; ++j) {
+      if (v[j] > v[j+1]) {
+        std::swap(v[j], v[j+1]);
+        sign *= -1;
+      }
+    }
+  }
+  return sign;
+}
+
+LiraExpr fully_normalize_ratios(const LiraExpr& expr) {
+  return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) -> LiraExpr {
+    int sign = 1;
+    auto new_ratios = mapped(formal_symbol.ratios(), [&](const RatioOrUnity& r) -> RatioOrUnity {
+      if (r.is_unity()) {
+        return r;
+      }
+      auto indices = r.as_ratio().indices();
+      sign *= sort_with_sign(indices);
+      return Ratio(indices);
+    });
+    return sign * LiraExpr::single(LiraParamOnes(new_ratios));
+  });
+}
+
 std::variant<const SplittingTree::Node*, std::array<int, 2>> find_central_node(
     const std::vector<int>& points,
     const SplittingTree::Node* node) {
