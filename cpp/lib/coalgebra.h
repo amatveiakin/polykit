@@ -60,7 +60,7 @@ struct EpsilonCoExprParam {
 
 struct ThetaCoExprParam {
   using ObjectT = std::array<ThetaPack, kThetaCoExprComponents>;
-  using StorageT = std::array<MultiWord, kThetaCoExprComponents>;
+  using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprComponents>;
   static StorageT object_to_key(const ObjectT& obj) {
     return mapped_array(obj, ThetaExprParam::object_to_key);
   }

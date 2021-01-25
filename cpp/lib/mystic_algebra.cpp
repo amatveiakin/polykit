@@ -157,8 +157,8 @@ static ThetaExpr monom_quasi_shuffle_product(
 }
 
 static ThetaExpr monom_key_quasi_shuffle_product(
-    const MultiWord& lhs_key,
-    const MultiWord& rhs_key) {
+    const ThetaExpr::StorageT& lhs_key,
+    const ThetaExpr::StorageT& rhs_key) {
   return monom_quasi_shuffle_product(
     ThetaExpr::Param::key_to_object(lhs_key),
     ThetaExpr::Param::key_to_object(rhs_key));

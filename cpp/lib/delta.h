@@ -43,6 +43,11 @@ public:
 
   std::pair<int, int> as_pair() const { return {a_, b_}; }
 
+  template <typename H>
+  friend H AbslHashValue(H h, const Delta& delta) {
+    return H::combine(std::move(h), delta.as_pair());
+  }
+
 private:
   int a_ = 0;
   int b_ = 0;

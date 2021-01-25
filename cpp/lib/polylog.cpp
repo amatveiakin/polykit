@@ -333,7 +333,7 @@ ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
     return outer_product<ThetaCoExpr>(
       multipliers[0],
       multipliers[1],
-      [](const MultiWord& lhs, const MultiWord& rhs) {
+      [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
         return std::array{lhs, rhs};
       },
       AnnOperator(fmt::coprod_hopf())

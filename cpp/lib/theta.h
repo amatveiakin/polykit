@@ -15,8 +15,6 @@
 #include "word.h"
 
 
-using ThetaStorageType = Word;
-
 class ThetaComplement {
 public:
   ThetaComplement() {}
@@ -42,11 +40,6 @@ using Theta = std::variant<Delta, ThetaComplement>;
 
 using ThetaPack = std::variant<std::vector<Theta>, LiraParam>;
 
-enum ThetaPackType {
-  kThetaPackTypeProduct = 0,
-  kThetaPackTypeFormalSymbol = 1,
-};
-
 
 inline std::string to_string(const ThetaComplement& complement) {
   return fmt::parens(fmt::diff("1", to_string(complement.ratio())));
@@ -68,7 +61,16 @@ inline std::string to_string(const ThetaPack& pack) {
 }
 
 
+#define OLD_THETA 0
+#if OLD_THETA
 namespace internal {
+using ThetaStorageType = Word;
+
+enum ThetaPackType {
+  kThetaPackTypeProduct = 0,
+  kThetaPackTypeFormalSymbol = 1,
+};
+
 // Idea: Store just the data. We don't need a type bit, because Delta
 // is always one byte and CompoundRatio is always more.
 inline ThetaStorageType theta_to_key(const Theta& t) {
@@ -192,6 +194,103 @@ struct ThetaExprParam {
   }
 };
 }  // namespace internal
+#else
+namespace internal {
+using ThetaStorageType = std::variant<Delta, CompressedBlob>;
+// Optimization potential: Compress LiraParam too.
+using ThetaProductStorageType = PVector<ThetaStorageType, 4>;
+using ThetaPackStorageType = std::variant<ThetaProductStorageType, LiraParam>;
+
+inline ThetaStorageType theta_to_key(const Theta& t) {
+  return std::visit(overloaded{
+    [](const Delta& d) {
+      return ThetaStorageType(d);
+    },
+    [](const ThetaComplement& complement) {
+      Compressor compressor;
+      complement.ratio().compress(compressor);
+      return ThetaStorageType(std::move(compressor).result());
+    },
+  }, t);
+}
+
+inline Theta key_to_theta(ThetaStorageType key) {
+  return std::visit(overloaded{
+    [](const Delta& d) {
+      return Theta(d);
+    },
+    [](const CompressedBlob& complement_compressed) {
+      Decompressor decompressor(complement_compressed);
+      Theta ret = ThetaComplement(CompoundRatio::from_compressed(decompressor));
+      CHECK(decompressor.done());
+      return ret;
+    },
+  }, key);
+}
+
+inline ThetaPackStorageType theta_pack_to_key(const ThetaPack& pack) {
+  return std::visit(overloaded{
+    [](const std::vector<Theta>& product) {
+      return ThetaPackStorageType(
+        mapped_to_pvector<ThetaProductStorageType>(product, theta_to_key)
+      );
+    },
+    [](const LiraParam& formal_symbol) {
+      return ThetaPackStorageType(formal_symbol);
+    },
+  }, pack);
+}
+
+inline ThetaPack key_to_theta_pack(const ThetaPackStorageType& key) {
+  return std::visit(overloaded{
+    [](const ThetaProductStorageType& product) {
+      return ThetaPack(mapped(product, key_to_theta));
+    },
+    [](const LiraParam& formal_symbol) {
+      return ThetaPack(formal_symbol);
+    },
+  }, key);
+}
+
+struct ThetaExprParam {
+  using ObjectT = ThetaPack;
+  using ProductT = ThetaProductStorageType;
+  using StorageT = ThetaPackStorageType;
+  using VectorT = ProductT;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return theta_pack_to_key(obj);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return key_to_theta_pack(key);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return to_string(obj);
+  }
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    CHECK(std::holds_alternative<ProductT>(lhs) && std::holds_alternative<ProductT>(rhs))
+        << "Tensor product for formal symbols is not defined";
+    return concat(std::get<ProductT>(lhs), std::get<ProductT>(rhs));
+  }
+  static int object_to_weight(const ObjectT& obj) {
+    return std::visit(overloaded{
+      [](const std::vector<Theta>& product) -> int {
+        return product.size();
+      },
+      [](const LiraParam& formal_symbol) -> int {
+        return formal_symbol.total_weight();
+      },
+    }, obj);
+  }
+  static VectorT key_to_vector(const StorageT& key) {
+    CHECK(std::holds_alternative<ProductT>(key)) << "Vector form is not defined for formal symbols";
+    return std::get<ProductT>(key);
+  }
+  static StorageT vector_to_key(const VectorT& vec) {
+    return vec;
+  }
+};
+}  // namespace internal
+#endif
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
 

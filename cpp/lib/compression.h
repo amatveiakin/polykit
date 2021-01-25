@@ -6,6 +6,8 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/span.h"
 
+#include "packed.h"
+
 
 constexpr int kCompressionSentinel = 0;
 constexpr int kCompressionValuesPerByte = 2;  // Note: some code implicitly assumes it's 2
@@ -14,11 +16,15 @@ constexpr int kCompressionMaxValue = (1 << kCompressionShift) - 1;
 constexpr int kCompressionLowerValueMask = (1 << kCompressionShift) - 1;
 
 
+// TODO: Strong typing
+using CompressedBlob = PVector<unsigned char, 10>;
+
+
 class Compressor {
 public:
   // `data` must not contain kCompressionSentinel.
   void add_segment(absl::Span<const int> data);
-  std::vector<unsigned char> result() &&;
+  CompressedBlob result() &&;
 
 private:
   std::vector<int> uncompressed_;

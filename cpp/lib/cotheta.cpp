@@ -14,7 +14,7 @@ ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
     return outer_product<ThetaCoExpr>(
       multipliers[0],
       multipliers[1],
-      [](const MultiWord& lhs, const MultiWord& rhs) {
+      [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
         return std::array{lhs, rhs};
       },
       AnnOperator(fmt::coprod_hopf())

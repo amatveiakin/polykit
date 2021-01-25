@@ -19,8 +19,8 @@ void Compressor::add_segment(absl::Span<const int> data) {
   append_vector(uncompressed_, data);
 }
 
-std::vector<unsigned char> Compressor::result() && {
-  std::vector<unsigned char> ret;
+CompressedBlob Compressor::result() && {
+  CompressedBlob ret;
   for (int i = 0; i < uncompressed_.size(); i += kCompressionValuesPerByte) {
     const int a = uncompressed_[i];
     const int b = (i+1 < uncompressed_.size()) ? uncompressed_[i+1] : kCompressionSentinel;
