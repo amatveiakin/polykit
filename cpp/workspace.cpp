@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   );
 
 
-  const int num_points = 7;
+  const int num_points = 9;
   const int num_args = num_points / 2 - 1;
   auto source = sum_looped_vec(
     [&](const std::vector<X>& args) {
@@ -57,6 +57,28 @@ int main(int argc, char *argv[]) {
 
   auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
 
+
+  // LiraExpr lhs = fully_normalize_ratios(expr);
+  // LiraExpr rhs;
+  // for (int i = 0; i < 7; ++i) {
+  //   const auto args = rotated_vector(seq_incl(1, 7), i);
+  //   const auto lira_four = slice(args, 0, 4);
+  //   const auto lira_five = concat({args[0]}, slice(args, 3));
+  //   for (int j = 0; j < 5; ++j) {
+  //     const auto lira_five_subset = removed_index(lira_five, j);
+  //     const int sign = neg_one_pow(j);
+  //     rhs += sign * LiraExpr::single(LiraParamOnes({Ratio(lira_four), Ratio(lira_five_subset)}));
+  //   }
+  //   // std::cout << rhs << "\n";
+  //   // rhs = {};
+  // }
+  // rhs = fully_normalize_ratios(rhs);
+  // // std::cout << "LHS " << lhs << "\n";
+  // // std::cout << "RHS " << rhs << "\n";
+  // // std::cout << "Sum " << lhs + rhs << "\n";
+  // std::cout << "LHS " << to_lyndon_basis_2(lhs) << "\n";
+  // std::cout << "RHS " << to_lyndon_basis_2(rhs) << "\n";
+  // std::cout << "Sum " << to_lyndon_basis_2(lhs + rhs) << "\n";
 
 
   StringExpr stats;

@@ -66,59 +66,65 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
     sort_two(ratios[0], ratios[2]);
     return LiraParamOnes(ratios);
   });
-  return expr_symm.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
-    const auto& ratios = formal_symbol.ratios();
-    CHECK_EQ(ratios.size(), 3);
-    const int distinct = num_distinct_elements(ratios);
-    LiraExpr replacement;
-    if (distinct == 3) {
-      //  abc  acb  bac  bca  cab  cba  -- original expr
-      //  abc  acb  bac  acb  bac  abc  -- expr_symm
-      //  ^^^^^^^^  ^^^  ^^^^^^^^^^^^^
-      //  already    |   duplicates
-      //  Lyndon     |
-      //             needs shuffle: (b)(ac) = bac + abc + acb
+  LiraExpr ret;
+  expr_symm.foreach([&](const LiraParamOnes& formal_symbol, int coeff) {
+    ret += [&]() -> LiraExpr {
+      const auto original_expr = coeff * LiraExpr::single(formal_symbol);
+      const auto& ratios = formal_symbol.ratios();
+      CHECK_EQ(ratios.size(), 3);
+      const int distinct = num_distinct_elements(ratios);
+      LiraExpr replacement;
+      if (distinct == 3) {
+        //  abc  acb  bac  bca  cab  cba  -- original expr
+        //  abc  acb  bac  acb  bac  abc  -- expr_symm
+        //  ^^^^^^^^  ^^^  ^^^^^^^^^^^^^
+        //  already    |   duplicates
+        //  Lyndon     |
+        //             needs shuffle: (b)(ac) = bac + abc + acb
 
-      if (ratios[1] >= ratios[0]) {
-        return LiraExpr::single(LiraParamOnes(ratios));
-      } else {
-        auto ratios1 = choose_indices(ratios, {1,0,2});
-        auto ratios2 = choose_indices(ratios, {1,2,0});
-        replacement.add_to(LiraParamOnes(ratios1), -1);
-        replacement.add_to(LiraParamOnes(ratios2), -1);
-      }
-    } else if (distinct == 2) {
-      //  aab  abb  aba  bab  baa  bba  -- original expr
-      //  aab  abb  aba  bab  aab  abb  -- expr_symm
-      //  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^
-      //  already   |         duplicates
-      //  Lyndon    |
-      //            needs shuffle: (ab)(a) = aba + 2*aab
-      //                           (b)(ab) = bab + 2*abb
+        if (ratios[1] >= ratios[0]) {
+          return original_expr;
+        } else {
+          auto ratios1 = choose_indices(ratios, {1,0,2});
+          auto ratios2 = choose_indices(ratios, {1,2,0});
+          replacement.add_to(LiraParamOnes(ratios1), -1);
+          replacement.add_to(LiraParamOnes(ratios2), -1);
+        }
+      } else if (distinct == 2) {
+        //  aab  abb  aba  bab  baa  bba  -- original expr
+        //  aab  abb  aba  bab  aab  abb  -- expr_symm
+        //  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+        //  already   |         duplicates
+        //  Lyndon    |
+        //            needs shuffle: (ab)(a) = aba + 2*aab
+        //                           (b)(ab) = bab + 2*abb
 
-      if (ratios[0] != ratios[2]) {
-        return LiraExpr::single(LiraParamOnes(ratios));
-      } else if (ratios[1] >= ratios[0]) {
-        auto ratios1 = choose_indices(ratios, {0,2,1});
-        replacement.add_to(LiraParamOnes(ratios1), -2);
+        if (ratios[0] != ratios[2]) {
+          return original_expr;
+        } else if (ratios[1] >= ratios[0]) {
+          auto ratios1 = choose_indices(ratios, {0,2,1});
+          replacement.add_to(LiraParamOnes(ratios1), -2);
+        } else {
+          auto ratios1 = choose_indices(ratios, {1,0,2});
+          replacement.add_to(LiraParamOnes(ratios1), -2);
+        }
+      } else if (distinct == 1) {
+        // skip: zero
+        return LiraExpr{};
       } else {
-        auto ratios1 = choose_indices(ratios, {1,0,2});
-        replacement.add_to(LiraParamOnes(ratios1), -2);
+        FATAL(absl::StrCat("Bad number of distinct elements: ", distinct));
       }
-    } else if (distinct == 1) {
-      // skip: zero
-      return LiraExpr{};
-    } else {
-      FATAL(absl::StrCat("Bad number of distinct elements: ", distinct));
-    }
-    CHECK(!replacement.zero());
-    // Note: for a proper Lyndon basis, use replacement unconditionally.
-    if ((expr_symm + replacement).l1_norm() <= expr_symm.l1_norm()) {
-      return replacement;
-    } else {
-      return LiraExpr::single(LiraParamOnes(ratios));
-    }
+      replacement *= coeff;
+      CHECK(!replacement.zero());
+      // Note: for a proper Lyndon basis, use replacement unconditionally.
+      if ((expr_symm - original_expr + replacement).l1_norm() <= expr_symm.l1_norm()) {
+        return replacement;
+      } else {
+        return original_expr;
+      }
+    }();
   });
+  return ret;
 }
 
 // Alternative to Lyndon basis.
@@ -364,6 +370,24 @@ LiraExpr lira_expr_substitute(
     }
     return LiraExpr::single(LiraParamOnes(std::move(new_ratios)));
   });
+}
+
+
+Snowpal& Snowpal::add_ball(std::vector<int> points) {
+  CHECK(!points.empty());
+  absl::c_sort(points);
+  CHECK_EQ(points.size(), num_distinct_elements(points)) << list_to_string(points);
+  auto* node = splitting_tree_.node_for_points(points);
+  node->split(points, splitting_tree_);
+  expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);
+  expr_ = without_unities(expr_);
+  expr_ = fully_normalize_ratios(expr_);
+  expr_ = keep_distinct_ratios(expr_);
+  // expr_ = keep_independent_ratios(expr_);
+  // expr_ = normalize_inverse(expr_);
+  // expr_ = to_lyndon_basis_2(expr_);
+  expr_ = to_lyndon_basis_3_soft(expr_);
+  return *this;
 }
 
 std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const SplittingTree& splitting_tree) {

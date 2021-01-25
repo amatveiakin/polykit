@@ -484,22 +484,7 @@ public:
   const LiraExpr& expr() const { return expr_; };
   const SplittingTree& splitting_tree() const { return splitting_tree_; }
 
-  Snowpal& add_ball(std::vector<int> points) {
-    CHECK(!points.empty());
-    absl::c_sort(points);
-    CHECK_EQ(points.size(), num_distinct_elements(points)) << list_to_string(points);
-    auto* node = splitting_tree_.node_for_points(points);
-    node->split(points, splitting_tree_);
-    expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);
-    expr_ = without_unities(expr_);
-    // expr_ = keep_distinct_ratios(expr_);
-    // expr_ = keep_independent_ratios(expr_);
-    // expr_ = normalize_inverse(expr_);
-    expr_ = fully_normalize_ratios(expr_);
-    expr_ = to_lyndon_basis_2(expr_);
-    // expr_ = to_lyndon_basis_3_soft(expr_);
-    return *this;
-  }
+  Snowpal& add_ball(std::vector<int> points);
 
 private:
   SplittingTree splitting_tree_;
