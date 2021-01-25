@@ -9,6 +9,7 @@ cc_library(
         "lib/format.h",
         "lib/hash.h",
         "lib/lexicographical.h",
+        "lib/macros.h",
         "lib/metaprogramming.h",
         "lib/packed.h",
         "lib/profiler.h",
