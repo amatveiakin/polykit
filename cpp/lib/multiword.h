@@ -1,3 +1,5 @@
+// DEPRECATED. Keeping for now to allow comparison benchmarks.
+
 #pragma once
 
 #include <array>

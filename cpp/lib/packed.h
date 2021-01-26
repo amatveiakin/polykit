@@ -236,6 +236,27 @@ template<typename T, int N> struct is_pvector<PVector<T, N>> : std::true_type {}
 template<typename T> inline constexpr bool is_pvector_v = is_pvector<T>::value;
 
 
+template<typename Dst, typename In>
+auto to_pvector(absl::Span<const In> src) {
+  static_assert(is_pvector_v<Dst>);
+  Dst dst(src.size());
+  absl::c_copy(src, dst.begin());
+  return dst;
+}
+template<int N, typename In>
+auto to_pvector(absl::Span<const In> src) {
+  return to_pvector<PVector<In, N>>(src);
+}
+
+template<typename Dst, typename In>
+auto to_pvector(const std::vector<In>& src) {
+  return to_pvector<Dst>(absl::MakeConstSpan(src));
+}
+template<int N, typename In>
+auto to_pvector(const std::vector<In>& src) {
+  return to_pvector<N>(absl::MakeConstSpan(src));
+}
+
 template<typename Dst, typename In, typename F>
 auto mapped_to_pvector(absl::Span<const In> src, F&& func) {
   static_assert(is_pvector_v<Dst>);

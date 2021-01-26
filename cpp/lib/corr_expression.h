@@ -6,6 +6,7 @@
 #include "lexicographical.h"
 #include "linear.h"
 #include "multiword.h"
+#include "packed.h"
 #include "util.h"
 #include "word.h"
 
@@ -28,6 +29,8 @@ inline std::string to_string(const CorrFSymb& fsymb) {
   );
 }
 
+#define OLD_CORR_EXPR 0
+#if OLD_CORR_EXPR
 struct CorrExprParam {
   using ObjectT = CorrFSymb;
   using StorageT = Word;
@@ -41,6 +44,22 @@ struct CorrExprParam {
     return to_string(obj);
   }
 };
+#else
+struct CorrExprParam {
+  using ObjectT = CorrFSymb;
+  using StorageT = PVector<unsigned char, 10>;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return to_pvector<StorageT>(obj.points);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    // TODO: Extend `to_vector` to support PVector-s and cast types.
+    return CorrFSymb{mapped(key, [](auto p) -> int { return p; })};
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return to_string(obj);
+  }
+};
+#endif
 
 using CorrExpr = Linear<CorrExprParam>;
 
@@ -57,21 +76,12 @@ inline std::string to_string(const CoCorrFSymb& fsymb) {
 
 struct CorrCoExprParam {
   using ObjectT = CoCorrFSymb;
-  using StorageT = MultiWord;
+  using StorageT = std::array<CorrExprParam::StorageT, kCorrCoExprComponents>;
   static StorageT object_to_key(const ObjectT& obj) {
-    MultiWord ret;
-    for (const auto& component : obj) {
-      ret.append_segment(CorrExprParam::object_to_key(component));
-    }
-    return ret;
+    return mapped_array(obj, CorrExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
-    CHECK_EQ(key.num_segments(), kCorrCoExprComponents);
-    std::array<CorrFSymb, kCorrCoExprComponents> ret;
-    for (int i = 0; i < kCorrCoExprComponents; ++i) {
-      ret[i] = CorrExprParam::key_to_object(Word{key.segment(i)});
-    }
-    return ret;
+    return mapped_array(key, CorrExprParam::key_to_object);
   }
   static std::string object_to_string(const ObjectT& obj) {
     return to_string(obj);
