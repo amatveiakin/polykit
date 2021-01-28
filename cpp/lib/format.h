@@ -120,6 +120,7 @@ class AbstractFormatter {
 public:
   virtual ~AbstractFormatter() {}
 
+  virtual std::string newline() = 0;
   virtual std::string inf() = 0;
   virtual std::string unity();
   virtual std::string minus();
@@ -142,8 +143,6 @@ public:
       const std::string& denominator) = 0;
   // Note: there is no function for product. Simply use an str_join
   // with one of the product signs above.
-
-  virtual std::string box(const std::string& expr) = 0;
 
   virtual std::string parens(const std::string& expr) = 0;
   virtual std::string brackets(const std::string& expr) = 0;
@@ -203,6 +202,7 @@ AbstractFormatter* current_formatter();
 
 namespace fmt {
 
+inline std::string newline() { return current_formatter()->newline(); }
 inline std::string inf() { return current_formatter()->inf(); }
 inline std::string unity() { return current_formatter()->unity(); }
 inline std::string minus() { return current_formatter()->minus(); }
@@ -228,10 +228,6 @@ inline std::string frac(
     const std::string& numerator,
     const std::string& denominator) {
   return current_formatter()->frac(numerator, denominator);
-}
-
-inline std::string box(const std::string& expr) {
-  return current_formatter()->box(expr);
 }
 
 inline std::string parens(const std::string& expr) {

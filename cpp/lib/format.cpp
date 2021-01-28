@@ -116,6 +116,14 @@ static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
   return mapped(v, [](int x){ return absl::StrCat(x); });
 }
 
+static bool is_html() {
+  return *current_formatting_config().rich_text_format == RichTextFormat::html;
+}
+
+static std::string maybe_html_newline() {
+  return is_html() ? " <br>\n" : "\n";
+}
+
 
 std::string AbstractFormatter::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
 std::string AbstractFormatter::minus() { return "-"; }
@@ -160,12 +168,13 @@ std::string AbstractFormatter::end_rich_text() {
 
 
 class AsciiFormatter : public AbstractFormatter {
+  virtual std::string newline() { return maybe_html_newline(); }
   virtual std::string inf() { return "Inf"; }
   virtual std::string dot() { return "."; }
   virtual std::string tensor_prod() { return " * "; }
   virtual std::string coprod_lie() { return "  ^  "; }
   virtual std::string coprod_hopf() { return "  @  "; }
-  virtual std::string comult() { return "&"; }
+  virtual std::string comult() { return is_html() ? "&amp;" : "&"; }
 
   virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
@@ -179,10 +188,6 @@ class AsciiFormatter : public AbstractFormatter {
     return absl::StrCat(numerator, "/", denominator);
   }
 
-  virtual std::string box(const std::string& expr) {
-    return absl::StrCat(expr, "\n");
-  }
-
   virtual std::string parens(const std::string& expr) {
     return absl::StrCat("(", expr, ")");
   }
@@ -193,7 +198,9 @@ class AsciiFormatter : public AbstractFormatter {
     return absl::StrCat("{", expr, "}");
   }
   virtual std::string chevrons(const std::string& expr) {
-    return absl::StrCat("<", expr, ">");
+    return is_html()
+      ? absl::StrCat("&lt;", expr, "&gt;")
+      : absl::StrCat("<", expr, ">");
   }
   virtual std::string frac_parens(const std::string& expr) {
     return parens(expr);
@@ -266,6 +273,7 @@ class UnicodeFormatter : public AbstractFormatter {
   static constexpr char kThinNbsp[] = " ";
   static constexpr char kMinusSign[] = "−";
 
+  virtual std::string newline() { return maybe_html_newline(); }
   virtual std::string inf() { return "∞"; }
   virtual std::string dot() { return "⋅"; }
   virtual std::string minus() { return kMinusSign; }
@@ -288,11 +296,6 @@ class UnicodeFormatter : public AbstractFormatter {
 
   std::string hspace(const std::string& expr) {
     return absl::StrCat(kNbsp, expr, kNbsp);
-  }
-  virtual std::string box(const std::string& expr) {
-    return *current_formatting_config().rich_text_format == RichTextFormat::html
-      ? absl::StrCat(expr, " <br>\n")
-      : absl::StrCat(expr, "\n");
   }
 
   virtual std::string parens(const std::string& expr) {
@@ -424,6 +427,7 @@ class UnicodeFormatter : public AbstractFormatter {
 
 
 class LatexFormatter : public AbstractFormatter {
+  virtual std::string newline() { return "\\\\\n"; }
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
   virtual std::string inf() { return "\\infty"; }
   virtual std::string dot() { return ""; }
@@ -444,9 +448,6 @@ class LatexFormatter : public AbstractFormatter {
 
   std::string hspace(const std::string& expr) {
     return absl::StrCat("\\ ", expr, "\\ ");
-  }
-  virtual std::string box(const std::string& expr) {
-    return absl::StrCat(expr, "\\\\\n");
   }
 
   // Note: could use \left and \right if necessary.

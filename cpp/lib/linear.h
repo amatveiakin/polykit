@@ -324,15 +324,15 @@ std::ostream& to_ostream(
     for (const auto& [obj, coeff] : dump) {
       ++line;
       if (line > line_limit) {
-        os << fmt::box("...");
+        os << "..." << fmt::newline();
         return os;
       }
       // TODO: Fix how padding works for parsable expressions
       os << pad_left(fmt::coeff(coeff), max_coeff_length);
       if constexpr (std::is_same_v<ContextT, LinearNoContext>) {
-        os << fmt::box(ParamT::object_to_string(obj));
+        os << ParamT::object_to_string(obj) << fmt::newline();
       } else {
-        os << fmt::box(ParamT::object_to_string(obj, context));
+        os << ParamT::object_to_string(obj, context) << fmt::newline();
       }
     }
   }
@@ -370,7 +370,7 @@ inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annota
       break;
   }
   for (const auto& err : annotations.errors) {
-    os << fmt::coeff(1) << "<?> " << err << "\n";
+    os << fmt::coeff(1) << "<?> " << err << fmt::newline();
   }
   return os;
 }
@@ -622,23 +622,23 @@ std::ostream& to_ostream(
     os << "# " << size << " " << en_plural(size, "term");
     os << ", |coeff| = " << linear.l1_norm();
     if (line_limit > 0) {
-      os << ":\n";
+      os << ":" << fmt::newline();
       to_ostream(os, linear.main(), sorting_cmp, context);
     } else {
-      os << "\n";
+      os << fmt::newline();
     }
   } else {
     if (line_limit > 0) {
-      os << "\n";
+      os << fmt::newline();
     }
-    os << fmt::coeff(0) << "\n";
+    os << fmt::coeff(0) << fmt::newline();
   }
   const auto& annotations = linear.annotations();
   if (!annotations.empty() &&
       *current_formatting_config().expression_include_annotations) {
     ScopedFormatting sf(FormattingConfig()
       .set_expression_line_limit(FormattingConfig::kNoLineLimit));
-    os << "~~~\n";
+    os << "~~~" << fmt::newline();
     os << annotations;
   }
   os.flush();
