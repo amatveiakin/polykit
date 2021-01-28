@@ -16,16 +16,13 @@ enum class Formatter {  // TODO: Rename to `encoder` (?)
   latex,
 };
 
-// `plain_text` always disables rich text formatting. Otherwise the
-// support is as follows:
+// Rich text support diagram:
 //
-//           |  Native    Console     HTML
-// ----------+------------------------------
-//   ASCII   |   no         YES       TBD
-//  Unicode  |   no         YES       TBD
-//   LaTeX   |   TBD        no        no
-//
-// If an option is not supported, the fallback is always `plain_text`.
+//           |  Plain text   Native    Console     HTML
+// ----------+------------------------------------------
+//   ASCII   |      no        no         YES       YES
+//  Unicode  |      no        no         YES       YES
+//   LaTeX   |      no        TBD        no        no
 //
 enum class RichTextFormat {
   native,
@@ -73,24 +70,28 @@ public:
 };
 
 
+// These are console colors. In HTML mode color brightness is reversed,
+// because console assumes white-on-black and HTML is black-on-white.
 enum class TextColor {
   normal         = 0,
-  black          = 30,
   red            = 31,
   green          = 32,
   yellow         = 33,
   blue           = 34,
   magenta        = 35,
   cyan           = 36,
-  white          = 37,
-  bright_black   = 90,
   bright_red     = 91,
   bright_green   = 92,
   bright_yellow  = 93,
   bright_blue    = 94,
   bright_magenta = 95,
   bright_cyan    = 96,
-  bright_white   = 97,
+  // Black & white variations are not supported, because inverting them
+  // would be confusing.
+  //   black          = 30,
+  //   white          = 37,
+  //   bright_black   = 90,
+  //   bright_white   = 97,
 };
 
 // TODO: Add optionals similarly to FormattingConfig when there are more options.
@@ -307,6 +308,8 @@ inline std::string colored(const std::string& expr, TextColor text_color) {
   std::string ret;
   ret += current_formatter()->begin_rich_text(RichTextOptions().set_text_color(text_color));
   ret += expr;
+  // TODO: Fix: this doesn't give correct results with nested `fmt::colored` calls
+  // in console mode.
   ret += current_formatter()->end_rich_text();
   return ret;
 }

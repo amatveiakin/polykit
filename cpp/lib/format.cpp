@@ -5,6 +5,7 @@
 #include <regex>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/substitute.h"
 
 #include "util.h"
 
@@ -34,6 +35,31 @@ std::string get_command_for_console_rich_text_options() {
   return options.text_color == TextColor::normal
     ? "\033[0m"
     : absl::StrCat("\033[", static_cast<int>(options.text_color), "m");
+}
+
+// Note: color brightness is inverted, because console is white-on-black
+// and html is black-on-white.
+std::string text_color_to_html_color(TextColor color) {
+  switch (color) {
+    case TextColor::normal:         return "Black";
+    case TextColor::red:            return "LightCoral";
+    case TextColor::green:          return "LightGreen";
+    case TextColor::yellow:         return "Khaki";
+    case TextColor::blue:           return "DeepSkyBlue";
+    case TextColor::magenta:        return "Violet";
+    case TextColor::cyan:           return "MediumAquamarine";
+    case TextColor::bright_red:     return "Red";
+    case TextColor::bright_green:   return "LimeGreen";
+    case TextColor::bright_yellow:  return "Gold";
+    case TextColor::bright_blue:    return "Blue";
+    case TextColor::bright_magenta: return "Magenta";
+    case TextColor::bright_cyan:    return "DarkCyan";
+  }
+  FATAL(absl::StrCat("Unknown color: ", color));
+}
+
+std::string rich_text_options_to_css(const RichTextOptions& options) {
+  return "color: " + text_color_to_html_color(options.text_color);
 }
 
 
@@ -113,8 +139,7 @@ std::string AbstractFormatter::begin_rich_text(const RichTextOptions& options) {
       console_rich_text_options_stack.push_back(options);
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
-      // TOOD: implement
-      return {};
+      return absl::Substitute(R"(<span style="$0">)", rich_text_options_to_css(options));
   }
   FATAL("Illegal rich_text_format");
 }
@@ -128,8 +153,7 @@ std::string AbstractFormatter::end_rich_text() {
       console_rich_text_options_stack.pop_back();
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
-      // TOOD: implement
-      return {};
+      return absl::Substitute("</span>");
   }
   FATAL("Illegal rich_text_format");
 }
