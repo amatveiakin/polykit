@@ -4,44 +4,29 @@
 #include "delta.h"
 
 
-// TODO: Instead of all there overloads declare a span type that
-// accepts both std::vector<X> and std::vector<int>.
-
-DeltaExpr LidoVec(int weight, const std::vector<X>& points);
-DeltaExpr LidoVec(int weight, const std::vector<int>& points);
-DeltaExpr LidoVec(int weight, std::initializer_list<int> points);
+DeltaExpr LidoVec(int weight, SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoVec(...))
 // but faster.
-WordExpr LidoVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector);
+WordExpr LidoVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
 
 
-DeltaExpr LidoNegVec(int weight, const std::vector<X>& points);
-DeltaExpr LidoNegVec(int weight, const std::vector<int>& points);
-DeltaExpr LidoNegVec(int weight, std::initializer_list<int> points);
+DeltaExpr LidoNegVec(int weight, SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoNegVec(...))
 // but faster.
-WordExpr LidoNegVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector);
+WordExpr LidoNegVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
 
 
 // Only 6 and 8 point are supported for now
-DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points);
-DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points);
-DeltaExpr LidoSymmVec(int weight, std::initializer_list<int> points);
+DeltaExpr LidoSymmVec(int weight, SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoSymmVec(...))
 // but faster.
-WordExpr LidoSymmVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector);
+WordExpr LidoSymmVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
 
 
 namespace internal {

@@ -3,23 +3,19 @@
 #include "delta.h"
 
 
-DeltaExpr IVec(const std::vector<X>& points);
+DeltaExpr IVec(SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(IVec(...))
 // but faster.
-WordExpr IVecPr(
-    const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector);
+WordExpr IVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector);
 
-DeltaExpr CorrVec(const std::vector<X>& points);
+DeltaExpr CorrVec(SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(CorrVec(...))
 // but faster.
-WordExpr CorrVecPr(
-    const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector);
+WordExpr CorrVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector);
 
 template<typename... Args>
 DeltaExpr I(Args... args) {

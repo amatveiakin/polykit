@@ -35,14 +35,12 @@ static ResultT IVec_wrapper(const std::vector<X>& points, const ProjectorT& proj
     fmt::function("I", mapped(points, [](X x){ return to_string(x); })));
 }
 
-DeltaExpr IVec(const std::vector<X>& points) {
-  return IVec_wrapper<DeltaExpr>(points, identity_function);
+DeltaExpr IVec(SpanX points) {
+  return IVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-WordExpr IVecPr(
-    const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector) {
-  return IVec_wrapper<WordExpr>(points, projector);
+WordExpr IVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
+  return IVec_wrapper<WordExpr>(points.as_x(), projector);
 }
 
 template<typename ResultT, typename ProjectorT>
@@ -55,12 +53,10 @@ ResultT CorrVec_wrapper(const std::vector<X>& points, const ProjectorT& projecto
   );
 }
 
-DeltaExpr CorrVec(const std::vector<X>& points) {
-  return CorrVec_wrapper<DeltaExpr>(points, identity_function);
+DeltaExpr CorrVec(SpanX points) {
+  return CorrVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-WordExpr CorrVecPr(
-    const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector) {
-  return CorrVec_wrapper<WordExpr>(points, projector);
+WordExpr CorrVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
+  return CorrVec_wrapper<WordExpr>(points.as_x(), projector);
 }

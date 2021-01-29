@@ -99,22 +99,12 @@ static ResultT Lido_wrapper(
     ));
 }
 
-DeltaExpr LidoVec(int weight, const std::vector<X>& points) {
-  return Lido_wrapper<DeltaExpr>(weight, points, identity_function);
+DeltaExpr LidoVec(int weight, SpanX points) {
+  return Lido_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-DeltaExpr LidoVec(int weight, const std::vector<int>& points) {
-  return LidoVec(weight, mapped(points, X::Var));
-}
-
-DeltaExpr LidoVec(int weight, std::initializer_list<int> points) {
-  return LidoVec(weight, std::vector(points));
-}
-
-WordExpr LidoVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector) {
-  return Lido_wrapper<WordExpr>(weight, points, projector);
+WordExpr LidoVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
+  return Lido_wrapper<WordExpr>(weight, points.as_x(), projector);
 }
 
 
@@ -132,22 +122,12 @@ static ResultT LidoNeg_wrapper(
     ));
 }
 
-DeltaExpr LidoNegVec(int weight, const std::vector<X>& points) {
-  return LidoNeg_wrapper<DeltaExpr>(weight, points, identity_function);
+DeltaExpr LidoNegVec(int weight, SpanX points) {
+  return LidoNeg_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-DeltaExpr LidoNegVec(int weight, const std::vector<int>& points) {
-  return LidoNegVec(weight, mapped(points, X::Var));
-}
-
-DeltaExpr LidoNegVec(int weight, std::initializer_list<int> points) {
-  return LidoNegVec(weight, std::vector(points));
-}
-
-WordExpr LidoNegVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector) {
-  return LidoNeg_wrapper<WordExpr>(weight, points, projector);
+WordExpr LidoNegVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
+  return LidoNeg_wrapper<WordExpr>(weight, points.as_x(), projector);
 }
 
 
@@ -184,20 +164,10 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
   ));
 }
 
-DeltaExpr LidoSymmVec(int weight, const std::vector<X>& points) {
-  return LidoSymm_wrapper<DeltaExpr>(weight, points, identity_function);
+DeltaExpr LidoSymmVec(int weight, SpanX points) {
+  return LidoSymm_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-DeltaExpr LidoSymmVec(int weight, const std::vector<int>& points) {
-  return LidoSymmVec(weight, mapped(points, X::Var));
-}
-
-DeltaExpr LidoSymmVec(int weight, std::initializer_list<int> points) {
-  return LidoSymmVec(weight, std::vector(points));
-}
-
-WordExpr LidoSymmVecPr(
-    int weight, const std::vector<X>& points,
-    std::function<WordExpr(DeltaExpr)> projector) {
-  return LidoSymm_wrapper<WordExpr>(weight, points, projector);
+WordExpr LidoSymmVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
+  return LidoSymm_wrapper<WordExpr>(weight, points.as_x(), projector);
 }

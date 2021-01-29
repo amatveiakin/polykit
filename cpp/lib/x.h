@@ -1,5 +1,7 @@
 #pragma once
 
+#include "absl/types/span.h"
+
 #include "check.h"
 #include "format.h"
 
@@ -44,3 +46,39 @@ static constexpr X Inf = X::Inf();
 inline std::string to_string(const X& x) {
   return (x == Inf) ? fmt::inf() : to_string(x.var());
 }
+
+
+class SpanX {
+public:
+  SpanX(absl::Span<const X> points) : span_(points) {}
+  SpanX(absl::Span<const int> points) : span_(points) {}
+  SpanX(const std::vector<X>& points) : SpanX(absl::MakeConstSpan(points)) {}
+  SpanX(const std::vector<int>& points) : SpanX(absl::MakeConstSpan(points)) {}
+  SpanX(std::initializer_list<int> points) : SpanX(absl::Span<const int>(points)) {}
+
+  std::vector<X> as_x() const {
+    return std::visit(overloaded{
+      [](const absl::Span<const int> s) {
+        return mapped(s, [](int p) { return X(p); });
+      },
+      [](const absl::Span<const X> s) {
+        return std::vector(s.begin(), s.end());
+      },
+    }, span_);
+  }
+
+  // Will crash if the list contains infinities.
+  std::vector<int> as_int() const {
+    return std::visit(overloaded{
+      [](const absl::Span<const int> s) {
+        return std::vector(s.begin(), s.end());
+      },
+      [](const absl::Span<const X> s) {
+        return mapped(s, [](X x) { return x.var(); });
+      },
+    }, span_);
+  }
+
+private:
+  std::variant<absl::Span<const int>, absl::Span<const X>> span_;
+};

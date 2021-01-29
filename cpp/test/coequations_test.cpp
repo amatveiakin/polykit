@@ -52,11 +52,11 @@ TEST(CoequationsTest, LidoSymm_Arg6) {
 TEST(CoequationsTest, Lido_Arg6) {
   for (int w = 1; w <= 2; ++w) {
     EXPECT_EXPR_EQ(
-      comultiply(LidoVec(2*w, std::vector{1,2,3,4,5,6}), {w,w}),
+      comultiply(LidoVec(2*w, {1,2,3,4,5,6}), {w,w}),
       (
-        + coproduct(LidoVec   (w, std::vector{1,2,3,4}), LidoVec(w, std::vector{1,4,5,6}))
-        + coproduct(LidoNegVec(w, std::vector{2,3,4,5}), LidoVec(w, std::vector{1,2,5,6}))
-        + coproduct(LidoVec   (w, std::vector{3,4,5,6}), LidoVec(w, std::vector{1,2,3,6}))
+        + coproduct(LidoVec   (w, {1,2,3,4}), LidoVec(w, {1,4,5,6}))
+        + coproduct(LidoNegVec(w, {2,3,4,5}), LidoVec(w, {1,2,5,6}))
+        + coproduct(LidoVec   (w, {3,4,5,6}), LidoVec(w, {1,2,3,6}))
       )
     );
   }
