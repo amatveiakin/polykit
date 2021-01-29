@@ -14,6 +14,7 @@
 //   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
+  // Optimization potential: unroll.
   using LinearT = Linear<SimpleLinearParam<MonomT>>;
   if (u.empty() && v.empty()) {
     return {};
@@ -24,7 +25,6 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT&
   if (v.empty()) {
     return LinearT::single_key(u);
   }
-  // TODO: unrolling
   const auto a = u.back();
   const auto b = v.back();
   MonomT u_trunc = u;

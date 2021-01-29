@@ -1,3 +1,5 @@
+// DEPRECATED[word-to-pvector]. Keeping for now to allow comparison benchmarks.
+
 #pragma once
 
 #include <array>

@@ -107,8 +107,9 @@ inline std::string to_string(const EpsilonPack& pack) {
   }, pack);
 }
 
-#define OLD_EPSILON 0  // TODO: Make new EpsilonExpr performace comparable.
-#if OLD_EPSILON
+// Optimization potential: Make new EpsilonExpr performace comparable.
+#define OLD_EPSILON 0
+#if OLD_EPSILON  // DEPRECATED[word-to-pvector]
 namespace internal {
 constexpr int kEpsilonTypeBit = kEpsilonDataBits;
 

@@ -1,5 +1,3 @@
-// TODO: What is the best way to store one? Separate type of thing or zero-length product?
-
 #include  "epsilon.h"
 
 #include  "algebra.h"

@@ -62,7 +62,7 @@ inline std::string to_string(const ThetaPack& pack) {
 
 
 #define OLD_THETA 0
-#if OLD_THETA
+#if OLD_THETA  // DEPRECATED[word-to-pvector]
 namespace internal {
 using ThetaStorageType = Word;
 

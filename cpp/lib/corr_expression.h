@@ -30,7 +30,7 @@ inline std::string to_string(const CorrFSymb& fsymb) {
 }
 
 #define OLD_CORR_EXPR 0
-#if OLD_CORR_EXPR
+#if OLD_CORR_EXPR  // DEPRECATED[word-to-pvector]
 struct CorrExprParam {
   using ObjectT = CorrFSymb;
   using StorageT = Word;

@@ -120,7 +120,6 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
   CHECK(CoExprT::Param::coproduct_is_lie_algebra);
   using CoMonomT = typename CoExprT::StorageT;
   CoExprT ret;
-  // TODO: Rewrite using add_to_key
   expr.foreach_key([&](const auto& key, int coeff) {
     CHECK_EQ(key.size(), 2);
     const auto& key1 = key[0];
@@ -129,15 +128,15 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
       if (key1 == key2) {
         // zero: through away
       } else if (key1 < key2) {
-        ret += coeff * CoExprT::single_key(key);
+        ret.add_to_key(key, coeff);
       } else {
-        ret -= coeff * CoExprT::single_key(CoMonomT({key2, key1}));
+        ret.add_to_key(CoMonomT({key2, key1}), -coeff);
       }
     } else {
       if (key1.size() < key2.size()) {
-        ret += coeff * CoExprT::single_key(key);
+        ret.add_to_key(key, coeff);
       } else {
-        ret -= coeff * CoExprT::single_key(CoMonomT({key2, key1}));
+        ret.add_to_key(CoMonomT({key2, key1}), -coeff);
       }
     }
   });
@@ -165,7 +164,6 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
       ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span))
     ));
   };
-  // TODO: Rewrite using mapped_expanding
   CoExprT ret;
   expr.foreach_key([&](const MonomT& monom, int coeff) {
     const auto& monom_vec = ExprT::Param::key_to_vector(monom);

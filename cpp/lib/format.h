@@ -300,12 +300,12 @@ inline std::string function_indexed_args(
   return current_formatter()->function_indexed_args(name, indices, hspacing);
 }
 
+// Warning: nested `fmt::colored` calls are not supprted with RichTextFormat::console.
+// Use begin_rich_text/end_rich_text for everything except the innermost color.
 inline std::string colored(const std::string& expr, TextColor text_color) {
   std::string ret;
   ret += current_formatter()->begin_rich_text(RichTextOptions().set_text_color(text_color));
   ret += expr;
-  // TODO: Fix: this doesn't give correct results with nested `fmt::colored` calls
-  // in console mode.
   ret += current_formatter()->end_rich_text();
   return ret;
 }

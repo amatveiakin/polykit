@@ -1,5 +1,3 @@
-// TODO: Add debug-only checks and replace all asserts.
-
 #pragma once
 
 #include <cstdlib>

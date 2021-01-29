@@ -50,12 +50,11 @@ LinearT to_lyndon_basis(const LinearT& expression) {
   while (!finished) {
     VectorLinearT expr_new;
     finished = true;
-    // TODO: Rewrite using add_to_key or mapped_expanding
     expr.foreach_key([&](const auto& word_orig, int coeff) {
       const auto& lyndon_words = lyndon_factorize(word_orig);
       CHECK(!lyndon_words.empty());
       if (lyndon_words.size() == 1) {
-        expr_new += coeff * VectorLinearT::single_key(word_orig);
+        expr_new.add_to_key(word_orig, coeff);
         return;
       }
       finished = false;

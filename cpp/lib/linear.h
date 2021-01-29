@@ -269,7 +269,7 @@ public:
     return *this;
   }
   void div_int(int scalar) {
-    assert(scalar != 0);
+    CHECK(scalar != 0);
     for (auto& [key, coeff]: data_) {
       coeff = ::div_int(coeff, scalar);
       assert(coeff != 0);
@@ -390,7 +390,6 @@ public:
   Linear(BasicLinearMain main, LinearAnnotation annotations)
     : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
-  // TODO: Replace "[+-]=.*::single" with `add_to`
   static Linear single(const ObjectT& obj) {
     Linear ret;
     ret.main_ = BasicLinearMain::single(obj);
@@ -505,7 +504,7 @@ public:
   const LinearAnnotation& annotations() const { return annotations_; };
 
   Linear& annotate(const std::string& annotation) {
-    annotations_.expression += BasicLinearAnnotation::single(annotation);
+    annotations_.expression.add_to_key(annotation, 1);
     return *this;
   }
   Linear& maybe_annotate(const std::optional<std::string>& annotation) {

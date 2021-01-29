@@ -3,32 +3,23 @@
 #include <algorithm>
 #include <string>
 
+#include "absl/strings/str_join.h"
+
 #include "string_basic.h"
 
 
-// TODO: Rewrite via absl::StrJoin
 template<typename T, typename F>
 std::string str_join(const T& container, std::string separator, F element_to_string) {
-  std::string ret;
-  for (const auto& v : container) {
-    if (!ret.empty()) {
-      ret += separator;
-    }
-    ret += element_to_string(v);
-  }
-  return ret;
+  return absl::StrJoin(container, separator, [&](std::string* out, const auto& value) {
+    out->append(element_to_string(value));
+  });
 }
 
 template<typename T>
 std::string str_join(const T& container, std::string separator) {
-  std::string ret;
-  for (const auto& v : container) {
-    if (!ret.empty()) {
-      ret += separator;
-    }
-    ret += to_string(v);
-  }
-  return ret;
+  return str_join(container, separator, [](const auto& value) {
+    return to_string(value);
+  });
 }
 
 template<typename T, typename F>

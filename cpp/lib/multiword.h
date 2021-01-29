@@ -1,4 +1,4 @@
-// DEPRECATED. Keeping for now to allow comparison benchmarks.
+// DEPRECATED[word-to-pvector]. Keeping for now to allow comparison benchmarks.
 
 #pragma once
 
@@ -40,9 +40,6 @@ public:
     SegmentRef operator*() const {
       return word_->segment(segment_idx_);
     }
-    // SegmentRef* operator->() const {
-    //   return &**this;  // TODO: fix without returning reference to remporary
-    // }
 
     const_iterator& operator++() {
       segment_idx_++;

@@ -16,7 +16,7 @@ constexpr int kCompressionMaxValue = (1 << kCompressionShift) - 1;
 constexpr int kCompressionLowerValueMask = (1 << kCompressionShift) - 1;
 
 
-// TODO: Strong typing
+// TODO: Strong typing (after MultiWord is completely removed)
 using CompressedBlob = PVector<unsigned char, 10>;
 
 

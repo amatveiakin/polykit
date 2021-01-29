@@ -1,5 +1,3 @@
-// TODO: Replace `virtual`-s with `override`-s
-
 #include "format.h"
 
 #include <regex>
@@ -168,45 +166,45 @@ std::string AbstractFormatter::end_rich_text() {
 
 
 class AsciiFormatter : public AbstractFormatter {
-  virtual std::string newline() { return maybe_html_newline(); }
-  virtual std::string inf() { return "Inf"; }
-  virtual std::string dot() { return "."; }
-  virtual std::string tensor_prod() { return " * "; }
-  virtual std::string coprod_lie() { return "  ^  "; }
-  virtual std::string coprod_hopf() { return "  @  "; }
-  virtual std::string comult() { return is_html() ? "&amp;" : "&"; }
+  std::string newline() override { return maybe_html_newline(); }
+  std::string inf() override { return "Inf"; }
+  std::string dot() override { return "."; }
+  std::string tensor_prod() override { return " * "; }
+  std::string coprod_lie() override { return "  ^  "; }
+  std::string coprod_hopf() override { return "  @  "; }
+  std::string comult() override { return is_html() ? "&amp;" : "&"; }
 
-  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+  std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
     return absl::StrCat(lhs, spacing, "+", spacing, rhs);
   }
-  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+  std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
     return absl::StrCat(lhs, spacing, "-", spacing, rhs);
   }
-  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+  std::string frac(const std::string& numerator, const std::string& denominator) override {
     return absl::StrCat(numerator, "/", denominator);
   }
 
-  virtual std::string parens(const std::string& expr) {
+  std::string parens(const std::string& expr) override {
     return absl::StrCat("(", expr, ")");
   }
-  virtual std::string brackets(const std::string& expr) {
+  std::string brackets(const std::string& expr) override {
     return absl::StrCat("[", expr, "]");
   }
-  virtual std::string braces(const std::string& expr) {
+  std::string braces(const std::string& expr) override {
     return absl::StrCat("{", expr, "}");
   }
-  virtual std::string chevrons(const std::string& expr) {
+  std::string chevrons(const std::string& expr) override {
     return is_html()
       ? absl::StrCat("&lt;", expr, "&gt;")
       : absl::StrCat("<", expr, ">");
   }
-  virtual std::string frac_parens(const std::string& expr) {
+  std::string frac_parens(const std::string& expr) override {
     return parens(expr);
   }
 
-  virtual std::string coeff(int v) {
+  std::string coeff(int v) override {
     if (*current_formatting_config().parsable_expression) {
       // Allows to copy annotations from the output and use them in code.
       // Should not start with whitespace, because that would mess up identation.
@@ -232,11 +230,11 @@ class AsciiFormatter : public AbstractFormatter {
     }
   }
 
-  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+  std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "_", str_join(indices, "_"));
   }
-  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+  std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     return absl::StrCat(
       left_index.empty() ? "" : absl::StrCat(left_index, "_"),
@@ -245,7 +243,7 @@ class AsciiFormatter : public AbstractFormatter {
     );
   }
 
-  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+  std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty()
       ? main
@@ -254,14 +252,14 @@ class AsciiFormatter : public AbstractFormatter {
         : absl::StrCat(main, "^", str_join(indices, "^"));
   }
 
-  virtual std::string var(int idx) {
+  std::string var(int idx) override {
     return absl::StrCat("x", idx);
   }
-  virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
+  std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) override {
     const auto separator = (hspacing == HSpacing::dense ? "," : ", ");
     return name + parens(str_join(args, separator));
   }
-  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
+  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
     return function(name, ints_to_strings(indices), hspacing);
   }
 };
@@ -273,24 +271,24 @@ class UnicodeFormatter : public AbstractFormatter {
   static constexpr char kThinNbsp[] = " ";
   static constexpr char kMinusSign[] = "−";
 
-  virtual std::string newline() { return maybe_html_newline(); }
-  virtual std::string inf() { return "∞"; }
-  virtual std::string dot() { return "⋅"; }
-  virtual std::string minus() { return kMinusSign; }
-  virtual std::string tensor_prod() { return "⊗"; }
-  virtual std::string coprod_lie() { return hspace("∧"); }
-  virtual std::string coprod_hopf() { return hspace("☒"); }
-  virtual std::string comult() { return "△"; }
+  std::string newline() override { return maybe_html_newline(); }
+  std::string inf() override { return "∞"; }
+  std::string dot() override { return "⋅"; }
+  std::string minus() override { return kMinusSign; }
+  std::string tensor_prod() override { return "⊗"; }
+  std::string coprod_lie() override { return hspace("∧"); }
+  std::string coprod_hopf() override { return hspace("☒"); }
+  std::string comult() override { return "△"; }
 
-  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+  std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
     return absl::StrCat(lhs, spacing, "+", spacing, rhs);
   }
-  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) {
+  std::string diff(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
     return absl::StrCat(lhs, spacing, kMinusSign, spacing, rhs);
   }
-  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+  std::string frac(const std::string& numerator, const std::string& denominator) override {
     return absl::StrCat(numerator, "/", denominator);
   }
 
@@ -298,19 +296,19 @@ class UnicodeFormatter : public AbstractFormatter {
     return absl::StrCat(kNbsp, expr, kNbsp);
   }
 
-  virtual std::string parens(const std::string& expr) {
+  std::string parens(const std::string& expr) override {
     return absl::StrCat("(", expr, ")");
   }
-  virtual std::string brackets(const std::string& expr) {
+  std::string brackets(const std::string& expr) override {
     return absl::StrCat("[", expr, "]");
   }
-  virtual std::string braces(const std::string& expr) {
+  std::string braces(const std::string& expr) override {
     return absl::StrCat("{", expr, "}");
   }
-  virtual std::string chevrons(const std::string& expr) {
+  std::string chevrons(const std::string& expr) override {
     return absl::StrCat("⟨", expr, "⟩");
   }
-  virtual std::string frac_parens(const std::string& expr) {
+  std::string frac_parens(const std::string& expr) override {
     return parens(expr);
   }
 
@@ -323,7 +321,7 @@ class UnicodeFormatter : public AbstractFormatter {
   //   return fix_minus(absl::StrCat(v));
   // }
 
-  virtual std::string coeff(int v) {
+  std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }
       else if (v == 1)  { return ""; }
@@ -395,11 +393,11 @@ class UnicodeFormatter : public AbstractFormatter {
     return ret;
   }
 
-  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+  std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return absl::StrCat(main, str_join(indices, "", string_to_subscript));
   }
-  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+  std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     return absl::StrCat(
       string_to_subscript(left_index),
@@ -408,41 +406,41 @@ class UnicodeFormatter : public AbstractFormatter {
     );
   }
 
-  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+  std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return absl::StrCat(main, str_join(indices, "", string_to_superscript));
   }
 
-  virtual std::string var(int idx) {
+  std::string var(int idx) override {
     return sub_num("x", {idx});
   }
-  virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) {
+  std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) override {
     const auto separator = (hspacing == HSpacing::dense ? "," : absl::StrCat(",", kThinNbsp));
     return name + parens(str_join(args, separator));
   }
-  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
+  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
     return function(name, ints_to_strings(indices), hspacing);
   }
 };
 
 
 class LatexFormatter : public AbstractFormatter {
-  virtual std::string newline() { return "\\\\\n"; }
+  std::string newline() override { return "\\\\\n"; }
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
-  virtual std::string inf() { return "\\infty"; }
-  virtual std::string dot() { return ""; }
-  virtual std::string tensor_prod() { return " \\otimes "; }
-  virtual std::string coprod_lie() { return hspace("\\wedge"); }
-  virtual std::string coprod_hopf() { return hspace("\\boxtimes"); }
-  virtual std::string comult() { return " \\triangle "; }
+  std::string inf() override { return "\\infty"; }
+  std::string dot() override { return ""; }
+  std::string tensor_prod() override { return " \\otimes "; }
+  std::string coprod_lie() override { return hspace("\\wedge"); }
+  std::string coprod_hopf() override { return hspace("\\boxtimes"); }
+  std::string comult() override { return " \\triangle "; }
 
-  virtual std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) {
+  std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) override {
     return absl::StrCat(lhs, "+", rhs);
   }
-  virtual std::string diff(const std::string& lhs, const std::string& rhs, HSpacing) {
+  std::string diff(const std::string& lhs, const std::string& rhs, HSpacing) override {
     return absl::StrCat(lhs, "-", rhs);
   }
-  virtual std::string frac(const std::string& numerator, const std::string& denominator) {
+  std::string frac(const std::string& numerator, const std::string& denominator) override {
     return absl::StrCat("\\frac{", numerator, "}{", denominator, "}");
   }
 
@@ -451,23 +449,23 @@ class LatexFormatter : public AbstractFormatter {
   }
 
   // Note: could use \left and \right if necessary.
-  virtual std::string parens(const std::string& expr) {
+  std::string parens(const std::string& expr) override {
     return absl::StrCat("(", expr, ")");
   }
-  virtual std::string brackets(const std::string& expr) {
+  std::string brackets(const std::string& expr) override {
     return absl::StrCat("[", expr, "]");
   }
-  virtual std::string braces(const std::string& expr) {
+  std::string braces(const std::string& expr) override {
     return absl::StrCat("\\{", expr, "\\}");
   }
-  virtual std::string chevrons(const std::string& expr) {
+  std::string chevrons(const std::string& expr) override {
     return absl::StrCat("\\langle", expr, "\\rangle");
   }
-  virtual std::string frac_parens(const std::string& expr) {
+  std::string frac_parens(const std::string& expr) override {
     return expr;
   }
 
-  virtual std::string coeff(int v) {
+  std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }
       else if (v == 1)  { return ""; }
@@ -483,11 +481,11 @@ class LatexFormatter : public AbstractFormatter {
     }
   }
 
-  virtual std::string sub(const std::string& main, const std::vector<std::string>& indices) {
+  std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "_{", str_join(indices, ","), "}");
   }
-  virtual std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) {
+  std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     // TODO: Cleaner solution, e.g. \tensor
     return absl::StrCat(
@@ -497,30 +495,30 @@ class LatexFormatter : public AbstractFormatter {
     );
   }
 
-  virtual std::string super(const std::string& main, const std::vector<std::string>& indices) {
+  std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "^{", str_join(indices, ","), "}");
   }
 
-  virtual std::string var(int idx) {
+  std::string var(int idx) override {
     return sub_num("x", {idx});
   }
-  virtual std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) {
+  std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) override {
     // TODO: Fix: operatorname is applied to sub-indices
     return absl::StrCat("\\operatorname{", name, "}", parens(str_join(args, ",")));
   }
-  virtual std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) {
+  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
     return function(name, mapped(indices, [&](int x){ return var(x); }), hspacing);
   }
 
-  virtual std::string begin_rich_text(const RichTextOptions& options) {
+  std::string begin_rich_text(const RichTextOptions& options) override {
     if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
     // TODO: implement
     return {};
   }
-  virtual std::string end_rich_text() {
+  std::string end_rich_text() override {
     if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
