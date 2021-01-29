@@ -27,6 +27,7 @@ cc_library(
     deps = [
         "@absl//absl/algorithm:container",
         "@absl//absl/algorithm:algorithm",
+        "@absl//absl/container:flat_hash_set",
         "@absl//absl/container:inlined_vector",
         "@absl//absl/types:span",
         "@absl//absl/strings:strings",

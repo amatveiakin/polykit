@@ -55,7 +55,7 @@ LiraExpr to_lyndon_basis_2(const LiraExpr& expr) {
   });
 }
 
-LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
+LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode) {
   // There are two equations in case of three ratios:
   //   * xyz == zyx
   //   * xyz + yxz + yzx == 0
@@ -116,8 +116,8 @@ LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr) {
       }
       replacement *= coeff;
       CHECK(!replacement.zero());
-      // Note: for a proper Lyndon basis, use replacement unconditionally.
-      if ((expr_symm - original_expr + replacement).l1_norm() <= expr_symm.l1_norm()) {
+      if (mode == LyndonMode::hard ||
+          (expr_symm - original_expr + replacement).l1_norm() <= expr_symm.l1_norm()) {
         return replacement;
       } else {
         return original_expr;
@@ -255,20 +255,6 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
   });
 }
 
-template<typename ContainerT>
-int sort_with_sign(ContainerT& v) {
-  int sign = 1;
-  for (int i = 0; i < v.size(); ++i) {
-    for (int j = 0; j < v.size()-1; ++j) {
-      if (v[j] > v[j+1]) {
-        std::swap(v[j], v[j+1]);
-        sign *= -1;
-      }
-    }
-  }
-  return sign;
-}
-
 LiraExpr fully_normalize_ratios(const LiraExpr& expr) {
   return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) -> LiraExpr {
     int sign = 1;
@@ -386,7 +372,7 @@ Snowpal& Snowpal::add_ball(std::vector<int> points) {
   // expr_ = keep_independent_ratios(expr_);
   // expr_ = normalize_inverse(expr_);
   // expr_ = to_lyndon_basis_2(expr_);
-  expr_ = to_lyndon_basis_3_soft(expr_);
+  expr_ = to_lyndon_basis_3(expr_, LyndonMode::soft);
   return *this;
 }
 

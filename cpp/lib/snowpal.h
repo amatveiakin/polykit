@@ -417,12 +417,32 @@ inline LiraExpr LiraE(std::vector<RatioOrUnity> ratios) {
 }
 
 
+// Optimization potential: O(N*log(N)) sort.
+template<typename ContainerT>
+int sort_with_sign(ContainerT& v) {
+  int sign = 1;
+  for (int i = 0; i < v.size(); ++i) {
+    for (int j = 0; j < v.size()-1; ++j) {
+      if (v[j] > v[j+1]) {
+        std::swap(v[j], v[j+1]);
+        sign *= -1;
+      }
+    }
+  }
+  return sign;
+}
+
 int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios);
 int num_ratio_points(const std::vector<Ratio>& ratios);
 bool are_ratios_independent(const std::vector<Ratio>& ratios);
 
+enum class LyndonMode {
+  hard,  // convert each term to Lyndon basis
+  soft,  // only convert terms to Lyndon basis if it makes the expression smaller
+};
+
 LiraExpr to_lyndon_basis_2(const LiraExpr& expr);
-LiraExpr to_lyndon_basis_3_soft(const LiraExpr& expr);
+LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode = LyndonMode::hard);
 
 LiraExpr without_unities(const LiraExpr& expr);
 LiraExpr keep_distinct_ratios(const LiraExpr& expr);

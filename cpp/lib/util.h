@@ -1,6 +1,7 @@
 #pragma once
 
 #include "absl/algorithm/container.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 
@@ -240,6 +241,11 @@ int num_distinct_elements(Container v) {
   return std::unique(v.begin(), v.end()) - v.begin();
 }
 
+template<typename Container>
+bool all_unique(const Container& v) {
+  return num_distinct_elements(v) == v.size();
+}
+
 template<size_t N, typename T>
 std::array<T, N> to_array(std::vector<T> v) {
   CHECK_EQ(v.size(), N);
@@ -253,6 +259,11 @@ std::vector<T> to_vector(std::array<T, N> v) {
   std::vector<T> ret;
   absl::c_move(v, std::back_inserter(ret));
   return ret;
+}
+
+template<typename Container>
+auto to_set(const Container& c) {
+  return absl::flat_hash_set<typename Container::value_type>(c.begin(), c.end());
 }
 
 template<typename Container>
