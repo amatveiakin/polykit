@@ -516,7 +516,12 @@ public:
   }
   template<typename SourceLinearT>
   Linear& copy_annotations(const SourceLinearT& other) {
-    add_annotations(other, 1);
+    add_annotations(other, 1, identity_function);
+    return *this;
+  }
+  template<typename SourceLinearT, typename F>
+  Linear& copy_annotations_mapped(const SourceLinearT& other, F func) {
+    add_annotations(other, 1, func);
     return *this;
   }
   Linear without_annotations() const {
@@ -553,12 +558,12 @@ public:
 
   Linear& operator+=(const Linear& other) {
     main_ += other.main_;
-    add_annotations(other, 1);
+    add_annotations(other, 1, identity_function);
     return *this;
   }
   Linear& operator-=(const Linear& other) {
     main_ -= other.main_;
-    add_annotations(other, -1);
+    add_annotations(other, -1, identity_function);
     return *this;
   }
   Linear& operator*=(int scalar) {
@@ -583,18 +588,22 @@ public:
   }
 
 private:
-  template<typename SourceLinearT>
-  void add_annotations(const SourceLinearT& other, int coeff) {
+  template<typename SourceLinearT, typename F>
+  void add_annotations(const SourceLinearT& other, int coeff, F func) {
     if (other.blank()) {
       return;
     }
+    const LinearAnnotation other_annotations{
+      other.annotations().expression.mapped(func),
+      other.annotations().errors
+    };
     if (blank()) {
-      annotations_ = other.annotations();
+      annotations_ = other_annotations;
       return;
     }
-    annotations_.expression += coeff * other.annotations().expression;
-    append_vector(annotations_.errors, other.annotations().errors);
-    if (annotations_.empty() != other.annotations().empty()) {
+    annotations_.expression += coeff * other_annotations.expression;
+    append_vector(annotations_.errors, other_annotations.errors);
+    if (annotations_.empty() != other_annotations.empty()) {
       annotations_.errors.push_back("");  // will display simply "<?>"
     }
     absl::c_sort(annotations_.errors);

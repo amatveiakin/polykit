@@ -65,9 +65,9 @@ CorrCoExpr corr_comultiply(const CorrExpr& expr, std::pair<int, int> form) {
       }
     }
   });
-  // TODO: Add `copy_annotations_mapped` and use it here and in other `comultiply`-s.
-  CHECK_EQ(expr.annotations().expression.size(), 1);  // HACK
-  return normalize_corr_coproduct(ret).annotate(
-    fmt::comult() + expr.annotations().expression.element().first
+  return normalize_corr_coproduct(ret).copy_annotations_mapped(
+    expr, [](const std::string& annotation) {
+      return fmt::comult() + annotation;
+    }
   );
 }
