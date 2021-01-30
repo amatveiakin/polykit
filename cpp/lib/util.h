@@ -80,6 +80,21 @@ Container concat(Container a, Container b) {
   return a;
 }
 
+template <class Container, class... ContainerTail,
+    class = std::enable_if_t<(std::is_same_v<Container, ContainerTail> && ...)>>
+Container concat(Container head, ContainerTail... tail) {
+  return concat(head, concat(tail...));
+}
+
+template<typename SuperContainer>
+auto flatten(const SuperContainer& containers) {
+  typename SuperContainer::value_type ret;
+  for (const auto& c: containers) {
+    ret.insert(ret.end(), c.begin(), c.end());
+  }
+  return ret;
+}
+
 template<typename T>
 std::vector<T> slice(const std::vector<T>& v, int from, int to = -1) {
   if (to == -1) {
@@ -295,4 +310,13 @@ template<typename T>
 int set_intersection_size(const std::vector<T>& a, const std::vector<T>& b) {
   // Optimization potential: Use a fake iterators that counts instead of back_inserter.
   return set_intersection(a, b).size();
+}
+
+template<typename T>
+std::vector<T> set_difference(const std::vector<T>& a, const std::vector<T>& b) {
+  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
+  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
+  std::vector<T> ret;
+  absl::c_set_difference(a, b, std::back_inserter(ret));
+  return ret;
 }

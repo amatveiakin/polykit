@@ -293,7 +293,7 @@ LoopExpr loop_expr_degenerate(
 
 LoopExpr loop_expr_smart_combine(const LoopExpr& a, const LoopExpr& b, int total_points) {
   LoopExpr best_expr = a + b;
-  for (const auto seq : all_permutations(seq_incl(1, total_points))) {
+  for (const auto& seq : all_permutations(seq_incl(1, total_points))) {
     for (int sign : {-1, 1}) {
       LoopExpr candidate = a + sign * loop_expr_substitute(b, seq);
       if (candidate.l1_norm() < best_expr.l1_norm()) {
@@ -304,6 +304,82 @@ LoopExpr loop_expr_smart_combine(const LoopExpr& a, const LoopExpr& b, int total
   return best_expr;
 }
 
+struct LoopsDecomposition {                        // elements in loops number...
+  std::vector<int> elements_3_way;                 // (0,1,2)
+  std::array<std::vector<int>, 3> elements_2_way;  // (0,1), (0,2), (1,2)
+  std::array<std::vector<int>, 3> elements_1_way;  // (0), (1), (2)
+};
+
+LoopsDecomposition decompose_loops(const Loops& loops) {
+  CHECK_EQ(loops.size(), 3);
+  std::vector<int> elements_3_way = common_elements(loops);
+  std::array<std::vector<int>, 3> elements_2_way = {
+    set_difference(common_elements({loops[0], loops[1]}), elements_3_way),
+    set_difference(common_elements({loops[0], loops[2]}), elements_3_way),
+    set_difference(common_elements({loops[1], loops[2]}), elements_3_way),
+  };
+  std::vector<int> elements_2_or_3_way = concat(elements_3_way, flatten(elements_2_way));
+  absl::c_sort(elements_2_or_3_way);
+  CHECK(all_unique(elements_2_or_3_way));
+  std::array<std::vector<int>, 3> elements_1_way = {
+    set_difference(sorted(loops[0]), elements_2_or_3_way),
+    set_difference(sorted(loops[1]), elements_2_or_3_way),
+    set_difference(sorted(loops[2]), elements_2_or_3_way),
+  };
+  return {elements_3_way, elements_2_way, elements_1_way};
+}
+
+LoopExpr to_canonical_permutation(const LoopExpr& expr) {
+  return expr.mapped_expanding([](const Loops& loops) {
+    const auto decomposition = decompose_loops(loops);
+    std::vector<int> full_permutation = concat(
+      decomposition.elements_3_way,
+      flatten(decomposition.elements_2_way),
+      flatten(decomposition.elements_1_way)
+    );
+    int sign = 1;
+    // TODO: Inverse into a vector instead.
+    absl::flat_hash_map<int, int> position_of;
+    for (int i = 0; i < full_permutation.size(); ++i) {
+      position_of[full_permutation[i]] = i + 1;
+    }
+    Loops new_loops;
+    for (const auto& loop : loops) {
+      const std::vector<std::pair<int, int>> loop_permutation_orig = mapped(loop, [&](int p) {
+        return std::pair{position_of.at(p), p};
+      });
+      auto loop_permutation = loop_permutation_orig;
+      const int loop_permutation_sign = sort_with_sign(loop_permutation);
+      sign *= loop_permutation_sign;
+      new_loops.push_back(mapped(loop_permutation, [&](auto p) { return p.second; }));
+    }
+    return sign * LoopExpr::single(new_loops);
+  });
+}
+
+StringExpr expr_type_1_to_column(const LoopExpr& expr) {
+  return expr.mapped<StringExpr>([](const Loops& loops) {
+    const auto decomposition = decompose_loops(loops);
+    // std::vector<int> v = {
+    //   decomposition.elements_3_way.at(0),
+    //   decomposition.elements_3_way.at(1),
+    //   decomposition.elements_1_way.at(2).at(0),
+    //   decomposition.elements_1_way.at(2).at(1),
+    //   decomposition.elements_1_way.at(0).at(0),
+    //   decomposition.elements_2_way.at(0).at(0),
+    //   decomposition.elements_2_way.at(2).at(0),
+    // };
+    std::vector<int> v = concat(
+      decomposition.elements_3_way,        // x2
+      decomposition.elements_1_way.at(2),  // x2
+      decomposition.elements_1_way.at(0),
+      decomposition.elements_2_way.at(0),
+      decomposition.elements_2_way.at(2)
+    );
+    CHECK_EQ(v.size(), 7);
+    return fmt::brackets(str_join(v, ","));
+  });
+}
 
 int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -377,29 +453,29 @@ int main(int argc, char *argv[]) {
   const auto a1 = cycle(a, {{2,4}, {5,7}});
   const auto v = n + m - a + a1;  // NICE  ({1},{1},{2})
 
-  std::cout << "a " << a << "\n";
-  std::cout << "m " << m << "\n";
-  std::cout << "v " << v << "\n";
-  // std::cout << "b " << b << "\n";
-  std::cout << "c " << c << "\n";
-  std::cout << "d " << d << "\n";
-  std::cout << "e " << e << "\n";
-  std::cout << "f " << f << "\n";
-  // std::cout << "g " << g << "\n";
-  std::cout << "h " << h << "\n";
-  std::cout << "i " << i << "\n";
-  std::cout << "j " << j << "\n";
-  std::cout << "k " << k << "\n";
-  std::cout << "l " << l << "\n";
-  // std::cout << "n " << n << "\n";
-  std::cout << "o " << o << "\n";
-  std::cout << "x " << x << "\n";
-  std::cout << "y " << y << "\n";
-  std::cout << "z " << z << "\n";
-  std::cout << "u " << u << "\n";
-  // std::cout << "w " << w << "\n";
+  // std::cout << "a " << a << "\n";
+  // std::cout << "m " << m << "\n";
+  // std::cout << "v " << v << "\n";
+  // // std::cout << "b " << b << "\n";
+  // std::cout << "c " << c << "\n";
+  // std::cout << "d " << d << "\n";
+  // std::cout << "e " << e << "\n";
+  // std::cout << "f " << f << "\n";
+  // // std::cout << "g " << g << "\n";
+  // std::cout << "h " << h << "\n";
+  // std::cout << "i " << i << "\n";
+  // std::cout << "j " << j << "\n";
+  // std::cout << "k " << k << "\n";
+  // std::cout << "l " << l << "\n";
+  // // std::cout << "n " << n << "\n";
+  // std::cout << "o " << o << "\n";
+  // std::cout << "x " << x << "\n";
+  // std::cout << "y " << y << "\n";
+  // std::cout << "z " << z << "\n";
+  // std::cout << "u " << u << "\n";
+  // // std::cout << "w " << w << "\n";
 
-  std::cout << "===\n\n";
+  // std::cout << "===\n\n";
 
   const auto p = n + m;
   // std::cout << p << "\n";
@@ -511,7 +587,7 @@ int main(int argc, char *argv[]) {
   // ;
   // // std::cout << x4 << "\n";
 
-  const auto o1 =  // very likely can be made ZERO using `m`
+  const auto o0 =
     + o
     // - m
     - cycle(m, {{2,6}, {3,5}})
@@ -525,8 +601,21 @@ int main(int argc, char *argv[]) {
     - cycle(a, {{2,3}, {4,7}, {5,6}})
     - cycle(v, {{2,3}, {4,7}, {5,6}})
   ;
-  std::cout << o1 << "\n";
+  const auto m0 = m - cycle(m, {{2,6}});  //  ~=  m - cycle(m, {{3,5}})
+  const auto v0 = v + cycle(v, {{1,6}});
+  std::cout << o0 << "\n";
+  std::cout << m0 << "\n";
+  std::cout << v0 << "\n";
 
-  std::cout << m - cycle(m, {{2,6}}) << "\n";  //  ~=  m - cycle(m, {{3,5}})
-  std::cout << v + cycle(v, {{1,6}}) << "\n";
+  std::cout << "===\n\n";
+
+  std::cout << to_canonical_permutation(o0) << "\n";
+  std::cout << to_canonical_permutation(m0) << "\n";
+  std::cout << to_canonical_permutation(v0) << "\n";
+
+  std::cout << "===\n\n";
+
+  std::cout << expr_type_1_to_column(to_canonical_permutation(o0)) << "\n";
+  std::cout << expr_type_1_to_column(to_canonical_permutation(m0)) << "\n";
+  std::cout << expr_type_1_to_column(to_canonical_permutation(v0)) << "\n";
 }
