@@ -115,26 +115,27 @@ LoopsInvariant loops_invariant(const Loops& loops) {
 
 class LoopsNames {
 public:
-  std::string loops_name(const Loops& loops) {
+  int loops_index(const Loops& loops) {
     const auto invariant = loops_invariant(loops);
-    if (!names_.contains(invariant)) {
-      std::string name;
-      name = fmt::braces(
-        fmt::colored(
-          pad_left(to_string(next_idx_++), 2),
-          TextColor::bright_cyan
-        )
-      );
-      names_[invariant] = name;
+    if (!indices_.contains(invariant)) {
+      indices_[invariant] = next_idx_++;
     }
-    return names_.at(invariant);
+    return indices_.at(invariant);
+  }
+  std::string loops_name(const Loops& loops) {
+    return fmt::braces(
+      fmt::colored(
+        pad_left(to_string(loops_index(loops)), 2),
+        TextColor::bright_cyan
+      )
+    );
   }
 
   int total_names() const { return next_idx_; }
 
 private:
   int next_idx_ = 1;
-  absl::flat_hash_map<LoopsInvariant, std::string> names_;
+  absl::flat_hash_map<LoopsInvariant, int> indices_;
 };
 
 static LoopsNames loops_names;
@@ -397,20 +398,26 @@ int main(int argc, char *argv[]) {
   static const int N = 9;
   LoopExpr loop_templates;
 
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
-  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
-
-  // In Lyndon basis:
   // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
-  // loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
   // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
   // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
-  // loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
+
+  // In Lyndon basis:
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+
+  LoopExpr loop_templates2;
+  for (int i = 0; i < 7; ++i) {
+    const auto seven = rotated_vector(std::vector{4,5,6,7,8,9,1}, i);
+    loop_templates2 += LoopExpr::single({{1,2,3,4}, slice(seven, 0, 4), concat(slice(seven, 3), {seven[0]})});
+  }
 
   auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
     return sum_looped_vec([&](const std::vector<X>& x_args) {
@@ -422,7 +429,27 @@ int main(int argc, char *argv[]) {
       );
     }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
   });
-  loop_expr = semi_lyndon(loop_expr);
+  // loop_expr = semi_lyndon(loop_expr);
+  loop_expr = to_canonical_permutation(semi_lyndon(loop_expr));
+
+  auto loop_expr2 = loop_templates2.mapped_expanding([](const Loops& loops) {
+    return sum_looped_vec([&](const std::vector<X>& x_args) {
+      const auto args = mapped(x_args, [](X x) { return x.var(); });
+      return LoopExpr::single(
+        mapped(loops, [&](const std::vector<int>& loop) {
+          return choose_indices_one_based(args, loop);
+        })
+      );
+    }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
+  });
+  // loop_expr2 = semi_lyndon(loop_expr2);
+  loop_expr2 = to_canonical_permutation(semi_lyndon(loop_expr2));
+
+
+  std::cout << "Orig " << loop_expr << "\n";
+  std::cout << "New " << loop_expr2 << "\n";
+  std::cout << "Diff " << (loop_expr + loop_expr2) << "\n";
+  return 0;
 
 
   // std::cout << loop_expr_degenerate(loop_expr, N, {{1,3}});
@@ -603,19 +630,72 @@ int main(int argc, char *argv[]) {
   ;
   const auto m0 = m - cycle(m, {{2,6}});  //  ~=  m - cycle(m, {{3,5}})
   const auto v0 = v + cycle(v, {{1,6}});
+
+  const auto o0c = to_canonical_permutation(o0);
+  const auto m0c = to_canonical_permutation(m0);
+  const auto v0c = to_canonical_permutation(v0);
+
   std::cout << o0 << "\n";
   std::cout << m0 << "\n";
   std::cout << v0 << "\n";
 
   std::cout << "===\n\n";
 
-  std::cout << to_canonical_permutation(o0) << "\n";
-  std::cout << to_canonical_permutation(m0) << "\n";
-  std::cout << to_canonical_permutation(v0) << "\n";
+  std::cout << o0c << "\n";
+  std::cout << m0c << "\n";
+  std::cout << v0c << "\n";
 
   std::cout << "===\n\n";
 
-  std::cout << expr_type_1_to_column(to_canonical_permutation(o0)) << "\n";
-  std::cout << expr_type_1_to_column(to_canonical_permutation(m0)) << "\n";
-  std::cout << expr_type_1_to_column(to_canonical_permutation(v0)) << "\n";
+  std::cout << expr_type_1_to_column(o0c) << "\n";
+  std::cout << expr_type_1_to_column(m0c) << "\n";
+  std::cout << expr_type_1_to_column(v0c) << "\n";
+
+  // std::cout << "%%%\n\n";
+
+  // const auto ac = to_canonical_permutation(a);
+  // const auto mc = to_canonical_permutation(m);
+  // const auto vc = to_canonical_permutation(v);
+
+  // std::cout << o0c << "\n";
+  // std::cout << ac << "\n";
+  // std::cout << mc << "\n";
+  // std::cout << vc << "\n";
+
+  // std::cout << "===\n\n";
+
+  // const auto mc1 = to_canonical_permutation(cycle(mc, {{4,6}, {3,7}}));
+  // std::cout << mc1 << "\n";
+  // std::cout << o0c + mc1 << "\n";
+
+  // std::cout << o0 + cycle(mc, {{4,6}, {3,7}}) << "\n";
+
+  std::cout << "%%%\n\n";
+
+  std::cout << to_canonical_permutation(
+    + m0c
+    - cycle(m0c, {{5,6}, {4,7}, {2,3}})
+  ) << "\n";
+  const auto m0c1 = to_canonical_permutation(
+    + m0c
+    - cycle(m0c, {{5,6}, {4,7}, {2,3}})
+    + cycle(o0c, {{5,3,7}, {4,6}})
+  );
+  const auto m0c2 = to_canonical_permutation(
+    + m0c
+    - cycle(m0c, {{5,6}, {4,7}, {2,3}})
+    + cycle(o0c, {{5,3,7}, {4,6}})
+  );
+  const auto m0c2x = to_canonical_permutation(
+    + m0c2
+    + cycle(m0c2, {{1,3}})
+  );
+  std::cout << m0c1 << "\n";
+  std::cout << m0c2 << "\n";
+
+  std::cout << expr_type_1_to_column(m0c1) << "\n";
+  std::cout << expr_type_1_to_column(m0c2) << "\n";
+
+  std::cout << m0c2x << "\n";
+  std::cout << expr_type_1_to_column(m0c2x) << "\n";
 }
