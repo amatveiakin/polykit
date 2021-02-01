@@ -49,36 +49,18 @@ int num_common_elements(std::vector<std::vector<int>> sets) {
 
 
 using Loops = std::vector<std::vector<int>>;
-using LoopsInvariant = std::array<int, 5>;
+// TODO: Strong typing (here and for invariant types in general)
+using LoopsInvariant = std::vector<int>;
 
-// std::string loops_common_elements_description(const Loops& loops) {
-//   auto fully_common = to_set(common_elements(loops));
-//   std::array element_collections = {
-//     common_elements({loops.at(0), loops.at(1)}),
-//     common_elements({loops.at(0), loops.at(2)}),
-//     common_elements({loops.at(1), loops.at(2)}),
-//   };
-//   return str_join(element_collections, " ", [&](const auto& elements) {
-//     return fmt::chevrons(
-//       str_join(elements, ",", [&](int p) {
-//         const auto p_str = to_string(p);
-//         return fully_common.contains(p)
-//           ? fmt::colored(p_str, TextColor::bright_red)
-//           : fmt::colored(p_str, TextColor::bright_yellow);
-//       })
-//     );
-//   });
-// }
 
 std::string loops_description(const Loops& loops) {
   absl::flat_hash_set<int> fully_common = to_set(common_elements(loops));
   absl::flat_hash_set<int> partially_common;
-  for (const auto& common_set : {
-        common_elements({loops.at(0), loops.at(1)}),
-        common_elements({loops.at(0), loops.at(2)}),
-        common_elements({loops.at(1), loops.at(2)}),
-      }) {
-    partially_common.insert(common_set.begin(), common_set.end());
+  for (int i = 0; i < loops.size(); ++i) {
+    for (int j = i+1; j < loops.size(); ++j) {
+      auto c = common_elements({loops[i], loops[j]});
+      partially_common.insert(c.begin(), c.end());
+    }
   }
   return str_join(
     mapped(loops, [&](const std::vector<int>& loop) {
@@ -97,20 +79,32 @@ std::string loops_description(const Loops& loops) {
   );
 }
 
-LoopsInvariant loops_invariant(const Loops& loops) {
-  int a = num_common_elements({loops.at(0), loops.at(1)});
-  int b = num_common_elements({loops.at(0), loops.at(2)});
-  int c = num_common_elements({loops.at(1), loops.at(2)});
-  if (loops[0].size() == loops[2].size()) {  // sync with semi_lyndon
-    sort_two(a, c);
+LoopsInvariant loops_invariant(Loops loops) {
+  std::vector<int> five_loop;
+  const auto it = absl::c_find_if(loops, [](const std::vector<int>& loop) {
+    return loop.size() == 5;}
+  );
+  CHECK(it != loops.end());
+  std::vector<int> invariant{static_cast<int>(it - loops.begin())};
+  five_loop = *it;
+  loops.erase(it);
+  for (int num_loops_to_include = 2; num_loops_to_include <= loops.size(); ++num_loops_to_include) {
+    for (const auto include_five_loop : {false, true}) {
+      std::vector<int> loops_common_elements;
+      for (const auto& loops_to_include : increasing_sequences(loops.size(), num_loops_to_include)) {
+        Loops loops_group;
+        if (include_five_loop) {
+          loops_group.push_back(five_loop);
+        }
+        for (const int idx : loops_to_include) {
+          loops_group.push_back(loops.at(idx));
+        }
+        loops_common_elements.push_back(num_common_elements(loops_group));
+      }
+      invariant = concat(invariant, sorted(loops_common_elements));
+    }
   }
-  return {
-    static_cast<int>(loops[1].size()),
-    num_common_elements(loops),
-    a,
-    b,
-    c,
-  };
+  return invariant;
 }
 
 class LoopsNames {
@@ -160,6 +154,13 @@ struct LoopExprParam : public SimpleLinearParam<Loops> {
 
 using LoopExpr = Linear<LoopExprParam>;
 
+// TODO: Force using this, disable on-the-fly name generation (?)
+void generate_loops_names(const std::vector<LoopExpr>& expressions) {
+  for (const auto& expr : expressions) {
+    std::stringstream() << expr;
+  }
+}
+
 LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
   return expr.mapped_expanding([](const auto& loops) {
     using RatioExpr = Linear<SimpleLinearParam<std::vector<RatioOrUnity>>>;
@@ -190,9 +191,13 @@ LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
   });
 }
 
-LoopExpr semi_lyndon(const LoopExpr& expr) {
+LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
   return expr.mapped([&](auto loops) {
-    CHECK_EQ(loops.size(), 3);
+    // CHECK_EQ(loops.size(), 3);
+    if (loops.size() != 3) {
+      // TODO: More rebust solution
+      return loops;
+    }
     if (loops[0].size() == loops[2].size()) {
       sort_two(loops[0], loops[2]);
     }
@@ -245,7 +250,7 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
     }
     return LoopExpr::single(new_loops);
   });
-  return semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
+  return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
 }
 
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices) {
@@ -292,52 +297,96 @@ LoopExpr loop_expr_degenerate(
   return loop_expr_substitute(expr, substitutions);
 }
 
-LoopExpr loop_expr_smart_combine(const LoopExpr& a, const LoopExpr& b, int total_points) {
-  LoopExpr best_expr = a + b;
-  for (const auto& seq : all_permutations(seq_incl(1, total_points))) {
-    for (int sign : {-1, 1}) {
-      LoopExpr candidate = a + sign * loop_expr_substitute(b, seq);
-      if (candidate.l1_norm() < best_expr.l1_norm()) {
-        best_expr = candidate;
+// struct LoopsDecomposition {                        // elements in loops number...
+//   std::vector<int> elements_3_way;                 // (0,1,2)
+//   std::array<std::vector<int>, 3> elements_2_way;  // (0,1), (0,2), (1,2)
+//   std::array<std::vector<int>, 3> elements_1_way;  // (0), (1), (2)
+// };
+// LoopsDecomposition decompose_loops(const Loops& loops) {
+//   CHECK_EQ(loops.size(), 3);
+//   std::vector<int> elements_3_way = common_elements(loops);
+//   std::array<std::vector<int>, 3> elements_2_way = {
+//     set_difference(common_elements({loops[0], loops[1]}), elements_3_way),
+//     set_difference(common_elements({loops[0], loops[2]}), elements_3_way),
+//     set_difference(common_elements({loops[1], loops[2]}), elements_3_way),
+//   };
+//   std::vector<int> elements_2_or_3_way = concat(elements_3_way, flatten(elements_2_way));
+//   absl::c_sort(elements_2_or_3_way);
+//   CHECK(all_unique(elements_2_or_3_way));
+//   std::array<std::vector<int>, 3> elements_1_way = {
+//     set_difference(sorted(loops[0]), elements_2_or_3_way),
+//     set_difference(sorted(loops[1]), elements_2_or_3_way),
+//     set_difference(sorted(loops[2]), elements_2_or_3_way),
+//   };
+//   return {elements_3_way, elements_2_way, elements_1_way};
+// }
+// LoopExpr to_canonical_permutation(const LoopExpr& expr) {
+//   return expr.mapped_expanding([](const Loops& loops) {
+//     const auto decomposition = decompose_loops(loops);
+//     std::vector<int> full_permutation = concat(
+//       decomposition.elements_3_way,
+//       flatten(decomposition.elements_2_way),
+//       flatten(decomposition.elements_1_way)
+//     );
+//     int sign = 1;
+//     // TODO: Inverse into a vector instead.
+//     absl::flat_hash_map<int, int> position_of;
+//     for (int i = 0; i < full_permutation.size(); ++i) {
+//       position_of[full_permutation[i]] = i + 1;
+//     }
+//     Loops new_loops;
+//     for (const auto& loop : loops) {
+//       const std::vector<std::pair<int, int>> loop_permutation_orig = mapped(loop, [&](int p) {
+//         return std::pair{position_of.at(p), p};
+//       });
+//       auto loop_permutation = loop_permutation_orig;
+//       const int loop_permutation_sign = sort_with_sign(loop_permutation);
+//       sign *= loop_permutation_sign;
+//       new_loops.push_back(mapped(loop_permutation, [&](auto p) { return p.second; }));
+//     }
+//     return sign * LoopExpr::single(new_loops);
+//   });
+// }
+
+// Returns variable that are common for all given loop, but not for a larger subset of loops.
+std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<int> loop_indices) {
+  absl::c_sort(loop_indices);
+  Loops target_batch = choose_indices(loops, loop_indices);
+  std::vector<int> higher_level_common;
+  for (const auto& seq : all_sequences(2, loops.size())) {
+    bool skip = false;
+    for (int i = 0; i < seq.size(); ++i) {
+      if (seq[i] && absl::c_binary_search(loop_indices, i)) {
+        skip = true;
+        break;
       }
     }
+    if (skip) {
+      continue;
+    }
+    const Loops loops_batch = concat(target_batch, choose_by_mask(loops, seq));
+    if (loops_batch.size() == target_batch.size()) {
+      continue;
+    }
+    higher_level_common = set_union(higher_level_common, common_elements(loops_batch));
   }
-  return best_expr;
+  return set_difference(common_elements(target_batch), higher_level_common);
 }
 
-struct LoopsDecomposition {                        // elements in loops number...
-  std::vector<int> elements_3_way;                 // (0,1,2)
-  std::array<std::vector<int>, 3> elements_2_way;  // (0,1), (0,2), (1,2)
-  std::array<std::vector<int>, 3> elements_1_way;  // (0), (1), (2)
-};
-
-LoopsDecomposition decompose_loops(const Loops& loops) {
-  CHECK_EQ(loops.size(), 3);
-  std::vector<int> elements_3_way = common_elements(loops);
-  std::array<std::vector<int>, 3> elements_2_way = {
-    set_difference(common_elements({loops[0], loops[1]}), elements_3_way),
-    set_difference(common_elements({loops[0], loops[2]}), elements_3_way),
-    set_difference(common_elements({loops[1], loops[2]}), elements_3_way),
-  };
-  std::vector<int> elements_2_or_3_way = concat(elements_3_way, flatten(elements_2_way));
-  absl::c_sort(elements_2_or_3_way);
-  CHECK(all_unique(elements_2_or_3_way));
-  std::array<std::vector<int>, 3> elements_1_way = {
-    set_difference(sorted(loops[0]), elements_2_or_3_way),
-    set_difference(sorted(loops[1]), elements_2_or_3_way),
-    set_difference(sorted(loops[2]), elements_2_or_3_way),
-  };
-  return {elements_3_way, elements_2_way, elements_1_way};
+std::vector<int> decompose_loops(const Loops& loops) {
+  std::vector<int> ret;
+  for (const auto& seq : all_sequences(2, loops.size())) {
+    const Loops loops_batch = choose_by_mask(loops, seq);
+    if (!loops_batch.empty()) {
+      append_vector(ret, common_elements(loops_batch));
+    }
+  }
+  return reversed(ret);  // TODO: Why doesn't `reverse` put red elements first?
 }
 
 LoopExpr to_canonical_permutation(const LoopExpr& expr) {
   return expr.mapped_expanding([](const Loops& loops) {
-    const auto decomposition = decompose_loops(loops);
-    std::vector<int> full_permutation = concat(
-      decomposition.elements_3_way,
-      flatten(decomposition.elements_2_way),
-      flatten(decomposition.elements_1_way)
-    );
+    const std::vector<int> full_permutation = decompose_loops(loops);
     int sign = 1;
     // TODO: Inverse into a vector instead.
     absl::flat_hash_map<int, int> position_of;
@@ -358,27 +407,86 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr) {
   });
 }
 
-StringExpr expr_type_1_to_column(const LoopExpr& expr) {
+LiraExpr lira_expr_sort_args(const LiraExpr& expr) {
+  return expr.mapped_expanding([](const LiraParamOnes& term) {
+    int sign = 1;
+    auto lira = LiraParamOnes(mapped(term.ratios(), [&](const RatioOrUnity& r) -> RatioOrUnity {
+      if (r.is_unity()) {
+        return r;
+      }
+      auto indices = r.as_ratio().indices();
+      sign *= sort_with_sign(indices);
+      return Ratio(indices);
+    }));
+    return sign * LiraExpr::single(lira);
+  });
+}
+
+StringExpr arg9_expr_type_1_to_column(const LoopExpr& expr) {
   return expr.mapped<StringExpr>([](const Loops& loops) {
-    const auto decomposition = decompose_loops(loops);
-    // std::vector<int> v = {
-    //   decomposition.elements_3_way.at(0),
-    //   decomposition.elements_3_way.at(1),
-    //   decomposition.elements_1_way.at(2).at(0),
-    //   decomposition.elements_1_way.at(2).at(1),
-    //   decomposition.elements_1_way.at(0).at(0),
-    //   decomposition.elements_2_way.at(0).at(0),
-    //   decomposition.elements_2_way.at(2).at(0),
-    // };
     std::vector<int> v = concat(
-      decomposition.elements_3_way,        // x2
-      decomposition.elements_1_way.at(2),  // x2
-      decomposition.elements_1_way.at(0),
-      decomposition.elements_2_way.at(0),
-      decomposition.elements_2_way.at(2)
+      loops_unique_common_variable(loops, {0,1,2}),
+      loops_unique_common_variable(loops, {2}),
+      loops_unique_common_variable(loops, {0}),
+      loops_unique_common_variable(loops, {0,1}),
+      loops_unique_common_variable(loops, {1,2})
     );
     CHECK_EQ(v.size(), 7);
     return fmt::brackets(str_join(v, ","));
+  });
+}
+
+StringExpr arg11_expr_type_2_to_column(const LoopExpr& expr) {
+  return expr.mapped<StringExpr>([](const Loops& loops) {
+    CHECK_EQ(loops.size(), 4);
+    std::vector<int> v = concat(
+      loops_unique_common_variable(loops, {0,1,2,3}),  // x2
+      loops_unique_common_variable(loops, {0}),        // x2
+      loops_unique_common_variable(loops, {3}),
+      loops_unique_common_variable(loops, {0,1}),
+      loops_unique_common_variable(loops, {1,2}),
+      loops_unique_common_variable(loops, {2,3})
+    );
+    CHECK_EQ(v.size(), 8);
+    return fmt::brackets(str_join(v, ","));
+  });
+}
+
+struct LoopCutResult {
+  std::vector<int> loop;
+  std::vector<int> remains;
+};
+
+LoopCutResult cut_loop(const std::vector<int>& points, int from, int to) {
+  CHECK_LT(from, to);
+  return {
+    slice(points, from, to),
+    concat(slice(points, 0, from + 1), slice(points, to - 1))
+  };
+}
+
+LoopExpr preshow(const LoopExpr& expr) {
+  return expr.filtered([](const Loops& loops) {
+    return loops_names.loops_index(loops) == 3;
+  });
+}
+
+LoopExpr cut_loops_recursively(const std::vector<int>& points, const Loops& loops) {
+  if (points.size() <= 5) {
+    CHECK_EQ(points.size(), 5);
+    return LoopExpr::single(appended(loops, points));
+  }
+  LoopExpr ret;
+  for (int i = 0; i < points.size(); ++i) {
+    auto cut_result = cut_loop(rotated_vector(points, i), 0, 4);
+    ret += cut_loops_recursively(cut_result.remains, appended(loops, cut_result.loop));
+  }
+  return ret;
+}
+
+LoopExpr reverse_loops(const LoopExpr& expr) {
+  return expr.mapped([](const Loops& loops) {
+    return reversed(loops);
   });
 }
 
@@ -395,29 +503,83 @@ int main(int argc, char *argv[]) {
   );
 
 
+#if 1
+  const int N = 11;
+  const int num_points = N;
+  const int num_args = num_points / 2 - 1;
+  auto source = sum_looped_vec(
+    [&](const std::vector<X>& args) {
+      return LiQuad(
+        num_points / 2 - 1,
+        mapped(args, [](X x) { return x.var(); })
+      );
+    },
+    num_points,
+    seq_incl(1, num_points - 1)
+  );
+
+  auto lira_expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
+
+  auto loop_expr = reverse_loops(cut_loops_recursively(seq_incl(1, num_points), {}));
+  auto loop_lira_expr = loop_expr_to_lira_expr(loop_expr);
+
+  lira_expr = lira_expr_sort_args(lira_expr);
+  loop_lira_expr = lira_expr_sort_args(loop_lira_expr);
+
+
+  // std::cout << "Via LiQuad " << lira_expr << "\n";
+  // std::cout << "Loops " << loop_expr_recursive << "\n";
+  // std::cout << "Via loops " << loop_lira_expr << "\n";
+  // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr) << "\n";
+
+  const auto a = loop_expr_degenerate(loop_expr, N, {{1,3,5,7}});
+  const auto b = loop_expr_degenerate(loop_expr, N, {{1,3,5,8}});
+  const auto c = loop_expr_degenerate(loop_expr, N, {{1,3,5,9}});
+  const auto d = loop_expr_degenerate(loop_expr, N, {{1,3,6,8}});
+  const auto e = loop_expr_degenerate(loop_expr, N, {{1,3,6,9}});
+  const auto f = loop_expr_degenerate(loop_expr, N, {{1,3,7,9}});
+
+  generate_loops_names({a, b, c, d, d, f});
+
+  // std::cout << loop_expr_degenerate(loop_expr, N, {{1,3}, {2,5}, {4,6}});
+  std::cout << "a " << a << "\n";
+  std::cout << "b " << b << "\n";
+  std::cout << "c " << c << "\n";
+  std::cout << "d " << d << "\n";
+  std::cout << "e " << e << "\n";
+  std::cout << "f " << f << "\n";
+
+  std::cout << "===\n\n";
+
+  // const auto a1 = cycle(a, {{2,4}, {5,8}, {6,7}});
+  const auto a1 = a - cycle(a, {{4,6}});
+  const auto a2 = a1 - cycle(a1, {{2,7}});
+  std::cout << "a " << a << "\n";
+  std::cout << a1 << "\n";
+  std::cout << a2 << "\n";
+  std::cout << arg11_expr_type_2_to_column(a2) << "\n";
+
+  std::cout << to_canonical_permutation(a2) << "\n";
+#endif
+
+#if 0
   static const int N = 9;
   LoopExpr loop_templates;
 
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
-  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
-
-  // In Lyndon basis:
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
-  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
   loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
-  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
 
-  LoopExpr loop_templates2;
-  for (int i = 0; i < 7; ++i) {
-    const auto seven = rotated_vector(std::vector{4,5,6,7,8,9,1}, i);
-    loop_templates2 += LoopExpr::single({{1,2,3,4}, slice(seven, 0, 4), concat(slice(seven, 3), {seven[0]})});
-  }
+  // In Lyndon basis:
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  // loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  // loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
 
   auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
     return sum_looped_vec([&](const std::vector<X>& x_args) {
@@ -429,9 +591,15 @@ int main(int argc, char *argv[]) {
       );
     }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
   });
-  // loop_expr = semi_lyndon(loop_expr);
-  loop_expr = to_canonical_permutation(semi_lyndon(loop_expr));
+  // loop_expr = arg9_semi_lyndon(loop_expr);
+  loop_expr = to_canonical_permutation(arg9_semi_lyndon(loop_expr));
 
+#if 0
+  LoopExpr loop_templates2;
+  for (int i = 0; i < 7; ++i) {
+    const auto seven = rotated_vector(std::vector{4,5,6,7,8,9,1}, i);
+    loop_templates2 += LoopExpr::single({{1,2,3,4}, slice(seven, 0, 4), concat(slice(seven, 3), {seven[0]})});
+  }
   auto loop_expr2 = loop_templates2.mapped_expanding([](const Loops& loops) {
     return sum_looped_vec([&](const std::vector<X>& x_args) {
       const auto args = mapped(x_args, [](X x) { return x.var(); });
@@ -442,14 +610,14 @@ int main(int argc, char *argv[]) {
       );
     }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
   });
-  // loop_expr2 = semi_lyndon(loop_expr2);
-  loop_expr2 = to_canonical_permutation(semi_lyndon(loop_expr2));
-
-
+  // loop_expr2 = arg9_semi_lyndon(loop_expr2);
+  loop_expr2 = to_canonical_permutation(arg9_semi_lyndon(loop_expr2));
   std::cout << "Orig " << loop_expr << "\n";
   std::cout << "New " << loop_expr2 << "\n";
   std::cout << "Diff " << (loop_expr + loop_expr2) << "\n";
+  std::cout << to_lyndon_basis_3(lira_expr - loop_expr_to_lira_expr(loop_expr)) << "\n";
   return 0;
+#endif
 
 
   // std::cout << loop_expr_degenerate(loop_expr, N, {{1,3}});
@@ -477,6 +645,8 @@ int main(int argc, char *argv[]) {
   const auto n = loop_expr_degenerate(loop_expr, N, {{1,3,6}});
   const auto o = loop_expr_degenerate(loop_expr, N, {{1,4,7}});
 
+  generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, m, o, x, y, z, u, w});
+
   const auto a1 = cycle(a, {{2,4}, {5,7}});
   const auto v = n + m - a + a1;  // NICE  ({1},{1},{2})
 
@@ -502,7 +672,49 @@ int main(int argc, char *argv[]) {
   // std::cout << "u " << u << "\n";
   // // std::cout << "w " << w << "\n";
 
-  // std::cout << "===\n\n";
+  std::cout << "a " << a << "\n";
+  std::cout << "m " << m << "\n";
+  std::cout << "v " << v << "\n";
+  std::cout << "b " << b << "\n";
+  std::cout << "c " << c << "\n";
+  std::cout << "d " << d << "\n";
+  std::cout << "e " << e << "\n";
+  std::cout << "f " << f << "\n";
+  std::cout << "g " << g << "\n";
+  std::cout << "h " << h << "\n";
+  std::cout << "i " << i << "\n";
+  std::cout << "j " << j << "\n";
+  std::cout << "k " << k << "\n";
+  std::cout << "l " << l << "\n";
+  std::cout << "n " << n << "\n";
+  std::cout << "o " << o << "\n";
+  std::cout << "x " << x << "\n";
+  std::cout << "y " << y << "\n";
+  std::cout << "z " << z << "\n";
+  std::cout << "u " << u << "\n";
+  std::cout << "w " << w << "\n";
+
+  std::cout << "===\n\n";
+
+  const auto on =
+    + o
+    - n
+    - cycle(n, {{2,3}, {4,7}, {5,6}})
+  ;
+  const auto onm =
+    + on
+    - 3 * m
+    - cycle(m, {{3,5,7}, {4,6}})
+    - cycle(m, {{2,7}, {3,6}, {4,5}})
+  ;
+  // std::cout << "n " << preshow(n) << "\n";
+  // std::cout << "m " << preshow(m) << "\n";
+  // std::cout << "o " << preshow(o) << "\n";
+  std::cout << onm << "\n";
+
+  std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm)) << "\n";
+
+  std::cout << "===\n\n";
 
   const auto p = n + m;
   // std::cout << p << "\n";
@@ -635,21 +847,21 @@ int main(int argc, char *argv[]) {
   const auto m0c = to_canonical_permutation(m0);
   const auto v0c = to_canonical_permutation(v0);
 
-  std::cout << o0 << "\n";
-  std::cout << m0 << "\n";
-  std::cout << v0 << "\n";
+  // std::cout << o0 << "\n";
+  // std::cout << m0 << "\n";
+  // std::cout << v0 << "\n";
 
-  std::cout << "===\n\n";
+  // std::cout << "===\n\n";
 
-  std::cout << o0c << "\n";
-  std::cout << m0c << "\n";
-  std::cout << v0c << "\n";
+  // std::cout << o0c << "\n";
+  // std::cout << m0c << "\n";
+  // std::cout << v0c << "\n";
 
-  std::cout << "===\n\n";
+  // std::cout << "===\n\n";
 
-  std::cout << expr_type_1_to_column(o0c) << "\n";
-  std::cout << expr_type_1_to_column(m0c) << "\n";
-  std::cout << expr_type_1_to_column(v0c) << "\n";
+  // std::cout << arg9_expr_type_1_to_column(o0c) << "\n";
+  // std::cout << arg9_expr_type_1_to_column(m0c) << "\n";
+  // std::cout << arg9_expr_type_1_to_column(v0c) << "\n";
 
   // std::cout << "%%%\n\n";
 
@@ -669,7 +881,9 @@ int main(int argc, char *argv[]) {
   // std::cout << o0c + mc1 << "\n";
 
   // std::cout << o0 + cycle(mc, {{4,6}, {3,7}}) << "\n";
+#endif
 
+#if 0
   std::cout << "%%%\n\n";
 
   std::cout << to_canonical_permutation(
@@ -693,9 +907,10 @@ int main(int argc, char *argv[]) {
   std::cout << m0c1 << "\n";
   std::cout << m0c2 << "\n";
 
-  std::cout << expr_type_1_to_column(m0c1) << "\n";
-  std::cout << expr_type_1_to_column(m0c2) << "\n";
+  std::cout << arg9_expr_type_1_to_column(m0c1) << "\n";
+  std::cout << arg9_expr_type_1_to_column(m0c2) << "\n";
 
   std::cout << m0c2x << "\n";
-  std::cout << expr_type_1_to_column(m0c2x) << "\n";
+  std::cout << arg9_expr_type_1_to_column(m0c2x) << "\n";
+#endif
 }

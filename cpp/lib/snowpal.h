@@ -376,8 +376,11 @@ private:
 };
 
 
-
 struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
+  using VectorT = std::vector<RatioOrUnity>;
+  static VectorT key_to_vector(const StorageT& key) { return key.ratios(); }
+  static StorageT vector_to_key(const VectorT& vec) { return LiraParamOnes(vec); }
+
   static std::string object_to_string(const LiraParamOnes& param) {
     return object_to_string(param, nullptr);
   }

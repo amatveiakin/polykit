@@ -74,6 +74,12 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
+template<typename T>
+std::vector<T> appended(std::vector<T> c, T element) {
+  c.push_back(std::move(element));
+  return c;
+}
+
 template<typename Container>
 Container concat(Container a, Container b) {
   a.insert(a.end(), std::move_iterator(b.begin()), std::move_iterator(b.end()));
@@ -100,8 +106,8 @@ std::vector<T> slice(const std::vector<T>& v, int from, int to = -1) {
   if (to == -1) {
     to = v.size();
   }
-  CHECK(0 <= from && from <= v.size());
-  CHECK(0 <= to && to <= v.size());
+  CHECK(0 <= from && from <= to && to <= v.size())
+      << "Cannot slice vector of length " << v.size() << " from " << from << " to " << to;
   return std::vector<T>(v.begin() + from, v.begin() + to);
 }
 
@@ -166,6 +172,18 @@ std::array<T, M> choose_indices_one_based(const std::array<T, N>& v, const std::
   std::array<T, M> ret;
   for (int i = 0; i < indices.size(); ++i) {
     ret[i] = v.at(indices[i] - 1);
+  }
+  return ret;
+}
+
+template<typename T, typename MaskT>
+std::vector<T> choose_by_mask(const std::vector<T>& v, const std::vector<MaskT>& mask) {
+  CHECK_EQ(v.size(), mask.size());
+  std::vector<T> ret;
+  for (int i = 0; i < v.size(); ++i) {
+    if (mask[i]) {
+      ret.push_back(v[i]);
+    }
   }
   return ret;
 }
@@ -318,5 +336,14 @@ std::vector<T> set_difference(const std::vector<T>& a, const std::vector<T>& b) 
   CHECK(absl::c_is_sorted(b)) << list_to_string(b);
   std::vector<T> ret;
   absl::c_set_difference(a, b, std::back_inserter(ret));
+  return ret;
+}
+
+template<typename T>
+std::vector<T> set_union(const std::vector<T>& a, const std::vector<T>& b) {
+  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
+  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
+  std::vector<T> ret;
+  absl::c_set_union(a, b, std::back_inserter(ret));
   return ret;
 }
