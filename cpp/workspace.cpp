@@ -124,24 +124,29 @@ int main(int argc, char *argv[]) {
   generate_loops_names({a, b, c, d, d, f});
 
   // std::cout << loop_expr_degenerate(loop_expr, {{1,3}, {2,5}, {4,6}});
-  std::cout << "a " << a << "\n";
-  std::cout << "b " << b << "\n";
-  std::cout << "c " << c << "\n";
-  std::cout << "d " << d << "\n";
-  std::cout << "e " << e << "\n";
-  std::cout << "f " << f << "\n";
 
-  std::cout << "===\n\n";
+  std::cout << "a " << a << fmt::newline();
+  std::cout << "b " << b << fmt::newline();
+  std::cout << "c " << c << fmt::newline();
+  std::cout << "d " << d << fmt::newline();
+  std::cout << "e " << e << fmt::newline();
+  std::cout << "f " << f << fmt::newline();
 
-  // const auto a1 = cycle(a, {{2,4}, {5,8}, {6,7}});
-  const auto a1 = a - cycle(a, {{4,6}});
-  const auto a2 = a1 - cycle(a1, {{2,7}});
-  std::cout << "a " << a << "\n";
-  std::cout << a1 << "\n";
-  std::cout << a2 << "\n";
-  std::cout << arg11_expr_type_2_to_column(a2) << "\n";
+  // std::cout << "a " << to_canonical_permutation(a) << fmt::newline();
+  // std::cout << "b " << to_canonical_permutation(b) << fmt::newline();
+  // std::cout << "c " << to_canonical_permutation(c) << fmt::newline();
+  // std::cout << "d " << to_canonical_permutation(d) << fmt::newline();
+  // std::cout << "e " << to_canonical_permutation(e) << fmt::newline();
+  // std::cout << "f " << to_canonical_permutation(f) << fmt::newline();
 
-  std::cout << to_canonical_permutation(a2) << "\n";
+  // std::cout << "===\n\n";
+
+  // const auto a1 = a - cycle(a, {{4,6}});
+  // const auto a2 = a1 - cycle(a1, {{2,7}});
+  // std::cout << "a " << a << "\n";
+  // std::cout << a1 << "\n";
+  // std::cout << a2 << "\n";
+  // std::cout << arg11_expr_type_2_to_column(a2) << "\n";
 #endif
 
 #if 0

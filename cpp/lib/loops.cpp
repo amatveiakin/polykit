@@ -242,13 +242,12 @@ std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<in
 
 std::vector<int> decompose_loops(const Loops& loops) {
   std::vector<int> ret;
-  for (const auto& seq : all_sequences(2, loops.size())) {
-    const Loops loops_batch = choose_by_mask(loops, seq);
-    if (!loops_batch.empty()) {
-      append_vector(ret, set_intersection(loops_batch));
+  for (const auto& seq : increasing_sequences(loops.size())) {
+    if (!seq.empty()) {
+      append_vector(ret, loops_unique_common_variable(loops, seq));
     }
   }
-  return reversed(ret);  // TODO: Why doesn't `reverse` put red elements first?
+  return reversed(ret);
 }
 
 LoopExpr to_canonical_permutation(const LoopExpr& expr) {
