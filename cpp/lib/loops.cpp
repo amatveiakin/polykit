@@ -3,17 +3,18 @@
 #include <sstream>
 
 #include "algebra.h"
+#include "set_util.h"
 
 
 LoopsNames loops_names;
 
 
 std::string loops_description(const Loops& loops) {
-  absl::flat_hash_set<int> fully_common = to_set(common_elements(loops));
+  absl::flat_hash_set<int> fully_common = to_set(set_intersection(loops));
   absl::flat_hash_set<int> partially_common;
   for (int i = 0; i < loops.size(); ++i) {
     for (int j = i+1; j < loops.size(); ++j) {
-      auto c = common_elements({loops[i], loops[j]});
+      auto c = set_intersection(loops[i], loops[j]);
       partially_common.insert(c.begin(), c.end());
     }
   }
@@ -54,7 +55,7 @@ LoopsInvariant loops_invariant(Loops loops) {
         for (const int idx : loops_to_include) {
           loops_group.push_back(loops.at(idx));
         }
-        loops_common_elements.push_back(num_common_elements(loops_group));
+        loops_common_elements.push_back(set_intersection_size(loops_group));
       }
       invariant = concat(invariant, sorted(loops_common_elements));
     }
@@ -234,9 +235,9 @@ std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<in
     if (loops_batch.size() == target_batch.size()) {
       continue;
     }
-    higher_level_common = set_union(higher_level_common, common_elements(loops_batch));
+    higher_level_common = set_union(higher_level_common, set_intersection(loops_batch));
   }
-  return set_difference(common_elements(target_batch), higher_level_common);
+  return set_difference(set_intersection(target_batch), higher_level_common);
 }
 
 std::vector<int> decompose_loops(const Loops& loops) {
@@ -244,7 +245,7 @@ std::vector<int> decompose_loops(const Loops& loops) {
   for (const auto& seq : all_sequences(2, loops.size())) {
     const Loops loops_batch = choose_by_mask(loops, seq);
     if (!loops_batch.empty()) {
-      append_vector(ret, common_elements(loops_batch));
+      append_vector(ret, set_intersection(loops_batch));
     }
   }
   return reversed(ret);  // TODO: Why doesn't `reverse` put red elements first?

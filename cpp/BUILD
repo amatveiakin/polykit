@@ -14,6 +14,7 @@ cc_library(
         "lib/packed.h",
         "lib/profiler.h",
         "lib/sequence_iteration.h",
+        "lib/set_util.h",
         "lib/string.h",
         "lib/string_basic.h",
         "lib/util.h",

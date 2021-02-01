@@ -314,36 +314,3 @@ std::vector<Container> all_permutations(const Container& c) {
   } while (absl::c_next_permutation(indices));
   return ret;
 }
-
-template<typename T>
-std::vector<T> set_intersection(const std::vector<T>& a, const std::vector<T>& b) {
-  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
-  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
-  std::vector<T> ret;
-  absl::c_set_intersection(a, b, std::back_inserter(ret));
-  return ret;
-}
-
-template<typename T>
-int set_intersection_size(const std::vector<T>& a, const std::vector<T>& b) {
-  // Optimization potential: Use a fake iterators that counts instead of back_inserter.
-  return set_intersection(a, b).size();
-}
-
-template<typename T>
-std::vector<T> set_difference(const std::vector<T>& a, const std::vector<T>& b) {
-  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
-  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
-  std::vector<T> ret;
-  absl::c_set_difference(a, b, std::back_inserter(ret));
-  return ret;
-}
-
-template<typename T>
-std::vector<T> set_union(const std::vector<T>& a, const std::vector<T>& b) {
-  CHECK(absl::c_is_sorted(a)) << list_to_string(a);
-  CHECK(absl::c_is_sorted(b)) << list_to_string(b);
-  std::vector<T> ret;
-  absl::c_set_union(a, b, std::back_inserter(ret));
-  return ret;
-}

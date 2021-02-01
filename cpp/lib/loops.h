@@ -5,24 +5,6 @@
 #include "util.h"
 
 
-// TODO: Rename to ~set_intersection and move to utils (or separate file)
-inline std::vector<int> common_elements(std::vector<std::vector<int>> sets) {
-  std::vector<int> ret(sets.front().begin(), sets.front().end());
-  absl::c_sort(ret);
-  for (auto one_set : sets) {
-    absl::c_sort(one_set);
-    std::vector<int> new_ret;
-    absl::c_set_intersection(ret, one_set, std::back_inserter(new_ret));
-    ret = std::move(new_ret);
-  }
-  return ret;
-}
-
-inline int num_common_elements(std::vector<std::vector<int>> sets) {
-  return common_elements(sets).size();
-}
-
-
 using Loops = std::vector<std::vector<int>>;
 // TODO: Strong typing (here and for invariant types in general)
 using LoopsInvariant = std::vector<int>;

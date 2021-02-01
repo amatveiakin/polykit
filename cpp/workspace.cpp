@@ -26,6 +26,7 @@
 #include "lib/profiler.h"
 #include "lib/projection.h"
 #include "lib/sequence_iteration.h"
+#include "lib/set_util.h"
 #include "lib/shuffle.h"
 #include "lib/snowpal.h"
 #include "lib/summation.h"

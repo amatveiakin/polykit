@@ -1,6 +1,7 @@
 #include "ratio.h"
 
 #include "format.h"
+#include "set_util.h"
 
 
 template<typename Container>
@@ -108,10 +109,9 @@ void CompoundRatio::normalize() {
       for (int j = i+1; j < loops_.size(); ++j) {
         std::vector<int> a = loops_[i];
         std::vector<int> b = loops_[j];
-        std::vector<int> common;
+        const std::vector<int> common = set_intersection(a, b);
         const int an = a.size();
         const int bn = b.size();
-        absl::c_set_intersection(sorted(a), sorted(b), std::back_inserter(common));
         const int num_common = common.size();
         CHECK_LE(num_common, 2);
         if (num_common == 2) {

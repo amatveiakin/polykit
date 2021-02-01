@@ -1,9 +1,10 @@
 #pragma once
 
-#include "lib/format.h"
-#include "lib/sequence_iteration.h"
-#include "lib/ratio.h"
-#include "lib/theta.h"
+#include "format.h"
+#include "sequence_iteration.h"
+#include "ratio.h"
+#include "set_util.h"
+#include "theta.h"
 
 
 using Ratio = CrossRatioN;
