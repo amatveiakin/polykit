@@ -15,6 +15,7 @@
 #include "lib/format.h"
 #include "lib/iterated_integral.h"
 #include "lib/lexicographical.h"
+#include "lib/loops.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
 #include "lib/packed.h"
@@ -31,394 +32,11 @@
 #include "lib/theta.h"
 
 
-std::vector<int> common_elements(std::vector<std::vector<int>> sets) {
-  std::vector<int> ret(sets.front().begin(), sets.front().end());
-  absl::c_sort(ret);
-  for (auto one_set : sets) {
-    absl::c_sort(one_set);
-    std::vector<int> new_ret;
-    absl::c_set_intersection(ret, one_set, std::back_inserter(new_ret));
-    ret = std::move(new_ret);
-  }
-  return ret;
-}
+static constexpr auto cycle = loop_expr_cycle;
 
-int num_common_elements(std::vector<std::vector<int>> sets) {
-  return common_elements(sets).size();
-}
-
-
-using Loops = std::vector<std::vector<int>>;
-// TODO: Strong typing (here and for invariant types in general)
-using LoopsInvariant = std::vector<int>;
-
-
-std::string loops_description(const Loops& loops) {
-  absl::flat_hash_set<int> fully_common = to_set(common_elements(loops));
-  absl::flat_hash_set<int> partially_common;
-  for (int i = 0; i < loops.size(); ++i) {
-    for (int j = i+1; j < loops.size(); ++j) {
-      auto c = common_elements({loops[i], loops[j]});
-      partially_common.insert(c.begin(), c.end());
-    }
-  }
-  return str_join(
-    mapped(loops, [&](const std::vector<int>& loop) {
-      return fmt::brackets(
-        str_join(loop, ",", [&](int p) {
-          const auto p_str = to_string(p);
-          return fully_common.contains(p)
-            ? fmt::colored(p_str, TextColor::bright_red)
-            : partially_common.contains(p)
-              ? fmt::colored(p_str, TextColor::bright_blue)
-              : p_str;
-        })
-      );
-    }),
-    ""
-  );
-}
-
-LoopsInvariant loops_invariant(Loops loops) {
-  std::vector<int> five_loop;
-  const auto it = absl::c_find_if(loops, [](const std::vector<int>& loop) {
-    return loop.size() == 5;}
-  );
-  CHECK(it != loops.end());
-  std::vector<int> invariant{static_cast<int>(it - loops.begin())};
-  five_loop = *it;
-  loops.erase(it);
-  for (int num_loops_to_include = 2; num_loops_to_include <= loops.size(); ++num_loops_to_include) {
-    for (const auto include_five_loop : {false, true}) {
-      std::vector<int> loops_common_elements;
-      for (const auto& loops_to_include : increasing_sequences(loops.size(), num_loops_to_include)) {
-        Loops loops_group;
-        if (include_five_loop) {
-          loops_group.push_back(five_loop);
-        }
-        for (const int idx : loops_to_include) {
-          loops_group.push_back(loops.at(idx));
-        }
-        loops_common_elements.push_back(num_common_elements(loops_group));
-      }
-      invariant = concat(invariant, sorted(loops_common_elements));
-    }
-  }
-  return invariant;
-}
-
-class LoopsNames {
-public:
-  int loops_index(const Loops& loops) {
-    const auto invariant = loops_invariant(loops);
-    if (!indices_.contains(invariant)) {
-      indices_[invariant] = next_idx_++;
-    }
-    return indices_.at(invariant);
-  }
-  std::string loops_name(const Loops& loops) {
-    return fmt::braces(
-      fmt::colored(
-        pad_left(to_string(loops_index(loops)), 2),
-        TextColor::bright_cyan
-      )
-    );
-  }
-
-  int total_names() const { return next_idx_; }
-
-private:
-  int next_idx_ = 1;
-  absl::flat_hash_map<LoopsInvariant, int> indices_;
-};
-
-static LoopsNames loops_names;
-
-struct LoopExprParam : public SimpleLinearParam<Loops> {
-  static std::string object_to_string(const ObjectT& loops) {
-    // const std::string loops_str = str_join(
-    //   mapped(loops, [&](const std::vector<int>& loop) {
-    //     return fmt::brackets(str_join(loop, ","));
-    //   }),
-    //   ""
-    // );
-    const std::string loops_str = loops_description(loops);
-    const std::string loops_name_str = loops_names.loops_name(loops);
-    // const std::vector<int> loops_common_elements = common_elements(loops);
-    // const std::string common_elements_str = loops_common_elements.empty() ? "-" : str_join(loops_common_elements, ",");
-    // const std::string common_elements_str = loops_common_elements_description(loops);
-    // return absl::StrCat(loops_str, "  ", loops_name_str, "  ", common_elements_str);
-    return absl::StrCat(loops_str, "  ", loops_name_str);
-  }
-};
-
-using LoopExpr = Linear<LoopExprParam>;
-
-// TODO: Force using this, disable on-the-fly name generation (?)
-void generate_loops_names(const std::vector<LoopExpr>& expressions) {
-  for (const auto& expr : expressions) {
-    std::stringstream() << expr;
-  }
-}
-
-LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
-  return expr.mapped_expanding([](const auto& loops) {
-    using RatioExpr = Linear<SimpleLinearParam<std::vector<RatioOrUnity>>>;
-    const std::vector<RatioExpr> ratio_exprs =
-      mapped(loops, [](const std::vector<int>& loop) -> RatioExpr {
-        switch (loop.size()) {
-          case 4: {
-            return RatioExpr::single({Ratio(loop)});
-          }
-          case 5: {
-            RatioExpr ret;
-            for (int i = 0; i < 5; ++i) {
-              ret += neg_one_pow(i) * RatioExpr::single({Ratio(removed_index(loop, i))});
-            }
-            return ret;
-          }
-          default:
-            FATAL(absl::StrCat("Unsupported loop size: ", loop.size()));
-        }
-      });
-    return outer_product(absl::MakeConstSpan(ratio_exprs),
-      [](const auto& lhs, const auto& rhs) {
-        return concat(lhs, rhs);
-      }, AnnNone()
-    ).template mapped<LiraExpr>([](const auto& loops) {
-      return LiraParamOnes(loops);
-    });
-  });
-}
-
-LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
-  return expr.mapped([&](auto loops) {
-    // CHECK_EQ(loops.size(), 3);
-    if (loops.size() != 3) {
-      // TODO: More rebust solution
-      return loops;
-    }
-    if (loops[0].size() == loops[2].size()) {
-      sort_two(loops[0], loops[2]);
-    }
-    return loops;
-  });
-}
-
-LoopExpr fully_normalize_loops(const LoopExpr& expr) {
-  return expr.mapped_expanding([&](const auto& loops) -> LoopExpr {
-    int sign = 1;
-    auto new_loops = mapped(loops, [&](std::vector<int> loop) {
-      sign *= sort_with_sign(loop);
-      return loop;
-    });
-    return sign * LoopExpr::single(new_loops);
-  });
-}
-
-LoopExpr remove_duplicate_loops(const LoopExpr& expr) {
-  return expr.filtered([&](const auto& loops) {
-    for (int i = 0; i < loops.size(); ++i) {
-      for (int j = 0; j < loops.size(); ++j) {
-        if (i == j) {
-          continue;
-        }
-        const auto outer = loops[i];
-        const auto inner = loops[j];
-        CHECK(absl::c_is_sorted(outer));
-        CHECK(absl::c_is_sorted(inner));
-        if (absl::c_includes(outer, inner)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  });
-}
-
-LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<int, int>& substitutions) {
-  auto loop_subst = expr.mapped_expanding([&](const Loops& loops) -> LoopExpr {
-    Loops new_loops;
-    for (const auto& loop : loops) {
-      auto new_loop = mapped(loop, [&](int p) {
-        return substitutions.contains(p) ? substitutions.at(p) : p;
-      });
-      if (!all_unique(new_loop)) {
-        return {};
-      }
-      new_loops.push_back(std::move(new_loop));
-    }
-    return LoopExpr::single(new_loops);
-  });
-  return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
-}
-
-LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices) {
-  absl::flat_hash_map<int, int> substitutions;
-  for (int i = 0; i < new_indices.size(); ++i) {
-    substitutions[i+1] = new_indices[i];
-  }
-  return loop_expr_substitute(expr, substitutions);
-}
-
-LoopExpr cycle(
-    const LoopExpr& expr, const std::vector<std::vector<int>>& cycles) {
-  absl::flat_hash_map<int, int> substitutions;
-  for (const auto& cycle : cycles) {
-    for (int i = 0; i < cycle.size(); ++i) {
-      const int p = cycle[i];
-      const int q = cycle[(i+1) % cycle.size()];
-      CHECK(!substitutions.contains(p));
-      substitutions[p] = q;
-    }
-  }
-  return loop_expr_substitute(expr, substitutions);
-}
-
-LoopExpr loop_expr_degenerate(
-    const LoopExpr& expr, int total_points, const std::vector<std::vector<int>>& groups) {
-  std::set<int> remaining_points;
-  for (int i = 1; i <= total_points; ++i) {
-    remaining_points.insert(i);
-  }
-  int next_idx = 1;
-  absl::flat_hash_map<int, int> substitutions;
-  for (const auto& group : groups) {
-    for (int p : group) {
-      CHECK(remaining_points.count(p));
-      remaining_points.erase(p);
-      substitutions[p] = next_idx;
-    }
-    next_idx++;
-  }
-  for (int p : remaining_points) {
-    substitutions[p] = next_idx++;
-  }
-  return loop_expr_substitute(expr, substitutions);
-}
-
-// struct LoopsDecomposition {                        // elements in loops number...
-//   std::vector<int> elements_3_way;                 // (0,1,2)
-//   std::array<std::vector<int>, 3> elements_2_way;  // (0,1), (0,2), (1,2)
-//   std::array<std::vector<int>, 3> elements_1_way;  // (0), (1), (2)
-// };
-// LoopsDecomposition decompose_loops(const Loops& loops) {
-//   CHECK_EQ(loops.size(), 3);
-//   std::vector<int> elements_3_way = common_elements(loops);
-//   std::array<std::vector<int>, 3> elements_2_way = {
-//     set_difference(common_elements({loops[0], loops[1]}), elements_3_way),
-//     set_difference(common_elements({loops[0], loops[2]}), elements_3_way),
-//     set_difference(common_elements({loops[1], loops[2]}), elements_3_way),
-//   };
-//   std::vector<int> elements_2_or_3_way = concat(elements_3_way, flatten(elements_2_way));
-//   absl::c_sort(elements_2_or_3_way);
-//   CHECK(all_unique(elements_2_or_3_way));
-//   std::array<std::vector<int>, 3> elements_1_way = {
-//     set_difference(sorted(loops[0]), elements_2_or_3_way),
-//     set_difference(sorted(loops[1]), elements_2_or_3_way),
-//     set_difference(sorted(loops[2]), elements_2_or_3_way),
-//   };
-//   return {elements_3_way, elements_2_way, elements_1_way};
-// }
-// LoopExpr to_canonical_permutation(const LoopExpr& expr) {
-//   return expr.mapped_expanding([](const Loops& loops) {
-//     const auto decomposition = decompose_loops(loops);
-//     std::vector<int> full_permutation = concat(
-//       decomposition.elements_3_way,
-//       flatten(decomposition.elements_2_way),
-//       flatten(decomposition.elements_1_way)
-//     );
-//     int sign = 1;
-//     // TODO: Inverse into a vector instead.
-//     absl::flat_hash_map<int, int> position_of;
-//     for (int i = 0; i < full_permutation.size(); ++i) {
-//       position_of[full_permutation[i]] = i + 1;
-//     }
-//     Loops new_loops;
-//     for (const auto& loop : loops) {
-//       const std::vector<std::pair<int, int>> loop_permutation_orig = mapped(loop, [&](int p) {
-//         return std::pair{position_of.at(p), p};
-//       });
-//       auto loop_permutation = loop_permutation_orig;
-//       const int loop_permutation_sign = sort_with_sign(loop_permutation);
-//       sign *= loop_permutation_sign;
-//       new_loops.push_back(mapped(loop_permutation, [&](auto p) { return p.second; }));
-//     }
-//     return sign * LoopExpr::single(new_loops);
-//   });
-// }
-
-// Returns variable that are common for all given loop, but not for a larger subset of loops.
-std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<int> loop_indices) {
-  absl::c_sort(loop_indices);
-  Loops target_batch = choose_indices(loops, loop_indices);
-  std::vector<int> higher_level_common;
-  for (const auto& seq : all_sequences(2, loops.size())) {
-    bool skip = false;
-    for (int i = 0; i < seq.size(); ++i) {
-      if (seq[i] && absl::c_binary_search(loop_indices, i)) {
-        skip = true;
-        break;
-      }
-    }
-    if (skip) {
-      continue;
-    }
-    const Loops loops_batch = concat(target_batch, choose_by_mask(loops, seq));
-    if (loops_batch.size() == target_batch.size()) {
-      continue;
-    }
-    higher_level_common = set_union(higher_level_common, common_elements(loops_batch));
-  }
-  return set_difference(common_elements(target_batch), higher_level_common);
-}
-
-std::vector<int> decompose_loops(const Loops& loops) {
-  std::vector<int> ret;
-  for (const auto& seq : all_sequences(2, loops.size())) {
-    const Loops loops_batch = choose_by_mask(loops, seq);
-    if (!loops_batch.empty()) {
-      append_vector(ret, common_elements(loops_batch));
-    }
-  }
-  return reversed(ret);  // TODO: Why doesn't `reverse` put red elements first?
-}
-
-LoopExpr to_canonical_permutation(const LoopExpr& expr) {
-  return expr.mapped_expanding([](const Loops& loops) {
-    const std::vector<int> full_permutation = decompose_loops(loops);
-    int sign = 1;
-    // TODO: Inverse into a vector instead.
-    absl::flat_hash_map<int, int> position_of;
-    for (int i = 0; i < full_permutation.size(); ++i) {
-      position_of[full_permutation[i]] = i + 1;
-    }
-    Loops new_loops;
-    for (const auto& loop : loops) {
-      const std::vector<std::pair<int, int>> loop_permutation_orig = mapped(loop, [&](int p) {
-        return std::pair{position_of.at(p), p};
-      });
-      auto loop_permutation = loop_permutation_orig;
-      const int loop_permutation_sign = sort_with_sign(loop_permutation);
-      sign *= loop_permutation_sign;
-      new_loops.push_back(mapped(loop_permutation, [&](auto p) { return p.second; }));
-    }
-    return sign * LoopExpr::single(new_loops);
-  });
-}
-
-LiraExpr lira_expr_sort_args(const LiraExpr& expr) {
-  return expr.mapped_expanding([](const LiraParamOnes& term) {
-    int sign = 1;
-    auto lira = LiraParamOnes(mapped(term.ratios(), [&](const RatioOrUnity& r) -> RatioOrUnity {
-      if (r.is_unity()) {
-        return r;
-      }
-      auto indices = r.as_ratio().indices();
-      sign *= sort_with_sign(indices);
-      return Ratio(indices);
-    }));
-    return sign * LiraExpr::single(lira);
+LoopExpr preshow(const LoopExpr& expr) {
+  return expr.filtered([](const Loops& loops) {
+    return loops_names.loops_index(loops) == 3;
   });
 }
 
@@ -452,43 +70,6 @@ StringExpr arg11_expr_type_2_to_column(const LoopExpr& expr) {
   });
 }
 
-struct LoopCutResult {
-  std::vector<int> loop;
-  std::vector<int> remains;
-};
-
-LoopCutResult cut_loop(const std::vector<int>& points, int from, int to) {
-  CHECK_LT(from, to);
-  return {
-    slice(points, from, to),
-    concat(slice(points, 0, from + 1), slice(points, to - 1))
-  };
-}
-
-LoopExpr preshow(const LoopExpr& expr) {
-  return expr.filtered([](const Loops& loops) {
-    return loops_names.loops_index(loops) == 3;
-  });
-}
-
-LoopExpr cut_loops_recursively(const std::vector<int>& points, const Loops& loops) {
-  if (points.size() <= 5) {
-    CHECK_EQ(points.size(), 5);
-    return LoopExpr::single(appended(loops, points));
-  }
-  LoopExpr ret;
-  for (int i = 0; i < points.size(); ++i) {
-    auto cut_result = cut_loop(rotated_vector(points, i), 0, 4);
-    ret += cut_loops_recursively(cut_result.remains, appended(loops, cut_result.loop));
-  }
-  return ret;
-}
-
-LoopExpr reverse_loops(const LoopExpr& expr) {
-  return expr.mapped([](const Loops& loops) {
-    return reversed(loops);
-  });
-}
 
 int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -520,7 +101,7 @@ int main(int argc, char *argv[]) {
 
   auto lira_expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
 
-  auto loop_expr = reverse_loops(cut_loops_recursively(seq_incl(1, num_points), {}));
+  auto loop_expr = reverse_loops(cut_loops(seq_incl(1, num_points)));
   auto loop_lira_expr = loop_expr_to_lira_expr(loop_expr);
 
   lira_expr = lira_expr_sort_args(lira_expr);
@@ -532,16 +113,16 @@ int main(int argc, char *argv[]) {
   // std::cout << "Via loops " << loop_lira_expr << "\n";
   // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr) << "\n";
 
-  const auto a = loop_expr_degenerate(loop_expr, N, {{1,3,5,7}});
-  const auto b = loop_expr_degenerate(loop_expr, N, {{1,3,5,8}});
-  const auto c = loop_expr_degenerate(loop_expr, N, {{1,3,5,9}});
-  const auto d = loop_expr_degenerate(loop_expr, N, {{1,3,6,8}});
-  const auto e = loop_expr_degenerate(loop_expr, N, {{1,3,6,9}});
-  const auto f = loop_expr_degenerate(loop_expr, N, {{1,3,7,9}});
+  const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
+  const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,3,5,9}});
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,8}});
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3,6,9}});
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
 
   generate_loops_names({a, b, c, d, d, f});
 
-  // std::cout << loop_expr_degenerate(loop_expr, N, {{1,3}, {2,5}, {4,6}});
+  // std::cout << loop_expr_degenerate(loop_expr, {{1,3}, {2,5}, {4,6}});
   std::cout << "a " << a << "\n";
   std::cout << "b " << b << "\n";
   std::cout << "c " << c << "\n";
@@ -620,30 +201,30 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-  // std::cout << loop_expr_degenerate(loop_expr, N, {{1,3}});
+  // std::cout << loop_expr_degenerate(loop_expr, {{1,3}});
   // return 0;
 
 
-  const auto a = loop_expr_degenerate(loop_expr, N, {{1,3}, {2,4}});
-  const auto b = loop_expr_degenerate(loop_expr, N, {{1,3}, {2,5}});
-  const auto c = loop_expr_degenerate(loop_expr, N, {{1,4}, {2,5}});
-  const auto d = loop_expr_degenerate(loop_expr, N, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
-  const auto e = loop_expr_degenerate(loop_expr, N, {{1,3}, {4,7}});
-  const auto f = loop_expr_degenerate(loop_expr, N, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
-  const auto g = loop_expr_degenerate(loop_expr, N, {{1,3}, {2,6}});
-  const auto h = loop_expr_degenerate(loop_expr, N, {{1,3}, {5,8}});
-  const auto i = loop_expr_degenerate(loop_expr, N, {{1,4}, {2,6}});
-  const auto j = loop_expr_degenerate(loop_expr, N, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
-  const auto k = loop_expr_degenerate(loop_expr, N, {{1,6}, {2,4}});
-  const auto l = loop_expr_degenerate(loop_expr, N, {{1,6}, {2,5}});
-  const auto x = loop_expr_degenerate(loop_expr, N, {{1,4}, {2,7}});
-  const auto y = loop_expr_degenerate(loop_expr, N, {{1,4}, {2,8}});
-  const auto z = loop_expr_degenerate(loop_expr, N, {{1,4}, {5,8}});
-  const auto u = loop_expr_degenerate(loop_expr, N, {{1,5}, {2,6}});
-  const auto w = loop_expr_degenerate(loop_expr, N, {{1,5}, {3,7}});
-  const auto m = loop_expr_degenerate(loop_expr, N, {{1,3,5}});
-  const auto n = loop_expr_degenerate(loop_expr, N, {{1,3,6}});
-  const auto o = loop_expr_degenerate(loop_expr, N, {{1,4,7}});
+  const auto a = loop_expr_degenerate(loop_expr, {{1,3}, {2,4}});
+  const auto b = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,4}, {2,5}});
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3}, {4,7}});
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
+  const auto g = loop_expr_degenerate(loop_expr, {{1,3}, {2,6}});
+  const auto h = loop_expr_degenerate(loop_expr, {{1,3}, {5,8}});
+  const auto i = loop_expr_degenerate(loop_expr, {{1,4}, {2,6}});
+  const auto j = loop_expr_degenerate(loop_expr, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
+  const auto k = loop_expr_degenerate(loop_expr, {{1,6}, {2,4}});
+  const auto l = loop_expr_degenerate(loop_expr, {{1,6}, {2,5}});
+  const auto x = loop_expr_degenerate(loop_expr, {{1,4}, {2,7}});
+  const auto y = loop_expr_degenerate(loop_expr, {{1,4}, {2,8}});
+  const auto z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
+  const auto u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
+  const auto w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
+  const auto m = loop_expr_degenerate(loop_expr, {{1,3,5}});
+  const auto n = loop_expr_degenerate(loop_expr, {{1,3,6}});
+  const auto o = loop_expr_degenerate(loop_expr, {{1,4,7}});
 
   generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, m, o, x, y, z, u, w});
 
