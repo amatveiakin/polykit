@@ -6,8 +6,16 @@
 
 
 using Loops = std::vector<std::vector<int>>;
-// TODO: Strong typing (here and for invariant types in general)
-using LoopsInvariant = std::vector<int>;
+
+class LoopsInvariant {
+public:
+  LoopsInvariant(std::vector<int> data) : data_(std::move(data)) {}
+  bool operator==(const LoopsInvariant& other) const { return data_ == other.data_; }
+  template <typename H>
+  friend H AbslHashValue(H h, const LoopsInvariant& v) { return H::combine(std::move(h), v.data_); }
+private:
+  std::vector<int> data_;
+};
 
 
 std::string loops_description(const Loops& loops);
