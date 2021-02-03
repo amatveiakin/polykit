@@ -11,7 +11,6 @@
 
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
-#include "lib/cotheta.h"
 #include "lib/format.h"
 #include "lib/iterated_integral.h"
 #include "lib/lexicographical.h"

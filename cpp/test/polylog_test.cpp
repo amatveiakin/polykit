@@ -2,7 +2,6 @@
 
 #include "gtest/gtest.h"
 
-#include "lib/cotheta.h"
 #include "test_util/matchers.h"
 
 

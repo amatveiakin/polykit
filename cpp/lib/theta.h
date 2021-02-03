@@ -61,6 +61,8 @@ inline std::string to_string(const ThetaPack& pack) {
 }
 
 
+constexpr int kThetaCoExprComponents = 2;
+
 #define OLD_THETA 0
 #if OLD_THETA  // DEPRECATED[word-to-pvector]
 namespace internal {
@@ -289,10 +291,26 @@ struct ThetaExprParam {
     return vec;
   }
 };
+
+struct ThetaCoExprParam {
+  using ObjectT = std::array<ThetaPack, kThetaCoExprComponents>;
+  using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprComponents>;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return mapped_array(obj, ThetaExprParam::object_to_key);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return mapped_array(key, ThetaExprParam::key_to_object);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return str_join(obj, fmt::coprod_hopf());
+  }
+  static constexpr bool coproduct_is_lie_algebra = false;
+};
 }  // namespace internal
 #endif
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
+using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
@@ -368,3 +386,7 @@ ThetaExpr update_foreweight(
     int new_foreweight);
 
 StringExpr count_functions(const ThetaExpr& expr);
+
+ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
+    const EpsilonCoExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& ratios);

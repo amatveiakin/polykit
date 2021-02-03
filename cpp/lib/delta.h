@@ -5,6 +5,7 @@
 #include "absl/strings/str_cat.h"
 
 #include "check.h"
+#include "coalgebra.h"
 #include "format.h"
 #include "linear.h"
 #include "packed.h"
@@ -119,9 +120,27 @@ struct DeltaExprParam : IdentityVectorLinearParamMixin<PVector<unsigned char, 10
     return obj.size();
   }
 };
+
+struct DeltaCoExprParam {
+  using ObjectT = std::vector<std::vector<Delta>>;
+  using PartStorageT = DeltaExprParam::StorageT;
+  using StorageT = PVector<PartStorageT, 2>;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return mapped_to_pvector<StorageT>(obj, DeltaExprParam::object_to_key);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return mapped(key, DeltaExprParam::key_to_object);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
+  }
+  static constexpr bool coproduct_is_lie_algebra = true;
+};
 }  // namespace internal
 
+
 using DeltaExpr = Linear<internal::DeltaExprParam>;
+using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
 
 inline DeltaExpr D(X a, X b) {
   Delta d(a, b);
@@ -144,3 +163,11 @@ DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vect
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);
+
+// Explicit rules allow to omit template types when calling the function.
+inline DeltaCoExpr coproduct(const DeltaExpr& lhs, const DeltaExpr& rhs) {
+  return coproduct<DeltaCoExpr>(lhs, rhs);
+}
+inline DeltaCoExpr comultiply(const DeltaExpr& expr, std::pair<int, int> form) {
+  return comultiply<DeltaCoExpr>(expr, form);
+}

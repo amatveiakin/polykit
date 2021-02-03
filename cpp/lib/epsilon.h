@@ -6,6 +6,7 @@
 
 #include "bit.h"
 #include "check.h"
+#include "coalgebra.h"
 #include "packed.h"
 #include "polylog_param.h"
 #include "word.h"
@@ -318,10 +319,27 @@ struct EpsilonExprParam {
     return vec;
   }
 };
+
+struct EpsilonCoExprParam {
+  using ObjectT = std::vector<EpsilonPack>;
+  using PartStorageT = EpsilonExprParam::StorageT;
+  using StorageT = PVector<PartStorageT, 2>;
+  static StorageT object_to_key(const ObjectT& obj) {
+    return mapped_to_pvector<StorageT>(obj, EpsilonExprParam::object_to_key);
+  }
+  static ObjectT key_to_object(const StorageT& key) {
+    return mapped(key, EpsilonExprParam::key_to_object);
+  }
+  static std::string object_to_string(const ObjectT& obj) {
+    return str_join(obj, fmt::coprod_hopf());
+  }
+  static constexpr bool coproduct_is_lie_algebra = false;
+};
 }  // namespace internal
 #endif
 
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
+using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
 
 // Whether expr is one w.r.t. shuffle multiplication.
 inline bool epsilon_pack_is_unity(const EpsilonPack& pack) {
@@ -380,3 +398,12 @@ EpsilonExpr epsilon_expr_substitute(
 // Removes EpsilonComplement-s with more than one variable.
 // TODO: Add EpsilonCoExpr overload
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);
+
+
+// Explicit rules allow to omit template types when calling the function.
+inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
+  return coproduct<EpsilonCoExpr>(lhs, rhs);
+}
+inline EpsilonCoExpr comultiply(const EpsilonExpr& expr, std::pair<int, int> form) {
+  return comultiply<EpsilonCoExpr>(expr, form);
+}

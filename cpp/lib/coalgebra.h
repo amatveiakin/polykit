@@ -1,84 +1,7 @@
-// TODO: Leave only generic functionality here. Move expression defitions
-// to corresponding files.
-
 #pragma once
 
 #include "algebra.h"
-#include "delta.h"
-#include "epsilon.h"
 #include "lyndon.h"
-#include "multiword.h"
-#include "theta.h"
-#include "word.h"
-
-
-constexpr int kThetaCoExprComponents = 2;
-
-namespace internal {
-struct WordCoExprParam : SimpleLinearParam<MultiWord> {
-  static std::string object_to_string(const MultiWord& word) {
-    std::vector<std::string> segment_strings;
-    for (const auto& segment : word) {
-      segment_strings.push_back(list_to_string(segment));
-    }
-    return str_join(segment_strings, fmt::coprod_lie());
-  }
-  static constexpr bool coproduct_is_lie_algebra = true;
-};
-
-struct DeltaCoExprParam {
-  using ObjectT = std::vector<std::vector<Delta>>;
-  using PartStorageT = DeltaExprParam::StorageT;
-  using StorageT = PVector<PartStorageT, 2>;
-  static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, DeltaExprParam::object_to_key);
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    return mapped(key, DeltaExprParam::key_to_object);
-  }
-  static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
-  }
-  static constexpr bool coproduct_is_lie_algebra = true;
-};
-
-struct EpsilonCoExprParam {
-  using ObjectT = std::vector<EpsilonPack>;
-  using PartStorageT = EpsilonExprParam::StorageT;
-  using StorageT = PVector<PartStorageT, 2>;
-  static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, EpsilonExprParam::object_to_key);
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    return mapped(key, EpsilonExprParam::key_to_object);
-  }
-  static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, fmt::coprod_hopf());
-  }
-  static constexpr bool coproduct_is_lie_algebra = false;
-};
-
-struct ThetaCoExprParam {
-  using ObjectT = std::array<ThetaPack, kThetaCoExprComponents>;
-  using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprComponents>;
-  static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_array(obj, ThetaExprParam::object_to_key);
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    return mapped_array(key, ThetaExprParam::key_to_object);
-  }
-  static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, fmt::coprod_hopf());
-  }
-  static constexpr bool coproduct_is_lie_algebra = false;
-};
-
-}  // namespace internal
-
-using WordCoExpr = Linear<internal::WordCoExprParam>;
-using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
-using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
-using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
 
 template<typename CoExprT, typename ExprT>
@@ -101,18 +24,6 @@ CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
     return ret;  // `normalize_coproduct` might not compile here, thus `if constexpr`
   }
 }
-
-// Explicit rules allow to omit template types when calling the function.
-inline DeltaCoExpr coproduct(const DeltaExpr& lhs, const DeltaExpr& rhs) {
-  return coproduct<DeltaCoExpr>(lhs, rhs);
-}
-inline WordCoExpr coproduct(const WordExpr& lhs, const WordExpr& rhs) {
-  return coproduct<WordCoExpr>(lhs, rhs);
-}
-inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
-  return coproduct<EpsilonCoExpr>(lhs, rhs);
-}
-
 
 // TODO: Should this be exposed publicly?
 template<typename CoExprT>
@@ -142,7 +53,6 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
   });
   return ret.copy_annotations(expr);
 }
-
 
 // Optimization potential: convert expr to Lyndon basis first to minimize
 // the number of times individual terms need to be converted.
@@ -189,17 +99,6 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   );
 }
 
-// Explicit rules allow to omit template types when calling the function.
-inline DeltaCoExpr comultiply(const DeltaExpr& expr, std::pair<int, int> form) {
-  return comultiply<DeltaCoExpr>(expr, form);
-}
-inline WordCoExpr comultiply(const WordExpr& expr, std::pair<int, int> form) {
-  return comultiply<WordCoExpr>(expr, form);
-}
-inline EpsilonCoExpr comultiply(const EpsilonExpr& expr, std::pair<int, int> form) {
-  return comultiply<EpsilonCoExpr>(expr, form);
-}
-
 
 template<typename CoExprT, typename F>
 CoExprT filter_coexpr_predicate(const CoExprT& expr, int side, const F& predicate) {
@@ -211,8 +110,10 @@ CoExprT filter_coexpr_predicate(const CoExprT& expr, int side, const F& predicat
 template<typename CoExprT>
 CoExprT filter_coexpr(
     const CoExprT& expr, int side, const typename CoExprT::ObjectT::value_type& value) {
-  return filter_coexpr_predicate(expr, side,
+  return filter_coexpr_predicate(
+    expr, side,
     [&](const typename CoExprT::ObjectT::value_type& x) {
       return x == value;
-    });
+    }
+  );
 }

@@ -9,6 +9,7 @@
 
 #include "absl/types/span.h"
 
+#include "coalgebra.h"
 #include "hash.h"
 #include "linear.h"
 #include "word.h"
@@ -164,6 +165,31 @@ std::string to_string(const MultiWord& w, F char_to_string) {
 inline std::string to_string(const MultiWord& w) {
   return to_string(w, [](auto c){ return to_string(c); });
 }
+
+
+namespace internal {
+struct WordCoExprParam : SimpleLinearParam<MultiWord> {
+  static std::string object_to_string(const MultiWord& word) {
+    std::vector<std::string> segment_strings;
+    for (const auto& segment : word) {
+      segment_strings.push_back(list_to_string(segment));
+    }
+    return str_join(segment_strings, fmt::coprod_lie());
+  }
+  static constexpr bool coproduct_is_lie_algebra = true;
+};
+}  // namespace internal
+
+using WordCoExpr = Linear<internal::WordCoExprParam>;
+
+// Explicit rules allow to omit template types when calling the function.
+inline WordCoExpr coproduct(const WordExpr& lhs, const WordExpr& rhs) {
+  return coproduct<WordCoExpr>(lhs, rhs);
+}
+inline WordCoExpr comultiply(const WordExpr& expr, std::pair<int, int> form) {
+  return comultiply<WordCoExpr>(expr, form);
+}
+
 
 namespace std {
   template <>

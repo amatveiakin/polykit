@@ -1,6 +1,7 @@
 #pragma once
 
-#include "coalgebra.h"
+#include "epsilon.h"
+#include "theta.h"
 
 
 EpsilonExpr mystic_product(

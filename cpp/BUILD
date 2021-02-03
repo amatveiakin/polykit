@@ -41,7 +41,6 @@ cc_library(
         "lib/algebra.h",
         "lib/coalgebra.h",
         "lib/corr_expression.h",
-        "lib/cotheta.h",
         "lib/delta.h",
         "lib/delta_ratio.h",
         "lib/epsilon.h",
@@ -61,7 +60,6 @@ cc_library(
     ],
     srcs = [
         "lib/corr_expression.cpp",
-        "lib/cotheta.cpp",
         "lib/delta.cpp",
         "lib/epsilon.cpp",
         "lib/polylog_cross_ratio_param.cpp",
