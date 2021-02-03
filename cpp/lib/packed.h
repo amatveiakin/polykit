@@ -227,8 +227,6 @@ private:
 public:
   static constexpr int inlined_size = N;
   using ParentT::ParentT;
-  explicit PVector(absl::Span<const T> span)
-      : ParentT(span.begin(), span.end()) {}
 };
 
 template<typename, typename = void> struct is_pvector : std::false_type {};

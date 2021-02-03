@@ -4,7 +4,6 @@
 
 #include "algebra.h"
 #include "util.h"
-#include "word.h"
 
 
 // Returns shuffle product of two words as a List of words.

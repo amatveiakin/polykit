@@ -71,7 +71,7 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   static auto make_copart = [](auto span) {
     // TODO: Fix: Lyndon is repeated here and in coproduct!
     return to_lyndon_basis(ExprT::single_key(
-      ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span))
+      ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span.begin(), span.end()))
     ));
   };
   CoExprT ret;

@@ -3,7 +3,6 @@
 #include "linear.h"
 #include "shuffle.h"
 #include "util.h"
-#include "word.h"
 
 
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.

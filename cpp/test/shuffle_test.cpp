@@ -8,23 +8,23 @@
 
 TEST(ShuffleProductTest, ThreeExpressions) {
   EXPECT_EXPR_EQ(
-    shuffle_product<Word>({  // TODO: Avoid specifying monom type
-      Word{0, 1, 0},
-      Word{1, 0},
-      Word{1 },
-    }).cast_to<WordExpr>()
+    shuffle_product<std::vector<int>>({  // TODO: Avoid specifying monom type
+      std::vector{0, 1, 0},
+      std::vector{1, 0},
+      std::vector{1},
+    }).cast_to<SimpleVectorExpr>()
     ,
-     +2 * W({0, 1, 0, 1, 0, 1})
-     +4 * W({0, 1, 0, 1, 1, 0})
-     +4 * W({0, 1, 1, 0, 0, 1})
-     +8 * W({0, 1, 1, 0, 1, 0})
-    +12 * W({0, 1, 1, 1, 0, 0})
-     +2 * W({1, 0, 0, 1, 0, 1})
-     +4 * W({1, 0, 0, 1, 1, 0})
-     +2 * W({1, 0, 1, 0, 0, 1})
-     +6 * W({1, 0, 1, 0, 1, 0})
-     +8 * W({1, 0, 1, 1, 0, 0})
-     +4 * W({1, 1, 0, 0, 1, 0})
-     +4 * W({1, 1, 0, 1, 0, 0})
+     +2 * SV({0, 1, 0, 1, 0, 1})
+     +4 * SV({0, 1, 0, 1, 1, 0})
+     +4 * SV({0, 1, 1, 0, 0, 1})
+     +8 * SV({0, 1, 1, 0, 1, 0})
+    +12 * SV({0, 1, 1, 1, 0, 0})
+     +2 * SV({1, 0, 0, 1, 0, 1})
+     +4 * SV({1, 0, 0, 1, 1, 0})
+     +2 * SV({1, 0, 1, 0, 0, 1})
+     +6 * SV({1, 0, 1, 0, 1, 0})
+     +8 * SV({1, 0, 1, 1, 0, 0})
+     +4 * SV({1, 1, 0, 0, 1, 0})
+     +4 * SV({1, 1, 0, 1, 0, 0})
   );
 }

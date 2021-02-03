@@ -5,7 +5,6 @@
 #include "absl/types/span.h"
 
 #include "linear.h"
-#include "word.h"
 
 
 struct ProductAnnotationNone {};

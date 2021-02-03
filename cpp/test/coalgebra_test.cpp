@@ -4,23 +4,24 @@
 
 #include "lib/iterated_integral.h"
 #include "lib/polylog.h"
+#include "test_util/helpers.h"
 #include "test_util/matchers.h"
 
 
 TEST(CoproductTest, TwoExpressions) {
   EXPECT_EXPR_EQ(
     coproduct(
-      +  WordExpr::single(Word{1})
-      -  WordExpr::single(Word{2})
+      +  SV({1})
+      -  SV({2})
       ,
-      +  WordExpr::single(Word{3})
-      +3*WordExpr::single(Word{4})
+      +  SV({3})
+      +3*SV({4})
     ),
     (
-      +  WordCoExpr::single(MultiWord({{1}, {3}}))
-      +3*WordCoExpr::single(MultiWord({{1}, {4}}))
-      -  WordCoExpr::single(MultiWord({{2}, {3}}))
-      -3*WordCoExpr::single(MultiWord({{2}, {4}}))
+      +  CoSV({{1}, {3}})
+      +3*CoSV({{1}, {4}})
+      -  CoSV({{2}, {3}})
+      -3*CoSV({{2}, {4}})
     )
   );
 }
@@ -28,12 +29,12 @@ TEST(CoproductTest, TwoExpressions) {
 TEST(ComultiplyTest, Form_1_1) {
   EXPECT_EXPR_EQ(
     comultiply(
-      +2*WordExpr::single(Word{1,2})
+      +2*SV({1,2})
       ,
       {1, 1}
     ),
     (
-      +2*WordCoExpr::single(MultiWord({{1}, {2}}))
+      +2*CoSV({{1}, {2}})
     )
   );
 }
@@ -41,14 +42,14 @@ TEST(ComultiplyTest, Form_1_1) {
 TEST(ComultiplyTest, Form_2_2) {
   EXPECT_EXPR_EQ(
     comultiply(
-      + WordExpr::single(Word{1,3,2,4})
-      + WordExpr::single(Word{4,3,2,1})
+      + SV({1,3,2,4})
+      + SV({4,3,2,1})
       ,
       {2, 2}
     ),
     (
-      + WordCoExpr::single(MultiWord({{1,3}, {2,4}}))
-      - WordCoExpr::single(MultiWord({{1,2}, {3,4}}))
+      + CoSV({{1,3}, {2,4}})
+      - CoSV({{1,2}, {3,4}})
     )
   );
 }
@@ -56,11 +57,11 @@ TEST(ComultiplyTest, Form_2_2) {
 TEST(ComultiplyTest, Zero) {
   EXPECT_EXPR_EQ(
     comultiply(
-      + WordExpr::single(Word{1,1,2,3})
+      + SV({1,1,2,3})
       ,
       {2, 2}
     ),
-    WordCoExpr{}
+    SimpleVectorCoExpr{}
   );
 }
 
