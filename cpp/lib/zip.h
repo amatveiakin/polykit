@@ -11,7 +11,7 @@ std::vector<std::pair<First, Second>> zip(
     const std::vector<Second>& second) {
   CHECK_EQ(first.size(), second.size());
   std::vector<std::pair<First, Second>> ret;
-  for (int i = 0; i < first.size(); ++i) {
+  for (int i : range(first.size())) {
     ret.push_back({first[i], second[i]});
   }
   return ret;
@@ -24,7 +24,7 @@ auto mapped_zip(
     F&& func) {
   CHECK_EQ(first.size(), second.size());
   std::vector<std::invoke_result_t<F, First, Second>> ret;
-  for (int i = 0; i < first.size(); ++i) {
+  for (int i : range(first.size())) {
     ret.push_back(func(first[i], second[i]));
   }
   return ret;

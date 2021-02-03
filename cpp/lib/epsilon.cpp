@@ -23,7 +23,7 @@ EpsilonExpr epsilon_expr_substitute(
               },
               [&](const EpsilonComplement& v) {
                 std::bitset<kMaxComplementVariables> term_indices;
-                for (int idx = 0; idx < kMaxComplementVariables; ++idx) {
+                for (int idx : range(kMaxComplementVariables)) {
                   if (v.indices()[idx]) {
                     const auto& new_indices = new_products.at(idx - 1);
                     for (const int new_idx : new_indices) {

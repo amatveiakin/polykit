@@ -32,7 +32,7 @@ TEST(CoequationsTest, LidoSymm4_OldFormula) {
 
 #if RUN_LARGE_TESTS
 TEST(CoequationsTest, LidoSymm_Arg6) {
-  for (int wr = 2; wr <= 3; ++wr) {
+  for (int wr : range_incl(2, 3)) {
     EXPECT_EXPR_EQ(
       comultiply(LidoSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
       (
@@ -50,7 +50,7 @@ TEST(CoequationsTest, LidoSymm_Arg6) {
 #endif
 
 TEST(CoequationsTest, Lido_Arg6) {
-  for (int w = 1; w <= 2; ++w) {
+  for (int w : range_incl(1, 2)) {
     EXPECT_EXPR_EQ(
       comultiply(LidoVec(2*w, {1,2,3,4,5,6}), {w,w}),
       (

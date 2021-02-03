@@ -42,7 +42,7 @@ static ResultT Lido_impl(
   CHECK_GE(weight, min_weight);
   const auto subsums = [&]() {
     ResultT ret;
-    for (int i = 0; i < num_points - 3; ++i) {
+    for (int i : range(num_points - 3)) {
       const auto foundation = concat(slice(points, 0, i+1), slice(points, i+3));
       ret += tensor_product(
         projector(lido_node_func(slice(points, i, i+4))),
@@ -80,7 +80,7 @@ static ResultT Lido_generic_wrapper(
     return weight == 1 ? projector(D(points[0], points[1])) : ResultT{};
   }
   std::vector<Point> tagged_points;
-  for (int i = 0; i < points.size(); ++i) {
+  for (int i : range(points.size())) {
     tagged_points.push_back({points[i], (i+1) % 2 == 1});
   }
   return Lido_impl<ResultT>(weight, tagged_points, lido_node_func, projector);
@@ -150,7 +150,7 @@ static ResultT LidoSymm_wrapper(int weight, const std::vector<X>& points, const 
     }
     const int sign = neg_one_pow(num_pairs - num_pairs_included);
     std::vector<X> args;
-    for (int pair_idx = 0; pair_idx < seq.size(); ++pair_idx) {
+    for (int pair_idx : range(seq.size())) {
       if (seq[pair_idx]) {
         args.push_back(points[2*pair_idx  ]);
         args.push_back(points[2*pair_idx+1]);

@@ -28,7 +28,7 @@ bool are_ratios_independent(const std::vector<Ratio>& ratios) {
     return false;
   }
   if (ratios.size() > 1) {
-    for (int i = 0; i < ratios.size(); ++i) {
+    for (int i : range(ratios.size())) {
       if (!are_ratios_independent(removed_index(ratios, i))) {
         return false;
       }
@@ -403,7 +403,7 @@ std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const Splitting
     os << "^^^\n";
     for (const auto& [node_index, nbr_indices] : nbr_indices_per_vertex) {
       std::vector<std::string> index_strs;
-      for (int i = 0; i < nbr_indices.size(); ++i) {
+      for (int i : range(nbr_indices.size())) {
         const std::vector<int>& indices = nbr_indices[i];
         index_strs.push_back(absl::StrCat(
           metavar_to_string_by_name(make_metavar(node_index, i+1)),

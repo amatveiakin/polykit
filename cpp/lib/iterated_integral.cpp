@@ -19,7 +19,7 @@ static ResultT I_impl(const std::vector<X>& points, const ProjectorT& projector)
   if (num_points == 3) {
     ret = projector(I_3_point(absl::MakeConstSpan(points)));
   } else {
-    for (int i = 0; i <= num_points - 3; ++i) {
+    for (int i : range_incl(num_points - 3)) {
       ret += tensor_product(
         projector(I_3_point(absl::MakeConstSpan(points).subspan(i, 3))),
         I_impl<ResultT>(removed_index(points, i+1), projector)

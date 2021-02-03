@@ -6,6 +6,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
+#include "range.h"
 
 
 // For std::visit
@@ -161,7 +162,7 @@ std::vector<T> choose_indices_one_based(const std::vector<T>& v, const std::vect
 template<typename T, size_t N, size_t M>
 std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int, M>& indices) {
   std::array<T, M> ret;
-  for (int i = 0; i < indices.size(); ++i) {
+  for (int i : range(indices.size())) {
     ret[i] = v.at(indices[i]);
   }
   return ret;
@@ -170,7 +171,7 @@ std::array<T, M> choose_indices(const std::array<T, N>& v, const std::array<int,
 template<typename T, size_t N, size_t M>
 std::array<T, M> choose_indices_one_based(const std::array<T, N>& v, const std::array<int, M>& indices) {
   std::array<T, M> ret;
-  for (int i = 0; i < indices.size(); ++i) {
+  for (int i : range(indices.size())) {
     ret[i] = v.at(indices[i] - 1);
   }
   return ret;
@@ -180,7 +181,7 @@ template<typename T, typename MaskT>
 std::vector<T> choose_by_mask(const std::vector<T>& v, const std::vector<MaskT>& mask) {
   CHECK_EQ(v.size(), mask.size());
   std::vector<T> ret;
-  for (int i = 0; i < v.size(); ++i) {
+  for (int i : range(v.size())) {
     if (mask[i]) {
       ret.push_back(v[i]);
     }

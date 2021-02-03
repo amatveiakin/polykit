@@ -13,6 +13,7 @@ cc_library(
         "lib/metaprogramming.h",
         "lib/packed.h",
         "lib/profiler.h",
+        "lib/range.h",
         "lib/sequence_iteration.h",
         "lib/set_util.h",
         "lib/string.h",

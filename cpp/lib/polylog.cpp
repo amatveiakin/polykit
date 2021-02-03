@@ -28,16 +28,16 @@ static constexpr inline bool is_one (int index) { return index == kOne; }
 
 std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights) {
   std::vector<int> dots;
-  for (int j = 0; j < foreweight; ++j) {
+  for (int j : range(foreweight)) {
     dots.push_back(kZero);
   }
   dots.push_back(kOne);
-  for (int i = 0; i < weights.size(); ++i) {
+  for (int i : range(weights.size())) {
     const int w = weights[i];
     const int p = i + 1;
     CHECK_GE(w, 1);
     CHECK_GE(p, 1);
-    for (int j = 1; j < w; ++j) {
+    for (int j : range(1, w)) {
       dots.push_back(kZero);
     }
     dots.push_back(p);
@@ -58,7 +58,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
     // Cancel common multipliers
     common_vars = dots[foreweight];
     dots[foreweight] = kOne;
-    for (int i = 2; i < dots.size(); ++i) {
+    for (int i : range(2, dots.size())) {
       int& dot = dots[i];
       if (is_var(dot)) {
         dot -= common_vars;
@@ -70,7 +70,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   std::vector<std::vector<int>> points;
   int cur_weight = 0;
   int prev_vars = 0;
-  for (int i = foreweight + 1; i < dots.size(); ++i) {
+  for (int i : range(foreweight + 1, dots.size())) {
     const int dot = dots[i];
     CHECK(!is_one(dot)) << list_to_string(dots_orig);
     if (is_var(dot)) {
@@ -94,7 +94,7 @@ static EpsilonExpr EFormalSymbolSigned(const std::vector<int>& dots) {
 
 static EpsilonExpr EVarProd(int from, int to) {
   EpsilonExpr ret;
-  for (int i = from; i <= to; ++i) {
+  for (int i : range_incl(from, to)) {
     ret += EVar(i);
   }
   return ret;
@@ -198,7 +198,7 @@ static EpsilonExpr Li_impl(const std::vector<int>& points) {
   if (num_points == 3) {
     ret = Li_3_point(absl::MakeConstSpan(points));
   } else {
-    for (int i = 0; i <= num_points - 3; ++i) {
+    for (int i : range_incl(0, num_points - 3)) {
       ret += tensor_product(
         Li_impl(removed_index(points, i+1)),
         Li_3_point(absl::MakeConstSpan(points).subspan(i, 3))
@@ -255,7 +255,7 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
     seq.push_back(dots.size() - 1);
 
     bool two_formal_symbols_special_case = true;
-    for (int i = 1; i < seq.size()-1; ++i) {
+    for (int i : range(1, seq.size() - 1)) {
       if (seq[i+1] - seq[i] != 1) {
         two_formal_symbols_special_case = false;
         break;
@@ -275,7 +275,7 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
     } else {
       bool term_is_zero = false;
       std::vector<EpsilonExpr> rhs_components;
-      for (int i = 0; i < seq.size()-1; ++i) {
+      for (int i : range(seq.size() - 1)) {
         CHECK_LT(seq[i], seq[i+1]);
         if (seq[i+1] - seq[i] > 1) {
           if (is_zero(dots[seq[i]]) && is_zero(dots[seq[i+1]])) {
@@ -310,7 +310,7 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
         },
         [&](const LiraParam& as_cross_ratios) {
           std::vector<std::vector<int>> points;
-          for (int i = 1; i <= as_cross_ratios.depth(); ++i) {
+          for (int i : range_incl(1, as_cross_ratios.depth())) {
             points.push_back({i});
           }
           LiParam as_variables(

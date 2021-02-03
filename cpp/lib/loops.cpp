@@ -12,8 +12,8 @@ LoopsNames loops_names;
 std::string loops_description(const Loops& loops) {
   absl::flat_hash_set<int> fully_common = to_set(set_intersection(loops));
   absl::flat_hash_set<int> partially_common;
-  for (int i = 0; i < loops.size(); ++i) {
-    for (int j = i+1; j < loops.size(); ++j) {
+  for (int i : range(loops.size())) {
+    for (int j : range(i+1, loops.size())) {
       auto c = set_intersection(loops[i], loops[j]);
       partially_common.insert(c.begin(), c.end());
     }
@@ -44,7 +44,7 @@ LoopsInvariant loops_invariant(Loops loops) {
   std::vector<int> invariant{static_cast<int>(it - loops.begin())};
   five_loop = *it;
   loops.erase(it);
-  for (int num_loops_to_include = 2; num_loops_to_include <= loops.size(); ++num_loops_to_include) {
+  for (int num_loops_to_include : range_incl(2, loops.size())) {
     for (const auto include_five_loop : {false, true}) {
       std::vector<int> loops_common_elements;
       for (const auto& loops_to_include : increasing_sequences(loops.size(), num_loops_to_include)) {
@@ -103,7 +103,7 @@ LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
           }
           case 5: {
             RatioExpr ret;
-            for (int i = 0; i < 5; ++i) {
+            for (int i : range(5)) {
               ret += neg_one_pow(i) * RatioExpr::single({Ratio(removed_index(loop, i))});
             }
             return ret;
@@ -135,8 +135,8 @@ LoopExpr fully_normalize_loops(const LoopExpr& expr) {
 
 LoopExpr remove_duplicate_loops(const LoopExpr& expr) {
   return expr.filtered([&](const auto& loops) {
-    for (int i = 0; i < loops.size(); ++i) {
-      for (int j = 0; j < loops.size(); ++j) {
+    for (int i : range(loops.size())) {
+      for (int j : range(loops.size())) {
         if (i == j) {
           continue;
         }
@@ -173,7 +173,7 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
 
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices) {
   absl::flat_hash_map<int, int> substitutions;
-  for (int i = 0; i < new_indices.size(); ++i) {
+  for (int i : range(new_indices.size())) {
     substitutions[i+1] = new_indices[i];
   }
   return loop_expr_substitute(expr, substitutions);
@@ -183,7 +183,7 @@ LoopExpr loop_expr_cycle(
     const LoopExpr& expr, const std::vector<std::vector<int>>& cycles) {
   absl::flat_hash_map<int, int> substitutions;
   for (const auto& cycle : cycles) {
-    for (int i = 0; i < cycle.size(); ++i) {
+    for (int i : range(cycle.size())) {
       const int p = cycle[i];
       const int q = cycle[(i+1) % cycle.size()];
       CHECK(!substitutions.contains(p));
@@ -199,7 +199,7 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
   absl::flat_hash_map<std::vector<int>, std::vector<int>> loop_positions;
   group.foreach([&](const Loops& loops, int term_coeff) {
     CHECK_EQ(coeff, term_coeff) << group;
-    for (int i = 0; i < loops.size(); ++i) {
+    for (int i : range(loops.size())) {
       loop_positions[loops[i]].push_back(i);
     }
   });
@@ -303,7 +303,7 @@ std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<in
   std::vector<int> higher_level_common;
   for (const auto& seq : all_sequences(2, loops.size())) {
     bool skip = false;
-    for (int i = 0; i < seq.size(); ++i) {
+    for (int i : range(seq.size())) {
       if (seq[i] && absl::c_binary_search(loop_indices, i)) {
         skip = true;
         break;
@@ -337,7 +337,7 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr) {
     int sign = 1;
     // Optimization potential: inverse into a vector instead.
     absl::flat_hash_map<int, int> position_of;
-    for (int i = 0; i < full_permutation.size(); ++i) {
+    for (int i : range(full_permutation.size())) {
       position_of[full_permutation[i]] = i + 1;
     }
     Loops new_loops;
@@ -388,7 +388,7 @@ LoopExpr cut_loops_recursively(const std::vector<int>& points, const Loops& loop
     return LoopExpr::single(appended(loops, points));
   }
   LoopExpr ret;
-  for (int i = 0; i < points.size(); ++i) {
+  for (int i : range(points.size())) {
     auto cut_result = cut_loop(rotated_vector(points, i), 0, 4);
     ret += cut_loops_recursively(cut_result.remains, appended(loops, cut_result.loop));
   }

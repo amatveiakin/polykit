@@ -81,7 +81,7 @@ inline std::string to_string(const EpsilonVariable& var) {
 inline std::string to_string(const EpsilonComplement& complement) {
   const auto& index_set = complement.indices();
   std::vector<int> index_list;
-  for (int i = 0; i < kMaxComplementVariables; ++i) {
+  for (int i : range(kMaxComplementVariables)) {
     if (index_set[i]) {
       index_list.push_back(i);
     }
@@ -376,7 +376,7 @@ inline EpsilonExpr EComplementRangeInclusive(int from, int to) {
   CHECK_LE(from, to);
   CHECK_LT(to, kMaxComplementVariables);
   std::bitset<kMaxComplementVariables> index_set;
-  for (int i = from; i <= to; ++i) {
+  for (int i : range_incl(from, to)) {
     index_set[i] = 1;
   }
   return EComplementIndexSet(std::move(index_set));

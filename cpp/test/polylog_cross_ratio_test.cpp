@@ -78,7 +78,7 @@ TEST(LidoTest, LidoSymm_Arg8_AlternativeFormula) {
 }
 
 TEST(LidoTest, Lido_Arg6_ShiftedDiffFormula) {
-  for (int w = 2; w <= 3; ++w) {
+  for (int w : range_incl(2, 3)) {
     const int s = neg_one_pow(w);
     EXPECT_EXPR_EQ_AFTER_LYNDON(
       +  LidoVec(w, {1,2,3,4,5,6})
@@ -96,7 +96,7 @@ TEST(LidoTest, Lido_Arg6_ShiftedDiffFormula) {
 
 #if RUN_LARGE_TESTS
 TEST(LidoTest, Lido_Arg8_ShiftedDiffFormula) {
-  for (int w = 3; w <= 4; ++w) {
+  for (int w : range_incl(3, 4)) {
     const int s = neg_one_pow(w);
     EXPECT_EXPR_EQ_AFTER_LYNDON(
       +  LidoVec(w, {1,2,3,4,5,6,7,8})

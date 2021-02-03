@@ -24,6 +24,7 @@
 #include "lib/polylog_via_correlators.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
+#include "lib/range.h"
 #include "lib/sequence_iteration.h"
 #include "lib/set_util.h"
 #include "lib/shuffle.h"
@@ -35,7 +36,7 @@
 static constexpr auto cycle = loop_expr_cycle;
 
 LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
-  for (int i = 0; i < power; ++i) {
+  for (int _ : range(power)) {
     expr = cycle(expr, cycles);
   }
   return expr;
@@ -88,7 +89,7 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_va
       );
     }
   }
-  for (int rotation_pow = 1; rotation_pow < 8; ++rotation_pow) {
+  for (int rotation_pow : range(1, 8)) {
     for (int sign : {-1, 1}) {
       update_victim(
         cycle_pow(killer, {{2,3,4,5,6,7,8}}, rotation_pow),
@@ -133,8 +134,8 @@ StringExpr arg11_expr_type_2_to_column(const LoopExpr& expr) {
 using Degenerations = std::vector<std::vector<int>>;
 
 bool is_degenerations_ok(const Degenerations& groups) {
-  for (int i = 0; i < groups.size(); ++i) {
-    for (int j = i+1; j < groups.size(); ++j) {
+  for (int i : range(groups.size())) {
+    for (int j : range(i+1, groups.size())) {
       if (set_intersection_size(groups[i], groups[j]) > 0) {
         return false;
       }
@@ -194,7 +195,7 @@ void list_all_degenerations(const LoopExpr& expr) {
     }
     normalize_degenerations(groups);
     auto groups_flipped = flip_variables(groups, N);
-    for (int rotation_pow = 0; rotation_pow < N; ++rotation_pow) {
+    for (int rotation_pow : range(N)) {
       if (degenerations_seen.contains(normalized_degenerations(rotate_variables(groups, N, rotation_pow))) ||
           degenerations_seen.contains(normalized_degenerations(rotate_variables(groups_flipped, N, rotation_pow)))) {
         return;
@@ -207,11 +208,11 @@ void list_all_degenerations(const LoopExpr& expr) {
     }
   };
 
-  for (int a2 = a1+2; a2 <= N; ++a2) {
-  for (int b1 = 1;    b1 <= N; ++b1) {
-  for (int b2 = b1+2; b2 <= N; ++b2) {
-  for (int c1 = 1;    c1 <= N; ++c1) {
-  for (int c2 = c1+2; c2 <= N; ++c2) {
+  for (int a2 : range_incl(a1+2, N)) {
+  for (int b1 : range_incl(1,    N)) {
+  for (int b2 : range_incl(b1+2, N)) {
+  for (int c1 : range_incl(1,    N)) {
+  for (int c2 : range_incl(c1+2, N)) {
     add_degeneration({{a1, a2}, {b1, b2}, {c1, c2}});
   }
   }
@@ -219,10 +220,10 @@ void list_all_degenerations(const LoopExpr& expr) {
   }
   }
 
-  for (int a2 = a1+2; a2 <= N; ++a2) {
-  for (int a3 = a2+2; a3 <= N; ++a3) {
-  for (int b1 = 1;    b1 <= N; ++b1) {
-  for (int b2 = b1+2; b2 <= N; ++b2) {
+  for (int a2 : range_incl(a1+2, N)) {
+  for (int a3 : range_incl(a2+2, N)) {
+  for (int b1 : range_incl(1,    N)) {
+  for (int b2 : range_incl(b1+2, N)) {
     add_degeneration({{a1, a2, a3}, {b1, b2}});
   }
   }
@@ -457,7 +458,7 @@ int main(int argc, char *argv[]) {
 
 #if 0
   LoopExpr loop_templates2;
-  for (int i = 0; i < 7; ++i) {
+  for (int i : range(7)) {
     const auto seven = rotated_vector(std::vector{4,5,6,7,8,9,1}, i);
     loop_templates2 += LoopExpr::single({{1,2,3,4}, slice(seven, 0, 4), concat(slice(seven, 3), {seven[0]})});
   }
@@ -598,7 +599,7 @@ int main(int argc, char *argv[]) {
     + LoopExpr::single({{2,1,6,7}, {2,1,5,6}, {2,1,5,4,3}})
   ;
   LoopExpr qqq;
-  for (int i = 0; i < 6; ++i) {
+  for (int i : range(6)) {
     qqq += neg_one_pow(i) * loop_expr_substitute(qqq_tmpl, concat({1}, rotated_vector(seq_incl(2, 7), i)));
   }
   qqq = to_canonical_permutation(qqq);

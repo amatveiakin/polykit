@@ -14,7 +14,7 @@ std::vector<T> lexicographically_minimal_rotation(std::vector<T> v) {
   // provided by CircularView reported correct traits.
   static auto lexicographical_less = [](CircularView<T> a, CircularView<T> b) {
     CHECK_EQ(a.size(), b.size());
-    for (int i = 0; i < a.size(); ++i) {
+    for (int i : range(a.size())) {
       if (a[i] != b[i]) {
         return a[i] < b[i];
       }
@@ -28,7 +28,7 @@ std::vector<T> lexicographically_minimal_rotation(std::vector<T> v) {
 
   CircularView<T> span{v};
   CircularView<T> min = span;
-  for (int i = 1; i < v.size(); ++i) {
+  for (int i : range(1, v.size())) {
     const auto span_rotated = span.rotated(i);
     if (lexicographical_less(span_rotated, min)) {
       min = span_rotated;

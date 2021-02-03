@@ -79,7 +79,7 @@ CompoundRatio CompoundRatio::from_compressed(Decompressor& decompressor) {
   const std::vector<int> size_vec = decompressor.next_segment();
   CHECK_EQ(size_vec.size(), kSizeBump);
   const int size = size_vec.front() - 1;
-  for (int i = 0; i < size; ++i) {
+  for (int i : range(size)) {
     loops.push_back(decompressor.next_segment());
   }
   return CompoundRatio(std::move(loops));
@@ -105,10 +105,11 @@ void CompoundRatio::normalize() {
   bool simplification_found = false;
   do {
     simplification_found = false;
+    // Do no use `range` of here since `loops_.size()` changes during iteration.
     for (int i = 0; i < loops_.size(); ++i) {
       for (int j = i+1; j < loops_.size(); ++j) {
-        std::vector<int> a = loops_[i];
-        std::vector<int> b = loops_[j];
+        std::vector<int> a = loops_.at(i);
+        std::vector<int> b = loops_.at(j);
         const std::vector<int> common = set_intersection(a, b);
         const int an = a.size();
         const int bn = b.size();

@@ -68,8 +68,8 @@ public:
     static constexpr int kAlphabetSize = kMaxDimension * (kMaxDimension - 1) / 2;
     static_assert(kAlphabetSize <= kWordAlphabetSize);
     deltas_.resize(kAlphabetSize);
-    for (int b = 1; b <= kMaxDimension; ++b) {
-      for (int a = 1; a < b; ++a) {
+    for (int b : range_incl(1, kMaxDimension)) {
+      for (int a : range(1, b)) {
         Delta d(a, b);
         deltas_.at(to_alphabet(d)) = d;
       }

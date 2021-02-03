@@ -48,10 +48,10 @@ CorrCoExpr corr_coproduct(const CorrExpr& lhs, const CorrExpr& rhs) {
 CorrCoExpr corr_comultiply(const CorrExpr& expr, std::pair<int, int> form) {
   CorrCoExpr ret;
   expr.foreach([&](const CorrFSymb& term, int coeff) {
-    for (int shift = 0; shift < term.points.size(); ++shift) {
+    for (int shift : range(term.points.size())) {
       const auto points_potated = rotated_vector(term.points, shift);
       const int n = term.points.size();
-      for (int i = 1; i < n-1; ++i) {
+      for (int i : range(1, n-1)) {
         std::vector<int> lhs_incides = seq_incl(0, i);
         std::vector<int> rhs_incides = concat({0}, seq_incl(i+1, n-1));
         CorrFSymb lhs{choose_indices(points_potated, lhs_incides)};

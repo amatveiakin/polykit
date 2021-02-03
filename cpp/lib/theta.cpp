@@ -21,7 +21,7 @@ ThetaExpr epsilon_expr_to_theta_expr(
               },
               [&](const EpsilonComplement& v) {
                 CompoundRatio ratio_prod;
-                for (int idx = 0; idx < kMaxComplementVariables; ++idx) {
+                for (int idx : range(kMaxComplementVariables)) {
                   if (v.indices()[idx]) {
                     ratio_prod.add(compound_ratios.at(idx - 1));
                   }

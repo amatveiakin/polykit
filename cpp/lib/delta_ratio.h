@@ -12,7 +12,7 @@ template<typename T>
 DeltaExpr cross_ratio(const T& v) {
   DeltaExpr ret;
   const int n = v.size();
-  for (int i = 0; i < n; ++i) {
+  for (int i : range(n)) {
     ret += neg_one_pow(i) * D(v[i], v[(i+1)%n]);
   }
   return ret;

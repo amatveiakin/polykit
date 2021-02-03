@@ -38,7 +38,7 @@ std::vector<std::vector<int>> increasing_sequences(int alphabet_size, int length
   for (const auto& seq : all_sequences(alphabet_size, length)) {
     bool increasing = true;
     if (seq.size() >= 2) {
-      for (int i = 0; i < seq.size()-1; ++i) {
+      for (int i : range(seq.size() - 1)) {
         if (seq[i] >= seq[i+1]) {
           increasing = false;
           break;
@@ -59,7 +59,7 @@ std::vector<std::vector<int>> nondecreasing_sequences(int alphabet_size, int len
   for (const auto& seq : all_sequences(alphabet_size, length)) {
     bool nondecreasing = true;
     if (seq.size() >= 2) {
-      for (int i = 0; i < seq.size()-1; ++i) {
+      for (int i : range(seq.size() - 1)) {
         if (seq[i] > seq[i+1]) {
           nondecreasing = false;
           break;
@@ -76,7 +76,7 @@ std::vector<std::vector<int>> nondecreasing_sequences(int alphabet_size, int len
 // TODO: Optimized generator; use this impl for testing
 std::vector<std::vector<int>> increasing_sequences(int alphabet_size) {
   std::vector<std::vector<int>> ret;
-  for (int length = 0; length <= alphabet_size; ++length) {
+  for (int length : range_incl(alphabet_size)) {
     append_vector(ret, increasing_sequences(alphabet_size, length));
   }
   return ret;

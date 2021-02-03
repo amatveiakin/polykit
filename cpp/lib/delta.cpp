@@ -27,8 +27,8 @@ DeltaExpr delta_expr_substitute(
   std::array<unsigned char, kMaxChar> replacements;
   replacements.fill(kNoReplacement);
   const int num_src_vars = new_points.size();
-  for (int a = 1; a <= num_src_vars; ++a) {
-    for (int b = a+1; b <= num_src_vars; ++b) {
+  for (int a : range_incl(1, num_src_vars)) {
+    for (int b : range_incl(a+1, num_src_vars)) {
       const Delta before = Delta(a, b);
       const Delta after = Delta(new_points[a-1], new_points[b-1]);
       const unsigned char key_before = delta_alphabet_mapping.to_alphabet(before);

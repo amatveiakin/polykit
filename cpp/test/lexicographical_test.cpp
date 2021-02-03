@@ -5,7 +5,7 @@
 
 static std::vector<int> lexicographically_minimal_rotation_naive(std::vector<int> v) {
   std::vector<int> min = v;
-  for (int i = 1; i < v.size(); ++i) {
+  for (int i : range(1, v.size())) {
     absl::c_rotate(v, v.begin() + 1);
     if (v < min) {
       min = v;

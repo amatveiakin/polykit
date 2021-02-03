@@ -19,7 +19,7 @@ TEST(CorrTest, ArgsCanBeShifted_3) {
 
 TEST(CorrTest, ArgsCanBeShifted_4) {
   const std::vector<X> args = {1,2,3,4};
-  for (int shift = 1; shift < 4; ++shift) {
+  for (int shift : range(1, 4)) {
     EXPECT_EXPR_EQ_AFTER_LYNDON(
       // Compare projection to speed up
       project_on_x1(CorrVec(args)),
