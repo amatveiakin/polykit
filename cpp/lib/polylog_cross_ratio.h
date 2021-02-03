@@ -2,6 +2,7 @@
 
 #include "delta_ratio.h"
 #include "delta.h"
+#include "projection.h"
 
 
 DeltaExpr LidoVec(int weight, SpanX points);
@@ -9,7 +10,7 @@ DeltaExpr LidoVec(int weight, SpanX points);
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoVec(...))
 // but faster.
-WordExpr LidoVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
+ProjectionExpr LidoVecPr(int weight, SpanX points, DeltaProjector projector);
 
 
 DeltaExpr LidoNegVec(int weight, SpanX points);
@@ -17,16 +18,15 @@ DeltaExpr LidoNegVec(int weight, SpanX points);
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoNegVec(...))
 // but faster.
-WordExpr LidoNegVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
+ProjectionExpr LidoNegVecPr(int weight, SpanX points, DeltaProjector projector);
 
 
-// Only 6 and 8 point are supported for now
 DeltaExpr LidoSymmVec(int weight, SpanX points);
 
 // Assuming projector is indeed a projection, this is equivalent to
 //   projector(LidoSymmVec(...))
 // but faster.
-WordExpr LidoSymmVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector);
+ProjectionExpr LidoSymmVecPr(int weight, SpanX points, DeltaProjector projector);
 
 
 namespace internal {

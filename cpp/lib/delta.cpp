@@ -79,9 +79,15 @@ DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr) {
 }
 
 
-DeltaExpr terms_with_num_distinct_variables(const DeltaExpr& expr, int num_variables) {
+DeltaExpr terms_with_num_distinct_variables(const DeltaExpr& expr, int num_distinct) {
   return expr.filtered([&](const std::vector<Delta>& term) {
-    return num_distinct_variables(term) == num_variables;
+    return num_distinct_variables(term) == num_distinct;
+  });
+}
+
+DeltaExpr terms_with_min_distinct_variables(const DeltaExpr& expr, int min_distinct) {
+  return expr.filtered([&](const std::vector<Delta>& term) {
+    return num_distinct_variables(term) >= min_distinct;
   });
 }
 

@@ -52,8 +52,7 @@ struct CorrExprParam {
     return to_pvector<StorageT>(obj.points);
   }
   static ObjectT key_to_object(const StorageT& key) {
-    // TODO: Extend `to_vector` to support PVector-s and cast types.
-    return CorrFSymb{mapped(key, [](auto p) -> int { return p; })};
+    return CorrFSymb(to_vector<int>(key));
   }
   static std::string object_to_string(const ObjectT& obj) {
     return to_string(obj);

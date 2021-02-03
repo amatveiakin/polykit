@@ -8,6 +8,11 @@
 #include "test_util/matchers.h"
 
 
+inline ProjectionExpr Pr(std::initializer_list<int> data) {
+  return ProjectionExpr::single(data);
+}
+
+
 TEST(LidoTest, Lido4_Arg6) {
   auto expr = Lido4(1,2,3,4,5,6);
   EXPECT_EQ(expr.size(), 2560);
@@ -17,13 +22,13 @@ TEST(LidoTest, Lido4_Arg6) {
   auto project_then_lyndon = to_lyndon_basis(project_on_x1(expr));
   EXPECT_EXPR_EQ(lyndon_then_project, project_then_lyndon);
   EXPECT_EXPR_EQ(
-    terms_with_min_distinct_elements(lyndon_then_project, 4)
+    terms_with_min_distinct_variables(lyndon_then_project, 4)
     ,
-    + W({2, 3, 4, 5})
-    - W({2, 3, 4, 6})
-    + W({2, 3, 5, 6})
-    - W({2, 4, 5, 6})
-    + W({3, 4, 5, 6})
+    + Pr({2, 3, 4, 5})
+    - Pr({2, 3, 4, 6})
+    + Pr({2, 3, 5, 6})
+    - Pr({2, 4, 5, 6})
+    + Pr({3, 4, 5, 6})
   );
 }
 
@@ -135,7 +140,7 @@ public:
 TEST_P(SubsetSumFormulaTest, LidoSymm_SubsetSumFormula) {
   DeltaExpr expr;
   for (int num_args = 4; num_args <= total_points(); num_args += 2) {
-    for (const auto seq : increasing_sequences(total_points(), num_args)) {
+    for (const auto& seq : increasing_sequences(total_points(), num_args)) {
       const auto args = mapped(seq, [](int x) { return x + 1; });
       const int sign_proto = absl::c_accumulate(args, 0) + num_args / 2;
       const int sign = neg_one_pow(sign_proto);
@@ -145,13 +150,13 @@ TEST_P(SubsetSumFormulaTest, LidoSymm_SubsetSumFormula) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
 }
 
-INSTANTIATE_TEST_CASE_P(FastCases, SubsetSumFormulaTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(FastCases, SubsetSumFormulaTest, ::testing::Values(
   std::pair{2, 5},
   std::pair{2, 6},
   std::pair{3, 6}
 ));
 #if RUN_LARGE_TESTS
-INSTANTIATE_TEST_CASE_P(SlowCases, SubsetSumFormulaTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(SlowCases, SubsetSumFormulaTest, ::testing::Values(
   std::pair{3, 7},
   std::pair{4, 7},
   std::pair{3, 8},

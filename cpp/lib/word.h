@@ -156,50 +156,6 @@ struct WordExprParam : SimpleLinearParam<Word>,
 
 using WordExpr = Linear<internal::WordExprParam>;
 
-inline int distinct_chars(Word word) {
-  std::sort(word.begin(), word.end());
-  return std::unique(word.begin(), word.end()) - word.begin();
-}
-
-template<typename LinearT>
-LinearT terms_with_num_distinct_elements(const LinearT& expr, int num_distinct) {
-  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
-  return expr.filtered_key([&](const Word& key) {
-    return distinct_chars(key) == num_distinct;
-  });
-}
-
-template<typename LinearT>
-LinearT terms_with_min_distinct_elements(const LinearT& expr, int min_distinct) {
-  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
-  return expr.filtered_key([&](const Word& key) {
-    return distinct_chars(key) >= min_distinct;
-  });
-}
-
-template<typename LinearT>
-void print_sorted_by_num_distinct_elements(std::ostream& os, const LinearT& expr) {
-  static_assert(std::is_same_v<typename LinearT::StorageT, Word>);
-  if (expr.zero()) {
-    os << expr;
-    return;
-  }
-  std::map<int, LinearT> num_elements_to_expr;
-  expr.foreach_key([&](const auto& term, int coeff) {
-    num_elements_to_expr[distinct_chars(term)].add_to(term, coeff);
-  });
-  bool first = true;
-  for (const auto& [num_elements, expr] : num_elements_to_expr) {
-    if (!first) {
-      os << "---\n";
-    }
-    first = false;
-    os << num_elements << " elements " << expr;
-  }
-  if (*current_formatting_config().expression_include_annotations) {
-    os << "~~~\n" << expr.annotations();
-  }
-}
 
 inline Word word_to_template(const Word& word) {
   Word ret;

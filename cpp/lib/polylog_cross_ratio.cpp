@@ -103,8 +103,8 @@ DeltaExpr LidoVec(int weight, SpanX points) {
   return Lido_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-WordExpr LidoVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
-  return Lido_wrapper<WordExpr>(weight, points.as_x(), projector);
+ProjectionExpr LidoVecPr(int weight, SpanX points, DeltaProjector projector) {
+  return Lido_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }
 
 
@@ -126,8 +126,8 @@ DeltaExpr LidoNegVec(int weight, SpanX points) {
   return LidoNeg_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-WordExpr LidoNegVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
-  return LidoNeg_wrapper<WordExpr>(weight, points.as_x(), projector);
+ProjectionExpr LidoNegVecPr(int weight, SpanX points, DeltaProjector projector) {
+  return LidoNeg_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }
 
 
@@ -168,6 +168,6 @@ DeltaExpr LidoSymmVec(int weight, SpanX points) {
   return LidoSymm_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-WordExpr LidoSymmVecPr(int weight, SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
-  return LidoSymm_wrapper<WordExpr>(weight, points.as_x(), projector);
+ProjectionExpr LidoSymmVecPr(int weight, SpanX points, DeltaProjector projector) {
+  return LidoSymm_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }

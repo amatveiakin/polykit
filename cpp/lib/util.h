@@ -287,11 +287,14 @@ std::array<T, N> to_array(std::vector<T> v) {
   return ret;
 }
 
-template<typename T, size_t N>
-std::vector<T> to_vector(std::array<T, N> v) {
-  std::vector<T> ret;
-  absl::c_move(v, std::back_inserter(ret));
-  return ret;
+template<typename Container>
+auto to_vector(const Container& c) {
+  return std::vector<typename Container::value_type>(c.begin(), c.end());
+}
+
+template<typename DstElement, typename Container>
+auto to_vector(const Container& c) {
+  return std::vector<DstElement>(c.begin(), c.end());
 }
 
 template<typename Container>

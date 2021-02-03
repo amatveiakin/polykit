@@ -39,8 +39,8 @@ DeltaExpr IVec(SpanX points) {
   return IVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-WordExpr IVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
-  return IVec_wrapper<WordExpr>(points.as_x(), projector);
+ProjectionExpr IVecPr(SpanX points, DeltaProjector projector) {
+  return IVec_wrapper<ProjectionExpr>(points.as_x(), projector);
 }
 
 template<typename ResultT, typename ProjectorT>
@@ -57,6 +57,6 @@ DeltaExpr CorrVec(SpanX points) {
   return CorrVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-WordExpr CorrVecPr(SpanX points, std::function<WordExpr(DeltaExpr)> projector) {
-  return CorrVec_wrapper<WordExpr>(points.as_x(), projector);
+ProjectionExpr CorrVecPr(SpanX points, DeltaProjector projector) {
+  return CorrVec_wrapper<ProjectionExpr>(points.as_x(), projector);
 }
