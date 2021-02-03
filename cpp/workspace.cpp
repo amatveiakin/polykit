@@ -35,10 +35,70 @@
 
 static constexpr auto cycle = loop_expr_cycle;
 
-LoopExpr preshow(const LoopExpr& expr) {
-  return expr.filtered([](const Loops& loops) {
-    return loops_names.loops_index(loops) == 3;
+LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
+  for (int i = 0; i < power; ++i) {
+    expr = cycle(expr, cycles);
+  }
+  return expr;
+}
+
+LoopExpr keep_var(const LoopExpr& expr, int var) {
+  return expr.filtered([&](const Loops& loops) {
+    return loops_names.loops_index(loops) == var;
   });
+}
+
+LoopExpr preshow(const LoopExpr& expr) {
+  return expr;
+  // return keep_var(expr, 5);
+  // return arg11_shuffle_cluster(expr);
+}
+
+std::string permutation_to_string(const std::vector<std::vector<int>>& permutation) {
+  return str_join(
+    mapped(permutation, [&](const std::vector<int>& loop) {
+      return fmt::parens(str_join(loop, ","));
+    }),
+    ""
+  );
+}
+
+LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_var) {
+  static const std::vector<std::vector<std::vector<int>>> symmetries{
+    {{2,4}, {5,8}, {6,7}},
+    {{2,5}, {3,4}, {6,8}},
+    {{2,6}, {3,5}, {7,8}},
+    {{2,7}, {3,6}, {4,5}},
+    {{3,8}, {4,7}, {5,6}},
+    {{2,3}, {4,8}, {5,7}},
+    {{2,8}, {3,7}, {4,6}},
+  };
+  const auto update_victim = [&](const LoopExpr& bonus, int sign, std::string description) {
+    const auto new_victim_candidate = victim + sign * bonus;
+    if (keep_var(new_victim_candidate, target_var).l1_norm() < keep_var(victim, target_var).l1_norm()) {
+      victim = new_victim_candidate;
+      std::cout << fmt::coeff(sign) << description << "\n";
+    }
+  };
+  for (const auto& permutation : symmetries) {
+    for (int sign : {-1, 1}) {
+      update_victim(
+        cycle(killer, permutation),
+        sign,
+        "symmetry: " + permutation_to_string(permutation)
+      );
+    }
+  }
+  for (int rotation_pow = 1; rotation_pow < 8; ++rotation_pow) {
+    for (int sign : {-1, 1}) {
+      update_victim(
+        cycle_pow(killer, {{2,3,4,5,6,7,8}}, rotation_pow),
+        sign,
+        absl::StrCat("rotate ", rotation_pow, " positions")
+      );
+    }
+  }
+  return victim;
 }
 
 StringExpr arg9_expr_type_1_to_column(const LoopExpr& expr) {
@@ -69,6 +129,106 @@ StringExpr arg11_expr_type_2_to_column(const LoopExpr& expr) {
     CHECK_EQ(v.size(), 8);
     return fmt::brackets(str_join(v, ","));
   });
+}
+
+using Degenerations = std::vector<std::vector<int>>;
+
+bool is_degenerations_ok(const Degenerations& groups) {
+  for (int i = 0; i < groups.size(); ++i) {
+    for (int j = i+1; j < groups.size(); ++j) {
+      if (set_intersection_size(groups[i], groups[j]) > 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void normalize_degenerations(Degenerations& groups) {
+  for (auto& group : groups) {
+    absl::c_sort(group);
+  }
+  absl::c_sort(groups);
+}
+
+Degenerations normalized_degenerations(Degenerations groups) {
+  normalize_degenerations(groups);
+  return groups;
+}
+
+Degenerations flip_variables(const Degenerations& groups, int total_vars) {
+  return mapped(groups, [&](const auto& group) {
+    return mapped(group, [&](int v) {
+      return total_vars + 1 - v;
+    });
+  });
+}
+
+Degenerations rotate_variables(const Degenerations& groups, int total_vars, int shift) {
+  return mapped(groups, [&](const auto& group) {
+    return mapped(group, [&](int v) {
+      return (v - 1 + shift) % total_vars + 1;
+    });
+  });
+}
+
+bool contains_only_expression_of_type(const LoopExpr& expr, const std::vector<int>& types) {
+  absl::flat_hash_set<int> types_set(types.begin(), types.end());
+  bool ret = true;
+  expr.foreach([&](const auto& loops, int) {
+    if (!types_set.contains(loops_names.loops_index(loops))) {
+      ret = false;
+      return;
+    }
+  });
+  return ret;
+}
+
+void list_all_degenerations(const LoopExpr& expr) {
+  const int N = 11;
+  const int a1 = 1;
+  absl::flat_hash_set<Degenerations> degenerations_seen;
+
+  const auto add_degeneration = [&](Degenerations groups) {
+    if (!is_degenerations_ok(groups)) {
+      return;
+    }
+    normalize_degenerations(groups);
+    auto groups_flipped = flip_variables(groups, N);
+    for (int rotation_pow = 0; rotation_pow < N; ++rotation_pow) {
+      if (degenerations_seen.contains(normalized_degenerations(rotate_variables(groups, N, rotation_pow))) ||
+          degenerations_seen.contains(normalized_degenerations(rotate_variables(groups_flipped, N, rotation_pow)))) {
+        return;
+      }
+    }
+    CHECK(degenerations_seen.insert(groups).second);
+    const auto expr_degenerated = loop_expr_degenerate(expr, groups);
+    if (!expr_degenerated.zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
+      std::cout << permutation_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
+    }
+  };
+
+  for (int a2 = a1+2; a2 <= N; ++a2) {
+  for (int b1 = 1;    b1 <= N; ++b1) {
+  for (int b2 = b1+2; b2 <= N; ++b2) {
+  for (int c1 = 1;    c1 <= N; ++c1) {
+  for (int c2 = c1+2; c2 <= N; ++c2) {
+    add_degeneration({{a1, a2}, {b1, b2}, {c1, c2}});
+  }
+  }
+  }
+  }
+  }
+
+  for (int a2 = a1+2; a2 <= N; ++a2) {
+  for (int a3 = a2+2; a3 <= N; ++a3) {
+  for (int b1 = 1;    b1 <= N; ++b1) {
+  for (int b2 = b1+2; b2 <= N; ++b2) {
+    add_degeneration({{a1, a2, a3}, {b1, b2}});
+  }
+  }
+  }
+  }
 }
 
 
@@ -116,37 +276,152 @@ int main(int argc, char *argv[]) {
 
   const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
   const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
-  const auto c = loop_expr_degenerate(loop_expr, {{1,3,5,9}});
-  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,8}});
-  const auto e = loop_expr_degenerate(loop_expr, {{1,3,6,9}});
-  const auto f = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
+  const auto f1 = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
+  const auto g1 = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}, {4,6}});
 
-  generate_loops_names({a, b, c, d, d, f});
+  generate_loops_names({a, b, c, d, e, f1, g1});
+
+  list_all_degenerations(loop_expr);
+  return 0;
+
+  // const auto a_c = to_canonical_permutation(a);
+  // const auto b_c = to_canonical_permutation(b);
+  // const auto c_c = to_canonical_permutation(c);
+  // const auto d_c = to_canonical_permutation(d);
+  // const auto e_c = to_canonical_permutation(e);
 
   // std::cout << loop_expr_degenerate(loop_expr, {{1,3}, {2,5}, {4,6}});
 
-  std::cout << "a " << a << fmt::newline();
-  std::cout << "b " << b << fmt::newline();
-  std::cout << "c " << c << fmt::newline();
-  std::cout << "d " << d << fmt::newline();
-  std::cout << "e " << e << fmt::newline();
-  std::cout << "f " << f << fmt::newline();
+  // std::cout << "a " << a << fmt::newline();
+  // std::cout << "b " << b << fmt::newline();
+  // std::cout << "c " << c << fmt::newline();
+  // std::cout << "d " << d << fmt::newline();
+  // std::cout << "e " << e << fmt::newline();
 
-  // std::cout << "a " << to_canonical_permutation(a) << fmt::newline();
-  // std::cout << "b " << to_canonical_permutation(b) << fmt::newline();
-  // std::cout << "c " << to_canonical_permutation(c) << fmt::newline();
-  // std::cout << "d " << to_canonical_permutation(d) << fmt::newline();
-  // std::cout << "e " << to_canonical_permutation(e) << fmt::newline();
-  // std::cout << "f " << to_canonical_permutation(f) << fmt::newline();
+  std::cout << "a " << preshow(a) << fmt::newline();
+  std::cout << "b " << preshow(b) << fmt::newline();
+  // std::cout << "c " << preshow(c) << fmt::newline();
+  // std::cout << "d " << preshow(d) << fmt::newline();
+  std::cout << "e " << preshow(e) << fmt::newline();
+  std::cout << "f1 " << preshow(f1) << fmt::newline();
+  std::cout << "g1 " << preshow(g1) << fmt::newline();
 
-  // std::cout << "===\n\n";
+  std::cout << "===\n\n";
 
-  // const auto a1 = a - cycle(a, {{4,6}});
-  // const auto a2 = a1 - cycle(a1, {{2,7}});
+  // const auto cb =  // {1,2};  but then we discarded c
+  //   + c
+  //   + b
+  //   + cycle(b, {{2,5}, {3,4}, {6,8}})
+  // ;
+
+  // ZERO:  cb + a + cycle(a, {{2,5}, {3,4}, {6,8}})
+
+  const auto db =  // {1,2,4}
+    + d
+    - b
+    - cycle(b, {{2,5}, {3,4}, {6,8}})
+    + cycle(b, {{2,7}, {3,6}, {4,5}})
+    - cycle(b, {{3,8}, {4,7}, {5,6}})
+  ;
+
+  const auto eb =  // {1,2,4}
+    + e
+    - cycle(b, {{2,7}, {3,6}, {4,5}})
+    + cycle(b, {{3,8}, {4,7}, {5,6}})
+  ;
+
+  const auto eba = auto_kill_planar(eb, a, 1);
+  const auto eba1 = eba + cycle(eba, {{4,5}});
+  const auto eba2 = eba1 + cycle(eba1, {{2,8}});
+
+  // std::cout << eb << "\n";
+  // std::cout << eba << "\n";
+  // std::cout << eba1 << "\n";
+  // std::cout << eba2 << "\n";
+  // std::cout << arg11_expr_type_2_to_column(eba2) << "\n";
+
+  const auto dbe =  // {1,2}
+    + db
+    + eb
+    + cycle(eb, {{2,3}, {4,8}, {5,7}})
+  ;
+
+  // ZERO:  + dbe - a + cycle(a, {{2,6}, {3,5}, {7,8}})
+
+  const auto a1 = a - cycle(a, {{4,6}});
+  const auto a2 = a1 - cycle(a1, {{2,7}});
   // std::cout << "a " << a << "\n";
   // std::cout << a1 << "\n";
   // std::cout << a2 << "\n";
   // std::cout << arg11_expr_type_2_to_column(a2) << "\n";
+
+  // const auto df =
+  //   + d
+  //   - f1
+  //   + cycle(f1, {{2,4}, {5,8}, {6,7}})
+  //   + cycle(f1, {{2,7}, {3,6}, {4,5}})
+  // ;
+  // const auto df_1 =
+  //   + df
+  //   - cycle(df, {{1,5}})
+  // ;
+
+  const auto eb1 =
+    + eb
+    + cycle(eb, {{2,8}})
+  ;
+
+  const auto eb2 =  // {1,2}
+    + eb1
+    + cycle(eb1, {{4,5}})
+  ;
+
+  const auto eb3 =  // {1,2}
+    + eb
+    - cycle(eb, {{2,4}, {5,8}, {6,7}})
+  ;
+
+  // std::cout << preshow(
+  //   + eb2
+  //   + a
+  //   // + cycle(a, {{2,4}, {5,8}, {6,7}})  // bad
+  //   // + cycle(a, {{2,5}, {3,4}, {6,8}})  // bad
+  //   // + cycle(a, {{2,6}, {3,5}, {7,8}})  // bad
+  //   - cycle(a, {{2,7}, {3,6}, {4,5}})
+  //   + cycle(a, {{3,8}, {4,7}, {5,6}})
+  //   // + cycle(a, {{2,3}, {4,8}, {5,7}})  // bad
+  //   // + cycle(a, {{2,8}, {3,7}, {4,6}})  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 1)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 2)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 3)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 4)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 5)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 6)  // bad
+  //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 7)  // bad
+  // ) << "\n";
+
+  // std::cout << preshow(eb) << "\n";
+
+  // std::cout << preshow(
+  //   + eb
+  //   // + cycle(eb, {{2,8}, {3,7}, {4,6}})
+  // ) << "\n";
+
+  // std::cout << preshow(
+  //   + eb3
+  //   // + a
+  //   // + cycle(a, {{2,3}, {4,8}, {5,7}})
+  //   // + cycle(a, {{2,4}, {5,8}, {6,7}})
+  //   // + cycle(a, {{2,5}, {3,4}, {6,8}})
+  //   - cycle(a, {{2,6}, {3,5}, {7,8}})
+  //   - cycle(a, {{2,7}, {3,6}, {4,5}})
+  //   + cycle(a, {{2,8}, {3,7}, {4,6}})
+  //   + cycle(a, {{3,8}, {4,7}, {5,6}})
+  // ) << "\n";
+
 #endif
 
 #if 0
@@ -259,47 +534,78 @@ int main(int argc, char *argv[]) {
   // std::cout << "u " << u << "\n";
   // // std::cout << "w " << w << "\n";
 
-  std::cout << "a " << a << "\n";
   std::cout << "m " << m << "\n";
-  std::cout << "v " << v << "\n";
-  std::cout << "b " << b << "\n";
-  std::cout << "c " << c << "\n";
-  std::cout << "d " << d << "\n";
-  std::cout << "e " << e << "\n";
-  std::cout << "f " << f << "\n";
-  std::cout << "g " << g << "\n";
-  std::cout << "h " << h << "\n";
-  std::cout << "i " << i << "\n";
-  std::cout << "j " << j << "\n";
-  std::cout << "k " << k << "\n";
-  std::cout << "l " << l << "\n";
   std::cout << "n " << n << "\n";
   std::cout << "o " << o << "\n";
-  std::cout << "x " << x << "\n";
-  std::cout << "y " << y << "\n";
-  std::cout << "z " << z << "\n";
-  std::cout << "u " << u << "\n";
-  std::cout << "w " << w << "\n";
 
-  std::cout << "===\n\n";
-
-  const auto on =
+  std::cout << (
     + o
     - n
     - cycle(n, {{2,3}, {4,7}, {5,6}})
-  ;
+  ) << "\n";
+
+  return 0;
+
+  // std::cout << "a " << a << "\n";
+  // std::cout << "m " << m << "\n";
+  // std::cout << "v " << v << "\n";
+  // std::cout << "b " << b << "\n";
+  // std::cout << "c " << c << "\n";
+  // std::cout << "d " << d << "\n";
+  // std::cout << "e " << e << "\n";
+  // std::cout << "f " << f << "\n";
+  // std::cout << "g " << g << "\n";
+  // std::cout << "h " << h << "\n";
+  // std::cout << "i " << i << "\n";
+  // std::cout << "j " << j << "\n";
+  // std::cout << "k " << k << "\n";
+  // std::cout << "l " << l << "\n";
+  // std::cout << "n " << n << "\n";
+  // std::cout << "o " << o << "\n";
+  // std::cout << "x " << x << "\n";
+  // std::cout << "y " << y << "\n";
+  // std::cout << "z " << z << "\n";
+  // std::cout << "u " << u << "\n";
+  // std::cout << "w " << w << "\n";
+
+  // std::cout << "===\n\n";
+
+  // const auto onm =
+  //   + o
+  //   - n
+  //   - cycle(n, {{2,3}, {4,7}, {5,6}})
+  //   - 3 * m
+  //   - cycle(m, {{3,5,7}, {4,6}})
+  //   - cycle(m, {{2,7}, {3,6}, {4,5}})
+  // ;
   const auto onm =
-    + on
+    + o
+    - n
+    - cycle(n, {{2,3}, {4,7}, {5,6}})
     - 3 * m
-    - cycle(m, {{3,5,7}, {4,6}})
+    - cycle(m, {{7,6,5,4,3,2}})
     - cycle(m, {{2,7}, {3,6}, {4,5}})
   ;
+  const auto onm_c = to_canonical_permutation(onm);
   // std::cout << "n " << preshow(n) << "\n";
   // std::cout << "m " << preshow(m) << "\n";
   // std::cout << "o " << preshow(o) << "\n";
-  std::cout << onm << "\n";
+  // std::cout << onm << "\n";
+  std::cout << onm_c << "\n";
+  // std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm)) << "\n";
 
-  std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm)) << "\n";
+  const auto qqq_tmpl =
+    - LoopExpr::single({{2,1,4,3}, {2,1,5,4}, {2,1,5,7,6}})
+    + LoopExpr::single({{2,1,6,7}, {2,1,5,6}, {2,1,5,4,3}})
+  ;
+  LoopExpr qqq;
+  for (int i = 0; i < 6; ++i) {
+    qqq += neg_one_pow(i) * loop_expr_substitute(qqq_tmpl, concat({1}, rotated_vector(seq_incl(2, 7), i)));
+  }
+  qqq = to_canonical_permutation(qqq);
+  std::cout << qqq << "\n";
+  std::cout << qqq + onm_c << "\n";
+
 
   std::cout << "===\n\n";
 
@@ -443,6 +749,8 @@ int main(int argc, char *argv[]) {
   // std::cout << o0c << "\n";
   // std::cout << m0c << "\n";
   // std::cout << v0c << "\n";
+
+  // std::cout << to_canonical_permutation(cycle(m0, {{2,5,7}, {3,6}}));
 
   // std::cout << "===\n\n";
 

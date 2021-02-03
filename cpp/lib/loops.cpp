@@ -167,7 +167,8 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
     }
     return LoopExpr::single(new_loops);
   });
-  return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
+  return to_canonical_permutation(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst))));
+  // return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
 }
 
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices) {
@@ -192,6 +193,85 @@ LoopExpr loop_expr_cycle(
   return loop_expr_substitute(expr, substitutions);
 }
 
+static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
+  CHECK(group.size() == 3) << group;
+  const int coeff = group.element().second;
+  absl::flat_hash_map<std::vector<int>, std::vector<int>> loop_positions;
+  group.foreach([&](const Loops& loops, int term_coeff) {
+    CHECK_EQ(coeff, term_coeff) << group;
+    for (int i = 0; i < loops.size(); ++i) {
+      loop_positions[loops[i]].push_back(i);
+    }
+  });
+  std::vector<int> running_loop;
+  int running_loop_new_position = -1;
+  for (const auto& [loop, positions] : loop_positions) {
+    if (all_unique(positions)) {
+      CHECK(running_loop.empty()) << group;
+      running_loop = loop;
+      auto missing_positions = set_difference({0,1,2,3}, positions);
+      CHECK_EQ(missing_positions.size(), 1) << list_to_string(positions) << "\n" << group;
+      running_loop_new_position = missing_positions.front();
+    }
+  }
+  CHECK(!running_loop.empty()) << group;
+  auto shuffled = group.element().first;
+  shuffled.erase(absl::c_find(shuffled, running_loop));
+  shuffled.insert(shuffled.begin() + running_loop_new_position, running_loop);
+  return coeff * LoopExpr::single(shuffled);
+}
+
+static LoopExpr arg11_shuffle_cluster(const LoopExpr& expr) {
+  if (expr.zero() || expr.element().first.size() != 4) {
+    return expr;  // TODO: Generalize !!!
+  }
+
+  struct LoopsAndCoeff {
+    Loops value;
+    int coeff;
+  };
+  absl::flat_hash_map<Loops, LoopExpr> loops_groups;
+  const auto expr_normalized = fully_normalize_loops(expr);
+  expr_normalized.foreach([&](const Loops& loops, int coeff) {
+    loops_groups[sorted(loops)].add_to(loops, coeff);
+  });
+  LoopExpr ret;
+  for (const auto& [_, group] : loops_groups) {
+    if (group.size() == 1 || group.size() == 2 || group.size() == 4) {
+      ret += group;
+      continue;
+    }
+    if (group.size() == 6) {
+      std::vector<std::pair<Loops, int>> group_elements;
+      group.foreach([&](const Loops& loops, int coeff) {
+        group_elements.push_back({loops, coeff});
+      });
+      // Sorting gives:
+      //   a b c
+      //   a c b
+      //   b a c
+      //   b c a
+      //   c a b
+      //   c b a
+      // which splits into shuffle perfectly.
+      absl::c_sort(group_elements);
+      for (const auto& subgroup_elements: {
+            slice(group_elements, 0, 3),
+            slice(group_elements, 3, 6),
+          }) {
+        LoopExpr subgroup;
+        for (const auto& [element, coeff] : subgroup_elements) {
+          subgroup.add_to(element, coeff);
+        }
+        ret += arg11_shuffle_group3(subgroup);
+      }
+    } else {
+      ret += arg11_shuffle_group3(group);
+    }
+  }
+  return to_canonical_permutation(ret);
+}
+
 LoopExpr loop_expr_degenerate(
     const LoopExpr& expr, const std::vector<std::vector<int>>& groups) {
   std::set<int> remaining_points;
@@ -213,7 +293,8 @@ LoopExpr loop_expr_degenerate(
   for (int p : remaining_points) {
     substitutions[p] = next_idx++;
   }
-  return loop_expr_substitute(expr, substitutions);
+  // return loop_expr_substitute(expr, substitutions);
+  return arg11_shuffle_cluster(loop_expr_substitute(expr, substitutions));
 }
 
 std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<int> loop_indices) {
