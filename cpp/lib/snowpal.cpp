@@ -129,6 +129,17 @@ LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode) {
 
 // Alternative to Lyndon basis.
 /*
+template<typename Container>
+std::vector<Container> all_permutations(const Container& c) {
+  std::vector<int> indices(c.size());
+  absl::c_iota(indices, 0);
+  std::vector<Container> ret;
+  do {
+    ret.push_back(choose_indices(c, indices));
+  } while (absl::c_next_permutation(indices));
+  return ret;
+}
+
 std::pair<LiraExpr, LiraExpr> lira_expr_cancel_shuffle(const LiraExpr& expr) {
   using Key = std::array<RatioOrUnity, 3>;
   struct Value {
