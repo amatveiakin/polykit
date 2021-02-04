@@ -166,6 +166,13 @@ inline std::string to_string(const MultiWord& w) {
   return to_string(w, [](auto c){ return to_string(c); });
 }
 
+namespace std {
+  template <>
+  struct hash<MultiWord> {
+    size_t operator()(MultiWord const& w) const noexcept { return hash_array(w.data_); }
+  };
+}
+
 
 namespace internal {
 struct WordCoExprParam : SimpleLinearParam<MultiWord> {
@@ -188,12 +195,4 @@ inline WordCoExpr coproduct(const WordExpr& lhs, const WordExpr& rhs) {
 }
 inline WordCoExpr comultiply(const WordExpr& expr, std::pair<int, int> form) {
   return comultiply<WordCoExpr>(expr, form);
-}
-
-
-namespace std {
-  template <>
-  struct hash<MultiWord> {
-    size_t operator()(MultiWord const& w) const noexcept { return hash_array(w.data_); }
-  };
 }
