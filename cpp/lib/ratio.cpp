@@ -126,8 +126,8 @@ void CompoundRatio::normalize() {
           const int ap2 = (ap1 + an - 1) % an;
           const int bp1 = absl::c_find(b, c1) - b.begin();
           const int bp2 = (bp1 + 1) % bn;
-          CHECK_EQ(a[ap2], c2) << list_to_string(a) << " + " << list_to_string(b);
-          CHECK_EQ(b[bp2], c2) << list_to_string(a) << " + " << list_to_string(b);
+          CHECK_EQ(a[ap2], c2) << dump_to_string(a) << " + " << dump_to_string(b);
+          CHECK_EQ(b[bp2], c2) << dump_to_string(a) << " + " << dump_to_string(b);
           if (bp1 < bp2) {
             a.insert(a.begin() + ap1, b.begin(), b.begin() + bp1);
             a.insert(a.begin() + ap1, b.begin() + bp2 + 1, b.end());

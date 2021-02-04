@@ -120,7 +120,7 @@ private:
 
 template<typename F>
 std::string to_string(const Word& w, F char_to_string) {
-  return list_to_string(w, char_to_string);
+  return fmt::parens(str_join(w, ", ", char_to_string));
 }
 
 inline std::string to_string(const Word& w) {

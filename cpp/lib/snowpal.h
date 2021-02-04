@@ -160,8 +160,8 @@ public:
     void split(const std::vector<int>& subpoints, SplittingTree& tree) {
       CHECK(!subpoints.empty());
       CHECK(absl::c_is_sorted(subpoints));
-      CHECK(absl::c_includes(points, subpoints)) << list_to_string(points)
-        << " does not contain " << list_to_string(subpoints);
+      CHECK(absl::c_includes(points, subpoints)) << dump_to_string(points)
+        << " does not contain " << dump_to_string(subpoints);
       children.push_back(absl::make_unique<Node>(this, subpoints, tree.new_node_index()));
       std::vector<int> remaining_vars = complement_to_children();
       constexpr int kMinValency = 3;
@@ -250,9 +250,9 @@ public:
         if (inter_size > 0) {
           if (inter_size != subpoints.size()) {
             throw IllegalTreeCutException(absl::StrCat(
-              list_to_string(child->points),
+              dump_to_string(child->points),
               " includes some but not all of ",
-              list_to_string(subpoints)
+              dump_to_string(subpoints)
             ));
           }
           return child.get();

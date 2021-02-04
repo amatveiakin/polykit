@@ -373,7 +373,7 @@ LiraExpr lira_expr_substitute(
 Snowpal& Snowpal::add_ball(std::vector<int> points) {
   CHECK(!points.empty());
   absl::c_sort(points);
-  CHECK_EQ(points.size(), num_distinct_elements(points)) << list_to_string(points);
+  CHECK_EQ(points.size(), num_distinct_elements(points)) << dump_to_string(points);
   auto* node = splitting_tree_.node_for_points(points);
   node->split(points, splitting_tree_);
   expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);

@@ -234,7 +234,7 @@ bool contains_naive(const Container& c, const T& value) {
 template<typename Container, typename T>
 int element_index(const Container& c, const T& value) {
   const auto it = absl::c_find(c, value);
-  CHECK(it != c.end()) << list_to_string(c) << " does not contain " << value;
+  CHECK(it != c.end()) << dump_to_string(c) << " does not contain " << value;
   return it - c.begin();
 }
 

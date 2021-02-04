@@ -210,7 +210,7 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
       CHECK(running_loop.empty()) << group;
       running_loop = loop;
       auto missing_positions = set_difference({0,1,2,3}, positions);
-      CHECK_EQ(missing_positions.size(), 1) << list_to_string(positions) << "\n" << group;
+      CHECK_EQ(missing_positions.size(), 1) << dump_to_string(positions) << "\n" << group;
       running_loop_new_position = missing_positions.front();
     }
   }

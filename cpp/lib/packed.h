@@ -189,7 +189,7 @@ private:
   explicit PArray(ConstructorImpl, absl::Span<const T> data) {
     static_assert(std::is_integral_v<T>);
     CHECK_EQ(data.size(), N);
-    CHECK(absl::c_all_of(data, is_uint4_value_ok)) << list_to_string(data);
+    CHECK(absl::c_all_of(data, is_uint4_value_ok)) << dump_to_string(data);
     int dst = 0;
     for (int src = 0; src < data.size(); src += kValuesPerByte) {
       const int a = data[src];

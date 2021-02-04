@@ -3,34 +3,7 @@
 #include <algorithm>
 #include <string>
 
-#include "absl/strings/str_join.h"
-
 #include "string_basic.h"
-
-
-template<typename T, typename F>
-std::string str_join(const T& container, std::string separator, F element_to_string) {
-  return absl::StrJoin(container, separator, [&](std::string* out, const auto& value) {
-    out->append(element_to_string(value));
-  });
-}
-
-template<typename T>
-std::string str_join(const T& container, std::string separator) {
-  return str_join(container, separator, [](const auto& value) {
-    return to_string(value);
-  });
-}
-
-template<typename T, typename F>
-std::string list_to_string(T container, F element_to_string) {
-  return "(" + str_join(container, ", ", element_to_string) + ")";
-}
-
-template<typename T>
-std::string list_to_string(T container) {
-  return "(" + str_join(container, ", ") + ")";
-}
 
 
 inline void trim_left(std::string &s) {

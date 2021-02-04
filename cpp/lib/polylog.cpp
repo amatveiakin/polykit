@@ -47,11 +47,11 @@ std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights
 
 LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   std::vector<int> dots = dots_orig;
-  CHECK_GE(dots.size(), 3) << list_to_string(dots_orig);
-  CHECK(is_var(dots.back())) << list_to_string(dots_orig);
+  CHECK_GE(dots.size(), 3) << dump_to_string(dots_orig);
+  CHECK(is_var(dots.back())) << dump_to_string(dots_orig);
 
   const int foreweight = absl::c_find_if_not(dots, is_zero) - dots.begin();
-  CHECK_GT(foreweight, 0) << list_to_string(dots_orig);
+  CHECK_GT(foreweight, 0) << dump_to_string(dots_orig);
 
   int common_vars = 0;
   if (is_var(dots[foreweight])) {
@@ -72,16 +72,16 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   int prev_vars = 0;
   for (int i : range(foreweight + 1, dots.size())) {
     const int dot = dots[i];
-    CHECK(!is_one(dot)) << list_to_string(dots_orig);
+    CHECK(!is_one(dot)) << dump_to_string(dots_orig);
     if (is_var(dot)) {
       ++cur_weight;
       weights.push_back(cur_weight);
       points.push_back(seq_incl(common_vars+prev_vars+1, common_vars+dot));
-      CHECK_LT(prev_vars, dot) << list_to_string(dots_orig);
+      CHECK_LT(prev_vars, dot) << dump_to_string(dots_orig);
       prev_vars = dot;
       cur_weight = 0;
     } else {
-      CHECK(is_zero(dot)) << list_to_string(dots_orig);
+      CHECK(is_zero(dot)) << dump_to_string(dots_orig);
       ++cur_weight;
     }
   }

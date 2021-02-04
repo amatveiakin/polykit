@@ -74,7 +74,7 @@ public:
 
 private:
   void check() const {
-    CHECK(absl::c_all_of(indices_, [](int idx) { return idx >= 1; })) << list_to_string(indices_);
+    CHECK(absl::c_all_of(indices_, [](int idx) { return idx >= 1; })) << dump_to_string(indices_);
   }
   void normalize();
 

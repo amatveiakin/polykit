@@ -6,7 +6,7 @@
 struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>>,
                                IdentityVectorLinearParamMixin<std::vector<int>> {
   static std::string object_to_string(const ObjectT& obj) {
-    return list_to_string(obj);
+    return fmt::parens(str_join(obj, ", "));
   }
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();

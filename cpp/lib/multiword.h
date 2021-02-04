@@ -153,17 +153,12 @@ private:
   DataT data_;
 };
 
-template<typename F>
-std::string to_string(const MultiWord& w, F char_to_string) {
+inline std::string to_string(const MultiWord& w) {
   std::vector<std::string> segment_strings;
   for (const auto& segment : w) {
-    segment_strings.push_back(list_to_string(segment));
+    segment_strings.push_back(fmt::parens(str_join(segment, ", ")));
   }
-  return list_to_string(segment_strings, char_to_string);
-}
-
-inline std::string to_string(const MultiWord& w) {
-  return to_string(w, [](auto c){ return to_string(c); });
+  return fmt::parens(str_join(segment_strings, ", "));
 }
 
 namespace std {
@@ -179,7 +174,7 @@ struct WordCoExprParam : SimpleLinearParam<MultiWord> {
   static std::string object_to_string(const MultiWord& word) {
     std::vector<std::string> segment_strings;
     for (const auto& segment : word) {
-      segment_strings.push_back(list_to_string(segment));
+      segment_strings.push_back(fmt::parens(str_join(segment, ",")));
     }
     return str_join(segment_strings, fmt::coprod_lie());
   }

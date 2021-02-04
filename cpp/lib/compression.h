@@ -59,7 +59,7 @@ inline void decompress_pair(unsigned char compressed, int& a, int& b) {
 template<int N>
 std::array<unsigned char, N/2> compress_array(const std::array<int, N>& data) {
   static_assert(N % 2 == 0);
-  CHECK(absl::c_all_of(data, compression_value_ok)) << list_to_string(data);
+  CHECK(absl::c_all_of(data, compression_value_ok)) << dump_to_string(data);
   std::array<unsigned char, N/2> ret;
   int dst = 0;
   for (int i = 0; i < data.size(); i += kCompressionValuesPerByte) {

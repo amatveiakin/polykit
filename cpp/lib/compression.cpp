@@ -12,7 +12,7 @@
 
 void Compressor::add_segment(absl::Span<const int> data) {
   CHECK(!data.empty());
-  CHECK(absl::c_all_of(data, compression_value_ok)) << list_to_string(data);
+  CHECK(absl::c_all_of(data, compression_value_ok)) << dump_to_string(data);
   if (!uncompressed_.empty()) {
     uncompressed_.push_back(kCompressionSentinel);
   }

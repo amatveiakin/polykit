@@ -14,7 +14,7 @@ struct ProjectionExprParam : public IdentityVectorLinearParamMixin<PVector<unsig
     return to_vector<int>(key);
   }
   static std::string object_to_string(const ObjectT& obj) {
-    return list_to_string(obj);
+    return fmt::parens(str_join(obj, ", "));
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
