@@ -5,6 +5,8 @@
 #include "util.h"
 
 
+// TODO: Strong typing and proper group operations for `cycles`.
+
 using Loops = std::vector<std::vector<int>>;
 
 class LoopsInvariant {

@@ -31,6 +31,7 @@
 #include "lib/snowpal.h"
 #include "lib/summation.h"
 #include "lib/theta.h"
+#include "lib/zip.h"
 
 
 static constexpr auto cycle = loop_expr_cycle;
@@ -63,7 +64,7 @@ std::string permutation_to_string(const std::vector<std::vector<int>>& permutati
   );
 }
 
-LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_var) {
+LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_type) {
   static const std::vector<std::vector<std::vector<int>>> symmetries{
     {{2,4}, {5,8}, {6,7}},
     {{2,5}, {3,4}, {6,8}},
@@ -75,7 +76,7 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_va
   };
   const auto update_victim = [&](const LoopExpr& bonus, int sign, std::string description) {
     const auto new_victim_candidate = victim + sign * bonus;
-    if (keep_var(new_victim_candidate, target_var).l1_norm() < keep_var(victim, target_var).l1_norm()) {
+    if (keep_var(new_victim_candidate, target_type).l1_norm() < keep_var(victim, target_type).l1_norm()) {
       victim = new_victim_candidate;
       std::cout << fmt::coeff(sign) << description << "\n";
     }
@@ -96,6 +97,87 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_va
         sign,
         absl::StrCat("rotate ", rotation_pow, " positions")
       );
+    }
+  }
+  return victim;
+}
+
+// TODO: Move to strings.h
+template<typename Map>
+std::string map_to_string(const Map& map) {
+  std::string ret;
+  for (const auto& [a, b] : map) {
+    ret += absl::StrCat(to_string(a), " => ", to_string(b), "\n");
+  }
+  return ret;
+}
+
+// TODO: Normalize cycles
+std::vector<std::vector<int>> substitutions_to_cycles(absl::flat_hash_map<int, int> substitutions) {
+  std::vector<std::vector<int>> ret;
+  while (!substitutions.empty()) {
+    const int start = substitutions.begin()->first;
+    int next = substitutions.begin()->second;
+    substitutions.erase(start);
+    if (start == next) {
+      continue;
+    } else {
+      std::vector<int> cycle = {start};
+      while (next != start) {
+        cycle.push_back(next);
+        const int prev = next;
+        next = substitutions.at(prev);
+        substitutions.erase(prev);
+      }
+      ret.push_back(std::move(cycle));
+    }
+  }
+  return ret;
+}
+
+absl::flat_hash_map<int, int> get_substitution(const Loops& from, const Loops& to) {
+  absl::flat_hash_map<int, int> ret;
+  for (auto [a, b] : zip(flatten(from), flatten(to))) {
+    if (ret.contains(a)) {
+      CHECK(ret.at(a) == b);
+    } else {
+      ret[a] = b;
+    }
+  }
+  return ret;
+}
+
+LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
+  std::cout << ".\n";
+  Loops killer_term;
+  killer.foreach([&](const Loops& loops, int) {
+    if (loops_names.loops_index(loops) == target_type) {
+      killer_term = loops;
+    }
+  });
+  CHECK(!killer_term.empty());
+  bool stuck = false;
+  while (!stuck) {
+    stuck = true;
+    Loops victim_term;
+    victim.foreach([&](const Loops& loops, int) {
+      if (loops_names.loops_index(loops) == target_type) {
+        victim_term = loops;
+      }
+    });
+    if (victim_term.empty()) {
+      break;  // everything killed already
+    }
+    // NOTE. Assumes canonical form.
+    // NOTE. Doesn't take into account different ways of treating symmetries.
+    const auto subst = get_substitution(killer_term, victim_term);
+    for (int sign : {-1, 1}) {
+      const auto new_victim_candidate = victim + sign * loop_expr_substitute(killer, subst);
+      if (keep_var(new_victim_candidate, target_type).l1_norm() < keep_var(victim, target_type).l1_norm()) {
+        stuck = false;
+        victim = new_victim_candidate;
+        std::cout << fmt::coeff(sign) << "cycle " << permutation_to_string(substitutions_to_cycles(subst)) << "\n";
+      }
     }
   }
   return victim;
@@ -276,16 +358,23 @@ int main(int argc, char *argv[]) {
 
   const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
   const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
-  const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});
-  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});  // == expr(a, b)
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});  // == expr(a, b, e)
   const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
-  const auto f1 = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
-  const auto g1 = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}, {4,6}});
 
-  generate_loops_names({a, b, c, d, e, f1, g1});
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
+  const auto g = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,11}});
+  const auto h = loop_expr_degenerate(loop_expr, {{1,4,7}, {3,5}});  // expr(f, g, a)
+  const auto fg = loop_expr_degenerate(loop_expr, {{1,3,6}, {2,4}});  // == -(f1 + f2)
 
-  list_all_degenerations(loop_expr);
-  return 0;
+  const auto gg = loop_expr_degenerate(loop_expr, {{2,5}, {1,3}, {4,6}});  // ==  g(symmetry: (2,3)(4,8)(5,7) + rotate 7 positions)
+  const auto m = loop_expr_degenerate(loop_expr, {{2,6}, {1,3}, {5,7}});
+  const auto n = loop_expr_degenerate(loop_expr, {{2,7}, {1,3}, {6,8}});
+
+  generate_loops_names({a, b, c, d, e});
+
+  // list_all_degenerations(loop_expr);
+  // return 0;
 
   // const auto a_c = to_canonical_permutation(a);
   // const auto b_c = to_canonical_permutation(b);
@@ -306,10 +395,37 @@ int main(int argc, char *argv[]) {
   // std::cout << "c " << preshow(c) << fmt::newline();
   // std::cout << "d " << preshow(d) << fmt::newline();
   std::cout << "e " << preshow(e) << fmt::newline();
-  std::cout << "f1 " << preshow(f1) << fmt::newline();
-  std::cout << "g1 " << preshow(g1) << fmt::newline();
+  std::cout << "---\n\n";
+  std::cout << "f " << preshow(f) << fmt::newline();
+  std::cout << "g " << preshow(g) << fmt::newline();
+  // std::cout << "h " << preshow(h) << fmt::newline();
+  std::cout << "---\n\n";
+  std::cout << "m " << preshow(m) << fmt::newline();
+  std::cout << "n " << preshow(n) << fmt::newline();
 
   std::cout << "===\n\n";
+
+  const auto mf = auto_kill(m, f, 6);  // {1,2,4}
+  const auto mfa = auto_kill(mf, a, 1);  // {2,4}
+  const auto mfg = auto_kill(mf, g, 4);  // {2,3}
+  const auto mfg1 = mfg + cycle(mfg, {{3,5}});
+  const auto mfg2 = mfg1 + cycle(mfg1, {{2,8}});  // only {2}
+
+  const auto nf = auto_kill(n, f, 6);  // {1,2,3,4}
+  const auto nfg = auto_kill(nf, g, 4);  // {2,3}
+  const auto nfg1 = nfg + cycle(nfg, {{3,5}});
+  const auto nfg2 = nfg1 + cycle(nfg1, {{2,4}});  // only {2}
+
+  std::cout << "\n";
+  std::cout << mfg << "\n";
+  std::cout << nfg << "\n";
+
+  std::cout << arg11_expr_type_2_to_column(mfg2) << "\n";
+  std::cout << arg11_expr_type_2_to_column(nfg2) << "\n";
+
+
+  // const auto hf = h - cycle(f, {{3,4,5,6,7,8}});
+  // ZERO:  hf - cycle(g, {{4,8}, {5,7}}) - cycle(g, {{3,4,5,6,7,8}}) - cycle(a, {{2,3}})
 
   // const auto cb =  // {1,2};  but then we discarded c
   //   + c
@@ -333,9 +449,9 @@ int main(int argc, char *argv[]) {
     + cycle(b, {{3,8}, {4,7}, {5,6}})
   ;
 
-  const auto eba = auto_kill_planar(eb, a, 1);
-  const auto eba1 = eba + cycle(eba, {{4,5}});
-  const auto eba2 = eba1 + cycle(eba1, {{2,8}});
+  // const auto eba = auto_kill_planar(eb, a, 1);
+  // const auto eba1 = eba + cycle(eba, {{4,5}});
+  // const auto eba2 = eba1 + cycle(eba1, {{2,8}});  // just one variable (but need correction for new indices)
 
   // std::cout << eb << "\n";
   // std::cout << eba << "\n";
