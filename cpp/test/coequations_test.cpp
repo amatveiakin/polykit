@@ -18,45 +18,45 @@ TEST(CoequationsTest, I_6) {
   );
 }
 
-// Note: also true for Lido4.
-TEST(CoequationsTest, LidoSymm4_OldFormula) {
+// Note: also true for QLi4.
+TEST(CoequationsTest, QLiSymm4_OldFormula) {
   EXPECT_EXPR_EQ(
-    comultiply(LidoSymm4(1,2,3,4,5,6), {2,2}),
+    comultiply(QLiSymm4(1,2,3,4,5,6), {2,2}),
     (
-      + coproduct(Lido2(1,2,3,4), Lido2(1,4,5,6))
-      - coproduct(Lido2(2,3,4,5), Lido2(2,5,6,1))
-      + coproduct(Lido2(3,4,5,6), Lido2(3,6,1,2))
+      + coproduct(QLi2(1,2,3,4), QLi2(1,4,5,6))
+      - coproduct(QLi2(2,3,4,5), QLi2(2,5,6,1))
+      + coproduct(QLi2(3,4,5,6), QLi2(3,6,1,2))
     )
   );
 }
 
 #if RUN_LARGE_TESTS
-TEST(CoequationsTest, LidoSymm_Arg6) {
+TEST(CoequationsTest, QLiSymm_Arg6) {
   for (int wr : range_incl(2, 3)) {
     EXPECT_EXPR_EQ(
-      comultiply(LidoSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
+      comultiply(QLiSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
       (
         + sum_looped_vec([&](const std::vector<X>& args) {
           return coproduct(
-            LidoVec    (1,  choose_indices_one_based(args, {1,2,3,4})),
-            LidoSymmVec(wr, choose_indices_one_based(args, {1,4,5,6}))
+            QLiVec    (1,  choose_indices_one_based(args, {1,2,3,4})),
+            QLiSymmVec(wr, choose_indices_one_based(args, {1,4,5,6}))
           );
         }, 6, {1,2,3,4,5,6}, (wr % 2 == 0 ? SumSign::plus : SumSign::alternating))
-        + coproduct(cross_ratio(std::vector{1,2,3,4,5,6}), LidoSymmVec(wr, {1,2,3,4,5,6}))
+        + coproduct(cross_ratio(std::vector{1,2,3,4,5,6}), QLiSymmVec(wr, {1,2,3,4,5,6}))
       )
     );
   }
 }
 #endif
 
-TEST(CoequationsTest, Lido_Arg6) {
+TEST(CoequationsTest, QLi_Arg6) {
   for (int w : range_incl(1, 2)) {
     EXPECT_EXPR_EQ(
-      comultiply(LidoVec(2*w, {1,2,3,4,5,6}), {w,w}),
+      comultiply(QLiVec(2*w, {1,2,3,4,5,6}), {w,w}),
       (
-        + coproduct(LidoVec   (w, {1,2,3,4}), LidoVec(w, {1,4,5,6}))
-        + coproduct(LidoNegVec(w, {2,3,4,5}), LidoVec(w, {1,2,5,6}))
-        + coproduct(LidoVec   (w, {3,4,5,6}), LidoVec(w, {1,2,3,6}))
+        + coproduct(QLiVec   (w, {1,2,3,4}), QLiVec(w, {1,4,5,6}))
+        + coproduct(QLiNegVec(w, {2,3,4,5}), QLiVec(w, {1,2,5,6}))
+        + coproduct(QLiVec   (w, {3,4,5,6}), QLiVec(w, {1,2,3,6}))
       )
     );
   }
@@ -64,146 +64,146 @@ TEST(CoequationsTest, Lido_Arg6) {
 
 // TODO: Convert the rest of the tests
 
-  // auto lhs = comultiply(Lido4(1,2,3,4,5,6,7,8), {2,2});
+  // auto lhs = comultiply(QLi4(1,2,3,4,5,6,7,8), {2,2});
   // auto rhs = (
-  //   + coproduct(Lido2   (1,2,3,4), Lido2(1,4,5,6,7,8))
-  //   + coproduct(LidoNeg2(2,3,4,5), Lido2(1,2,5,6,7,8))
-  //   + coproduct(Lido2   (3,4,5,6), Lido2(1,2,3,6,7,8))
-  //   + coproduct(LidoNeg2(4,5,6,7), Lido2(1,2,3,4,7,8))
-  //   + coproduct(Lido2   (5,6,7,8), Lido2(1,2,3,4,5,8))
-  //   + coproduct(Lido2   (1,2,3,4,5,6), Lido2(1,6,7,8))
-  //   + coproduct(LidoNeg2(2,3,4,5,6,7), Lido2(1,2,7,8))
-  //   + coproduct(Lido2   (3,4,5,6,7,8), Lido2(1,2,3,8))
+  //   + coproduct(QLi2   (1,2,3,4), QLi2(1,4,5,6,7,8))
+  //   + coproduct(QLiNeg2(2,3,4,5), QLi2(1,2,5,6,7,8))
+  //   + coproduct(QLi2   (3,4,5,6), QLi2(1,2,3,6,7,8))
+  //   + coproduct(QLiNeg2(4,5,6,7), QLi2(1,2,3,4,7,8))
+  //   + coproduct(QLi2   (5,6,7,8), QLi2(1,2,3,4,5,8))
+  //   + coproduct(QLi2   (1,2,3,4,5,6), QLi2(1,6,7,8))
+  //   + coproduct(QLiNeg2(2,3,4,5,6,7), QLi2(1,2,7,8))
+  //   + coproduct(QLi2   (3,4,5,6,7,8), QLi2(1,2,3,8))
   // );
   // auto diff = lhs - rhs;
 
-  // auto lhs = comultiply(Lido6(1,2,3,4,5,6,7,8), {3,3});
+  // auto lhs = comultiply(QLi6(1,2,3,4,5,6,7,8), {3,3});
   // auto rhs = (
-  //   + coproduct(Lido3   (1,2,3,4), Lido3(1,4,5,6,7,8))
-  //   + coproduct(LidoNeg3(2,3,4,5), Lido3(1,2,5,6,7,8))
-  //   + coproduct(Lido3   (3,4,5,6), Lido3(1,2,3,6,7,8))
-  //   + coproduct(LidoNeg3(4,5,6,7), Lido3(1,2,3,4,7,8))
-  //   + coproduct(Lido3   (5,6,7,8), Lido3(1,2,3,4,5,8))
-  //   + coproduct(Lido3   (1,2,3,4,5,6), Lido3(1,6,7,8))
-  //   + coproduct(LidoNeg3(2,3,4,5,6,7), Lido3(1,2,7,8))
-  //   + coproduct(Lido3   (3,4,5,6,7,8), Lido3(1,2,3,8))
-  // );
-  // auto diff = lhs - rhs;
-
-
-  // auto lhs = comultiply(Lido5(1,2,3,4,5,6), {2,3});
-  // auto rhs = (
-  //   + coproduct(Lido2   (1,2,3,4), Lido3(1,4,5,6))
-  //   + coproduct(LidoNeg2(2,3,4,5), Lido3(1,2,5,6))
-  //   + coproduct(Lido2   (3,4,5,6), Lido3(1,2,3,6))
-  //   + coproduct(Lido3   (1,2,3,4), Lido2(1,4,5,6))
-  //   + coproduct(LidoNeg3(2,3,4,5), Lido2(1,2,5,6))
-  //   + coproduct(Lido3   (3,4,5,6), Lido2(1,2,3,6))
+  //   + coproduct(QLi3   (1,2,3,4), QLi3(1,4,5,6,7,8))
+  //   + coproduct(QLiNeg3(2,3,4,5), QLi3(1,2,5,6,7,8))
+  //   + coproduct(QLi3   (3,4,5,6), QLi3(1,2,3,6,7,8))
+  //   + coproduct(QLiNeg3(4,5,6,7), QLi3(1,2,3,4,7,8))
+  //   + coproduct(QLi3   (5,6,7,8), QLi3(1,2,3,4,5,8))
+  //   + coproduct(QLi3   (1,2,3,4,5,6), QLi3(1,6,7,8))
+  //   + coproduct(QLiNeg3(2,3,4,5,6,7), QLi3(1,2,7,8))
+  //   + coproduct(QLi3   (3,4,5,6,7,8), QLi3(1,2,3,8))
   // );
   // auto diff = lhs - rhs;
 
 
-  // auto lhs = comultiply(Lido5(1,2,3,4,5,6,7,8), {2,3});
+  // auto lhs = comultiply(QLi5(1,2,3,4,5,6), {2,3});
   // auto rhs = (
-  //   + coproduct(Lido3   (1,2,3,4), Lido2(1,4,5,6,7,8))
-  //   + coproduct(LidoNeg3(2,3,4,5), Lido2(1,2,5,6,7,8))
-  //   + coproduct(Lido3   (3,4,5,6), Lido2(1,2,3,6,7,8))
-  //   + coproduct(LidoNeg3(4,5,6,7), Lido2(1,2,3,4,7,8))
-  //   + coproduct(Lido3   (5,6,7,8), Lido2(1,2,3,4,5,8))
-  //   + coproduct(Lido3   (1,2,3,4,5,6), Lido2(1,6,7,8))
-  //   + coproduct(LidoNeg3(2,3,4,5,6,7), Lido2(1,2,7,8))
-  //   + coproduct(Lido3   (3,4,5,6,7,8), Lido2(1,2,3,8))
-  //   + coproduct(Lido2   (1,2,3,4), Lido3(1,4,5,6,7,8))
-  //   + coproduct(LidoNeg2(2,3,4,5), Lido3(1,2,5,6,7,8))
-  //   + coproduct(Lido2   (3,4,5,6), Lido3(1,2,3,6,7,8))
-  //   + coproduct(LidoNeg2(4,5,6,7), Lido3(1,2,3,4,7,8))
-  //   + coproduct(Lido2   (5,6,7,8), Lido3(1,2,3,4,5,8))
-  //   + coproduct(Lido2   (1,2,3,4,5,6), Lido3(1,6,7,8))
-  //   + coproduct(LidoNeg2(2,3,4,5,6,7), Lido3(1,2,7,8))
-  //   + coproduct(Lido2   (3,4,5,6,7,8), Lido3(1,2,3,8))
+  //   + coproduct(QLi2   (1,2,3,4), QLi3(1,4,5,6))
+  //   + coproduct(QLiNeg2(2,3,4,5), QLi3(1,2,5,6))
+  //   + coproduct(QLi2   (3,4,5,6), QLi3(1,2,3,6))
+  //   + coproduct(QLi3   (1,2,3,4), QLi2(1,4,5,6))
+  //   + coproduct(QLiNeg3(2,3,4,5), QLi2(1,2,5,6))
+  //   + coproduct(QLi3   (3,4,5,6), QLi2(1,2,3,6))
   // );
   // auto diff = lhs - rhs;
 
 
-  // auto lhs = comultiply(LidoNeg2(1,2,3,4,5,6), {1,1});
+  // auto lhs = comultiply(QLi5(1,2,3,4,5,6,7,8), {2,3});
   // auto rhs = (
-  //   + coproduct(LidoNeg1(1,2,3,4), LidoNeg1(1,4,5,6))
-  //   + coproduct(Lido1   (2,3,4,5), LidoNeg1(1,2,5,6))
-  //   + coproduct(LidoNeg1(3,4,5,6), LidoNeg1(1,2,3,6))
+  //   + coproduct(QLi3   (1,2,3,4), QLi2(1,4,5,6,7,8))
+  //   + coproduct(QLiNeg3(2,3,4,5), QLi2(1,2,5,6,7,8))
+  //   + coproduct(QLi3   (3,4,5,6), QLi2(1,2,3,6,7,8))
+  //   + coproduct(QLiNeg3(4,5,6,7), QLi2(1,2,3,4,7,8))
+  //   + coproduct(QLi3   (5,6,7,8), QLi2(1,2,3,4,5,8))
+  //   + coproduct(QLi3   (1,2,3,4,5,6), QLi2(1,6,7,8))
+  //   + coproduct(QLiNeg3(2,3,4,5,6,7), QLi2(1,2,7,8))
+  //   + coproduct(QLi3   (3,4,5,6,7,8), QLi2(1,2,3,8))
+  //   + coproduct(QLi2   (1,2,3,4), QLi3(1,4,5,6,7,8))
+  //   + coproduct(QLiNeg2(2,3,4,5), QLi3(1,2,5,6,7,8))
+  //   + coproduct(QLi2   (3,4,5,6), QLi3(1,2,3,6,7,8))
+  //   + coproduct(QLiNeg2(4,5,6,7), QLi3(1,2,3,4,7,8))
+  //   + coproduct(QLi2   (5,6,7,8), QLi3(1,2,3,4,5,8))
+  //   + coproduct(QLi2   (1,2,3,4,5,6), QLi3(1,6,7,8))
+  //   + coproduct(QLiNeg2(2,3,4,5,6,7), QLi3(1,2,7,8))
+  //   + coproduct(QLi2   (3,4,5,6,7,8), QLi3(1,2,3,8))
   // );
   // auto diff = lhs - rhs;
 
 
-  // auto lhs = comultiply(LidoNeg5(1,2,3,4,5,6,7,8), {2,3});
+  // auto lhs = comultiply(QLiNeg2(1,2,3,4,5,6), {1,1});
   // auto rhs = (
-  //   + coproduct(LidoNeg3(1,2,3,4), LidoNeg2(1,4,5,6,7,8))
-  //   + coproduct(Lido3   (2,3,4,5), LidoNeg2(1,2,5,6,7,8))
-  //   + coproduct(LidoNeg3(3,4,5,6), LidoNeg2(1,2,3,6,7,8))
-  //   + coproduct(Lido3   (4,5,6,7), LidoNeg2(1,2,3,4,7,8))
-  //   + coproduct(LidoNeg3(5,6,7,8), LidoNeg2(1,2,3,4,5,8))
-  //   + coproduct(LidoNeg3(1,2,3,4,5,6), LidoNeg2(1,6,7,8))
-  //   + coproduct(Lido3   (2,3,4,5,6,7), LidoNeg2(1,2,7,8))
-  //   + coproduct(LidoNeg3(3,4,5,6,7,8), LidoNeg2(1,2,3,8))
-  //   + coproduct(LidoNeg2(1,2,3,4), LidoNeg3(1,4,5,6,7,8))
-  //   + coproduct(Lido2   (2,3,4,5), LidoNeg3(1,2,5,6,7,8))
-  //   + coproduct(LidoNeg2(3,4,5,6), LidoNeg3(1,2,3,6,7,8))
-  //   + coproduct(Lido2   (4,5,6,7), LidoNeg3(1,2,3,4,7,8))
-  //   + coproduct(LidoNeg2(5,6,7,8), LidoNeg3(1,2,3,4,5,8))
-  //   + coproduct(LidoNeg2(1,2,3,4,5,6), LidoNeg3(1,6,7,8))
-  //   + coproduct(Lido2   (2,3,4,5,6,7), LidoNeg3(1,2,7,8))
-  //   + coproduct(LidoNeg2(3,4,5,6,7,8), LidoNeg3(1,2,3,8))
+  //   + coproduct(QLiNeg1(1,2,3,4), QLiNeg1(1,4,5,6))
+  //   + coproduct(QLi1   (2,3,4,5), QLiNeg1(1,2,5,6))
+  //   + coproduct(QLiNeg1(3,4,5,6), QLiNeg1(1,2,3,6))
   // );
   // auto diff = lhs - rhs;
 
 
-  // auto lhs = comultiply(Lido3(1,2,3,4,5,6), {1,2});
+  // auto lhs = comultiply(QLiNeg5(1,2,3,4,5,6,7,8), {2,3});
   // auto rhs = (
-  //   + coproduct(Lido1   (1,2,3,4), Lido2(1,4,5,6))
-  //   + coproduct(LidoNeg1(2,3,4,5), Lido2(1,2,5,6))
-  //   + coproduct(Lido1   (3,4,5,6), Lido2(1,2,3,6))
-  //   + coproduct(Lido2   (1,2,3,4), Lido1(1,4,5,6))
-  //   + coproduct(LidoNeg2(2,3,4,5), Lido1(1,2,5,6))
-  //   + coproduct(Lido2   (3,4,5,6), Lido1(1,2,3,6))
-  //   + coproduct(Lido1_2p   (1,2), Lido2(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(2,3), Lido2(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (3,4), Lido2(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(4,5), Lido2(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (5,6), Lido2(1,2,3,4,5,6))
-  //   + coproduct(Lido2(1,2,3,4,5,6), Lido1_2p   (1,6))
+  //   + coproduct(QLiNeg3(1,2,3,4), QLiNeg2(1,4,5,6,7,8))
+  //   + coproduct(QLi3   (2,3,4,5), QLiNeg2(1,2,5,6,7,8))
+  //   + coproduct(QLiNeg3(3,4,5,6), QLiNeg2(1,2,3,6,7,8))
+  //   + coproduct(QLi3   (4,5,6,7), QLiNeg2(1,2,3,4,7,8))
+  //   + coproduct(QLiNeg3(5,6,7,8), QLiNeg2(1,2,3,4,5,8))
+  //   + coproduct(QLiNeg3(1,2,3,4,5,6), QLiNeg2(1,6,7,8))
+  //   + coproduct(QLi3   (2,3,4,5,6,7), QLiNeg2(1,2,7,8))
+  //   + coproduct(QLiNeg3(3,4,5,6,7,8), QLiNeg2(1,2,3,8))
+  //   + coproduct(QLiNeg2(1,2,3,4), QLiNeg3(1,4,5,6,7,8))
+  //   + coproduct(QLi2   (2,3,4,5), QLiNeg3(1,2,5,6,7,8))
+  //   + coproduct(QLiNeg2(3,4,5,6), QLiNeg3(1,2,3,6,7,8))
+  //   + coproduct(QLi2   (4,5,6,7), QLiNeg3(1,2,3,4,7,8))
+  //   + coproduct(QLiNeg2(5,6,7,8), QLiNeg3(1,2,3,4,5,8))
+  //   + coproduct(QLiNeg2(1,2,3,4,5,6), QLiNeg3(1,6,7,8))
+  //   + coproduct(QLi2   (2,3,4,5,6,7), QLiNeg3(1,2,7,8))
+  //   + coproduct(QLiNeg2(3,4,5,6,7,8), QLiNeg3(1,2,3,8))
   // );
   // auto diff = lhs - rhs;
 
-  // auto lhs = comultiply(Lido4(1,2,3,4,5,6), {1,3});
+
+  // auto lhs = comultiply(QLi3(1,2,3,4,5,6), {1,2});
   // auto rhs = (
-  //   + coproduct(Lido1   (1,2,3,4), Lido3(1,4,5,6))
-  //   + coproduct(LidoNeg1(2,3,4,5), Lido3(1,2,5,6))
-  //   + coproduct(Lido1   (3,4,5,6), Lido3(1,2,3,6))
-  //   + coproduct(Lido3   (1,2,3,4), Lido1(1,4,5,6))
-  //   + coproduct(LidoNeg3(2,3,4,5), Lido1(1,2,5,6))
-  //   + coproduct(Lido3   (3,4,5,6), Lido1(1,2,3,6))
-  //   + coproduct(Lido1_2p   (1,2), Lido3(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(2,3), Lido3(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (3,4), Lido3(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(4,5), Lido3(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (5,6), Lido3(1,2,3,4,5,6))
-  //   + coproduct(Lido3(1,2,3,4,5,6), Lido1_2p   (1,6))
+  //   + coproduct(QLi1   (1,2,3,4), QLi2(1,4,5,6))
+  //   + coproduct(QLiNeg1(2,3,4,5), QLi2(1,2,5,6))
+  //   + coproduct(QLi1   (3,4,5,6), QLi2(1,2,3,6))
+  //   + coproduct(QLi2   (1,2,3,4), QLi1(1,4,5,6))
+  //   + coproduct(QLiNeg2(2,3,4,5), QLi1(1,2,5,6))
+  //   + coproduct(QLi2   (3,4,5,6), QLi1(1,2,3,6))
+  //   + coproduct(QLi1_2p   (1,2), QLi2(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(2,3), QLi2(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (3,4), QLi2(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(4,5), QLi2(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (5,6), QLi2(1,2,3,4,5,6))
+  //   + coproduct(QLi2(1,2,3,4,5,6), QLi1_2p   (1,6))
   // );
   // auto diff = lhs - rhs;
 
-  // auto lhs = comultiply(LidoNeg4(1,2,3,4,5,6), {1,3});
+  // auto lhs = comultiply(QLi4(1,2,3,4,5,6), {1,3});
   // auto rhs = (
-  //   + coproduct(LidoNeg1(1,2,3,4), LidoNeg3(1,4,5,6))
-  //   + coproduct(Lido1   (2,3,4,5), LidoNeg3(1,2,5,6))
-  //   + coproduct(LidoNeg1(3,4,5,6), LidoNeg3(1,2,3,6))
-  //   + coproduct(LidoNeg3(1,2,3,4), LidoNeg1(1,4,5,6))
-  //   + coproduct(Lido3   (2,3,4,5), LidoNeg1(1,2,5,6))
-  //   + coproduct(LidoNeg3(3,4,5,6), LidoNeg1(1,2,3,6))
-  //   + coproduct(LidoNeg1_2p(1,2), LidoNeg3(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (2,3), LidoNeg3(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(3,4), LidoNeg3(1,2,3,4,5,6))
-  //   + coproduct(Lido1_2p   (4,5), LidoNeg3(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg1_2p(5,6), LidoNeg3(1,2,3,4,5,6))
-  //   + coproduct(LidoNeg3(1,2,3,4,5,6), LidoNeg1_2p(1,6))
+  //   + coproduct(QLi1   (1,2,3,4), QLi3(1,4,5,6))
+  //   + coproduct(QLiNeg1(2,3,4,5), QLi3(1,2,5,6))
+  //   + coproduct(QLi1   (3,4,5,6), QLi3(1,2,3,6))
+  //   + coproduct(QLi3   (1,2,3,4), QLi1(1,4,5,6))
+  //   + coproduct(QLiNeg3(2,3,4,5), QLi1(1,2,5,6))
+  //   + coproduct(QLi3   (3,4,5,6), QLi1(1,2,3,6))
+  //   + coproduct(QLi1_2p   (1,2), QLi3(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(2,3), QLi3(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (3,4), QLi3(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(4,5), QLi3(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (5,6), QLi3(1,2,3,4,5,6))
+  //   + coproduct(QLi3(1,2,3,4,5,6), QLi1_2p   (1,6))
+  // );
+  // auto diff = lhs - rhs;
+
+  // auto lhs = comultiply(QLiNeg4(1,2,3,4,5,6), {1,3});
+  // auto rhs = (
+  //   + coproduct(QLiNeg1(1,2,3,4), QLiNeg3(1,4,5,6))
+  //   + coproduct(QLi1   (2,3,4,5), QLiNeg3(1,2,5,6))
+  //   + coproduct(QLiNeg1(3,4,5,6), QLiNeg3(1,2,3,6))
+  //   + coproduct(QLiNeg3(1,2,3,4), QLiNeg1(1,4,5,6))
+  //   + coproduct(QLi3   (2,3,4,5), QLiNeg1(1,2,5,6))
+  //   + coproduct(QLiNeg3(3,4,5,6), QLiNeg1(1,2,3,6))
+  //   + coproduct(QLiNeg1_2p(1,2), QLiNeg3(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (2,3), QLiNeg3(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(3,4), QLiNeg3(1,2,3,4,5,6))
+  //   + coproduct(QLi1_2p   (4,5), QLiNeg3(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg1_2p(5,6), QLiNeg3(1,2,3,4,5,6))
+  //   + coproduct(QLiNeg3(1,2,3,4,5,6), QLiNeg1_2p(1,6))
   // );
   // auto diff = lhs - rhs;
 
@@ -211,24 +211,24 @@ TEST(CoequationsTest, Lido_Arg6) {
 
 
 #if RUN_LARGE_TESTS
-TEST(CoequationsTest, LidoSymm5) {
+TEST(CoequationsTest, QLiSymm5) {
   EXPECT_EXPR_EQ(
-    comultiply(LidoSymm5(1,2,3,4,5,6), {2,3}),
+    comultiply(QLiSymm5(1,2,3,4,5,6), {2,3}),
     sum_looped(
       [](X x1, X x2, X x3, X x4, X x5, X x6) {
-        return coproduct(Lido3(x1,x2,x3,x4), Lido2(x1,x4,x5,x6));
+        return coproduct(QLi3(x1,x2,x3,x4), QLi2(x1,x4,x5,x6));
       },
       6
     )
   );
 }
-TEST(CoequationsTest, LidoSymm6) {
+TEST(CoequationsTest, QLiSymm6) {
   EXPECT_EXPR_EQ(
-    comultiply(LidoSymm6(1,2,3,4,5,6), {3,3}),
+    comultiply(QLiSymm6(1,2,3,4,5,6), {3,3}),
     (
-      + coproduct(Lido3(1,2,3,4), Lido3(1,4,5,6))
-      - coproduct(Lido3(2,3,4,5), Lido3(2,5,6,1))
-      + coproduct(Lido3(3,4,5,6), Lido3(3,6,1,2))
+      + coproduct(QLi3(1,2,3,4), QLi3(1,4,5,6))
+      - coproduct(QLi3(2,3,4,5), QLi3(2,5,6,1))
+      + coproduct(QLi3(3,4,5,6), QLi3(3,6,1,2))
     )
   );
 }

@@ -19,7 +19,7 @@ static bool contains_var_from_each_pair_odd(const std::vector<int>& args, int nu
   return true;
 }
 
-DeltaExpr LidoViaCorr(int weight, int num_vars) {
+DeltaExpr QLiViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = (num_vars + 1) / 2;
   DeltaExpr ret;
@@ -51,7 +51,7 @@ static bool contains_var_from_each_pair_even(const std::vector<int>& args, int n
 }
 
 // TODO: Update definition and cyclic shift!
-DeltaExpr LidoNegViaCorr(int weight, int num_vars) {
+DeltaExpr QLiNegViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = div_int(num_vars, 2);
   DeltaExpr ret;
@@ -70,7 +70,7 @@ DeltaExpr LidoNegViaCorr(int weight, int num_vars) {
   return ret;
 }
 
-DeltaExpr LidoNegAltViaCorr(int weight, int num_vars) {
+DeltaExpr QLiNegAltViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_even_vars = div_int(num_vars, 2);
   DeltaExpr ret;
@@ -90,7 +90,7 @@ DeltaExpr LidoNegAltViaCorr(int weight, int num_vars) {
 }
 
 
-DeltaExpr LidoSymmViaCorr(int weight, int num_vars) {
+DeltaExpr QLiSymmViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = div_int(num_vars, 2);
   DeltaExpr ret;
@@ -109,7 +109,7 @@ DeltaExpr LidoSymmViaCorr(int weight, int num_vars) {
 
 
 // TODO: remove duplicate code
-CorrExpr LidoViaCorrFSymb(int weight, int num_vars) {
+CorrExpr QLiViaCorrFSymb(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = (num_vars + 1) / 2;
   CorrExpr ret;
@@ -128,16 +128,16 @@ CorrExpr LidoViaCorrFSymb(int weight, int num_vars) {
   return ret;
 }
 
-CorrExpr LidoNegViaCorrFSymb(int weight, int num_vars) {
+CorrExpr QLiNegViaCorrFSymb(int weight, int num_vars) {
   return -corr_expr_substitute(
-    LidoViaCorrFSymb(weight, num_vars),
+    QLiViaCorrFSymb(weight, num_vars),
     concat(seq_incl(2, num_vars), {1})
   );
 }
 
 CorrExpr PosCorrFSymb(int weight, const std::vector<int>& points) {
   return corr_expr_substitute(
-    LidoViaCorrFSymb(
+    QLiViaCorrFSymb(
       weight,
       points.size()
     ),
@@ -147,7 +147,7 @@ CorrExpr PosCorrFSymb(int weight, const std::vector<int>& points) {
 
 CorrExpr NegCorrFSymb(int weight, const std::vector<int>& points) {
   return corr_expr_substitute(
-    LidoNegViaCorrFSymb(
+    QLiNegViaCorrFSymb(
       weight,
       points.size()
     ),

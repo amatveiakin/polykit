@@ -4,10 +4,10 @@
 
 
 // Sample usage:
-//    return Lido_impl(weight, asc_points);
+//    return QLi_impl(weight, asc_points);
 // =>
 //    static CallCache<DeltaExpr, int, std::vector<int>> call_cache;
-//    return call_cache.apply(&Lido_impl, weight, asc_points);
+//    return call_cache.apply(&QLi_impl, weight, asc_points);
 //
 template<typename Value, typename... Args>
 class CallCache {

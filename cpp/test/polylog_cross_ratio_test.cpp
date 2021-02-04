@@ -13,8 +13,8 @@ inline ProjectionExpr Pr(std::initializer_list<int> data) {
 }
 
 
-TEST(LidoTest, Lido4_Arg6) {
-  auto expr = Lido4(1,2,3,4,5,6);
+TEST(QLiTest, QLi4_Arg6) {
+  auto expr = QLi4(1,2,3,4,5,6);
   EXPECT_EQ(expr.size(), 2560);
   auto lyndon = to_lyndon_basis(expr);
   EXPECT_EQ(lyndon.size(), 1272);
@@ -32,100 +32,100 @@ TEST(LidoTest, Lido4_Arg6) {
   );
 }
 
-TEST(LidoTest, LidoSymmEquation_Arg6) {
+TEST(QLiTest, QLiSymmEquation_Arg6) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
-    + LidoSymm2(1,2,3,4,5,6)
-    + LidoSymm2(2,3,4,5,6,1)
+    + QLiSymm2(1,2,3,4,5,6)
+    + QLiSymm2(2,3,4,5,6,1)
   );
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
-    + LidoSymm3(1,2,3,4,5,6)
-    - LidoSymm3(2,3,4,5,6,1)
+    + QLiSymm3(1,2,3,4,5,6)
+    - QLiSymm3(2,3,4,5,6,1)
   );
 }
 
-TEST(LidoTest, LidoSymmEquation_Arg8) {
+TEST(QLiTest, QLiSymmEquation_Arg8) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
-    + LidoSymm3(1,2,3,4,5,6,7,8)
-    - LidoSymm3(2,3,4,5,6,7,8,1)
+    + QLiSymm3(1,2,3,4,5,6,7,8)
+    - QLiSymm3(2,3,4,5,6,7,8,1)
   );
 }
 
 #if RUN_LARGE_TESTS
-TEST(LidoTest, LidoSymmEquation_Arg10) {
+TEST(QLiTest, QLiSymmEquation_Arg10) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(project_on_x1(
-    + LidoSymm4(1,2,3,4,5,6,7,8,9,10)
-    + LidoSymm4(2,3,4,5,6,7,8,9,10,1)
+    + QLiSymm4(1,2,3,4,5,6,7,8,9,10)
+    + QLiSymm4(2,3,4,5,6,7,8,9,10,1)
   ));
 }
 #endif
 
-TEST(LidoTest, LidoSymm_Arg8_AlternativeFormula) {
+TEST(QLiTest, QLiSymm_Arg8_AlternativeFormula) {
   EXPECT_EXPR_EQ_AFTER_LYNDON(
-    + LidoSymm3(1,2,3,4,5,6,7,8)
+    + QLiSymm3(1,2,3,4,5,6,7,8)
     ,
-    + Lido3(1,2,3,4,5,6,7,8)
+    + QLi3(1,2,3,4,5,6,7,8)
     + (
-      - LidoSymm3(1,2,3,4,5,6)
-      - LidoSymm3(3,4,5,6,7,8)
-      - LidoSymm3(5,6,7,8,1,2)
-      - LidoSymm3(7,8,1,2,3,4)
-      - Lido3(1,2,3,4,5,6)
-      - Lido3(3,4,5,6,7,8)
-      - Lido3(5,6,7,8,1,2)
-      - Lido3(7,8,1,2,3,4)
+      - QLiSymm3(1,2,3,4,5,6)
+      - QLiSymm3(3,4,5,6,7,8)
+      - QLiSymm3(5,6,7,8,1,2)
+      - QLiSymm3(7,8,1,2,3,4)
+      - QLi3(1,2,3,4,5,6)
+      - QLi3(3,4,5,6,7,8)
+      - QLi3(5,6,7,8,1,2)
+      - QLi3(7,8,1,2,3,4)
     ).dived_int(2)
   );
 }
 
-TEST(LidoTest, Lido_Arg6_ShiftedDiffFormula) {
+TEST(QLiTest, QLi_Arg6_ShiftedDiffFormula) {
   for (int w : range_incl(2, 3)) {
     const int s = neg_one_pow(w);
     EXPECT_EXPR_EQ_AFTER_LYNDON(
-      +  LidoVec(w, {1,2,3,4,5,6})
-      +s*LidoVec(w, {2,3,4,5,6,1})
+      +  QLiVec(w, {1,2,3,4,5,6})
+      +s*QLiVec(w, {2,3,4,5,6,1})
       ,
-      + LidoVec(w, {1,2,3,4})
-      - LidoVec(w, {3,4,5,2})
-      + LidoVec(w, {3,4,5,6})
-      - LidoVec(w, {5,6,1,4})
-      + LidoVec(w, {5,6,1,2})
-      - LidoVec(w, {1,2,3,6})
+      + QLiVec(w, {1,2,3,4})
+      - QLiVec(w, {3,4,5,2})
+      + QLiVec(w, {3,4,5,6})
+      - QLiVec(w, {5,6,1,4})
+      + QLiVec(w, {5,6,1,2})
+      - QLiVec(w, {1,2,3,6})
     );
   }
 }
 
 #if RUN_LARGE_TESTS
-TEST(LidoTest, Lido_Arg8_ShiftedDiffFormula) {
+TEST(QLiTest, QLi_Arg8_ShiftedDiffFormula) {
   for (int w : range_incl(3, 4)) {
     const int s = neg_one_pow(w);
     EXPECT_EXPR_EQ_AFTER_LYNDON(
-      +  LidoVec(w, {1,2,3,4,5,6,7,8})
-      +s*LidoVec(w, {2,3,4,5,6,7,8,1})
+      +  QLiVec(w, {1,2,3,4,5,6,7,8})
+      +s*QLiVec(w, {2,3,4,5,6,7,8,1})
       ,
-      - LidoVec(w, {1,2,3,4,5,8})
-      + LidoVec(w, {1,2,3,4,5,6})
-      - LidoVec(w, {3,4,5,6,7,2})
-      + LidoVec(w, {3,4,5,6,7,8})
-      - LidoVec(w, {5,6,7,8,1,4})
-      + LidoVec(w, {5,6,7,8,1,2})
-      - LidoVec(w, {7,8,1,2,3,6})
-      + LidoVec(w, {7,8,1,2,3,4})
-      + LidoVec(w, {1,2,3,6})
-      - LidoVec(w, {1,2,3,8})
-      - LidoVec(w, {1,2,5,6})
-      + LidoVec(w, {1,2,5,8})
-      + LidoVec(w, {1,4,5,6})
-      - LidoVec(w, {1,4,5,8})
-      + LidoVec(w, {1,4,7,8})
-      - LidoVec(w, {1,6,7,8})
-      - LidoVec(w, {3,4,5,2})
-      + LidoVec(w, {3,4,7,2})
-      + LidoVec(w, {3,4,5,8})
-      - LidoVec(w, {3,4,7,8})
-      - LidoVec(w, {3,6,7,2})
-      + LidoVec(w, {3,6,7,8})
-      + LidoVec(w, {5,6,7,2})
-      - LidoVec(w, {5,6,7,4})
+      - QLiVec(w, {1,2,3,4,5,8})
+      + QLiVec(w, {1,2,3,4,5,6})
+      - QLiVec(w, {3,4,5,6,7,2})
+      + QLiVec(w, {3,4,5,6,7,8})
+      - QLiVec(w, {5,6,7,8,1,4})
+      + QLiVec(w, {5,6,7,8,1,2})
+      - QLiVec(w, {7,8,1,2,3,6})
+      + QLiVec(w, {7,8,1,2,3,4})
+      + QLiVec(w, {1,2,3,6})
+      - QLiVec(w, {1,2,3,8})
+      - QLiVec(w, {1,2,5,6})
+      + QLiVec(w, {1,2,5,8})
+      + QLiVec(w, {1,4,5,6})
+      - QLiVec(w, {1,4,5,8})
+      + QLiVec(w, {1,4,7,8})
+      - QLiVec(w, {1,6,7,8})
+      - QLiVec(w, {3,4,5,2})
+      + QLiVec(w, {3,4,7,2})
+      + QLiVec(w, {3,4,5,8})
+      - QLiVec(w, {3,4,7,8})
+      - QLiVec(w, {3,6,7,2})
+      + QLiVec(w, {3,6,7,8})
+      + QLiVec(w, {5,6,7,2})
+      - QLiVec(w, {5,6,7,4})
     );
   }
 }
@@ -137,14 +137,14 @@ public:
   int total_points() const { return GetParam().second; }
 };
 
-TEST_P(SubsetSumFormulaTest, LidoSymm_SubsetSumFormula) {
+TEST_P(SubsetSumFormulaTest, QLiSymm_SubsetSumFormula) {
   DeltaExpr expr;
   for (int num_args = 4; num_args <= total_points(); num_args += 2) {
     for (const auto& seq : increasing_sequences(total_points(), num_args)) {
       const auto args = mapped(seq, [](int x) { return x + 1; });
       const int sign_proto = absl::c_accumulate(args, 0) + num_args / 2;
       const int sign = neg_one_pow(sign_proto);
-      expr += sign * LidoSymmVec(weight(), args);
+      expr += sign * QLiSymmVec(weight(), args);
     }
   }
   EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
@@ -165,20 +165,20 @@ INSTANTIATE_TEST_SUITE_P(SlowCases, SubsetSumFormulaTest, ::testing::Values(
 ));
 #endif
 
-TEST(LidoTest, LidoBuiltinProjection) {
+TEST(QLiTest, QLiBuiltinProjection) {
   EXPECT_EXPR_EQ(
-    project_on_x1(Lido3(1,2,3,4,5,6)),
-    LidoVecPr(3, {1,2,3,4,5,6}, project_on_x1)
+    project_on_x1(QLi3(1,2,3,4,5,6)),
+    QLiVecPr(3, {1,2,3,4,5,6}, project_on_x1)
   );
   EXPECT_EXPR_EQ(
-    project_on_x7(Lido3(1,7,3,4,5,6,7,8)),
-    LidoVecPr(3, {1,7,3,4,5,6,7,8}, project_on_x7)
+    project_on_x7(QLi3(1,7,3,4,5,6,7,8)),
+    QLiVecPr(3, {1,7,3,4,5,6,7,8}, project_on_x7)
   );
 }
 
-TEST(LidoTest, LidoSymmBuiltinProjection) {
+TEST(QLiTest, QLiSymmBuiltinProjection) {
   EXPECT_EXPR_EQ(
-    project_on_x4(LidoSymm3(1,2,3,4,5,6)),
-    LidoSymmVecPr(3, {1,2,3,4,5,6}, project_on_x4)
+    project_on_x4(QLiSymm3(1,2,3,4,5,6)),
+    QLiSymmVecPr(3, {1,2,3,4,5,6}, project_on_x4)
   );
 }
