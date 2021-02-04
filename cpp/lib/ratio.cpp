@@ -79,7 +79,7 @@ CompoundRatio CompoundRatio::from_compressed(Decompressor& decompressor) {
   const std::vector<int> size_vec = decompressor.next_segment();
   CHECK_EQ(size_vec.size(), kSizeBump);
   const int size = size_vec.front() - 1;
-  for (int i : range(size)) {
+  for (EACH : range(size)) {
     loops.push_back(decompressor.next_segment());
   }
   return CompoundRatio(std::move(loops));

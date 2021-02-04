@@ -37,7 +37,7 @@
 static constexpr auto cycle = loop_expr_cycle;
 
 LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
-  for (int _ : range(power)) {
+  for (EACH : range(power)) {
     expr = cycle(expr, cycles);
   }
   return expr;
@@ -330,7 +330,6 @@ int main(int argc, char *argv[]) {
 #if 1
   const int N = 11;
   const int num_points = N;
-  const int num_args = num_points / 2 - 1;
   auto source = sum_looped_vec(
     [&](const std::vector<X>& args) {
       return LiQuad(

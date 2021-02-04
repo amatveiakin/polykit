@@ -28,7 +28,7 @@ static constexpr inline bool is_one (int index) { return index == kOne; }
 
 std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights) {
   std::vector<int> dots;
-  for (int j : range(foreweight)) {
+  for (EACH : range(foreweight)) {
     dots.push_back(kZero);
   }
   dots.push_back(kOne);
@@ -37,7 +37,7 @@ std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights
     const int p = i + 1;
     CHECK_GE(w, 1);
     CHECK_GE(p, 1);
-    for (int j : range(1, w)) {
+    for (EACH : range(1, w)) {
       dots.push_back(kZero);
     }
     dots.push_back(p);

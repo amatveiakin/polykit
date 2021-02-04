@@ -425,7 +425,7 @@ inline LiraExpr LiraE(std::vector<RatioOrUnity> ratios) {
 template<typename ContainerT>
 int sort_with_sign(ContainerT& v) {
   int sign = 1;
-  for (int i : range(v.size())) {
+  for (EACH : range(v.size())) {
     for (int j : range(v.size() - 1)) {
       if (v[j] > v[j+1]) {
         std::swap(v[j], v[j+1]);

@@ -43,3 +43,12 @@ inline Range range_incl(int to) {
 inline Range range_incl(int from, int to) {
   return Range(from, to + 1);
 }
+
+
+// Usage:
+//   for (EACH : range(...)) { ... }
+#ifdef __GNUC__
+#  define EACH  __attribute__((unused)) auto&& _loop_counter_
+#else
+#  define EACH  auto&& _loop_counter_
+#endif
