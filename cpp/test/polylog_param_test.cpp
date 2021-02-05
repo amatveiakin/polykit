@@ -7,7 +7,7 @@
 
 TEST(LiParamTest, Serialization) {
   const LiParam orig{2, {1,3,5}, {{1},{3,4,5},{2}}};
-  Word encoded = li_param_to_key(orig);
+  auto encoded = li_param_to_key(orig);
   const LiParam decoded = key_to_li_param(encoded);
   EXPECT_EQ(orig.weights(), decoded.weights());
   EXPECT_EQ(orig.points(), decoded.points());

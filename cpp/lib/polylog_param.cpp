@@ -3,23 +3,22 @@
 #include "absl/algorithm/container.h"
 #include "absl/types/span.h"
 
-#include "compression.h"
 #include "format.h"
 #include "util.h"
 
 
-Word li_param_to_key(const LiParam& param) {
+CompressedBlob li_param_to_key(const LiParam& param) {
   Compressor compressor;
   compressor.add_segment({param.foreweight()});
   compressor.add_segment(param.weights());
   for (const auto& p : param.points()) {
     compressor.add_segment(p);
   }
-  return Word(std::move(compressor).result());
+  return std::move(compressor).result();
 }
 
-LiParam key_to_li_param(const Word& word) {
-  Decompressor decompressor(word.span());
+LiParam key_to_li_param(const CompressedBlob& key) {
+  Decompressor decompressor(key);
   std::vector<int> foreweight = decompressor.next_segment();
   CHECK_EQ(foreweight.size(), 1);
   std::vector<int> weights = decompressor.next_segment();

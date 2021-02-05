@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <limits>
 
 #include "absl/strings/str_cat.h"
 
@@ -10,7 +11,6 @@
 #include "linear.h"
 #include "packed.h"
 #include "util.h"
-#include "word.h"
 #include "x.h"
 
 
@@ -60,13 +60,18 @@ inline std::string to_string(const Delta& d) {
 }
 
 
+namespace internal {
+using DeltaDiffT = unsigned char;
+}  // namespace internal
+
+
 class DeltaAlphabetMapping {
 public:
   static constexpr int kMaxDimension = X::kMaxVariableIndex;
 
   DeltaAlphabetMapping() {
     static constexpr int kAlphabetSize = kMaxDimension * (kMaxDimension - 1) / 2;
-    static_assert(kAlphabetSize <= kWordAlphabetSize);
+    static_assert(kAlphabetSize <= std::numeric_limits<internal::DeltaDiffT>::max() + 1);
     deltas_.resize(kAlphabetSize);
     for (int b : range_incl(1, kMaxDimension)) {
       for (int a : range(1, b)) {
@@ -97,11 +102,11 @@ extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
 namespace internal {
-struct DeltaExprParam : IdentityVectorLinearParamMixin<PVector<unsigned char, 10>> {
+struct DeltaExprParam : IdentityVectorLinearParamMixin<PVector<DeltaDiffT, 10>> {
   using ObjectT = std::vector<Delta>;
-  using StorageT = PVector<unsigned char, 10>;
+  using StorageT = PVector<DeltaDiffT, 10>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) -> unsigned char {
+    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) -> DeltaDiffT {
       return delta_alphabet_mapping.to_alphabet(d);
     });
   }

@@ -2,7 +2,8 @@
 
 #include "absl/algorithm/container.h"
 
-#include "word.h"
+#include "compression.h"
+#include "util.h"
 
 
 class LiParam {
@@ -43,6 +44,6 @@ private:
   std::vector<std::vector<int>> points_;
 };
 
-Word li_param_to_key(const LiParam& params);
-LiParam key_to_li_param(const Word& word);
+CompressedBlob li_param_to_key(const LiParam& param);
+LiParam key_to_li_param(const CompressedBlob& key);
 std::string to_string(const LiParam& params);

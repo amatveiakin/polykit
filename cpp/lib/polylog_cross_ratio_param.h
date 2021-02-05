@@ -3,10 +3,10 @@
 #include <vector>
 
 #include "check.h"
+#include "compression.h"
 #include "ratio.h"
 #include "string.h"
 #include "util.h"
-#include "word.h"
 
 
 class LiraParam {
@@ -44,8 +44,8 @@ private:
   std::vector<CompoundRatio> ratios_;
 };
 
-Word lira_param_to_key(const LiraParam& params);
-LiraParam key_to_lira_param(const Word& word);
+CompressedBlob lira_param_to_key(const LiraParam& param);
+LiraParam key_to_lira_param(const CompressedBlob& key);
 std::string lira_param_function_name(int foreweight, const std::vector<int>& weights);
 std::string lira_param_function_name(const LiraParam& param);
 std::string to_string(const LiraParam& params);

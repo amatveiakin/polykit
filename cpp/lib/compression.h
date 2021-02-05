@@ -16,8 +16,23 @@ constexpr int kCompressionMaxValue = (1 << kCompressionShift) - 1;
 constexpr int kCompressionLowerValueMask = (1 << kCompressionShift) - 1;
 
 
-// TODO: Strong typing (after MultiWord is completely removed)
-using CompressedBlob = PVector<unsigned char, 10>;
+class CompressedBlob {
+public:
+  using DataT = PVector<unsigned char, 10>;
+
+  CompressedBlob(DataT data) : data_(std::move(data)) {}
+  absl::Span<const unsigned char> data() const { return data_; };
+
+  bool operator==(const CompressedBlob& other) const { return data_ == other.data_; }
+  bool operator< (const CompressedBlob& other) const { return data_ <  other.data_; }
+  template <typename H>
+  friend H AbslHashValue(H h, const CompressedBlob& blob) {
+    return H::combine(std::move(h), blob.data_);
+  }
+
+private:
+  DataT data_;
+};
 
 
 class Compressor {
@@ -32,7 +47,7 @@ private:
 
 class Decompressor {
 public:
-  Decompressor(absl::Span<const unsigned char> compressed);
+  Decompressor(const CompressedBlob& compressed_blob);
 
   bool done() const;
   std::vector<int> next_segment();

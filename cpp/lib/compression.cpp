@@ -20,16 +20,17 @@ void Compressor::add_segment(absl::Span<const int> data) {
 }
 
 CompressedBlob Compressor::result() && {
-  CompressedBlob ret;
+  CompressedBlob::DataT ret;
   for (int i = 0; i < uncompressed_.size(); i += kCompressionValuesPerByte) {
     const int a = uncompressed_[i];
     const int b = (i+1 < uncompressed_.size()) ? uncompressed_[i+1] : kCompressionSentinel;
     ret.push_back(compress_pair_no_check(a, b));
   }
-  return ret;
+  return CompressedBlob(ret);
 }
 
-Decompressor::Decompressor(absl::Span<const unsigned char> compressed) {
+Decompressor::Decompressor(const CompressedBlob& compressed_blob) {
+  const auto compressed = compressed_blob.data();
   CHECK(!compressed.empty());
   for (unsigned char ch : compressed) {
     int a, b;
