@@ -1,3 +1,21 @@
+// Functions that compute symbol for QLi and its variations.
+//
+// Contains three functions:
+//   * `QLi` corresponds to QLi+
+//   * `QLiNeg` corresponds to QLi-
+//   * `QLiSymm` is a symmetrized version of QLi (except weight 1 where it's just QLi)
+//
+// Each function can be called using one of the three forms (examples use QLi, but
+// the same is true for QLiNeg and QLiSymm):
+//   * Simple form: `QLiN(x1,x2,...,xk)` where N is weight, e.g. `QLi4(1,2,3,4,5,6)`.
+//   * Full form: `QLi(weight, vector_of_arguments)` e.g. `QLi(4, {1,2,3,4,5,6})`.
+//   * Projected form: `QLi(weight, vector_of_arguments, projector)`.
+//     Assuming that `projector` is indeed a projection, this is equivalent to
+//     `projector(QLi(weight, vector_of_arguments))` but faster.
+//
+// Any argument can be `Inf` denoting that the corresponding variable is sent to infinity.
+// In practice this means that any terms including this variable are discarded.
+
 #pragma once
 
 #include "delta_ratio.h"
@@ -6,26 +24,12 @@
 
 
 DeltaExpr QLiVec(int weight, SpanX points);
-
-// Assuming projector is indeed a projection, this is equivalent to
-//   projector(QLiVec(...))
-// but faster.
 ProjectionExpr QLiVecPr(int weight, SpanX points, DeltaProjector projector);
 
-
 DeltaExpr QLiNegVec(int weight, SpanX points);
-
-// Assuming projector is indeed a projection, this is equivalent to
-//   projector(QLiNegVec(...))
-// but faster.
 ProjectionExpr QLiNegVecPr(int weight, SpanX points, DeltaProjector projector);
 
-
 DeltaExpr QLiSymmVec(int weight, SpanX points);
-
-// Assuming projector is indeed a projection, this is equivalent to
-//   projector(QLiSymmVec(...))
-// but faster.
 ProjectionExpr QLiSymmVecPr(int weight, SpanX points, DeltaProjector projector);
 
 
