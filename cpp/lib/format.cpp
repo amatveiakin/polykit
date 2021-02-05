@@ -9,7 +9,7 @@
 
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
-  .set_formatter(Formatter::ascii)
+  .set_encoder(Encoder::ascii)
   .set_rich_text_format(RichTextFormat::native)
   .set_annotation_sorting(AnnotationSorting::lexicographic)
   .set_expression_line_limit(100)
@@ -74,7 +74,7 @@ static void apply_field_override(
 }
 
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
-  apply_field_override(formatter, src.formatter);
+  apply_field_override(encoder, src.encoder);
   apply_field_override(rich_text_format, src.rich_text_format);
   apply_field_override(annotation_sorting, src.annotation_sorting);
   apply_field_override(expression_line_limit, src.expression_line_limit);
@@ -102,11 +102,11 @@ ScopedFormatting::~ScopedFormatting() {
 
 ScopedRichTextOptions::ScopedRichTextOptions(std::ostream& os, const RichTextOptions& options) {
   stream = &os;
-  (*stream) << current_formatter()->begin_rich_text(options);
+  (*stream) << current_encoder()->begin_rich_text(options);
 }
 
 ScopedRichTextOptions::~ScopedRichTextOptions() {
-  (*stream) << current_formatter()->end_rich_text();
+  (*stream) << current_encoder()->end_rich_text();
 }
 
 
@@ -123,20 +123,20 @@ static std::string maybe_html_newline() {
 }
 
 
-std::string AbstractFormatter::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
-std::string AbstractFormatter::minus() { return "-"; }
+std::string AbstractEncoder::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
+std::string AbstractEncoder::minus() { return "-"; }
 
-std::string AbstractFormatter::sub_num(const std::string& main, const std::vector<int>& indices) {
+std::string AbstractEncoder::sub_num(const std::string& main, const std::vector<int>& indices) {
   return sub(main, ints_to_strings(indices));
 }
-std::string AbstractFormatter::super_num(const std::string& main, const std::vector<int>& indices) {
+std::string AbstractEncoder::super_num(const std::string& main, const std::vector<int>& indices) {
   return super(main, ints_to_strings(indices));
 }
-std::string AbstractFormatter::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
+std::string AbstractEncoder::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
   return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
 }
 
-std::string AbstractFormatter::begin_rich_text(const RichTextOptions& options) {
+std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
   switch (*current_formatting_config().rich_text_format) {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
@@ -150,7 +150,7 @@ std::string AbstractFormatter::begin_rich_text(const RichTextOptions& options) {
   FATAL("Illegal rich_text_format");
 }
 
-std::string AbstractFormatter::end_rich_text() {
+std::string AbstractEncoder::end_rich_text() {
   switch (*current_formatting_config().rich_text_format) {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
@@ -165,7 +165,7 @@ std::string AbstractFormatter::end_rich_text() {
 }
 
 
-class AsciiFormatter : public AbstractFormatter {
+class AsciiEncoder : public AbstractEncoder {
   std::string newline() override { return maybe_html_newline(); }
   std::string inf() override { return "Inf"; }
   std::string dot() override { return "."; }
@@ -265,7 +265,7 @@ class AsciiFormatter : public AbstractFormatter {
 };
 
 
-class UnicodeFormatter : public AbstractFormatter {
+class UnicodeEncoder : public AbstractEncoder {
   static constexpr char kNbsp[] = " ";
   // static constexpr char kThinSpace[] = " ";
   static constexpr char kThinNbsp[] = " ";
@@ -374,7 +374,7 @@ class UnicodeFormatter : public AbstractFormatter {
   }
   static std::string string_to_subscript(const std::string& str) {
     CHECK_EQ(str.size(), 1) << str
-      << "Unicode formatter doesn't support multi-character subscripts: there are "
+      << "Unicode encoder doesn't support multi-character subscripts: there are "
       << "no subscript commas in Unicode, so there is no way to separate the indices.";
     std::string ret;
     for (const char ch : str) {
@@ -384,7 +384,7 @@ class UnicodeFormatter : public AbstractFormatter {
   }
   static std::string string_to_superscript(const std::string& str) {
     CHECK_EQ(str.size(), 1) << str
-      << "Unicode formatter doesn't support multi-character superscripts: there are "
+      << "Unicode encoder doesn't support multi-character superscripts: there are "
       << "no superscript commas in Unicode, so there is no way to separate the indices.";
     std::string ret;
     for (const char ch : str) {
@@ -424,7 +424,7 @@ class UnicodeFormatter : public AbstractFormatter {
 };
 
 
-class LatexFormatter : public AbstractFormatter {
+class LatexEncoder : public AbstractEncoder {
   std::string newline() override { return "\\\\\n"; }
   // TODO: Make sure all op signs are in fact math ops from Latex point of view
   std::string inf() override { return "\\infty"; }
@@ -528,15 +528,15 @@ class LatexFormatter : public AbstractFormatter {
 };
 
 
-static AbstractFormatter* ascii_formatter = new AsciiFormatter;
-static AbstractFormatter* unicode_formatter = new UnicodeFormatter;
-static AbstractFormatter* latex_formatter = new LatexFormatter;
+static AbstractEncoder* ascii_encoder = new AsciiEncoder;
+static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
+static AbstractEncoder* latex_encoder = new LatexEncoder;
 
-AbstractFormatter* current_formatter() {
-  switch (*current_formatting_config().formatter) {
-    case Formatter::ascii:      return ascii_formatter;
-    case Formatter::unicode:    return unicode_formatter;
-    case Formatter::latex:      return latex_formatter;
+AbstractEncoder* current_encoder() {
+  switch (*current_formatting_config().encoder) {
+    case Encoder::ascii:      return ascii_encoder;
+    case Encoder::unicode:    return unicode_encoder;
+    case Encoder::latex:      return latex_encoder;
   }
-  FATAL("Unknown formatter");
+  FATAL("Unknown encoder");
 }

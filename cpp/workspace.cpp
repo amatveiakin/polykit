@@ -319,27 +319,13 @@ int main(int argc, char *argv[]) {
   absl::InstallFailureSignalHandler({});
 
   ScopedFormatting sf(FormattingConfig()
-    // .set_formatter(Formatter::ascii)
-    .set_formatter(Formatter::unicode)
+    // .set_encoder(Encoder::ascii)
+    .set_encoder(Encoder::unicode)
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
+    // .set_expression_line_limit(10)
     .set_annotation_sorting(AnnotationSorting::length)
   );
-
-  Profiler profiler;
-  const auto q4 = CoLi(3,2,1,1,1)({1},{2},{3,4},{5},{6});
-  profiler.finish("Expr Z");
-  const auto q1 = LiQuad(3, {1,2,3,4,5,6,7,8,9,10,11,12,13,14});
-  profiler.finish("Expr A");
-  const auto q2 = CoLi(3,4)({1},{2});
-  profiler.finish("Expr B1");
-  const auto q3 = epsilon_coexpr_to_theta_coexpr(q2, {
-    {CR(1,2,3,6)},
-    {CR(3,4,5,6)},
-  });
-  profiler.finish("Expr B2");
-  std::cout << "Checksum = " << q1.l1_norm() + q3.l1_norm() + q4.l1_norm() << "\n";
-  return 0;
 
 
 #if 1
