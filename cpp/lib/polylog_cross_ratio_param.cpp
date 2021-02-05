@@ -4,25 +4,26 @@
 #include "util.h"
 
 
-CompressedBlob lira_param_to_key(const LiraParam& param) {
+LiraParamCompressed lira_param_to_key(const LiraParam& param) {
   Compressor compressor;
   compressor.add_segment({param.foreweight()});
   compressor.add_segment(param.weights());
   for (const auto& r : param.ratios()) {
-    r.compress(compressor);
+    compress_compound_ratio(r, compressor);
   }
-  return std::move(compressor).result();
+  return std::move(compressor).result<LiraParamCompressed>();
 }
 
-LiraParam key_to_lira_param(const CompressedBlob& key) {
+LiraParam key_to_lira_param(const LiraParamCompressed& key) {
   Decompressor decompressor(key);
   std::vector<int> foreweight = decompressor.next_segment();
   CHECK_EQ(foreweight.size(), 1);
   std::vector<int> weights = decompressor.next_segment();
   std::vector<CompoundRatio> ratios;
   while (!decompressor.done()) {
-    ratios.push_back(CompoundRatio::from_compressed(decompressor));
+    ratios.push_back(uncompress_compound_ratio(decompressor));
   }
+  CHECK(decompressor.done());
   return LiraParam(foreweight.front(), std::move(weights), std::move(ratios));
 }
 

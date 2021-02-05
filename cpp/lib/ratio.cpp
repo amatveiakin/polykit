@@ -74,25 +74,6 @@ std::string dependent_cross_ratio_formula(
 }
 
 
-CompoundRatio CompoundRatio::from_compressed(Decompressor& decompressor) {
-  std::vector<std::vector<int>> loops;
-  const std::vector<int> size_vec = decompressor.next_segment();
-  CHECK_EQ(size_vec.size(), kSizeBump);
-  const int size = size_vec.front() - 1;
-  for (EACH : range(size)) {
-    loops.push_back(decompressor.next_segment());
-  }
-  return CompoundRatio(std::move(loops));
-}
-
-void CompoundRatio::compress(Compressor& compressor) const {
-  // Compressor doesn't support zeroes
-  compressor.add_segment({int(loops_.size()) + kSizeBump});
-  for (const auto& l : loops_) {
-    compressor.add_segment(l);
-  }
-}
-
 void CompoundRatio::check() const {
   for (const auto& points : loops_) {
     CHECK(points.size() % 2 == 0);
@@ -156,6 +137,41 @@ std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio
     }
   }
   return std::nullopt;
+}
+
+static constexpr int kCompressionSizeBump = 1;
+
+void compress_compound_ratio(const CompoundRatio& ratio, Compressor& compressor) {
+  const auto& loops = ratio.loops();
+  // Compressor doesn't support zeroes, hence kCompressionSizeBump
+  compressor.add_segment({int(loops.size()) + kCompressionSizeBump});
+  for (const auto& l : loops) {
+    compressor.add_segment(l);
+  }
+}
+
+CompoundRatio uncompress_compound_ratio(Decompressor& decompressor) {
+  std::vector<std::vector<int>> loops;
+  const std::vector<int> size_vec = decompressor.next_segment();
+  CHECK_EQ(size_vec.size(), kCompressionSizeBump);
+  const int size = size_vec.front() - 1;
+  for (EACH : range(size)) {
+    loops.push_back(decompressor.next_segment());
+  }
+  return CompoundRatio(std::move(loops));
+}
+
+CompoundRatioCompressed compress_compound_ratio(const CompoundRatio& ratio) {
+  Compressor compressor;
+  compress_compound_ratio(ratio, compressor);
+  return std::move(compressor).result<CompoundRatioCompressed>();
+}
+
+CompoundRatio uncompress_compound_ratio(const CompoundRatioCompressed& data) {
+  Decompressor decompressor(data);
+  CompoundRatio ret = uncompress_compound_ratio(decompressor);
+  CHECK(decompressor.done());
+  return ret;
 }
 
 std::string to_string(const CompoundRatio& ratio) {

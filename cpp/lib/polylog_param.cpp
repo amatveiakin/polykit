@@ -7,17 +7,17 @@
 #include "util.h"
 
 
-CompressedBlob li_param_to_key(const LiParam& param) {
+LiParamCompressed li_param_to_key(const LiParam& param) {
   Compressor compressor;
   compressor.add_segment({param.foreweight()});
   compressor.add_segment(param.weights());
   for (const auto& p : param.points()) {
     compressor.add_segment(p);
   }
-  return std::move(compressor).result();
+  return std::move(compressor).result<LiParamCompressed>();
 }
 
-LiParam key_to_li_param(const CompressedBlob& key) {
+LiParam key_to_li_param(const LiParamCompressed& key) {
   Decompressor decompressor(key);
   std::vector<int> foreweight = decompressor.next_segment();
   CHECK_EQ(foreweight.size(), 1);
@@ -26,6 +26,7 @@ LiParam key_to_li_param(const CompressedBlob& key) {
   while (!decompressor.done()) {
     points.push_back(decompressor.next_segment());
   }
+  CHECK(decompressor.done());
   return LiParam(foreweight.front(), std::move(weights), std::move(points));
 }
 

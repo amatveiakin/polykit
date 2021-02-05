@@ -16,12 +16,15 @@ constexpr int kCompressionMaxValue = (1 << kCompressionShift) - 1;
 constexpr int kCompressionLowerValueMask = (1 << kCompressionShift) - 1;
 
 
+namespace internal {
+using CompressedBlobData = PVector<unsigned char, 10>;
+}  // namespace internal
+
+template<typename Tag>
 class CompressedBlob {
 public:
-  using DataT = PVector<unsigned char, 10>;
-
-  CompressedBlob(DataT data) : data_(std::move(data)) {}
-  absl::Span<const unsigned char> data() const { return data_; };
+  CompressedBlob(internal::CompressedBlobData data) : data_(std::move(data)) {}
+  const internal::CompressedBlobData& data() const { return data_; };
 
   bool operator==(const CompressedBlob& other) const { return data_ == other.data_; }
   bool operator< (const CompressedBlob& other) const { return data_ <  other.data_; }
@@ -31,28 +34,45 @@ public:
   }
 
 private:
-  DataT data_;
+  internal::CompressedBlobData data_;
 };
+
+namespace internal {
+template<typename T>
+struct IsCompressedBlob { static constexpr bool value = false; };
+template<typename T>
+struct IsCompressedBlob<CompressedBlob<T>> { static constexpr bool value = true; };
+}  // namespace internal
 
 
 class Compressor {
 public:
   // `data` must not contain kCompressionSentinel.
   void add_segment(absl::Span<const int> data);
-  CompressedBlob result() &&;
+
+  template<typename CompressedBlobT>
+  CompressedBlobT result() && {
+    static_assert(internal::IsCompressedBlob<CompressedBlobT>::value);
+    return CompressedBlobT(result_impl());
+  }
 
 private:
+  internal::CompressedBlobData result_impl();
+
   std::vector<int> uncompressed_;
 };
 
 class Decompressor {
 public:
-  Decompressor(const CompressedBlob& compressed_blob);
+  template<typename Tag>
+  Decompressor(const CompressedBlob<Tag>& compressed_blob) : Decompressor(compressed_blob.data()) {}
 
   bool done() const;
   std::vector<int> next_segment();
 
 private:
+  Decompressor(const internal::CompressedBlobData& compressed);
+
   std::vector<int> decompressed_;
   absl::Span<const int> remainder_;
 };

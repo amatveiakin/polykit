@@ -62,7 +62,7 @@ inline std::string to_string(const ThetaPack& pack) {
 constexpr int kThetaCoExprComponents = 2;
 
 namespace internal {
-using ThetaStorageType = std::variant<Delta, CompressedBlob>;
+using ThetaStorageType = std::variant<Delta, CompoundRatioCompressed>;
 // Optimization potential: Compress LiraParam too.
 using ThetaProductStorageType = PVector<ThetaStorageType, 4>;
 using ThetaPackStorageType = std::variant<ThetaProductStorageType, LiraParam>;
@@ -73,9 +73,7 @@ inline ThetaStorageType theta_to_key(const Theta& t) {
       return ThetaStorageType(d);
     },
     [](const ThetaComplement& complement) {
-      Compressor compressor;
-      complement.ratio().compress(compressor);
-      return ThetaStorageType(std::move(compressor).result());
+      return ThetaStorageType(compress_compound_ratio(complement.ratio()));
     },
   }, t);
 }
@@ -85,11 +83,8 @@ inline Theta key_to_theta(ThetaStorageType key) {
     [](const Delta& d) {
       return Theta(d);
     },
-    [](const CompressedBlob& complement_compressed) {
-      Decompressor decompressor(complement_compressed);
-      Theta ret = ThetaComplement(CompoundRatio::from_compressed(decompressor));
-      CHECK(decompressor.done());
-      return ret;
+    [](const CompoundRatioCompressed& complement_compressed) {
+      return Theta(ThetaComplement(uncompress_compound_ratio(complement_compressed)));
     },
   }, key);
 }

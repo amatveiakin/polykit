@@ -167,9 +167,6 @@ public:
     return ret;
   }
 
-  static CompoundRatio from_compressed(Decompressor& decompressor);
-  void compress(Compressor& compressor) const;
-
   bool is_unity() const { return loops_.empty(); };
 
   void add(const CompoundRatio& ratio) {
@@ -196,9 +193,14 @@ private:
   void check() const;
   void normalize();
 
-  static constexpr int kSizeBump = 1;
-
   std::vector<std::vector<int>> loops_;
 };
+
+using CompoundRatioCompressed = CompressedBlob<CompoundRatio>;
+
+void compress_compound_ratio(const CompoundRatio& ratio, Compressor& compressor);
+CompoundRatioCompressed compress_compound_ratio(const CompoundRatio& ratio);
+CompoundRatio uncompress_compound_ratio(Decompressor& decompressor);
+CompoundRatio uncompress_compound_ratio(const CompoundRatioCompressed& data);
 
 std::string to_string(const CompoundRatio& ratio);

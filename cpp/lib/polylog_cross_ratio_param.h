@@ -44,8 +44,10 @@ private:
   std::vector<CompoundRatio> ratios_;
 };
 
-CompressedBlob lira_param_to_key(const LiraParam& param);
-LiraParam key_to_lira_param(const CompressedBlob& key);
+using LiraParamCompressed = CompressedBlob<LiraParam>;
+
+LiraParamCompressed lira_param_to_key(const LiraParam& param);
+LiraParam key_to_lira_param(const LiraParamCompressed& key);
 std::string lira_param_function_name(int foreweight, const std::vector<int>& weights);
 std::string lira_param_function_name(const LiraParam& param);
 std::string to_string(const LiraParam& params);

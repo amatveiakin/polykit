@@ -44,6 +44,8 @@ private:
   std::vector<std::vector<int>> points_;
 };
 
-CompressedBlob li_param_to_key(const LiParam& param);
-LiParam key_to_li_param(const CompressedBlob& key);
+using LiParamCompressed = CompressedBlob<LiParam>;
+
+LiParamCompressed li_param_to_key(const LiParam& param);
+LiParam key_to_li_param(const LiParamCompressed& key);
 std::string to_string(const LiParam& params);
