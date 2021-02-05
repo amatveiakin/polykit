@@ -147,8 +147,7 @@ inline Epsilon key_to_epsilon(EpsilonStorageType key) {
 struct EpsilonExprParam {
   using ObjectT = EpsilonPack;
   using ProductT = PVector<EpsilonStorageType, 8>;
-  // Optimization potential: pack LiParam as well.
-  using StorageT = std::variant<ProductT, LiParam>;
+  using StorageT = std::variant<ProductT, LiParamCompressed>;
   using VectorT = ProductT;
   static StorageT object_to_key(const ObjectT& obj) {
     return std::visit(overloaded{
@@ -156,7 +155,7 @@ struct EpsilonExprParam {
         return mapped_to_pvector<ProductT>(product, epsilon_to_key);
       },
       [](const LiParam& formal_symbol) -> StorageT {
-        return formal_symbol;
+        return li_param_to_key(formal_symbol);
       },
     }, obj);
   }
@@ -165,8 +164,8 @@ struct EpsilonExprParam {
       [](const ProductT& product) -> ObjectT {
         return mapped(product, key_to_epsilon);
       },
-      [](const LiParam& formal_symbol) -> ObjectT {
-        return formal_symbol;
+      [](const LiParamCompressed& compressed) -> ObjectT {
+        return key_to_li_param(compressed);
       },
     }, key);
   }

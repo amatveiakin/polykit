@@ -63,9 +63,8 @@ constexpr int kThetaCoExprComponents = 2;
 
 namespace internal {
 using ThetaStorageType = std::variant<Delta, CompoundRatioCompressed>;
-// Optimization potential: Compress LiraParam too.
 using ThetaProductStorageType = PVector<ThetaStorageType, 4>;
-using ThetaPackStorageType = std::variant<ThetaProductStorageType, LiraParam>;
+using ThetaPackStorageType = std::variant<ThetaProductStorageType, LiraParamCompressed>;
 
 inline ThetaStorageType theta_to_key(const Theta& t) {
   return std::visit(overloaded{
@@ -97,7 +96,7 @@ inline ThetaPackStorageType theta_pack_to_key(const ThetaPack& pack) {
       );
     },
     [](const LiraParam& formal_symbol) {
-      return ThetaPackStorageType(formal_symbol);
+      return ThetaPackStorageType(lira_param_to_key(formal_symbol));
     },
   }, pack);
 }
@@ -107,8 +106,8 @@ inline ThetaPack key_to_theta_pack(const ThetaPackStorageType& key) {
     [](const ThetaProductStorageType& product) {
       return ThetaPack(mapped(product, key_to_theta));
     },
-    [](const LiraParam& formal_symbol) {
-      return ThetaPack(formal_symbol);
+    [](const LiraParamCompressed& compressed) {
+      return ThetaPack(key_to_lira_param(compressed));
     },
   }, key);
 }
