@@ -5,10 +5,8 @@
 #include "format.h"
 #include "lexicographical.h"
 #include "linear.h"
-#include "multiword.h"
 #include "packed.h"
 #include "util.h"
-#include "word.h"
 
 
 struct CorrFSymb {
@@ -29,22 +27,7 @@ inline std::string to_string(const CorrFSymb& fsymb) {
   );
 }
 
-#define OLD_CORR_EXPR 0
-#if OLD_CORR_EXPR  // DEPRECATED[word-to-pvector]
-struct CorrExprParam {
-  using ObjectT = CorrFSymb;
-  using StorageT = Word;
-  static StorageT object_to_key(const ObjectT& obj) {
-    return Word(obj.points.begin(), obj.points.end());
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    return CorrFSymb{mapped(key.span(), [](int ch){ return ch; })};
-  }
-  static std::string object_to_string(const ObjectT& obj) {
-    return to_string(obj);
-  }
-};
-#else
+namespace internal {
 struct CorrExprParam {
   using ObjectT = CorrFSymb;
   using StorageT = PVector<unsigned char, 10>;
@@ -58,9 +41,9 @@ struct CorrExprParam {
     return to_string(obj);
   }
 };
-#endif
+}  // namespace internal
 
-using CorrExpr = Linear<CorrExprParam>;
+using CorrExpr = Linear<internal::CorrExprParam>;
 
 CorrExpr corr_expr_substitute(const CorrExpr& expr, const std::vector<int>& new_points);
 
@@ -73,6 +56,7 @@ inline std::string to_string(const CoCorrFSymb& fsymb) {
   return str_join(fsymb, fmt::coprod_lie());
 }
 
+namespace internal {
 struct CorrCoExprParam {
   using ObjectT = CoCorrFSymb;
   using StorageT = std::array<CorrExprParam::StorageT, kCorrCoExprComponents>;
@@ -87,9 +71,9 @@ struct CorrCoExprParam {
   }
   static constexpr bool coproduct_is_lie_algebra = true;
 };
+}  // namespace internal
 
-
-using CorrCoExpr = Linear<CorrCoExprParam>;
+using CorrCoExpr = Linear<internal::CorrCoExprParam>;
 
 CorrCoExpr corr_coproduct(const CorrExpr& lhs, const CorrExpr& rhs);
 CorrCoExpr corr_comultiply(const CorrExpr& expr, std::pair<int, int> form);

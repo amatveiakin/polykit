@@ -10,9 +10,7 @@
 #include "delta_ratio.h"
 #include "epsilon.h"
 #include "format.h"
-#include "multiword.h"
 #include "polylog_cross_ratio_param.h"
-#include "word.h"
 
 
 class ThetaComplement {
@@ -63,140 +61,6 @@ inline std::string to_string(const ThetaPack& pack) {
 
 constexpr int kThetaCoExprComponents = 2;
 
-#define OLD_THETA 0
-#if OLD_THETA  // DEPRECATED[word-to-pvector]
-namespace internal {
-using ThetaStorageType = Word;
-
-enum ThetaPackType {
-  kThetaPackTypeProduct = 0,
-  kThetaPackTypeFormalSymbol = 1,
-};
-
-// Idea: Store just the data. We don't need a type bit, because Delta
-// is always one byte and CompoundRatio is always more.
-inline ThetaStorageType theta_to_key(const Theta& t) {
-  return std::visit(overloaded{
-    [](const Delta& d) {
-      return Word({delta_alphabet_mapping.to_alphabet(d)});
-    },
-    [](const ThetaComplement& complement) {
-      Compressor compressor;
-      complement.ratio().compress(compressor);
-      return Word(std::move(compressor).result());
-    },
-  }, t);
-}
-
-inline Theta key_to_theta(ThetaStorageType key) {
-  if (key.size() == 1) {
-    return delta_alphabet_mapping.from_alphabet(key.front());
-  } else {
-    Decompressor decompressor(key.span());
-    Theta ret = ThetaComplement(CompoundRatio::from_compressed(decompressor));
-    CHECK(decompressor.done());
-    return ret;
-  }
-}
-
-inline MultiWord theta_pack_to_key(const ThetaPack& pack) {
-  return std::visit(overloaded{
-    [](const std::vector<Theta>& product) {
-      MultiWord ret;
-      ret.append_segment(Word({kThetaPackTypeProduct}));
-      for (const Theta& t : product) {
-        ret.append_segment(theta_to_key(t));
-      }
-      return ret;
-    },
-    [](const LiraParam& formal_symbol) {
-      MultiWord ret;
-      ret.append_segment(Word({kThetaPackTypeFormalSymbol}));
-      ret.append_segment(lira_param_to_key(formal_symbol));
-      return ret;
-    },
-  }, pack);
-}
-
-inline ThetaPackType key_to_theta_pack_type(const MultiWord& key) {
-  CHECK(!key.empty());
-  CHECK(!key.segment(0).empty());
-  return ThetaPackType(key.segment(0)[0]);
-}
-
-class ThetaPackDataRange {
-public:
-  ThetaPackDataRange(MultiWord::const_iterator begin, MultiWord::const_iterator end)
-    : begin_(begin), end_(end) {}
-  MultiWord::const_iterator begin() const { return begin_; }
-  MultiWord::const_iterator end() const { return end_; }
-private:
-  MultiWord::const_iterator begin_;
-  MultiWord::const_iterator end_;
-};
-
-inline ThetaPackDataRange key_to_theta_pack_data_range(const MultiWord& key) {
-  auto begin = key.begin();
-  ++begin;
-  return ThetaPackDataRange{begin, key.end()};
-}
-
-inline ThetaPack key_to_theta_pack(const MultiWord& key) {
-  const ThetaPackType type = key_to_theta_pack_type(key);
-  const auto data_range = key_to_theta_pack_data_range(key);
-  switch (type) {
-    case kThetaPackTypeProduct: {
-      std::vector<Theta> ret;
-      for (const auto& segment : data_range) {
-        ret.push_back(key_to_theta(Word(segment)));
-      }
-      return ret;
-    }
-    case kThetaPackTypeFormalSymbol: {
-      auto next = data_range.begin();
-      ++next;
-      CHECK(next == data_range.end());
-      return key_to_lira_param(Word(*data_range.begin()));
-    }
-  }
-  FATAL(absl::StrCat("Bad ThetaPack type = ", type, "; key = ", to_string(key)));
-}
-
-struct ThetaExprParam {
-  using ObjectT = ThetaPack;
-  using StorageT = MultiWord;
-  static StorageT object_to_key(const ObjectT& obj) {
-    return theta_pack_to_key(obj);
-  }
-  static ObjectT key_to_object(const StorageT& key) {
-    return key_to_theta_pack(key);
-  }
-  static std::string object_to_string(const ObjectT& obj) {
-    return to_string(obj);
-  }
-  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
-    const auto type = key_to_theta_pack_type(lhs);
-    CHECK_EQ(type, key_to_theta_pack_type(rhs));
-    CHECK_EQ(type, kThetaPackTypeProduct) << "Tensor product for formal symbols is not defined";
-    MultiWord ret = lhs;
-    for (const auto& segment : key_to_theta_pack_data_range(rhs)) {
-      ret.append_segment(segment);
-    }
-    return ret;
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return std::visit(overloaded{
-      [](const std::vector<Theta>& product) -> int {
-        return product.size();
-      },
-      [](const LiraParam& formal_symbol) -> int {
-        return formal_symbol.total_weight();
-      },
-    }, obj);
-  }
-};
-}  // namespace internal
-#else
 namespace internal {
 using ThetaStorageType = std::variant<Delta, CompressedBlob>;
 // Optimization potential: Compress LiraParam too.
@@ -307,7 +171,7 @@ struct ThetaCoExprParam {
   static constexpr bool coproduct_is_lie_algebra = false;
 };
 }  // namespace internal
-#endif
+
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
 using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;

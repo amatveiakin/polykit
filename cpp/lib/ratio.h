@@ -8,7 +8,6 @@
 #include "compression.h"
 #include "string.h"
 #include "util.h"
-#include "word.h"
 
 
 constexpr int kCrossRatioElements = 4;

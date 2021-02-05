@@ -7,7 +7,6 @@ cc_library(
         "lib/circular_view.h",
         "lib/compression.h",
         "lib/format.h",
-        "lib/hash.h",
         "lib/lexicographical.h",
         "lib/macros.h",
         "lib/metaprogramming.h",
@@ -48,7 +47,6 @@ cc_library(
         "lib/epsilon.h",
         "lib/linear.h",
         "lib/lyndon.h",
-        "lib/multiword.h",
         "lib/polylog_cross_ratio_param.h",
         "lib/polylog_param.h",
         "lib/projection.h",
@@ -57,7 +55,6 @@ cc_library(
         "lib/shuffle.h",
         "lib/summation.h",
         "lib/theta.h",
-        "lib/word.h",
         "lib/x.h",
     ],
     srcs = [
@@ -69,7 +66,6 @@ cc_library(
         "lib/projection.cpp",
         "lib/ratio.cpp",
         "lib/theta.cpp",
-        "lib/word.cpp",
     ],
     deps = [
         "@absl//absl/strings:strings",
