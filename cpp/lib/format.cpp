@@ -35,8 +35,8 @@ std::string get_command_for_console_rich_text_options() {
     : absl::StrCat("\033[", static_cast<int>(options.text_color), "m");
 }
 
-// Note: color brightness is inverted, because console is white-on-black
-// and html is black-on-white.
+// Note. Color brightness is inverted, because console is white-on-black and
+// html is black-on-white.
 std::string text_color_to_html_color(TextColor color) {
   switch (color) {
     case TextColor::normal:         return "Black";
@@ -52,6 +52,31 @@ std::string text_color_to_html_color(TextColor color) {
     case TextColor::bright_blue:    return "Blue";
     case TextColor::bright_magenta: return "Magenta";
     case TextColor::bright_cyan:    return "DarkCyan";
+  }
+  FATAL(absl::StrCat("Unknown color: ", color));
+}
+
+// Note. Color brightness is inverted, because console is white-on-black and\
+// LaTeX is black-on-white.
+// Note. Color names are case-sensitive. Basic colors start with a small letter
+// and additional colors provided by `dvipsnames` option start with a capital
+// letter. Colors that differ only in case can be very different, e.g. "Green"
+// is much darker than "green".
+std::string text_color_to_latex_color(TextColor color) {
+  switch (color) {
+    case TextColor::normal:         return "black";
+    case TextColor::red:            return "Salmon";
+    case TextColor::green:          return "LimeGreen";
+    case TextColor::yellow:         return "yellow";
+    case TextColor::blue:           return "SkyBlue";
+    case TextColor::magenta:        return "Lavender";
+    case TextColor::cyan:           return "Turquoise";
+    case TextColor::bright_red:     return "red";
+    case TextColor::bright_green:   return "Green";
+    case TextColor::bright_yellow:  return "Goldenrod";
+    case TextColor::bright_blue:    return "blue";
+    case TextColor::bright_magenta: return "magenta";
+    case TextColor::bright_cyan:    return "cyan";
   }
   FATAL(absl::StrCat("Unknown color: ", color));
 }
@@ -515,15 +540,13 @@ class LatexEncoder : public AbstractEncoder {
     if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
-    // TODO: implement
-    return {};
+    return absl::StrCat("\\textcolor{", text_color_to_latex_color(options.text_color), "}{");
   }
   std::string end_rich_text() override {
     if (*current_formatting_config().rich_text_format != RichTextFormat::native) {
       return {};
     }
-    // TODO: implement
-    return {};
+    return "}";
   }
 };
 

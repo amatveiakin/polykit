@@ -70,8 +70,14 @@ public:
 };
 
 
-// These are console colors. In HTML mode color brightness is reversed,
-// because console assumes white-on-black and HTML is black-on-white.
+// These are console colors. In HTML and LaTeX modes color brightness is reversed,
+// because console assumes white-on-black and the others are black-on-white.
+// Prefer colors starting with "bright": these are good vivid options, while the
+// dark versions are rather pale.
+//
+// When using colors in LaTeX add
+//    \usepackage[dvipsnames]{xcolor}
+// to the preambule.
 enum class TextColor {
   normal         = 0,
   red            = 31,
