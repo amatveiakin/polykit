@@ -43,15 +43,23 @@ LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, i
   return expr;
 }
 
-LoopExpr keep_var(const LoopExpr& expr, int var) {
+LoopExpr keep_term(const LoopExpr& expr, int type) {
   return expr.filtered([&](const Loops& loops) {
-    return loops_names.loops_index(loops) == var;
+    return loops_names.loops_index(loops) == type;
   });
+}
+
+int num_distinct_term_types(const LoopExpr& expr) {
+  std::vector<int> term_types;
+  expr.foreach([&](const Loops& loops, int) {
+    term_types.push_back(loops_names.loops_index(loops));
+  });
+  return num_distinct_elements(term_types);
 }
 
 LoopExpr preshow(const LoopExpr& expr) {
   return expr;
-  // return keep_var(expr, 5);
+  // return keep_term(expr, 7);
   // return arg11_shuffle_cluster(expr);
 }
 
@@ -76,17 +84,18 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_ty
   };
   const auto update_victim = [&](const LoopExpr& bonus, int sign, std::string description) {
     const auto new_victim_candidate = victim + sign * bonus;
-    if (keep_var(new_victim_candidate, target_type).l1_norm() < keep_var(victim, target_type).l1_norm()) {
+    if (keep_term(new_victim_candidate, target_type).l1_norm() < keep_term(victim, target_type).l1_norm()) {
       victim = new_victim_candidate;
       std::cout << fmt::coeff(sign) << description << "\n";
     }
   };
+  std::cout << ".\n";
   for (const auto& permutation : symmetries) {
     for (int sign : {-1, 1}) {
       update_victim(
         cycle(killer, permutation),
         sign,
-        "symmetry: " + permutation_to_string(permutation)
+        "symmetry " + permutation_to_string(permutation)
       );
     }
   }
@@ -139,7 +148,7 @@ absl::flat_hash_map<int, int> get_substitution(const Loops& from, const Loops& t
   absl::flat_hash_map<int, int> ret;
   for (auto [a, b] : zip(flatten(from), flatten(to))) {
     if (ret.contains(a)) {
-      CHECK(ret.at(a) == b);
+      CHECK(ret.at(a) == b) << "\n" << LoopExprParam::object_to_string(from) << "\n" << LoopExprParam::object_to_string(to);
     } else {
       ret[a] = b;
     }
@@ -148,36 +157,59 @@ absl::flat_hash_map<int, int> get_substitution(const Loops& from, const Loops& t
 }
 
 LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
+  const auto expr_complexity = [&](const LoopExpr& expr) {
+    return std::tuple{
+      keep_term(expr, target_type).l1_norm(),
+      num_distinct_term_types(expr),
+      expr.l1_norm(),
+    };
+  };
   std::cout << ".\n";
-  Loops killer_term;
+  std::vector<Loops> killer_terms;
   killer.foreach([&](const Loops& loops, int) {
     if (loops_names.loops_index(loops) == target_type) {
-      killer_term = loops;
+      killer_terms.push_back(loops);
     }
   });
-  CHECK(!killer_term.empty());
+  CHECK(!killer_terms.empty()) << "Term type " << target_type << " not found in\n" << killer;
   bool stuck = false;
   while (!stuck) {
     stuck = true;
-    Loops victim_term;
+    std::vector<Loops> victim_terms;
     victim.foreach([&](const Loops& loops, int) {
       if (loops_names.loops_index(loops) == target_type) {
-        victim_term = loops;
+        victim_terms.push_back(loops);
       }
     });
-    if (victim_term.empty()) {
+    if (victim_terms.empty()) {
       break;  // everything killed already
     }
-    // NOTE. Assumes canonical form.
-    // NOTE. Doesn't take into account different ways of treating symmetries.
-    const auto subst = get_substitution(killer_term, victim_term);
-    for (int sign : {-1, 1}) {
-      const auto new_victim_candidate = victim + sign * loop_expr_substitute(killer, subst);
-      if (keep_var(new_victim_candidate, target_type).l1_norm() < keep_var(victim, target_type).l1_norm()) {
-        stuck = false;
-        victim = new_victim_candidate;
-        std::cout << fmt::coeff(sign) << "cycle " << permutation_to_string(substitutions_to_cycles(subst)) << "\n";
+    std::optional<LoopExpr> best_candidate;
+    std::string best_candidate_description;
+    for (const Loops& killer_term : killer_terms) {
+      for (const Loops& victim_term : victim_terms) {
+        // NOTE. Assumes canonical form.
+        // TODO: take into account different ways of treating symmetries.
+        const auto subst = get_substitution(killer_term, victim_term);
+        const auto killer_subst = loop_expr_substitute(killer, subst);
+        for (int sign : {-1, 1}) {
+          const auto new_candidate = victim + sign * killer_subst;
+          if (keep_term(new_candidate, target_type).l1_norm() < keep_term(victim, target_type).l1_norm()) {
+            // std::cout << ">>> " << absl::StrCat(fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)))
+            //     << " : " << new_candidate << " => " << dump_to_string(expr_complexity(new_candidate)) << "\n\n";
+            if (!best_candidate || expr_complexity(new_candidate) < expr_complexity(*best_candidate)) {
+              best_candidate = new_candidate;
+              best_candidate_description = absl::StrCat(
+                  fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)));
+            }
+          }
+        }
       }
+    }
+    if (best_candidate) {
+      stuck = false;
+      victim = *best_candidate;
+      std::cout << best_candidate_description << "\n";
     }
   }
   return victim;
@@ -266,6 +298,17 @@ bool contains_only_expression_of_type(const LoopExpr& expr, const std::vector<in
   return ret;
 }
 
+bool has_common_variable_in_each_term(const LoopExpr& expr) {
+  bool ret = true;
+  expr.foreach([&](const auto& loops, int) {
+    if (set_intersection(loops).empty()) {
+      ret = false;
+      return;
+    }
+  });
+  return ret;
+}
+
 void list_all_degenerations(const LoopExpr& expr) {
   const int N = 11;
   const int a1 = 1;
@@ -285,7 +328,8 @@ void list_all_degenerations(const LoopExpr& expr) {
     }
     CHECK(degenerations_seen.insert(groups).second);
     const auto expr_degenerated = loop_expr_degenerate(expr, groups);
-    if (!expr_degenerated.zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
+    // if (!expr_degenerated.zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
+    if (!expr_degenerated.zero() && has_common_variable_in_each_term(expr_degenerated)) {
       std::cout << permutation_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
     }
   };
@@ -356,22 +400,33 @@ int main(int argc, char *argv[]) {
   // std::cout << "Via loops " << loop_lira_expr << "\n";
   // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr) << "\n";
 
+  // All possible ways of gluing 4 points together. Gives terms {1}-{6}.
   const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
   const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
   const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});  // == expr(a, b)
   const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});  // == expr(a, b, e)
   const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
 
+  // All expressions limited to terms {1}-{6}.
   const auto f = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
   const auto g = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,11}});
-  const auto h = loop_expr_degenerate(loop_expr, {{1,4,7}, {3,5}});  // expr(f, g, a)
   const auto fg = loop_expr_degenerate(loop_expr, {{1,3,6}, {2,4}});  // == -(f1 + f2)
-
+  const auto h = loop_expr_degenerate(loop_expr, {{1,4,7}, {3,5}});  // == expr(f, g, a)
   const auto gg = loop_expr_degenerate(loop_expr, {{2,5}, {1,3}, {4,6}});  // ==  g(symmetry: (2,3)(4,8)(5,7) + rotate 7 positions)
   const auto m = loop_expr_degenerate(loop_expr, {{2,6}, {1,3}, {5,7}});
   const auto n = loop_expr_degenerate(loop_expr, {{2,7}, {1,3}, {6,8}});
 
-  generate_loops_names({a, b, c, d, e});
+  // All expressions that have a common variable in each term. Gives terms {1}-{7}.
+  const auto p = loop_expr_degenerate(loop_expr, {{1,3,6}, {2,11}});  // == -r + f
+  const auto q = loop_expr_degenerate(loop_expr, {{1,3,6}, {5,7}});
+  const auto r = loop_expr_degenerate(loop_expr, {{1,3,7}, {2,4}});
+  const auto s = loop_expr_degenerate(loop_expr, {{1,3,7}, {2,11}});
+  const auto t = loop_expr_degenerate(loop_expr, {{1,3,7}, {6,8}});
+  const auto u = loop_expr_degenerate(loop_expr, {{1,4,7}, {2,11}});
+  const auto v = loop_expr_degenerate(loop_expr, {{1,4,8}, {2,11}});
+  const auto w = loop_expr_degenerate(loop_expr, {{1,4,8}, {7,9}});
+
+  generate_loops_names({a, b, c, d, e, r});
 
   // list_all_degenerations(loop_expr);
   // return 0;
@@ -402,16 +457,46 @@ int main(int argc, char *argv[]) {
   std::cout << "---\n\n";
   std::cout << "m " << preshow(m) << fmt::newline();
   std::cout << "n " << preshow(n) << fmt::newline();
+  std::cout << "---\n\n";
+  // std::cout << "p " << preshow(p) << fmt::newline();
+  std::cout << "q " << preshow(q) << fmt::newline();
+  std::cout << "r " << preshow(r) << fmt::newline();
+  std::cout << "s " << preshow(s) << fmt::newline();
+  std::cout << "t " << preshow(t) << fmt::newline();
+  std::cout << "u " << preshow(u) << fmt::newline();
+  std::cout << "v " << preshow(v) << fmt::newline();
+  std::cout << "w " << preshow(w) << fmt::newline();
 
   std::cout << "===\n\n";
 
-  const auto mf = auto_kill(m, f, 6);  // {1,2,4}
+  const auto qr = q - cycle(r, {{3,4}, {5,8}, {6,7}});  // without {7}
+
+  // LEGACY TERM NUMBEERS
+  // const auto mf = auto_kill(m, f, 6);  // {1,2,4}
+  // const auto mfa = auto_kill(mf, a, 1);  // {2,4}
+  // const auto mfg = auto_kill(mf, g, 4);  // {2,3}
+  // const auto mfg1 = mfg + cycle(mfg, {{3,5}});
+  // const auto mfg2 = mfg1 + cycle(mfg1, {{2,8}});  // only {2}
+  // const auto nf = auto_kill(n, f, 6);  // {1,2,3,4}
+  // const auto nfg = auto_kill(nf, g, 4);  // {2,3}
+  // const auto nfg1 = nfg + cycle(nfg, {{3,5}});
+  // const auto nfg2 = nfg1 + cycle(nfg1, {{2,4}});  // only {2}
+  // std::cout << "\n";
+  // std::cout << mfg << "\n";
+  // std::cout << nfg << "\n";
+  // std::cout << arg11_expr_type_2_to_column(mfg2) << "\n";
+  // std::cout << arg11_expr_type_2_to_column(nfg2) << "\n";
+
+
+
+
+  const auto mf = auto_kill(m, f, 7);  // {1,2,4}
   const auto mfa = auto_kill(mf, a, 1);  // {2,4}
   const auto mfg = auto_kill(mf, g, 4);  // {2,3}
   const auto mfg1 = mfg + cycle(mfg, {{3,5}});
   const auto mfg2 = mfg1 + cycle(mfg1, {{2,8}});  // only {2}
 
-  const auto nf = auto_kill(n, f, 6);  // {1,2,3,4}
+  const auto nf = auto_kill(n, f, 7);  // {1,2,3,4}
   const auto nfg = auto_kill(nf, g, 4);  // {2,3}
   const auto nfg1 = nfg + cycle(nfg, {{3,5}});
   const auto nfg2 = nfg1 + cycle(nfg1, {{2,4}});  // only {2}
@@ -419,9 +504,9 @@ int main(int argc, char *argv[]) {
   std::cout << "\n";
   std::cout << mfg << "\n";
   std::cout << nfg << "\n";
-
   std::cout << arg11_expr_type_2_to_column(mfg2) << "\n";
   std::cout << arg11_expr_type_2_to_column(nfg2) << "\n";
+
 
 
   // const auto hf = h - cycle(f, {{3,4,5,6,7,8}});
@@ -443,18 +528,19 @@ int main(int argc, char *argv[]) {
     - cycle(b, {{3,8}, {4,7}, {5,6}})
   ;
 
-  const auto eb =  // {1,2,4}
+  // const auto eb = auto_kill_planar(e, b, 7);
+  const auto eb =
     + e
     - cycle(b, {{2,7}, {3,6}, {4,5}})
     + cycle(b, {{3,8}, {4,7}, {5,6}})
   ;
 
-  // const auto eba = auto_kill_planar(eb, a, 1);
+  const auto eba = auto_kill_planar(eb, a, 1);
   // const auto eba1 = eba + cycle(eba, {{4,5}});
-  // const auto eba2 = eba1 + cycle(eba1, {{2,8}});  // just one variable (but need correction for new indices)
+  // const auto eba2 = eba1 + cycle(eba1, {{2,8}});  // BEFORE: just one variable (how?)
 
-  // std::cout << eb << "\n";
-  // std::cout << eba << "\n";
+  std::cout << eb << "\n";
+  std::cout << eba << "\n";
   // std::cout << eba1 << "\n";
   // std::cout << eba2 << "\n";
   // std::cout << arg11_expr_type_2_to_column(eba2) << "\n";
@@ -485,21 +571,18 @@ int main(int argc, char *argv[]) {
   //   - cycle(df, {{1,5}})
   // ;
 
-  const auto eb1 =
-    + eb
-    + cycle(eb, {{2,8}})
-  ;
-
-  const auto eb2 =  // {1,2}
-    + eb1
-    + cycle(eb1, {{4,5}})
-  ;
-
-  const auto eb3 =  // {1,2}
-    + eb
-    - cycle(eb, {{2,4}, {5,8}, {6,7}})
-  ;
-
+  // const auto eb1 =
+  //   + eb
+  //   + cycle(eb, {{2,8}})
+  // ;
+  // const auto eb2 =  // {1,2}
+  //   + eb1
+  //   + cycle(eb1, {{4,5}})
+  // ;
+  // const auto eb3 =  // {1,2}
+  //   + eb
+  //   - cycle(eb, {{2,4}, {5,8}, {6,7}})
+  // ;
   // std::cout << preshow(
   //   + eb2
   //   + a

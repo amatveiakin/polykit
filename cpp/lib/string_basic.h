@@ -80,6 +80,12 @@ private:
   static std::string auto_dump(const std::pair<T, U>& v) {
     return absl::StrCat("(", dump_impl(v.first), ", ", dump_impl(v.second), ")");
   }
+  template<typename... Args>
+  static std::string auto_dump(const std::tuple<Args...>& v) {
+    return absl::StrCat("(", absl::StrJoin(v, ", ", [](std::string* out, const auto& e) {
+      out->append(dump_impl(e));
+    }), ")");
+  }
 
   template<typename T>
   static std::string auto_dump(const std::vector<T>& v) {

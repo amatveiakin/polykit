@@ -4,12 +4,13 @@
 #include <iostream>
 
 #include "absl/base/optimization.h"
+
 #include "macros.h"
 #include "string_basic.h"
 
 
 inline void FATAL [[noreturn]] (const std::string& msg = {}) {
-  std::cerr << "Assertion failed";
+  std::cerr << "\nAssertion failed";
   if (!msg.empty()) {
     std::cerr << ": " << msg;
   }
@@ -41,7 +42,7 @@ struct CheckResult {
 };
 
 inline std::ostream& assertion_failed(CheckLocation loc) {
-  return std::cerr << "Assertion failed in " << loc.file << ":" << loc.line << "\n";
+  return std::cerr << "\nAssertion failed in " << loc.file << ":" << loc.line << "\n";
 }
 template<typename X, typename Y>
 CheckResult binary_assertion(

@@ -57,7 +57,8 @@ LoopsInvariant loops_invariant(Loops loops) {
         }
         loops_common_elements.push_back(set_intersection_size(loops_group));
       }
-      invariant = concat(invariant, sorted(loops_common_elements));
+      // append_vector(invariant, sorted(loops_common_elements));  // Note: enable sorting to account for shuffles
+      append_vector(invariant, loops_common_elements);
     }
   }
   return invariant;
