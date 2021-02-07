@@ -3,7 +3,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
-#include "format.h"
+#include "format_basic.h"
 
 
 class X {
@@ -76,6 +76,12 @@ public:
       [](const absl::Span<const X> s) {
         return mapped(s, [](X x) { return x.var(); });
       },
+    }, span_);
+  }
+
+  std::vector<std::string> as_string() const {
+    return std::visit([](const auto& s) {
+      return mapped_to_string(s);
     }, span_);
   }
 

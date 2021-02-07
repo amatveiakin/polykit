@@ -1,11 +1,9 @@
-#include "format.h"
+#include "format_basic.h"
 
 #include <regex>
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
-
-#include "util.h"
 
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
@@ -150,10 +148,6 @@ ScopedRichTextOptions::~ScopedRichTextOptions() {
 }
 
 
-static std::vector<std::string> ints_to_strings(const std::vector<int> v) {
-  return mapped(v, [](int x){ return absl::StrCat(x); });
-}
-
 static bool is_html() {
   return *current_formatting_config().rich_text_format == RichTextFormat::html;
 }
@@ -165,16 +159,6 @@ static std::string maybe_html_newline() {
 
 std::string AbstractEncoder::unity() { return fmt::colored(chevrons("1"), TextColor::yellow); }
 std::string AbstractEncoder::minus() { return "-"; }
-
-std::string AbstractEncoder::sub_num(const std::string& main, const std::vector<int>& indices) {
-  return sub(main, ints_to_strings(indices));
-}
-std::string AbstractEncoder::super_num(const std::string& main, const std::vector<int>& indices) {
-  return super(main, ints_to_strings(indices));
-}
-std::string AbstractEncoder::lrsub_num(int left_index, const std::string& main, const std::vector<int>& right_indices) {
-  return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
-}
 
 std::string AbstractEncoder::opname(const std::string& name) { return name; }
 
@@ -300,9 +284,6 @@ class AsciiEncoder : public AbstractEncoder {
   std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) override {
     const auto separator = (hspacing == HSpacing::dense ? "," : ", ");
     return name + parens(str_join(args, separator));
-  }
-  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
-    return function(name, ints_to_strings(indices), hspacing);
   }
 };
 
@@ -454,14 +435,11 @@ class UnicodeEncoder : public AbstractEncoder {
   }
 
   std::string var(int idx) override {
-    return sub_num("x", {idx});
+    return sub("x", {to_string(idx)});
   }
   std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing hspacing) override {
     const auto separator = (hspacing == HSpacing::dense ? "," : absl::StrCat(",", kThinNbsp));
     return name + parens(str_join(args, separator));
-  }
-  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
-    return function(name, ints_to_strings(indices), hspacing);
   }
 };
 
@@ -543,16 +521,13 @@ class LatexEncoder : public AbstractEncoder {
   }
 
   std::string var(int idx) override {
-    return sub_num("x", {idx});
+    return sub("x", {to_string(idx)});
   }
   std::string opname(const std::string& name) override {
     return absl::StrCat("\\operatorname{", name, "}");
   }
   std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) override {
     return absl::StrCat(name, parens(str_join(args, ",")));
-  }
-  std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
-    return function(name, mapped(indices, [&](int x){ return var(x); }), hspacing);
   }
 
   std::string begin_rich_text(const RichTextOptions& options) override {

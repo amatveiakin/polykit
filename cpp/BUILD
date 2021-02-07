@@ -6,7 +6,7 @@ cc_library(
         "lib/check.h",
         "lib/circular_view.h",
         "lib/compression.h",
-        "lib/format.h",
+        "lib/format_basic.h",
         "lib/lexicographical.h",
         "lib/macros.h",
         "lib/metaprogramming.h",
@@ -22,7 +22,7 @@ cc_library(
     ],
     srcs = [
         "lib/compression.cpp",
-        "lib/format.cpp",
+        "lib/format_basic.cpp",
         "lib/sequence_iteration.cpp",
     ],
     deps = [
@@ -45,6 +45,7 @@ cc_library(
         "lib/delta.h",
         "lib/delta_ratio.h",
         "lib/epsilon.h",
+        "lib/format.h",
         "lib/linear.h",
         "lib/lyndon.h",
         "lib/polylog_cross_ratio_param.h",

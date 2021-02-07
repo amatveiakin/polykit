@@ -208,6 +208,16 @@ auto mapped_array(const std::array<In, N>& src, F&& func) {
   return dst;
 }
 
+// Acts as `mapped(src, &to_string)`; the latter is forbidden because `to_string` is overloaded.
+template<typename Src>
+auto mapped_to_string(const Src& src) {
+  std::vector<std::string> dst(src.size());
+  absl::c_transform(src, dst.begin(), [](const auto& element) {
+    return to_string(element);
+  });
+  return dst;
+}
+
 template<typename T, typename F>
 std::vector<T> filtered(std::vector<T> src, F&& func) {
   src.erase(

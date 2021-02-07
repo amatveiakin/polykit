@@ -92,9 +92,9 @@ static ResultT QLi_wrapper(
     const std::vector<X>& points,
     const ProjectorT& projector) {
   return QLi_generic_wrapper<ResultT>(weight, points, lido_pos_node_func, projector)
-    .annotate(fmt::function(
+    .annotate(fmt::function_num_args(
       fmt::sub_num(fmt::opname("QLi"), {weight}),
-      mapped(points, [](X x){ return to_string(x); })
+      points
     ));
 }
 
@@ -115,9 +115,9 @@ static ResultT QLiNeg_wrapper(
   return (
       neg_one_pow(weight) *
       QLi_generic_wrapper<ResultT>(weight, points, lido_neg_node_func, projector)
-    ).annotate(fmt::function(
+    ).annotate(fmt::function_num_args(
       fmt::sub_num(fmt::super(fmt::opname("QLi"), {"-"}), {weight}),
-      mapped(points, [](X x){ return to_string(x); })
+      points
     ));
 }
 

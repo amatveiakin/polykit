@@ -142,7 +142,7 @@ CorrExpr PosCorrFSymb(int weight, const std::vector<int>& points) {
       points.size()
     ),
     points
-  ).annotate(fmt::function_indexed_args(
+  ).annotate(fmt::function_num_args(
     fmt::sub_num(fmt::opname("PosCorr"), {weight}),
     points
   ));
@@ -155,7 +155,7 @@ CorrExpr NegCorrFSymb(int weight, const std::vector<int>& points) {
       points.size()
     ),
     points
-  ).annotate(fmt::function_indexed_args(
+  ).annotate(fmt::function_num_args(
     fmt::sub_num(fmt::opname("NegCorr"), {weight}),
     points
   ));

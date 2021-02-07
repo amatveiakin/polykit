@@ -21,10 +21,7 @@ struct CorrFSymb {
 };
 
 inline std::string to_string(const CorrFSymb& fsymb) {
-  return fmt::function(fmt::opname("Corr"), mapped(
-    fsymb.points,
-    [](auto x){ return to_string(x); })
-  );
+  return fmt::function_num_args(fmt::opname("Corr"), fsymb.points);
 }
 
 namespace internal {

@@ -32,7 +32,8 @@ static ResultT I_impl(const std::vector<X>& points, const ProjectorT& projector)
 template<typename ResultT, typename ProjectorT>
 static ResultT IVec_wrapper(const std::vector<X>& points, const ProjectorT& projector) {
   return I_impl<ResultT>(points, projector).annotate(
-    fmt::function(fmt::opname("I"), mapped(points, [](X x){ return to_string(x); })));
+    fmt::function_num_args(fmt::opname("I"), points)
+  );
 }
 
 DeltaExpr IVec(SpanX points) {
@@ -46,10 +47,7 @@ ProjectionExpr IVecPr(SpanX points, DeltaProjector projector) {
 template<typename ResultT, typename ProjectorT>
 ResultT CorrVec_wrapper(const std::vector<X>& points, const ProjectorT& projector) {
   return I_impl<ResultT>(concat({Inf}, points), projector).annotate(
-    fmt::function(fmt::opname("Corr"), mapped(
-      lexicographically_minimal_rotation(points),
-      [](X x){ return to_string(x); })
-    )
+    fmt::function_num_args(fmt::opname("Corr"), lexicographically_minimal_rotation(points))
   );
 }
 

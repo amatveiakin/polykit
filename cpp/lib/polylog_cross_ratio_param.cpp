@@ -38,9 +38,7 @@ std::string lira_param_function_name(const LiraParam& param) {
 std::string to_string(const LiraParam& param) {
   return fmt::function(
     lira_param_function_name(param),
-    mapped(param.ratios(), [](const CompoundRatio& ratio){
-      return to_string(ratio);
-    }),
+    mapped_to_string(param.ratios()),
     HSpacing::sparse
   );
 }
