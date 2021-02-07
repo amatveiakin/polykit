@@ -26,6 +26,11 @@ inline ProductAnnotation AnnFunction(std::string name) {
   return ProductAnnotationFunction{std::move(name)};
 }
 
+inline ProductAnnotation AnnFunctionOp(const std::string& name) {
+  CHECK(!name.empty());
+  return ProductAnnotationFunction{fmt::opname(name)};
+}
+
 inline ProductAnnotation AnnOperator(std::string op) {
   CHECK(!op.empty());
   return ProductAnnotationOperator{std::move(op)};

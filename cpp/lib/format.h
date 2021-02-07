@@ -174,6 +174,7 @@ public:
       const std::vector<int>& indices);
 
   virtual std::string var(int idx) = 0;
+  virtual std::string opname(const std::string& name);
   virtual std::string function(
       const std::string& name,
       const std::vector<std::string>& args,
@@ -285,6 +286,9 @@ inline std::string super_num(
 
 inline std::string var(int idx) {
   return current_encoder()->var(idx);
+}
+inline std::string opname(const std::string& name) {
+  return current_encoder()->opname(name);
 }
 inline std::string function(
     const std::string& name,

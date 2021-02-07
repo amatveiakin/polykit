@@ -85,13 +85,13 @@ EpsilonExpr mystic_product(
     const EpsilonExpr& lhs,
     const EpsilonExpr& rhs) {
   return outer_product_expanding(lhs, rhs, monom_key_mystic_product,
-    AnnFunction("mystic"));
+    AnnFunctionOp("mystic"));
 }
 
 EpsilonExpr mystic_product(
     const absl::Span<const EpsilonExpr>& expressions) {
   return outer_product_expanding(expressions, monom_key_mystic_product,
-    AnnFunction("mystic"));
+    AnnFunctionOp("mystic"));
 }
 
 EpsilonCoExpr mystic_product(
@@ -113,7 +113,7 @@ EpsilonCoExpr mystic_product(
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );
     },
-    AnnFunction("mystic")
+    AnnFunctionOp("mystic")
   );
 }
 
@@ -167,5 +167,5 @@ static ThetaExpr monom_key_quasi_shuffle_product(
 ThetaExpr theta_expr_quasi_shuffle_product(
     const absl::Span<const ThetaExpr>& expressions) {
   return outer_product_expanding(expressions, monom_key_quasi_shuffle_product,
-    AnnFunction("quasishuffle"));
+    AnnFunctionOp("quasishuffle"));
 }

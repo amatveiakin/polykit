@@ -84,7 +84,7 @@ ThetaExpr LiQuad(int foreweight, const std::vector<int>& points, LiFirstPoint fi
     fmt::function_indexed_args(
       fmt::lrsub_num(
         foreweight,
-        fmt::super("LiQuad", {first_point == LiFirstPoint::odd ? "+" : "-"}),
+        fmt::super(fmt::opname("LiQuad"), {first_point == LiFirstPoint::odd ? "+" : "-"}),
         {}
       ),
       points

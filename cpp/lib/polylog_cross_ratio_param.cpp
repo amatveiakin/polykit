@@ -28,7 +28,7 @@ LiraParam key_to_lira_param(const LiraParamCompressed& key) {
 }
 
 std::string lira_param_function_name(int foreweight, const std::vector<int>& weights) {
-  return fmt::lrsub_num(foreweight, "Li", weights);
+  return fmt::lrsub_num(foreweight, fmt::opname("Li"), weights);
 }
 
 std::string lira_param_function_name(const LiraParam& param) {

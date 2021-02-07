@@ -176,6 +176,8 @@ std::string AbstractEncoder::lrsub_num(int left_index, const std::string& main, 
   return lrsub(absl::StrCat(left_index), main, ints_to_strings(right_indices));
 }
 
+std::string AbstractEncoder::opname(const std::string& name) { return name; }
+
 std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
   switch (*current_formatting_config().rich_text_format) {
     case RichTextFormat::native:
@@ -543,9 +545,11 @@ class LatexEncoder : public AbstractEncoder {
   std::string var(int idx) override {
     return sub_num("x", {idx});
   }
+  std::string opname(const std::string& name) override {
+    return absl::StrCat("\\operatorname{", name, "}");
+  }
   std::string function(const std::string& name, const std::vector<std::string>& args, HSpacing) override {
-    // TODO: Fix: operatorname is applied to sub-indices
-    return absl::StrCat("\\operatorname{", name, "}", parens(str_join(args, ",")));
+    return absl::StrCat(name, parens(str_join(args, ",")));
   }
   std::string function_indexed_args(const std::string& name, const std::vector<int>& indices, HSpacing hspacing) override {
     return function(name, mapped(indices, [&](int x){ return var(x); }), hspacing);

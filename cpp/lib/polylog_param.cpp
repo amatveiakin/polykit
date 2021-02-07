@@ -32,7 +32,7 @@ LiParam key_to_li_param(const LiParamCompressed& key) {
 
 std::string to_string(const LiParam& param) {
   return fmt::function(
-    fmt::lrsub_num(param.foreweight(), "Li", param.weights()),
+    fmt::lrsub_num(param.foreweight(), fmt::opname("Li"), param.weights()),
     mapped(param.points(), [](const std::vector<int>& prod){
       return str_join(prod, "", fmt::var);
     })

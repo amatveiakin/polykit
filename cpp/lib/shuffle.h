@@ -72,7 +72,7 @@ LinearT shuffle_product_expr(
       to_vector_expression(lhs),
       to_vector_expression(rhs),
       [](const auto& u, const auto& v) { return shuffle_product(u, v); },
-      AnnFunction("shuffle")
+      AnnFunctionOp("shuffle")
     )
   );
 }
@@ -88,7 +88,7 @@ LinearT shuffle_product_expr(
         })
       ),
       [](const auto& u, const auto& v) { return shuffle_product(u, v); },
-      AnnFunction("shuffle")
+      AnnFunctionOp("shuffle")
     )
   );
 }
