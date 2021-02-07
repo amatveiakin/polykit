@@ -26,62 +26,77 @@ static thread_local FormattingConfig aggregated_formatting_config = default_form
 // in reality only writing to console from one thread is supported.
 static thread_local std::vector<RichTextOptions> console_rich_text_options_stack;
 
-std::string get_command_for_console_rich_text_options() {
+static int text_color_to_console_color(TextColor color) {
+  switch (color) {
+    case TextColor::normal:         return 0;   // normal
+    case TextColor::red:            return 91;  // bright_red
+    case TextColor::green:          return 92;  // bright_green
+    case TextColor::yellow:         return 93;  // bright_yellow
+    case TextColor::blue:           return 94;  // bright_blue
+    case TextColor::magenta:        return 95;  // bright_magenta
+    case TextColor::cyan:           return 96;  // bright_cyan
+    case TextColor::orange:         return 33;  // yellow (actually dark yellow, but close enough)
+    case TextColor::pale_red:       return 31;  // red
+    case TextColor::pale_green:     return 32;  // green
+    case TextColor::pale_blue:      return 34;  // blue
+    case TextColor::pale_magenta:   return 35;  // magenta
+    case TextColor::pale_cyan:      return 36;  // cyan
+  }
+  FATAL(absl::StrCat("Unknown color: ", color));
+}
+
+static std::string text_color_to_html_color(TextColor color) {
+  switch (color) {
+    case TextColor::normal:         return "Black";
+    case TextColor::red:            return "Red";
+    case TextColor::green:          return "LimeGreen";
+    case TextColor::yellow:         return "Gold";
+    case TextColor::blue:           return "Blue";
+    case TextColor::magenta:        return "Magenta";
+    case TextColor::cyan:           return "DarkCyan";
+    case TextColor::orange:         return "DarkOrange";
+    case TextColor::pale_red:       return "LightCoral";
+    case TextColor::pale_green:     return "LightGreen";
+    case TextColor::pale_blue:      return "DeepSkyBlue";
+    case TextColor::pale_magenta:   return "Violet";
+    case TextColor::pale_cyan:      return "MediumAquamarine";
+  }
+  FATAL(absl::StrCat("Unknown color: ", color));
+}
+
+// Note. Color names are case-sensitive. Basic colors start with a small letter
+// and additional colors provided by `dvipsnames` option start with a capital
+// letter. Colors that differ only in case can be very different, e.g. "Green"
+// is much darker than "green".
+static std::string text_color_to_latex_color(TextColor color) {
+  switch (color) {
+    case TextColor::normal:         return "black";
+    case TextColor::red:            return "red";
+    case TextColor::green:          return "Green";
+    case TextColor::yellow:         return "Goldenrod";
+    case TextColor::blue:           return "blue";
+    case TextColor::magenta:        return "magenta";
+    case TextColor::cyan:           return "cyan";
+    case TextColor::orange:         return "Peach";
+    case TextColor::pale_red:       return "Salmon";
+    case TextColor::pale_green:     return "LimeGreen";
+    case TextColor::pale_blue:      return "SkyBlue";
+    case TextColor::pale_magenta:   return "Lavender";
+    case TextColor::pale_cyan:      return "Turquoise";
+  }
+  FATAL(absl::StrCat("Unknown color: ", color));
+}
+
+static std::string get_command_for_console_rich_text_options() {
   const RichTextOptions& options = console_rich_text_options_stack.empty()
     ? RichTextOptions()
     : console_rich_text_options_stack.back();
   return options.text_color == TextColor::normal
     ? "\033[0m"
-    : absl::StrCat("\033[", static_cast<int>(options.text_color), "m");
+    : absl::StrCat("\033[", text_color_to_console_color(options.text_color), "m");
 }
 
-// Note. Color brightness is inverted, because console is white-on-black and
-// html is black-on-white.
-std::string text_color_to_html_color(TextColor color) {
-  switch (color) {
-    case TextColor::normal:         return "Black";
-    case TextColor::red:            return "LightCoral";
-    case TextColor::green:          return "LightGreen";
-    case TextColor::yellow:         return "Khaki";
-    case TextColor::blue:           return "DeepSkyBlue";
-    case TextColor::magenta:        return "Violet";
-    case TextColor::cyan:           return "MediumAquamarine";
-    case TextColor::bright_red:     return "Red";
-    case TextColor::bright_green:   return "LimeGreen";
-    case TextColor::bright_yellow:  return "Gold";
-    case TextColor::bright_blue:    return "Blue";
-    case TextColor::bright_magenta: return "Magenta";
-    case TextColor::bright_cyan:    return "DarkCyan";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
-}
-
-// Note. Color brightness is inverted, because console is white-on-black and\
-// LaTeX is black-on-white.
-// Note. Color names are case-sensitive. Basic colors start with a small letter
-// and additional colors provided by `dvipsnames` option start with a capital
-// letter. Colors that differ only in case can be very different, e.g. "Green"
-// is much darker than "green".
-std::string text_color_to_latex_color(TextColor color) {
-  switch (color) {
-    case TextColor::normal:         return "black";
-    case TextColor::red:            return "Salmon";
-    case TextColor::green:          return "LimeGreen";
-    case TextColor::yellow:         return "yellow";
-    case TextColor::blue:           return "SkyBlue";
-    case TextColor::magenta:        return "Lavender";
-    case TextColor::cyan:           return "Turquoise";
-    case TextColor::bright_red:     return "red";
-    case TextColor::bright_green:   return "Green";
-    case TextColor::bright_yellow:  return "Goldenrod";
-    case TextColor::bright_blue:    return "blue";
-    case TextColor::bright_magenta: return "magenta";
-    case TextColor::bright_cyan:    return "cyan";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
-}
-
-std::string rich_text_options_to_css(const RichTextOptions& options) {
+static std::string rich_text_options_to_css(const RichTextOptions& options) {
   return "color: " + text_color_to_html_color(options.text_color);
 }
 

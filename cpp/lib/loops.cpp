@@ -24,9 +24,9 @@ std::string loops_description(const Loops& loops) {
         str_join(loop, ",", [&](int p) {
           const auto p_str = to_string(p);
           return fully_common.contains(p)
-            ? fmt::colored(p_str, TextColor::bright_red)
+            ? fmt::colored(p_str, TextColor::red)
             : partially_common.contains(p)
-              ? fmt::colored(p_str, TextColor::bright_blue)
+              ? fmt::colored(p_str, TextColor::blue)
               : p_str;
         })
       );
@@ -76,7 +76,7 @@ std::string LoopsNames::loops_name(const Loops& loops) {
   return fmt::braces(
     fmt::colored(
       pad_left(to_string(loops_index(loops)), 2),
-      TextColor::bright_cyan
+      TextColor::cyan
     )
   );
 }

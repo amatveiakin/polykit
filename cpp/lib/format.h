@@ -70,34 +70,26 @@ public:
 };
 
 
-// These are console colors. In HTML and LaTeX modes color brightness is reversed,
-// because console assumes white-on-black and the others are black-on-white.
-// Prefer colors starting with "bright": these are good vivid options, while the
-// dark versions are rather pale.
+// Console assumes white-on-black, so "pale" colors are darker.
+// HTML and LaTeX assume black-on-white, so "pale" colors are brighter.
 //
 // When using colors in LaTeX add
 //    \usepackage[dvipsnames]{xcolor}
 // to the preambule.
 enum class TextColor {
-  normal         = 0,
-  red            = 31,
-  green          = 32,
-  yellow         = 33,
-  blue           = 34,
-  magenta        = 35,
-  cyan           = 36,
-  bright_red     = 91,
-  bright_green   = 92,
-  bright_yellow  = 93,
-  bright_blue    = 94,
-  bright_magenta = 95,
-  bright_cyan    = 96,
-  // Black & white variations are not supported, because inverting them
-  // would be confusing.
-  //   black          = 30,
-  //   white          = 37,
-  //   bright_black   = 90,
-  //   bright_white   = 97,
+  normal,
+  red,
+  green,
+  yellow,
+  blue,
+  magenta,
+  cyan,
+  orange,
+  pale_red,
+  pale_green,
+  pale_blue,
+  pale_magenta,
+  pale_cyan,
 };
 
 // Note. It would make sense to add std::optional-s similarly to FormattingConfig

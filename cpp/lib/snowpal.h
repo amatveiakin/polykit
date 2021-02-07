@@ -27,10 +27,10 @@ inline RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio)
 
 
 static constexpr auto kMetaVariablesColors = std::array{
-  TextColor::bright_blue,
-  TextColor::bright_green,
-  TextColor::bright_magenta,
-  TextColor::bright_cyan,
+  TextColor::blue,
+  TextColor::green,
+  TextColor::magenta,
+  TextColor::cyan,
 };
 
 static constexpr int kMetaVarStart = 100;
@@ -342,7 +342,7 @@ private:
 inline std::string short_form_to_string(const ShortFormRatio& tmpl, Ratio value) {
   return fmt::colored(
     dependent_cross_ratio_formula(tmpl.normal_form, tmpl.letter, value),
-    TextColor::bright_yellow  // Idea: color should depend on the group element order
+    TextColor::orange  // Idea: color should depend on the group element order
   );
 }
 
