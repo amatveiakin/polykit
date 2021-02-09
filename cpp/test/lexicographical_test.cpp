@@ -3,18 +3,6 @@
 #include "gtest/gtest.h"
 
 
-static std::vector<int> lexicographically_minimal_rotation_naive(std::vector<int> v) {
-  std::vector<int> min = v;
-  for (int i : range(1, v.size())) {
-    absl::c_rotate(v, v.begin() + 1);
-    if (v < min) {
-      min = v;
-    }
-  }
-  return min;
-}
-
-
 TEST(MinimalRotationTest, Golden) {
   using Vec = std::vector<int>;
   using StrVec = std::vector<std::string>;
@@ -41,8 +29,4 @@ TEST(MinimalRotationTest, Golden) {
     lexicographically_minimal_rotation(StrVec{"bb", "a", "ccc", "dddd"}),
     (StrVec{"a", "ccc", "dddd", "bb"})
   );
-}
-
-TEST(MinimalRotationTest, CompareWithNaive) {
-  // TODO: ...
 }
