@@ -15,7 +15,7 @@ enum class SumSign {
 
 enum class SumStep : int;  // a simple strong int
 
-// TODO: Consider a builder interface instead of overloads, e.g.
+// Idea. A builder interface instead of overloads, e.g.
 //   * sum_looped(f).max_arg_value(8).starting_args({1,2,3,4}).compute();
 //   * sum_looped(f, SumOptions{}.max_arg_value(8).starting_args({1,2,3,4});
 

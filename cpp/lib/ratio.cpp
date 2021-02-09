@@ -128,7 +128,8 @@ void CompoundRatio::normalize() {
   check();
 }
 
-// TODO: Are there no other equations?
+// Note. There are other reducible expression of the form (1 - CompoundRatio),
+// but this is the only one relevant to our task.
 std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio) {
   if (ratio.loops_.size() == 1) {
     const std::vector<int>& l = ratio.loops_.front();

@@ -3,7 +3,6 @@
 #include <vector>
 
 
-// TODO: unit tests
 // Returns quasi shuffle product of two words as a List of words.
 // Rules:
 //   1 🟉 v = v

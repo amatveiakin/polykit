@@ -20,7 +20,7 @@ enum class CrossRatioNormalization {
 
   // Puts the smallest element in front.
   // Reduces the number of possible permutation from 24 to 6,
-  // which is the theoretical minimum
+  // which is the theoretical minimum.
   full,
 };
 
@@ -138,7 +138,6 @@ using CrossRatioNOrUnity = CrossRatioOrUnityTmpl<CrossRatioNormalization::full>;
 // (a - d) / (c - d), but in practice we have at least a cross ratio.
 constexpr int kMinCompoundRatioComponents = 2;
 
-// TODO: Fix duplicate variables
 class CompoundRatio {
 public:
   CompoundRatio() {}

@@ -101,7 +101,7 @@ EpsilonCoExpr mystic_product(
     lhs, rhs,
     [](const EpsilonCoExpr::StorageT& lhs_key,
        const EpsilonCoExpr::StorageT& rhs_key) -> EpsilonCoExpr {
-      // TODO: Optimize: Don't pack/unpack things meaninglessly.
+      // Optimization potential: do everything in key space without converting to object space.
       const std::vector<EpsilonPack> lhs_term =
           EpsilonCoExpr::Param::key_to_object(lhs_key);
       const std::vector<EpsilonPack> rhs_term =

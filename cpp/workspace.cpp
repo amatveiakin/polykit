@@ -111,16 +111,6 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_ty
   return victim;
 }
 
-// TODO: Move to strings.h
-template<typename Map>
-std::string map_to_string(const Map& map) {
-  std::string ret;
-  for (const auto& [a, b] : map) {
-    ret += absl::StrCat(to_string(a), " => ", to_string(b), "\n");
-  }
-  return ret;
-}
-
 // TODO: Normalize cycles
 std::vector<std::vector<int>> substitutions_to_cycles(absl::flat_hash_map<int, int> substitutions) {
   std::vector<std::vector<int>> ret;
