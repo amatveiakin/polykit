@@ -25,7 +25,57 @@ CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
   }
 }
 
-// TODO: Should this be exposed publicly?
+// Optimization potential: convert expr to Lyndon basis first to minimize
+// the number of times individual terms need to be converted.
+template<typename CoExprT, typename ExprT>
+CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
+  CHECK(CoExprT::Param::coproduct_is_lie_algebra);
+  if (expr.zero()) {
+    return {};
+  }
+  const int weight = expr.weight();
+  CHECK_EQ(form.first + form.second, weight);
+  sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
+
+  using MonomT = typename ExprT::StorageT;
+  // Optimization potential: remove conversion of vector form to key (here) and back
+  // (inside to_lyndon_basis inside coproduct). Idea: convert to Lyndon basis here
+  // and add a compile-time flag to `coproduct` saying that this is no longer required;
+  // note that in this case it might be better to convert the entire expression first
+  // (see above).
+  static auto make_copart = [](auto span) {
+    return ExprT::single_key(
+      ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span.begin(), span.end()))
+    );
+  };
+  CoExprT ret;
+  expr.foreach_key([&](const MonomT& monom, int coeff) {
+    const auto& monom_vec = ExprT::Param::key_to_vector(monom);
+    CHECK_EQ(monom_vec.size(), weight);
+    const auto span = absl::MakeConstSpan(monom_vec);
+    const int split = form.first;
+    ret += coeff * coproduct<CoExprT>(
+      make_copart(span.subspan(0, split)),
+      make_copart(span.subspan(split))
+    );
+    if (form.first != form.second) {
+      const int split = form.second;
+      ret -= coeff * coproduct<CoExprT>(
+        make_copart(span.subspan(split)),
+        make_copart(span.subspan(0, split))
+      );
+    }
+  });
+  return ret.copy_annotations_mapped(
+    expr, [](const std::string& annotation) {
+      return fmt::comult() + annotation;
+    }
+  );
+}
+
+// Sorts co-expression sides, so that the smaller one is always on the left.
+// There is no need to call `normalize_coproduct` if using `coproduct` or `comultiply`
+// to construct the coexpression, because these function do so automaticaly.
 template<typename CoExprT>
 CoExprT normalize_coproduct(const CoExprT& expr) {
   CHECK(CoExprT::Param::coproduct_is_lie_algebra);
@@ -52,51 +102,6 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
     }
   });
   return ret.copy_annotations(expr);
-}
-
-// Optimization potential: convert expr to Lyndon basis first to minimize
-// the number of times individual terms need to be converted.
-template<typename CoExprT, typename ExprT>
-CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
-  CHECK(CoExprT::Param::coproduct_is_lie_algebra);
-  if (expr.zero()) {
-    return {};
-  }
-  const int weight = expr.weight();
-  CHECK_EQ(form.first + form.second, weight);
-  sort_two(form.first, form.second);  // avoid unnecessary work in `normalize_coproduct`
-
-  using MonomT = typename ExprT::StorageT;
-  // TODO: Make sure there is no converting to/from vector form back and forth.
-  static auto make_copart = [](auto span) {
-    // TODO: Fix: Lyndon is repeated here and in coproduct!
-    return to_lyndon_basis(ExprT::single_key(
-      ExprT::Param::vector_to_key(typename ExprT::Param::VectorT(span.begin(), span.end()))
-    ));
-  };
-  CoExprT ret;
-  expr.foreach_key([&](const MonomT& monom, int coeff) {
-    const auto& monom_vec = ExprT::Param::key_to_vector(monom);
-    CHECK_EQ(monom_vec.size(), weight);
-    const auto span = absl::MakeConstSpan(monom_vec);
-    const int split = form.first;
-    ret += coeff * coproduct<CoExprT>(
-      make_copart(span.subspan(0, split)),
-      make_copart(span.subspan(split))
-    );
-    if (form.first != form.second) {
-      const int split = form.second;
-      ret -= coeff * coproduct<CoExprT>(
-        make_copart(span.subspan(split)),
-        make_copart(span.subspan(0, split))
-      );
-    }
-  });
-  return ret.copy_annotations_mapped(
-    expr, [](const std::string& annotation) {
-      return fmt::comult() + annotation;
-    }
-  );
 }
 
 

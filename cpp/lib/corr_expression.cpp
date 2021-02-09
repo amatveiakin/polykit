@@ -32,7 +32,6 @@ static CorrCoExpr normalize_corr_coproduct(const CorrCoExpr& expr) {
   ;
 }
 
-// TODO: Can generic coproduct be used here?
 CorrCoExpr corr_coproduct(const CorrExpr& lhs, const CorrExpr& rhs) {
   return normalize_corr_coproduct(
     outer_product<CorrCoExpr>(
