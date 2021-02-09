@@ -8,7 +8,7 @@
 
 TEST(ShuffleProductTest, ThreeExpressions) {
   EXPECT_EXPR_EQ(
-    shuffle_product<std::vector<int>>({  // TODO: Avoid specifying monom type
+    shuffle_product(std::vector{
       std::vector{0, 1, 0},
       std::vector{1, 0},
       std::vector{1},

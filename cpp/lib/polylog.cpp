@@ -322,7 +322,6 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
   });
 }
 
-// TODO: Unite common logic with epsilon_coexpr_to_theta_coexpr
 ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
   return expr.mapped_expanding([&](const std::array<ThetaPack, kThetaCoExprComponents>& term) {
     const std::array multipliers =

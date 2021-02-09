@@ -271,9 +271,11 @@ EpsilonExpr epsilon_expr_substitute(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 
-// Removes EpsilonComplement-s with more than one variable.
-// TODO: Add EpsilonCoExpr overload
+// Here 'monster' means 'EpsilonComplement with more than one variable'.
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);
+EpsilonExpr epsilon_expr_keep_monsters(const EpsilonExpr& expr);
+EpsilonCoExpr epsilon_coexpr_without_monsters(const EpsilonCoExpr& expr);
+EpsilonCoExpr epsilon_coexpr_keep_monsters(const EpsilonCoExpr& expr);
 
 
 // Explicit rules allow to omit template types when calling the function.

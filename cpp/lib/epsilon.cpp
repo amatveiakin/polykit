@@ -54,23 +54,42 @@ EpsilonExpr epsilon_expr_substitute(
   }).without_annotations();
 }
 
+static bool is_monster(const EpsilonPack& term) {
+  return std::visit(overloaded{
+    [&](const std::vector<Epsilon>& product) {
+      return absl::c_any_of(
+        product,
+        [](const Epsilon& e) {
+          return std::visit(overloaded{
+            [](const EpsilonVariable&) { return false; },
+            [](const EpsilonComplement& v) { return v.indices().count() != 1; },
+          }, e);
+        }
+      );
+    },
+    [](const LiParam& formal_symbol) {
+      return true;
+    },
+  }, term);
+}
+
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr) {
   return expr.filtered([](const EpsilonPack& term) {
-    return std::visit(overloaded{
-      [&](const std::vector<Epsilon>& product) {
-        return absl::c_all_of(
-          product,
-          [](const Epsilon& e) {
-            return std::visit(overloaded{
-              [](const EpsilonVariable&) { return true; },
-              [](const EpsilonComplement& v) { return v.indices().count() == 1; },
-            }, e);
-          }
-        );
-      },
-      [](const LiParam& formal_symbol) {
-        return false;
-      },
-    }, term);
+    return !is_monster(term);
+  });
+}
+EpsilonExpr epsilon_expr_keep_monsters(const EpsilonExpr& expr) {
+  return expr.filtered([](const EpsilonPack& term) {
+    return is_monster(term);
+  });
+}
+EpsilonCoExpr epsilon_coexpr_without_monsters(const EpsilonCoExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return !absl::c_any_of(term, is_monster);
+  });
+}
+EpsilonCoExpr epsilon_coexpr_keep_monsters(const EpsilonCoExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return absl::c_any_of(term, is_monster);
   });
 }

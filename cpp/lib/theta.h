@@ -21,6 +21,7 @@ public:
   const CompoundRatio& ratio() const { return ratio_; }
 
   bool operator==(const ThetaComplement& other) const { return ratio_ == other.ratio_; }
+  bool operator< (const ThetaComplement& other) const { return ratio_ <  other.ratio_; }
 
 private:
   CompoundRatio ratio_;
@@ -170,17 +171,6 @@ struct ThetaCoExprParam {
 using ThetaExpr = Linear<internal::ThetaExprParam>;
 using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<CompoundRatio>& compound_ratios);
-
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& cross_ratios);
-
-ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
-
-DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
 // Whether expr is one w.r.t. shuffle multiplication.
 inline bool theta_pack_is_unity(const ThetaPack& pack) {
@@ -196,13 +186,7 @@ inline ThetaExpr TUnity() {
   return ThetaExpr::single(ThetaUnityElement());
 }
 
-inline ThetaExpr TRatio(const CompoundRatio& ratio) {
-  ThetaExpr ret;
-  for (const std::vector<int>& l : ratio.loops()) {
-    ret += delta_expr_to_theta_expr(cross_ratio(l));
-  }
-  return ret;
-}
+inline ThetaExpr TRatio(const CompoundRatio& ratio);
 
 inline ThetaExpr TRatio(const CrossRatio& ratio) {
   return TRatio(CompoundRatio::from_cross_ratio(ratio));
@@ -212,32 +196,30 @@ inline ThetaExpr TRatio(std::initializer_list<int> indices) {
   return TRatio(CrossRatio(indices));
 }
 
-inline ThetaExpr TComplement(const CompoundRatio& ratio) {
-  auto one_minus_ratio = CompoundRatio::one_minus(ratio);
-  return one_minus_ratio.has_value()
-    ? TRatio(std::move(one_minus_ratio.value()))
-    : ThetaExpr::single(std::vector<Theta>{ThetaComplement(std::move(ratio))});
-}
+inline ThetaExpr TComplement(const CompoundRatio& ratio);
 
-inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices) {
-  std::vector<CrossRatio> ratios;
-  for (auto&& r : indices) {
-    ratios.push_back(CrossRatio(r));
-  }
-  return TComplement(CompoundRatio::from_cross_ratio_product(ratios));
-}
+inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices);
 
 inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) {
   return ThetaExpr::single(lira_param);
 }
 
 
-// Optimization potential: make sure sorting always happens in key space.
-inline bool operator<(const Theta& lhs, const Theta& rhs) {
-  return internal::theta_to_key(lhs) < internal::theta_to_key(rhs);
-}
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<CompoundRatio>& compound_ratios);
 
-ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
+ThetaExpr epsilon_expr_to_theta_expr(
+    const EpsilonExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& cross_ratios);
+
+ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
+    const EpsilonCoExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& ratios);
+
+ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
+
+DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
 ThetaExpr update_foreweight(
     const ThetaExpr& expr,
@@ -245,6 +227,7 @@ ThetaExpr update_foreweight(
 
 StringExpr count_functions(const ThetaExpr& expr);
 
-ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
-    const EpsilonCoExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& ratios);
+ThetaExpr theta_expr_without_monsters(const ThetaExpr& expr);
+ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
+ThetaCoExpr theta_coexpr_without_monsters(const ThetaCoExpr& expr);
+ThetaCoExpr theta_coexpr_keep_monsters(const ThetaCoExpr& expr);

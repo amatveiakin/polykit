@@ -118,7 +118,7 @@ TEST(LiTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
 // TODO:
 // TEST(CoLiTest, HandwrittenCoLiQuad_StartOdd_HasNoMonsters) {
 //   EXPECT_EXPR_ZERO(
-//     theta_expr_keep_monsters(
+//     theta_coexpr_keep_monsters(
 //       + epsilon_coexpr_to_theta_coexpr(CoLi(1,1)({1},{2}), {
 //         {CR(1,2,3,6)},
 //         {CR(3,4,5,6)},
@@ -132,7 +132,7 @@ TEST(LiTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
 //         {CR(1,2,3,4)},
 //       })
 //     )
-//   )
+//   );
 // };
 
 TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {

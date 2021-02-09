@@ -97,7 +97,7 @@ private:
   std::vector<Delta> deltas_;
 };
 
-// TODO: Consider replacing with PArray<uint4_t, 2>
+// Idea: replace with PArray<uint4_t, 2>
 extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 

@@ -3,6 +3,30 @@
 #include "algebra.h"
 
 
+
+ThetaExpr TRatio(const CompoundRatio& ratio) {
+  ThetaExpr ret;
+  for (const std::vector<int>& l : ratio.loops()) {
+    ret += delta_expr_to_theta_expr(cross_ratio(l));
+  }
+  return ret;
+}
+
+ThetaExpr TComplement(const CompoundRatio& ratio) {
+  auto one_minus_ratio = CompoundRatio::one_minus(ratio);
+  return one_minus_ratio.has_value()
+    ? TRatio(std::move(one_minus_ratio.value()))
+    : ThetaExpr::single(std::vector<Theta>{ThetaComplement(std::move(ratio))});
+}
+
+ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices) {
+  std::vector<CrossRatio> ratios;
+  for (auto&& r : indices) {
+    ratios.push_back(CrossRatio(r));
+  }
+  return TComplement(CompoundRatio::from_cross_ratio_product(ratios));
+}
+
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios) {
@@ -52,7 +76,29 @@ ThetaExpr epsilon_expr_to_theta_expr(
     const std::vector<std::vector<CrossRatio>>& cross_ratios) {
   return epsilon_expr_to_theta_expr(
     expr,
-    mapped(cross_ratios, CompoundRatio::from_cross_ratio_product));
+    mapped(cross_ratios, CompoundRatio::from_cross_ratio_product)
+  );
+}
+
+ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
+    const EpsilonCoExpr& expr,
+    const std::vector<std::vector<CrossRatio>>& ratios) {
+  return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
+    CHECK_EQ(term.size(), kThetaCoExprComponents);
+    const std::vector<ThetaExpr> multipliers =
+      mapped(term, [&](const EpsilonPack& pack) {
+        return epsilon_expr_to_theta_expr(EpsilonExpr::single(pack), ratios);
+      });
+    static_assert(kThetaCoExprComponents == 2);
+    return outer_product<ThetaCoExpr>(
+      multipliers[0],
+      multipliers[1],
+      [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
+        return std::array{lhs, rhs};
+      },
+      AnnOperator(fmt::coprod_hopf())
+    );
+  }).without_annotations();
 }
 
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr) {
@@ -74,21 +120,6 @@ DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr) {
         });
       },
       [](const LiraParam& formal_symbol) -> std::vector<Delta> {
-        FATAL("Unexpected formal symbol: " + to_string(formal_symbol));
-      },
-    }, term);
-  });
-}
-
-ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr) {
-  return expr.filtered([](const ThetaPack& term) {
-    return std::visit(overloaded{
-      [](const std::vector<Theta>& term_product) -> bool {
-        return absl::c_any_of(term_product, [](const Theta& t) {
-          return !std::holds_alternative<Delta>(t);
-        });
-      },
-      [](const LiraParam& formal_symbol) -> bool {
         FATAL("Unexpected formal symbol: " + to_string(formal_symbol));
       },
     }, term);
@@ -121,23 +152,36 @@ StringExpr count_functions(const ThetaExpr& expr) {
     ).without_annotations();
 }
 
-ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
-    const EpsilonCoExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& ratios) {
-  return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
-    CHECK_EQ(term.size(), kThetaCoExprComponents);
-    const std::vector<ThetaExpr> multipliers =
-      mapped(term, [&](const EpsilonPack& pack) {
-        return epsilon_expr_to_theta_expr(EpsilonExpr::single(pack), ratios);
+static bool is_monster(const ThetaPack& term) {
+  return std::visit(overloaded{
+    [](const std::vector<Theta>& term_product) {
+      return absl::c_any_of(term_product, [](const Theta& t) {
+        return !std::holds_alternative<Delta>(t);
       });
-    static_assert(kThetaCoExprComponents == 2);
-    return outer_product<ThetaCoExpr>(
-      multipliers[0],
-      multipliers[1],
-      [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
-        return std::array{lhs, rhs};
-      },
-      AnnOperator(fmt::coprod_hopf())
-    );
-  }).without_annotations();
+    },
+    [](const LiraParam& formal_symbol) {
+      return true;
+    },
+  }, term);
+}
+
+ThetaExpr theta_expr_without_monsters(const ThetaExpr& expr) {
+  return expr.filtered([](const ThetaPack& term) {
+    return !is_monster(term);
+  });
+}
+ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr) {
+  return expr.filtered([](const ThetaPack& term) {
+    return is_monster(term);
+  });
+}
+ThetaCoExpr theta_coexpr_without_monsters(const ThetaCoExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return !absl::c_any_of(term, is_monster);
+  });
+}
+ThetaCoExpr theta_coexpr_keep_monsters(const ThetaCoExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return absl::c_any_of(term, is_monster);
+  });
 }
