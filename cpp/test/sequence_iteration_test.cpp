@@ -5,7 +5,45 @@
 #include "test_util/matchers.h"
 
 
-TEST(SequenceIterationTest, AllSequences) {
+std::vector<std::vector<int>> increasing_sequences_naive(int alphabet_size, int length) {
+  std::vector<std::vector<int>> ret;
+  for (const auto& seq : all_sequences(alphabet_size, length)) {
+    bool increasing = true;
+    if (seq.size() >= 2) {
+      for (int i : range(seq.size() - 1)) {
+        if (seq[i] >= seq[i+1]) {
+          increasing = false;
+          break;
+        }
+      }
+    }
+    if (increasing) {
+      ret.push_back(seq);
+    }
+  }
+  return ret;
+};
+
+std::vector<std::vector<int>> nondecreasing_sequences_naive(int alphabet_size, int length) {
+  std::vector<std::vector<int>> ret;
+  for (const auto& seq : all_sequences(alphabet_size, length)) {
+    bool nondecreasing = true;
+    if (seq.size() >= 2) {
+      for (int i : range(seq.size() - 1)) {
+        if (seq[i] > seq[i+1]) {
+          nondecreasing = false;
+          break;
+        }
+      }
+    }
+    if (nondecreasing) {
+      ret.push_back(seq);
+    }
+  }
+  return ret;
+};
+
+TEST(SequenceIterationTest, AllSequencesGolden) {
   EXPECT_EQ(
     all_sequences(7, 0),
     (std::vector<std::vector<int>>{
@@ -43,7 +81,7 @@ TEST(SequenceIterationTest, AllSequences) {
   );
 }
 
-TEST(SequenceIterationTest, IncreasingSequencesFixedLength) {
+TEST(SequenceIterationTest, IncreasingSequencesFixedLengthGolden) {
   EXPECT_EQ(
     increasing_sequences(3, 4),
     std::vector<std::vector<int>>{}
@@ -81,7 +119,7 @@ TEST(SequenceIterationTest, IncreasingSequencesFixedLength) {
   );
 }
 
-TEST(SequenceIterationTest, IncreasingSequencesVarLength) {
+TEST(SequenceIterationTest, IncreasingSequencesVarLengthGolden) {
   EXPECT_EQ(
     increasing_sequences(1),
     (std::vector<std::vector<int>>{
@@ -104,3 +142,64 @@ TEST(SequenceIterationTest, IncreasingSequencesVarLength) {
     })
   );
 }
+
+TEST(SequenceIterationTest, NondecreasingSequencesGolden) {
+  EXPECT_EQ(
+    nondecreasing_sequences(7, 0),
+    (std::vector<std::vector<int>>{
+      {},
+    })
+  );
+
+  EXPECT_EQ(
+    nondecreasing_sequences(3, 2),
+    (std::vector<std::vector<int>>{
+      {0, 0},
+      {0, 1},
+      {0, 2},
+      {1, 1},
+      {1, 2},
+      {2, 2},
+    })
+  );
+
+  EXPECT_EQ(
+    nondecreasing_sequences(3, 3),
+    (std::vector<std::vector<int>>{
+      {0, 0, 0},
+      {0, 0, 1},
+      {0, 0, 2},
+      {0, 1, 1},
+      {0, 1, 2},
+      {0, 2, 2},
+      {1, 1, 1},
+      {1, 1, 2},
+      {1, 2, 2},
+      {2, 2, 2},
+    })
+  );
+}
+
+#if RUN_LARGE_TESTS
+TEST(SequenceIterationTest, IncreasingSequencesFixedLengthAgainstNaive) {
+  for (int alphabet_size : range(1, 5)) {
+    for (int length : range(5)) {
+      EXPECT_EQ(
+        increasing_sequences(alphabet_size, length),
+        increasing_sequences_naive(alphabet_size, length)
+      );
+    }
+  }
+}
+
+TEST(SequenceIterationTest, NondecreasingSequencesAgainstNaive) {
+  for (int alphabet_size : range(1, 5)) {
+    for (int length : range(5)) {
+      EXPECT_EQ(
+        nondecreasing_sequences(alphabet_size, length),
+        nondecreasing_sequences_naive(alphabet_size, length)
+      );
+    }
+  }
+}
+#endif
