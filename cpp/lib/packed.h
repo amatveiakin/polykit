@@ -66,7 +66,9 @@ namespace internal {
 //     absl::flat_hash_map stores keys directly inside, meaning that it has to
 //     move all keys every time the map is re-hashed. Therefore it's desirable
 //     to keep PVector small.
-constexpr int kMaxPVectorSize = 64;  // TODO: tune
+//
+// Optimization potential: tune this value and benchmark against real use-cases.
+constexpr int kMaxPVectorSize = 64;
 
 template<typename T, int N>
 struct should_use_inlined_vector {

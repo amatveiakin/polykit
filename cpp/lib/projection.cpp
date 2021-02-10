@@ -31,23 +31,15 @@ ProjectionExpr terms_with_min_distinct_variables(const ProjectionExpr& expr, int
 }
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const ProjectionExpr& expr) {
-  if (expr.zero()) {
-    os << expr;
-    return;
-  }
-  std::map<int, ProjectionExpr> num_variables_to_expr;
-  expr.foreach_key([&](const auto& term, int coeff) {
-    num_variables_to_expr[num_distinct_elements(term)].add_to_key(term, coeff);
-  });
-  bool first = true;
-  for (const auto& [num_variables, expr] : num_variables_to_expr) {
-    if (!first) {
-      os << "---\n";
-    }
-    first = false;
-    os << num_variables << " variables " << expr;
-  }
-  if (*current_formatting_config().expression_include_annotations) {
-    os << "~~~\n" << expr.annotations();
-  }
+  to_ostream_grouped(
+    os, expr, std::less<>{},
+    [](const auto& term) {
+      return num_distinct_elements(term);
+    },
+    std::less<>{},
+    [](int num_vars) {
+      return absl::StrCat(num_vars, " vars");
+    },
+    LinearNoContext{}
+  );
 }

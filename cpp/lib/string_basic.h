@@ -22,6 +22,10 @@
 
 // For generic programming like str_join
 inline std::string to_string(int x) { return std::to_string(x); }
+inline std::string to_string(unsigned int x) { return std::to_string(x); }
+inline std::string to_string(long long x) { return std::to_string(x); }
+inline std::string to_string(unsigned long long x) { return std::to_string(x); }
+inline std::string to_string(double x) { return std::to_string(x); }
 inline std::string to_string(std::string s) { return s; }
 
 

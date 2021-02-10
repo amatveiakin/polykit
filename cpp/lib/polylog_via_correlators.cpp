@@ -6,8 +6,6 @@
 #include "sequence_iteration.h"
 
 
-// TODO: Try to reduce the amount of copy-paste
-
 static bool contains_var_from_each_pair_odd(const std::vector<int>& args, int num_vars) {
   absl::flat_hash_set<int> args_set(args.begin(), args.end());
   CHECK(num_vars % 2 == 0);
@@ -18,6 +16,18 @@ static bool contains_var_from_each_pair_odd(const std::vector<int>& args, int nu
   }
   return true;
 }
+
+static bool contains_var_from_each_pair_even(const std::vector<int>& args, int num_vars) {
+  absl::flat_hash_set<int> args_set(args.begin(), args.end());
+  CHECK(num_vars % 2 == 0);
+  for (int var = 1; var <= num_vars; var += 2) {
+    if (!(args_set.contains(var+1) || args_set.contains((var+1)%num_vars+1))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 DeltaExpr QLiViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
@@ -36,18 +46,6 @@ DeltaExpr QLiViaCorr(int weight, int num_vars) {
     }
   }
   return ret;
-}
-
-
-static bool contains_var_from_each_pair_even(const std::vector<int>& args, int num_vars) {
-  absl::flat_hash_set<int> args_set(args.begin(), args.end());
-  CHECK(num_vars % 2 == 0);
-  for (int var = 1; var <= num_vars; var += 2) {
-    if (!(args_set.contains(var+1) || args_set.contains((var+1)%num_vars+1))) {
-      return false;
-    }
-  }
-  return true;
 }
 
 // TODO: Update definition and cyclic shift!
@@ -89,7 +87,6 @@ DeltaExpr QLiNegAltViaCorr(int weight, int num_vars) {
   return ret;
 }
 
-
 DeltaExpr QLiSymmViaCorr(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = div_int(num_vars, 2);
@@ -107,8 +104,6 @@ DeltaExpr QLiSymmViaCorr(int weight, int num_vars) {
 }
 
 
-
-// TODO: remove duplicate code
 CorrExpr QLiViaCorrFSymb(int weight, int num_vars) {
   const int num_args = weight + 1;
   const int total_odd_vars = (num_vars + 1) / 2;

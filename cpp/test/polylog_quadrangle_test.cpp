@@ -22,8 +22,6 @@ TEST(LiQuadTest, EvaluatedExorHasNoMonsters_Arg6_Weight4) {
   );
 }
 
-// TODO: More args and weights
-
 TEST(LiQuadTest, CompareToLegacy_Odd_Arg6_Weight3) {
   EXPECT_EXPR_EQ(
     theta_expr_to_delta_expr(eval_formal_symbols(

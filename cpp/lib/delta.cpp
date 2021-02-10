@@ -144,26 +144,12 @@ DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr) {
 }
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr) {
-  if (expr.zero()) {
-    os << expr;
-    return;
-  }
-  std::map<int, DeltaExpr> num_vars_to_expr;
-  expr.foreach([&](const auto& term, int coeff) {
-    num_vars_to_expr[num_distinct_variables(term)].add_to(term, coeff);
-  });
-  bool first = true;
-  for (const auto& [num_vars, expr] : num_vars_to_expr) {
-    if (!first) {
-      os << "---\n";
-    }
-    first = false;
-    os << num_vars << " vars " << expr;
-  }
-  // TODO: Factor out function for printing annotation that would encapsulate:
-  // separator; checking `expression_include_annotations`; removing (or setting
-  // custom) line limit, etc.
-  if (*current_formatting_config().expression_include_annotations) {
-    os << "~~~\n" << expr.annotations();
-  }
+  to_ostream_grouped(
+    os, expr, std::less<>{},
+    num_distinct_variables, std::less<>{},
+    [](int num_vars) {
+      return absl::StrCat(num_vars, " vars");
+    },
+    LinearNoContext{}
+  );
 }

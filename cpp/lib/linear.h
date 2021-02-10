@@ -25,24 +25,15 @@ struct SimpleLinearParam {
   // === left to define (optional; if missing the corresponding functionality will be unavailable):
 
   // static int object_to_weight(const ObjectT& obj);
-
-  // TODO: remove monom_tensor_product, always use `concat` instead
   // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
 
   // using VectorT = ...;
   // static VectorT key_to_vector(const StorageT& key);
   // static StorageT vector_to_key(const VectorT& vec);
   //
-  // TODO-s Regarding VectorT, key_to_vector, vector_to_key:
-  //   - Don't convert back and forth!
-  //   - Conversion functions must be defined iff  VectorT != StorageT.
-  //     It should be a compile-time error to have key_to_vector when VectorT == StorageT.
-  //     This will allow to reliably omit conversion when it's not needed.
-  //   - Consider alternative:
-  //     Introduce separate expression types (say, EpsilonPrime) which don't support
-  //     formal symbols and remove all the pre/post-processing machinery.
-  //   - Consider alternative:
-  //     Don't convert entire expression - convert only singular monoms.
+  // TODO: key_to_vector/vector_to_key conversion functions must be defined iff  VectorT != StorageT.
+  //     It should be a compile-time error to have key_to_vector when VectorT == StorageT. This will
+  //     allow to reliably omit conversion when it's not needed.
 
   // static constexpr bool coproduct_is_lie_algebra = ...;
 };
@@ -85,8 +76,7 @@ public:
   using StorageT = typename ParamT::StorageT;
 
   BasicLinear() {}
-  // TODO: debug `template<typename OtherParamT> friend class BasicLinear<OtherParamT>` and move to private
-  BasicLinear(absl::flat_hash_map<StorageT, int> data) : data_(std::move(data)) {}
+  explicit BasicLinear(absl::flat_hash_map<StorageT, int> data) : data_(std::move(data)) {}
   ~BasicLinear() {}
 
   static BasicLinear single(const ObjectT& obj) {
@@ -385,9 +375,7 @@ public:
   using BasicLinearMain = BasicLinear<ParamT>;
 
   Linear() {}
-
-  // TODO: debug `template<typename OtherParamT> friend class Linear<OtherParamT>` and move to private
-  Linear(BasicLinearMain main, LinearAnnotation annotations)
+  explicit Linear(BasicLinearMain main, LinearAnnotation annotations)
     : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
   static Linear single(const ObjectT& obj) {
@@ -650,6 +638,44 @@ std::ostream& to_ostream(
     os << annotations;
   }
   os.flush();
+  return os;
+}
+
+template<typename ParamT, typename TermCompareF, typename GroupByF,
+         typename GroupCompareF, typename GroupHeaderF, typename ContextT>
+std::ostream& to_ostream_grouped(
+    std::ostream& os,
+    const Linear<ParamT>& linear,
+    const TermCompareF& term_sorting_cmp,
+    const GroupByF& group_by,
+    const GroupCompareF& group_sorting_cmp,
+    const GroupHeaderF& group_header,
+    const ContextT& context) {
+  using LinearT = Linear<ParamT>;
+  using GroupT = std::invoke_result_t<GroupByF, ParamT::ObjectT>;
+  const auto piece_to_ostream = [&](const LinearT& linear_piece) {
+    to_ostream(os, linear_piece, term_sorting_cmp, context);
+  };
+  if (linear.zero()) {
+    piece_to_ostream(linear);
+    return os;
+  }
+  std::map<GroupT, LinearT, GroupCompareF> groups(group_sorting_cmp);
+  linear.foreach([&](const auto& term, int coeff) {
+    groups[group_by(term)].add_to(term, coeff);
+  });
+  bool first = true;
+  for (const auto& [group_id, linear_piece] : groups) {
+    if (!first) {
+      os << "---\n";
+    }
+    first = false;
+    os << group_header(group_id) << " ";
+    piece_to_ostream(linear_piece);
+  }
+  if (*current_formatting_config().expression_include_annotations) {
+    os << "~~~\n" << linear.annotations();
+  }
   return os;
 }
 

@@ -11,15 +11,15 @@
 #include "polylog_param.h"
 
 
-// TODO: Move to internal (except max_variables)
+constexpr int kMaxComplementVariables = 7;
+
+namespace internal {
 constexpr int kEpsilonControlBits = 1;
-constexpr int kEpsilonDataBits = 7;
+constexpr int kEpsilonDataBits = kMaxComplementVariables;
 constexpr int kEpsilonTotalBits = kEpsilonControlBits + kEpsilonDataBits;
-constexpr int kMaxComplementVariables = kEpsilonDataBits;
-
 static_assert(kEpsilonTotalBits <= sizeof(unsigned long) * CHAR_BIT);  // for std::bitset::to_ulong
-
 using EpsilonStorageType = std::bitset<kEpsilonTotalBits>;
+}  // namespace internal
 
 
 // Represents x_k
@@ -30,7 +30,7 @@ public:
     CHECK(is_valid()) << "EpsilonVariable index = " << idx_;
   }
 
-  bool is_valid() const { return 1 <= idx_ && idx_ < (1 << kEpsilonDataBits); }
+  bool is_valid() const { return 1 <= idx_ && idx_ < (1 << internal::kEpsilonDataBits); }
   int idx() const { return idx_; }
 
   bool operator==(const EpsilonVariable& other) const { return idx_ == other.idx_; }
@@ -66,11 +66,6 @@ private:
 using Epsilon = std::variant<EpsilonVariable, EpsilonComplement>;
 
 using EpsilonPack = std::variant<std::vector<Epsilon>, LiParam>;
-
-enum EpsilonPackType {
-  kEpsilonPackTypeProduct = 0,
-  kEpsilonPackTypeFormalSymbol = 1,
-};
 
 
 inline std::string to_string(const EpsilonVariable& var) {
