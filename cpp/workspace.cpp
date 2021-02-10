@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
   );
 
 
-#if 1
+#if 0
   const int N = 11;
   const int num_points = N;
   auto source = sum_looped_vec(
@@ -613,7 +613,7 @@ int main(int argc, char *argv[]) {
 
 #endif
 
-#if 0
+#if 1
   static const int N = 9;
   LoopExpr loop_templates;
 
@@ -671,7 +671,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-  // std::cout << loop_expr_degenerate(loop_expr, {{1,3}});
+  // std::cout << loop_expr;
+  // std::cout << loop_expr_degenerate(loop_expr, {{1,3,5}});
   // return 0;
 
 
@@ -727,13 +728,11 @@ int main(int argc, char *argv[]) {
   std::cout << "n " << n << "\n";
   std::cout << "o " << o << "\n";
 
-  std::cout << (
-    + o
-    - n
-    - cycle(n, {{2,3}, {4,7}, {5,6}})
-  ) << "\n";
-
-  return 0;
+  // std::cout << (
+  //   + o
+  //   - n
+  //   - cycle(n, {{2,3}, {4,7}, {5,6}})
+  // ) << "\n";
 
   // std::cout << "a " << a << "\n";
   // std::cout << "m " << m << "\n";
@@ -775,25 +774,23 @@ int main(int argc, char *argv[]) {
     - cycle(m, {{7,6,5,4,3,2}})
     - cycle(m, {{2,7}, {3,6}, {4,5}})
   ;
-  const auto onm_c = to_canonical_permutation(onm);
   // std::cout << "n " << preshow(n) << "\n";
   // std::cout << "m " << preshow(m) << "\n";
   // std::cout << "o " << preshow(o) << "\n";
   // std::cout << onm << "\n";
-  std::cout << onm_c << "\n";
   // std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm)) << "\n";
 
-  const auto qqq_tmpl =
-    - LoopExpr::single({{2,1,4,3}, {2,1,5,4}, {2,1,5,7,6}})
-    + LoopExpr::single({{2,1,6,7}, {2,1,5,6}, {2,1,5,4,3}})
-  ;
-  LoopExpr qqq;
-  for (int i : range(6)) {
-    qqq += neg_one_pow(i) * loop_expr_substitute(qqq_tmpl, concat({1}, rotated_vector(seq_incl(2, 7), i)));
-  }
-  qqq = to_canonical_permutation(qqq);
-  std::cout << qqq << "\n";
-  std::cout << qqq + onm_c << "\n";
+  // const auto qqq_tmpl =
+  //   - LoopExpr::single({{2,1,4,3}, {2,1,5,4}, {2,1,5,7,6}})
+  //   + LoopExpr::single({{2,1,6,7}, {2,1,5,6}, {2,1,5,4,3}})
+  // ;
+  // LoopExpr qqq;
+  // for (int i : range(6)) {
+  //   qqq += neg_one_pow(i) * loop_expr_substitute(qqq_tmpl, concat({1}, rotated_vector(seq_incl(2, 7), i)));
+  // }
+  // qqq = to_canonical_permutation(qqq);
+  // std::cout << qqq << "\n";
+  // std::cout << qqq + onm_c << "\n";
 
 
   std::cout << "===\n\n";
@@ -925,27 +922,21 @@ int main(int argc, char *argv[]) {
   const auto m0 = m - cycle(m, {{2,6}});  //  ~=  m - cycle(m, {{3,5}})
   const auto v0 = v + cycle(v, {{1,6}});
 
-  const auto o0c = to_canonical_permutation(o0);
-  const auto m0c = to_canonical_permutation(m0);
-  const auto v0c = to_canonical_permutation(v0);
-
+  std::cout << onm << "\n";
   // std::cout << o0 << "\n";
-  // std::cout << m0 << "\n";
+  std::cout << m0 << "\n";
   // std::cout << v0 << "\n";
 
   // std::cout << "===\n\n";
-
-  // std::cout << o0c << "\n";
-  // std::cout << m0c << "\n";
-  // std::cout << v0c << "\n";
 
   // std::cout << to_canonical_permutation(cycle(m0, {{2,5,7}, {3,6}}));
 
   // std::cout << "===\n\n";
 
-  // std::cout << arg9_expr_type_1_to_column(o0c) << "\n";
-  // std::cout << arg9_expr_type_1_to_column(m0c) << "\n";
-  // std::cout << arg9_expr_type_1_to_column(v0c) << "\n";
+  std::cout << arg9_expr_type_1_to_column(onm) << "\n";
+  // std::cout << arg9_expr_type_1_to_column(o0) << "\n";
+  std::cout << arg9_expr_type_1_to_column(m0) << "\n";
+  // std::cout << arg9_expr_type_1_to_column(v0) << "\n";
 
   // std::cout << "%%%\n\n";
 
