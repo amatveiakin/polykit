@@ -1,5 +1,3 @@
-// TODO: Organize this to be more in line with polylog formal symbol expressions.
-
 #pragma once
 
 #include "format.h"

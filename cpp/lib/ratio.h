@@ -19,8 +19,7 @@ enum class CrossRatioNormalization {
   rotation_only,
 
   // Puts the smallest element in front.
-  // Reduces the number of possible permutation from 24 to 6,
-  // which is the theoretical minimum.
+  // Reduces the number of possible permutation from 24 to 6.
   full,
 };
 

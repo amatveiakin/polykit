@@ -170,7 +170,6 @@ public:
       const std::vector<std::string>& args,
       HSpacing hspacing) = 0;
 
-  // TODO: CHECK conditions below.
   // Usage:
   //   * Each begin_rich_text call must be followed by exactly one end_rich_text call.
   //   * Calls to begin_rich_text/end_rich_text can be nested, e.g. begin, begin, end, end.
@@ -282,7 +281,7 @@ inline std::string function(
   return current_encoder()->function(name, args, hspacing);
 }
 
-// Warning: nested `fmt::colored` calls are not supprted with RichTextFormat::console.
+// Warning: nested `fmt::colored` calls are not supported with RichTextFormat::console.
 // Use begin_rich_text/end_rich_text for everything except the innermost color.
 inline std::string colored(const std::string& expr, TextColor text_color) {
   std::string ret;

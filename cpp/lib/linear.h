@@ -421,6 +421,7 @@ public:
   std::pair<ObjectT, int> pop() { return main_.pop(); }
   std::pair<StorageT, int> pop_key() { return main_.pop_key(); }
 
+  // TODO: Replace `foreach` with `begin/end`. This will be more natural and allow breaking early.
   template<typename F>
   void foreach(F func) const { return main_.foreach(func); }
   template<typename F>

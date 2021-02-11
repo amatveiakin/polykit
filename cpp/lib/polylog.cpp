@@ -1,8 +1,6 @@
 // Note: Cutting formulas are the same as in `iterated_integral`.
 // Difference: Epsilon instead of Delta, `..._3_point` implementation.
 
-// TODO: Consistent terminology: 'points' vs 'dots'.
-
 #include "polylog.h"
 
 #include "absl/types/span.h"
