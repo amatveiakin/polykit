@@ -1,7 +1,7 @@
 // Note: Cutting formulas are the same as in `iterated_integral`.
 // Difference: Epsilon instead of Delta, `..._3_point` implementation.
 
-#include "polylog.h"
+#include "polylog_li.h"
 
 #include "absl/types/span.h"
 

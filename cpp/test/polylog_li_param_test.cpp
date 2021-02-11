@@ -1,4 +1,4 @@
-#include "lib/polylog_param.h"
+#include "lib/polylog_li_param.h"
 
 #include "gtest/gtest.h"
 

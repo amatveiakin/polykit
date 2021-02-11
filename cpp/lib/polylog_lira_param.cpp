@@ -1,4 +1,4 @@
-#include "polylog_cross_ratio_param.h"
+#include "polylog_lira_param.h"
 
 #include "format.h"
 #include "util.h"

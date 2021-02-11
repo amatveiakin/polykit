@@ -1,4 +1,4 @@
-#include "polylog_quadrangle.h"
+#include "polylog_liquad.h"
 
 #include "algebra.h"
 #include "mystic_algebra.h"

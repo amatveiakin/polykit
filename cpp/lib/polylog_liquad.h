@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polylog_param.h"
+#include "polylog_li_param.h"
 #include "theta.h"
 
 

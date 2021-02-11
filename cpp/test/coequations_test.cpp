@@ -2,7 +2,7 @@
 
 #include "lib/coalgebra.h"
 #include "lib/iterated_integral.h"
-#include "lib/polylog_cross_ratio.h"
+#include "lib/polylog_qli.h"
 #include "lib/summation.h"
 #include "test_util/matchers.h"
 

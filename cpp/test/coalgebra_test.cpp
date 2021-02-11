@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/iterated_integral.h"
-#include "lib/polylog.h"
+#include "lib/polylog_li.h"
 #include "test_util/helpers.h"
 #include "test_util/matchers.h"
 

@@ -10,7 +10,7 @@
 #include "delta_ratio.h"
 #include "epsilon.h"
 #include "format.h"
-#include "polylog_cross_ratio_param.h"
+#include "polylog_lira_param.h"
 
 
 class ThetaComplement {

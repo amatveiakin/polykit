@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "lib/polylog_cross_ratio.h"
+#include "lib/polylog_qli.h"
 #include "lib/projection.h"
 #include "test_util/matchers.h"
 

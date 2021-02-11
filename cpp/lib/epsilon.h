@@ -8,7 +8,7 @@
 #include "check.h"
 #include "coalgebra.h"
 #include "packed.h"
-#include "polylog_param.h"
+#include "polylog_li_param.h"
 
 
 constexpr int kMaxComplementVariables = 7;

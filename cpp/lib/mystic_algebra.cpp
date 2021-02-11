@@ -2,7 +2,7 @@
 
 #include "algebra.h"
 #include "epsilon.h"
-#include "polylog.h"
+#include "polylog_li.h"
 #include "quasi_shuffle.h"
 #include "zip.h"
 

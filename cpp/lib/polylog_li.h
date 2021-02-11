@@ -2,7 +2,7 @@
 
 #include "coalgebra.h"
 #include "epsilon.h"
-#include "polylog_param.h"
+#include "polylog_li_param.h"
 #include "theta.h"
 
 

@@ -1,9 +1,9 @@
-#include "lib/polylog_quadrangle.h"
+#include "lib/polylog_liquad.h"
 
 #include "gtest/gtest.h"
 
-#include "lib/polylog.h"
-#include "lib/polylog_cross_ratio.h"
+#include "lib/polylog_li.h"
+#include "lib/polylog_qli.h"
 #include "test_util/matchers.h"
 
 

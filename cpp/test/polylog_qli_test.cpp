@@ -1,4 +1,4 @@
-#include "lib/polylog_cross_ratio.h"
+#include "lib/polylog_qli.h"
 
 #include "gtest/gtest.h"
 
