@@ -24,7 +24,7 @@ static LiraParam infuse_format_symbol(const LiraParam& lhs, const LiraParam& rhs
   std::vector<int> weights = rhs.weights();
   std::vector<CompoundRatio> ratios = rhs.ratios();
   weights.front() += lhs.weights().front();
-  ratios.front().add(lhs.ratios().front());
+  ratios.front() *= lhs.ratios().front();
   return LiraParam(1, std::move(weights), std::move(ratios));
 }
 
@@ -34,7 +34,7 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
   CHECK(n >= 4 && n % 2 == 0) << "Bad number of LiQuad points: " << n;
   auto ratio_from_points = [&](const std::vector<int>& points) {
     const auto& point_args = sigma ? rotated_vector(points, 1) : points;
-    return CompoundRatio::from_cross_ratio(CrossRatio(point_args));
+    return CompoundRatio(CrossRatio(point_args));
   };
   const int sigma_sign = sigma ? -1 : 1;
   if (n == 4) {

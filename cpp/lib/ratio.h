@@ -6,6 +6,7 @@
 
 #include "check.h"
 #include "compression.h"
+#include "format.h"
 #include "string.h"
 #include "util.h"
 
@@ -137,42 +138,43 @@ using CrossRatioNOrUnity = CrossRatioOrUnityTmpl<CrossRatioNormalization::full>;
 // (a - d) / (c - d), but in practice we have at least a cross ratio.
 constexpr int kMinCompoundRatioComponents = 2;
 
+// A product of several cross ratios. Represented as a collection of "loops" with
+// non-overlapping variables. The first half of each loop is the numerator and the
+// second half is the denominator.
+// The class is designed to store only very specific combinations of cross ratios
+// that arise while computing polylog symbols. Trying to multiply arbitrary cross
+// ratios will likely result in an error.
 class CompoundRatio {
 public:
   CompoundRatio() {}
-  CompoundRatio(std::vector<std::vector<int>> loops)
-    : loops_(std::move(loops)) {
-    normalize();
-  }
+  CompoundRatio(const CrossRatio& ratio) : CompoundRatio({to_vector(ratio.indices())}, ConstructImplTag{}) {}
+  CompoundRatio(const CrossRatioOrUnity& r) : CompoundRatio(
+    r.is_unity()
+      ? std::vector<std::vector<int>>{}
+      : std::vector<std::vector<int>>{to_vector(r.as_ratio().indices())},
+    ConstructImplTag{}
+  ) {}
 
   static CompoundRatio unity() {
     return CompoundRatio();
   }
-
-  static CompoundRatio from_cross_ratio(const CrossRatio& ratio) {
-    return CompoundRatio({to_vector(ratio.indices())});
-  }
-  static CompoundRatio from_cross_ratio(const CrossRatioOrUnity& r) {
-    return r.is_unity()
-      ? CompoundRatio::unity()
-      : CompoundRatio::from_cross_ratio(r.as_ratio());
-  }
-  static CompoundRatio from_cross_ratio_product(const std::vector<CrossRatio>& ratios) {
+  static CompoundRatio from_product(const std::vector<CrossRatio>& ratios) {
     CompoundRatio ret;
     for (const auto& r : ratios) {
-      ret.add(r);
+      ret *= r;
     }
     return ret;
+  }
+  static CompoundRatio from_loops(std::vector<std::vector<int>> loops) {
+    return CompoundRatio(std::move(loops), ConstructImplTag{});
   }
 
   bool is_unity() const { return loops_.empty(); };
 
-  void add(const CompoundRatio& ratio) {
+  CompoundRatio& operator*=(const CompoundRatio& ratio) {
     append_vector(loops_, ratio.loops_);
     normalize();
-  }
-  void add(const CrossRatio& ratio) {
-    add(CompoundRatio::from_cross_ratio(ratio));
+    return *this;
   }
 
   const std::vector<std::vector<int>>& loops() const { return loops_; };
@@ -188,11 +190,24 @@ public:
   }
 
 private:
+  // Work around "ambiguous call to overloaded function" MSVC bug. Apparently, it's
+  // ignoring `explicit` specifier in CrossRatio constructor.
+  struct ConstructImplTag {};
+  explicit CompoundRatio(std::vector<std::vector<int>> loops, ConstructImplTag)
+    : loops_(std::move(loops)) {
+    normalize();
+  }
+
   void check() const;
   void normalize();
 
   std::vector<std::vector<int>> loops_;
 };
+
+inline CompoundRatio operator*(CompoundRatio lhs, const CompoundRatio& rhs) {
+  lhs *= rhs;
+  return lhs;
+}
 
 using CompoundRatioCompressed = CompressedBlob<CompoundRatio>;
 

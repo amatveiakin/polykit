@@ -266,7 +266,11 @@ EpsilonExpr epsilon_expr_substitute(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 
-// Here 'monster' means 'EpsilonComplement with more than one variable'.
+// Here "monster" means "EpsilonComplement with more than one variable".
+// Motivation: we call a term "monster" if it cannot be reduced to a cross ratio
+// after we substitute a cross ratio for each variable. One minus cross ratio
+// is always a cross ratio. One minus a product of cross ratio is usually not
+// and here we assume that it never is.
 EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);
 EpsilonExpr epsilon_expr_keep_monsters(const EpsilonExpr& expr);
 EpsilonCoExpr epsilon_coexpr_without_monsters(const EpsilonCoExpr& expr);

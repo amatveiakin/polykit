@@ -13,7 +13,7 @@
 template<typename T>
 std::vector<T> lexicographically_minimal_rotation(std::vector<T> v) {
   std::vector<T> min = v;
-  for (int i : range(1, v.size())) {
+  for (EACH : range(1, v.size())) {
     absl::c_rotate(v, v.begin() + 1);
     if (v < min) {
       min = v;

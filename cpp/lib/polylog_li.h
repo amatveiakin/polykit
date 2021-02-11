@@ -3,27 +3,19 @@
 #include "coalgebra.h"
 #include "epsilon.h"
 #include "polylog_li_param.h"
-#include "theta.h"
 
 
 EpsilonExpr LiVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
-
-EpsilonExpr LiVec(
-    const LiParam& param);
+EpsilonExpr LiVec(const LiParam& param);
 
 EpsilonCoExpr CoLiVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
-
-EpsilonCoExpr CoLiVec(
-    const LiParam& param);
-
-ThetaExpr eval_formal_symbols(const ThetaExpr& expr);
-ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr);
+EpsilonCoExpr CoLiVec(const LiParam& param);
 
 
 namespace internal {

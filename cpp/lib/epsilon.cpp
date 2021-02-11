@@ -10,7 +10,7 @@ EpsilonExpr epsilon_expr_substitute(
     return std::visit(overloaded{
       [&](const std::vector<Epsilon>& term_product) {
         return tensor_product(absl::MakeConstSpan(mapped(
-          absl::MakeConstSpan(term_product),
+          term_product,
           [&](const Epsilon& e) -> EpsilonExpr {
             return std::visit(overloaded{
               [&](const EpsilonVariable& v) {
@@ -68,7 +68,7 @@ static bool is_monster(const EpsilonPack& term) {
       );
     },
     [](const LiParam& formal_symbol) {
-      return true;
+      return false;
     },
   }, term);
 }

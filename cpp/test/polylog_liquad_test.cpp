@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "lib/polylog_li.h"
+#include "lib/polylog_lira.h"
 #include "lib/polylog_qli.h"
 #include "test_util/matchers.h"
 

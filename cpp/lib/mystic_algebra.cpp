@@ -132,9 +132,7 @@ static LiraParam vec_to_lira_params(const std::vector<LiraParamZipElement>& vec)
 
 static LiraParamZipElement glue_lira_elements(
     const LiraParamZipElement& lhs, const LiraParamZipElement& rhs) {
-  CompoundRatio ratio = lhs.second;
-  ratio.add(rhs.second);
-  return LiraParamZipElement{lhs.first + rhs.first, ratio};
+  return LiraParamZipElement{lhs.first + rhs.first, lhs.second * rhs.second};
 }
 
 static ThetaExpr monom_quasi_shuffle_product(

@@ -95,7 +95,7 @@ void CompoundRatio::normalize() {
         const int an = a.size();
         const int bn = b.size();
         const int num_common = common.size();
-        CHECK_LE(num_common, 2);
+        CHECK_LE(num_common, 2) << to_string(*this);
         if (num_common == 2) {
           simplification_found = true;
           int c1 = common[0];
@@ -134,7 +134,7 @@ std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio
   if (ratio.loops_.size() == 1) {
     const std::vector<int>& l = ratio.loops_.front();
     if (l.size() == 4) {
-      return CompoundRatio({{l[0], l[2], l[1], l[3]}});
+      return CompoundRatio::from_loops({{l[0], l[2], l[1], l[3]}});
     }
   }
   return std::nullopt;
@@ -159,7 +159,7 @@ CompoundRatio uncompress_compound_ratio(Decompressor& decompressor) {
   for (EACH : range(size)) {
     loops.push_back(decompressor.next_segment());
   }
-  return CompoundRatio(std::move(loops));
+  return CompoundRatio::from_loops(std::move(loops));
 }
 
 CompoundRatioCompressed compress_compound_ratio(const CompoundRatio& ratio) {

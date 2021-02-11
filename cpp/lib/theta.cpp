@@ -20,11 +20,11 @@ ThetaExpr TComplement(const CompoundRatio& ratio) {
 }
 
 ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices) {
-  std::vector<CrossRatio> ratios;
+  CompoundRatio ratio;
   for (auto&& r : indices) {
-    ratios.push_back(CrossRatio(r));
+    ratio *= CrossRatio(r);
   }
-  return TComplement(CompoundRatio::from_cross_ratio_product(ratios));
+  return TComplement(ratio);
 }
 
 ThetaExpr epsilon_expr_to_theta_expr(
@@ -37,7 +37,7 @@ ThetaExpr epsilon_expr_to_theta_expr(
     return std::visit(overloaded{
       [&](const std::vector<Epsilon>& term_product) {
         return tensor_product(absl::MakeConstSpan(mapped(
-          absl::MakeConstSpan(term_product),
+          term_product,
           [&](const Epsilon& e) -> ThetaExpr {
             return std::visit(overloaded{
               [&](const EpsilonVariable& v) {
@@ -47,7 +47,7 @@ ThetaExpr epsilon_expr_to_theta_expr(
                 CompoundRatio ratio_prod;
                 for (int idx : range(kMaxComplementVariables)) {
                   if (v.indices()[idx]) {
-                    ratio_prod.add(compound_ratios.at(idx - 1));
+                    ratio_prod *= compound_ratios.at(idx - 1);
                   }
                 }
                 return TComplement(std::move(ratio_prod));
@@ -61,7 +61,7 @@ ThetaExpr epsilon_expr_to_theta_expr(
         for (const std::vector<int>& point_arg: formal_symbol.points()) {
           symbol_ratios.push_back({});
           for (const int p : point_arg) {
-            symbol_ratios.back().add(compound_ratios.at(p - 1));
+            symbol_ratios.back() *= compound_ratios.at(p - 1);
           }
         }
         return TFormalSymbol(LiraParam(
@@ -71,18 +71,9 @@ ThetaExpr epsilon_expr_to_theta_expr(
   }).without_annotations();
 }
 
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& cross_ratios) {
-  return epsilon_expr_to_theta_expr(
-    expr,
-    mapped(cross_ratios, CompoundRatio::from_cross_ratio_product)
-  );
-}
-
 ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
     const EpsilonCoExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& ratios) {
+    const std::vector<CompoundRatio>& ratios) {
   return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
     CHECK_EQ(term.size(), kThetaCoExprComponents);
     const std::vector<ThetaExpr> multipliers =
@@ -160,7 +151,7 @@ static bool is_monster(const ThetaPack& term) {
       });
     },
     [](const LiraParam& formal_symbol) {
-      return true;
+      return false;
     },
   }, term);
 }

@@ -653,7 +653,7 @@ std::ostream& to_ostream_grouped(
     const GroupHeaderF& group_header,
     const ContextT& context) {
   using LinearT = Linear<ParamT>;
-  using GroupT = std::invoke_result_t<GroupByF, ParamT::ObjectT>;
+  using GroupT = std::invoke_result_t<GroupByF, typename ParamT::ObjectT>;
   const auto piece_to_ostream = [&](const LinearT& linear_piece) {
     to_ostream(os, linear_piece, term_sorting_cmp, context);
   };

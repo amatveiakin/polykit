@@ -8,10 +8,10 @@
 // Each function can be called using one of the three forms (examples use QLi, but
 // the same is true for QLiNeg and QLiSymm):
 //   * Simple form: `QLiN(x1,x2,...,xk)` where N is weight, e.g. `QLi4(1,2,3,4,5,6)`.
-//   * Full form: `QLi(weight, vector_of_arguments)` e.g. `QLi(4, {1,2,3,4,5,6})`.
-//   * Projected form: `QLi(weight, vector_of_arguments, projector)`.
+//   * Vector form: `QLiVec(weight, vector_of_arguments)` e.g. `QLiVec(4, {1,2,3,4,5,6})`.
+//   * Projected form: `QLiVecPr(weight, vector_of_arguments, projector)`.
 //     Assuming that `projector` is indeed a projection, this is equivalent to
-//     `projector(QLi(weight, vector_of_arguments))` but faster.
+//     `projector(QLiVec(weight, vector_of_arguments))` but faster.
 //
 // Any argument can be `Inf` denoting that the corresponding variable is sent to infinity.
 // In practice this means that any terms including this variable are discarded.

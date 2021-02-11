@@ -178,47 +178,26 @@ inline bool theta_pack_is_unity(const ThetaPack& pack) {
   return as_product && as_product->empty();
 }
 
-inline ThetaPack ThetaUnityElement() {
-  return std::vector<Theta>{};
-}
+inline ThetaPack ThetaUnityElement() { return std::vector<Theta>{}; }
+inline ThetaExpr TUnity() { return ThetaExpr::single(ThetaUnityElement()); }
 
-inline ThetaExpr TUnity() {
-  return ThetaExpr::single(ThetaUnityElement());
-}
+ThetaExpr TRatio(const CompoundRatio& ratio);
+inline ThetaExpr TRatio(std::initializer_list<int> indices) { return TRatio(CrossRatio(indices)); }
 
-inline ThetaExpr TRatio(const CompoundRatio& ratio);
-
-inline ThetaExpr TRatio(const CrossRatio& ratio) {
-  return TRatio(CompoundRatio::from_cross_ratio(ratio));
-}
-
-inline ThetaExpr TRatio(std::initializer_list<int> indices) {
-  return TRatio(CrossRatio(indices));
-}
-
-inline ThetaExpr TComplement(const CompoundRatio& ratio);
-
+ThetaExpr TComplement(const CompoundRatio& ratio);
 inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices);
 
-inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) {
-  return ThetaExpr::single(lira_param);
-}
+inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) { return ThetaExpr::single(lira_param); }
 
 
 ThetaExpr epsilon_expr_to_theta_expr(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios);
-
-ThetaExpr epsilon_expr_to_theta_expr(
-    const EpsilonExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& cross_ratios);
-
 ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
     const EpsilonCoExpr& expr,
-    const std::vector<std::vector<CrossRatio>>& ratios);
+    const std::vector<CompoundRatio>& ratios);
 
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
-
 DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
 ThetaExpr update_foreweight(
@@ -227,6 +206,7 @@ ThetaExpr update_foreweight(
 
 StringExpr count_functions(const ThetaExpr& expr);
 
+// "Monster" is something that cannot be decomposed into a product of Plücker coordinates.
 ThetaExpr theta_expr_without_monsters(const ThetaExpr& expr);
 ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
 ThetaCoExpr theta_coexpr_without_monsters(const ThetaCoExpr& expr);
