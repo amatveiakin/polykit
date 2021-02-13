@@ -49,7 +49,7 @@ auto sum_looped_vec(
   return ret;
 }
 
-template<typename F, int N>
+template<typename F, size_t N>
 auto sum_looped(
     const F& func,
     int max_arg_value,
