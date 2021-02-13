@@ -11,7 +11,7 @@ ThetaExpr LiraVec(
   for (int i : range_incl(1, ratios.size())) {
     points.push_back({i});
   }
-  return epsilon_expr_to_theta_expr(
+  return substitute_ratios(
     LiVec(foreweight, weights, points),
     ratios
   );
@@ -29,7 +29,7 @@ ThetaCoExpr CoLiraVec(
   for (int i : range_incl(1, ratios.size())) {
     points.push_back({i});
   }
-  return epsilon_coexpr_to_theta_coexpr(
+  return substitute_ratios(
     CoLiVec(foreweight, weights, points),
     ratios
   );
@@ -42,7 +42,7 @@ ThetaCoExpr CoLiraVec(const LiraParam& param) {
 
 ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
   return expr.mapped_expanding([&](const ThetaPack& term) {
-    if (theta_pack_is_unity(term)) {
+    if (is_unity(term)) {
       return TUnity();
     }
     return std::visit(overloaded{

@@ -27,11 +27,11 @@ ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices)
   return TComplement(ratio);
 }
 
-ThetaExpr epsilon_expr_to_theta_expr(
+ThetaExpr substitute_ratios(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios) {
   return expr.mapped_expanding([&](const EpsilonPack& term) {
-    if (epsilon_pack_is_unity(term)) {
+    if (is_unity(term)) {
       return TUnity();
     }
     return std::visit(overloaded{
@@ -71,14 +71,14 @@ ThetaExpr epsilon_expr_to_theta_expr(
   }).without_annotations();
 }
 
-ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
+ThetaCoExpr substitute_ratios(
     const EpsilonCoExpr& expr,
     const std::vector<CompoundRatio>& ratios) {
   return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
     CHECK_EQ(term.size(), kThetaCoExprComponents);
     const std::vector<ThetaExpr> multipliers =
       mapped(term, [&](const EpsilonPack& pack) {
-        return epsilon_expr_to_theta_expr(EpsilonExpr::single(pack), ratios);
+        return substitute_ratios(EpsilonExpr::single(pack), ratios);
       });
     static_assert(kThetaCoExprComponents == 2);
     return outer_product<ThetaCoExpr>(
@@ -121,7 +121,7 @@ ThetaExpr update_foreweight(
     const ThetaExpr& expr,
     int new_foreweight) {
   return expr.without_annotations().mapped<ThetaExpr>([&](const ThetaPack& term) -> ThetaPack {
-    if (theta_pack_is_unity(term)) {
+    if (is_unity(term)) {
       return term;
     } else if (std::holds_alternative<LiraParam>(term)) {
       const LiraParam& param = std::get<LiraParam>(term);
@@ -156,22 +156,22 @@ static bool is_monster(const ThetaPack& term) {
   }, term);
 }
 
-ThetaExpr theta_expr_without_monsters(const ThetaExpr& expr) {
+ThetaExpr without_monsters(const ThetaExpr& expr) {
   return expr.filtered([](const ThetaPack& term) {
     return !is_monster(term);
   });
 }
-ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr) {
+ThetaExpr keep_monsters(const ThetaExpr& expr) {
   return expr.filtered([](const ThetaPack& term) {
     return is_monster(term);
   });
 }
-ThetaCoExpr theta_coexpr_without_monsters(const ThetaCoExpr& expr) {
+ThetaCoExpr without_monsters(const ThetaCoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return !absl::c_any_of(term, is_monster);
   });
 }
-ThetaCoExpr theta_coexpr_keep_monsters(const ThetaCoExpr& expr) {
+ThetaCoExpr keep_monsters(const ThetaCoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return absl::c_any_of(term, is_monster);
   });

@@ -10,11 +10,11 @@ TEST(LiraTest, DifferentSubstitutionsEquivalent) {
   auto cr_a  = CR(2,1,7,8);
   auto cr_b1 = CR(3,4,5,6);
   auto cr_b2 = CR(3,6,1,2);
-  auto separate_vars = epsilon_expr_to_theta_expr(
+  auto separate_vars = substitute_ratios(
     Li(2,2)({1},{2,3}), {
     {cr_a}, {cr_b1}, {cr_b2}
   });
-  auto multiply_first = epsilon_expr_to_theta_expr(
+  auto multiply_first = substitute_ratios(
     Li(2,2)({1},{2}), {
     {cr_a}, {cr_b1 * cr_b2}
   });
@@ -27,11 +27,11 @@ TEST(CoLiraTest, DifferentSubstitutionsEquivalent) {
   auto cr_a  = CR(2,1,7,8);
   auto cr_b1 = CR(3,4,5,6);
   auto cr_b2 = CR(3,6,1,2);
-  auto separate_vars = epsilon_coexpr_to_theta_coexpr(
+  auto separate_vars = substitute_ratios(
     CoLi(2,2)({1},{2,3}), {
     {cr_a}, {cr_b1}, {cr_b2}
   });
-  auto multiply_first = epsilon_coexpr_to_theta_coexpr(
+  auto multiply_first = substitute_ratios(
     CoLi(2,2)({1},{2}), {
     {cr_a}, {cr_b1 * cr_b2}
   });
@@ -43,20 +43,20 @@ TEST(CoLiraTest, DifferentSubstitutionsEquivalent) {
 TEST(LiraTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
   const int foreweight = 2;  // Should be true for any foreweight
   EXPECT_EXPR_ZERO(
-    theta_expr_keep_monsters(
-      + epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+    keep_monsters(
+      + substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(3,4,7,2)},
         {CR(5,6,7,4)},
       })
-      - epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+      - substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(3,6,7,2)},
         {CR(3,4,5,6)},
       })
-      + epsilon_expr_to_theta_expr(LiVec(foreweight, {1,1}, {{1},{2}}), {
+      + substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(5,6,7,2)},
         {CR(3,4,5,2)},
       })
-      + epsilon_expr_to_theta_expr(LiVec(foreweight, {2}, {{1,2}}), {
+      + substitute_ratios(LiVec(foreweight, {2}, {{1,2}}), {
         {CR(5,6,7,2)},
         {CR(3,4,5,2)},
       })
@@ -66,7 +66,7 @@ TEST(LiraTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
 
 TEST(CoLiraTest, HandwrittenCoLiQuad_StartOdd_HasNoMonsters) {
   EXPECT_EXPR_ZERO(
-    theta_coexpr_keep_monsters(
+    keep_monsters(
       + CoLira(1,1)(CR(1,2,3,6), CR(3,4,5,6))
       - CoLira(1,1)(CR(1,2,5,6), CR(3,4,5,2))
       + CoLira(1,1)(CR(1,4,5,6), CR(1,2,3,4))

@@ -173,7 +173,7 @@ using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
 
 
 // Whether expr is one w.r.t. shuffle multiplication.
-inline bool theta_pack_is_unity(const ThetaPack& pack) {
+inline bool is_unity(const ThetaPack& pack) {
   const auto* as_product = std::get_if<std::vector<Theta>>(&pack);
   return as_product && as_product->empty();
 }
@@ -190,24 +190,22 @@ inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> i
 inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) { return ThetaExpr::single(lira_param); }
 
 
-ThetaExpr epsilon_expr_to_theta_expr(
+ThetaExpr substitute_ratios(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios);
-ThetaCoExpr epsilon_coexpr_to_theta_coexpr(
+ThetaCoExpr substitute_ratios(
     const EpsilonCoExpr& expr,
     const std::vector<CompoundRatio>& ratios);
 
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
 DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
-ThetaExpr update_foreweight(
-    const ThetaExpr& expr,
-    int new_foreweight);
+ThetaExpr update_foreweight(const ThetaExpr& expr, int new_foreweight);
 
 StringExpr count_functions(const ThetaExpr& expr);
 
 // "Monster" is something that cannot be decomposed into a product of Plücker coordinates.
-ThetaExpr theta_expr_without_monsters(const ThetaExpr& expr);
-ThetaExpr theta_expr_keep_monsters(const ThetaExpr& expr);
-ThetaCoExpr theta_coexpr_without_monsters(const ThetaCoExpr& expr);
-ThetaCoExpr theta_coexpr_keep_monsters(const ThetaCoExpr& expr);
+ThetaExpr without_monsters(const ThetaExpr& expr);
+ThetaExpr keep_monsters(const ThetaExpr& expr);
+ThetaCoExpr without_monsters(const ThetaCoExpr& expr);
+ThetaCoExpr keep_monsters(const ThetaCoExpr& expr);

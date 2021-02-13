@@ -64,7 +64,7 @@ TEST(QLiSymmViaCorrTest, GluingTwoArgsReducesWeight) {
       auto large_args = seq_incl(1, num_args);
       --large_args.back();
       EXPECT_EXPR_EQ_AFTER_LYNDON(
-        delta_expr_substitute(
+        substitute_variables(
           QLiSymmViaCorr(weight, num_args),
           mapped(large_args, X::Var)
         ),
@@ -206,7 +206,7 @@ TEST(CorrFSymbTest, FormalSymbolCoEquation_Arg8_Form_2_3) {
   for (int weight = 1; weight <= 5; weight++) {
     for (int num_args = 4; num_args <= 10; num_args += 2) {
       auto new_args = mapped(concat(seq_incl(2,num_args), std::vector{1}), X::Var);
-      auto lhs = to_lyndon_basis(delta_expr_substitute(QLiViaCorr(weight, num_args), new_args));
+      auto lhs = to_lyndon_basis(substitute_variables(QLiViaCorr(weight, num_args), new_args));
       auto rhs = to_lyndon_basis(QLiNegViaCorr(weight, num_args));
       auto diff = lhs + rhs;
       std::cout << "weight = " << weight << ", num_args = " << num_args << ", sum = " << prnt::header_only(diff);

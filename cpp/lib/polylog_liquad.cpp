@@ -59,7 +59,7 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
         upper_parts.push_back(LiQuadImpl(slice(points, b, last+1), sigma));
       }
       CHECK(!upper_parts.empty());
-      const ThetaExpr upper_prod = theta_expr_quasi_shuffle_product(upper_parts);
+      const ThetaExpr upper_prod = quasi_shuffle_product_expr(upper_parts);
       ret += upper_prod.mapped([&](const ThetaPack& expr) {
         return concat_format_symbols(lower_part, std::get<LiraParam>(expr));
       });

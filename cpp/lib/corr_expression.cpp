@@ -3,7 +3,7 @@
 #include "coalgebra.h"
 
 
-CorrExpr corr_expr_substitute(const CorrExpr& expr, const std::vector<int>& new_points) {
+CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_points) {
   return expr.mapped([&](const CorrFSymb& term) {
     return CorrFSymb{mapped(term.points, [&](int p) {
       return new_points.at(p - 1);

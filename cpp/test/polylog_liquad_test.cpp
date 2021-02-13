@@ -9,14 +9,14 @@
 
 TEST(LiQuadTest, EvaluatedExorHasNoMonsters_Arg6_Weight3) {
   EXPECT_EXPR_ZERO(
-    theta_expr_keep_monsters(eval_formal_symbols(
+    keep_monsters(eval_formal_symbols(
       LiQuad(2, {1,2,3,4,5,6}, LiFirstPoint::odd)
     ))
   );
 }
 TEST(LiQuadTest, EvaluatedExorHasNoMonsters_Arg6_Weight4) {
   EXPECT_EXPR_ZERO(
-    theta_expr_keep_monsters(eval_formal_symbols(
+    keep_monsters(eval_formal_symbols(
       LiQuad(3, {1,2,3,4,5,6}, LiFirstPoint::odd)
     ))
   );

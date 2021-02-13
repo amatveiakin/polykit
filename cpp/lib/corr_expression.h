@@ -40,7 +40,7 @@ struct CorrExprParam {
 
 using CorrExpr = Linear<internal::CorrExprParam>;
 
-CorrExpr corr_expr_substitute(const CorrExpr& expr, const std::vector<int>& new_points);
+CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_points);
 
 
 constexpr int kCorrCoExprComponents = 2;

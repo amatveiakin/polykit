@@ -215,7 +215,7 @@ EpsilonExpr LiVec(
 }
 
 EpsilonExpr LiVec(const LiParam& param) {
-  return epsilon_expr_substitute(
+  return substitute_variables(
       param.sign() * Li_impl(weights_to_dots(param.foreweight(), param.weights())),
       param.points()
     ).annotate(to_string(param));
@@ -237,8 +237,8 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
   EpsilonCoExpr ret;
   auto add_term = [&](const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
     ret += coproduct(
-      epsilon_expr_substitute(lhs, param.points()),
-      epsilon_expr_substitute(rhs, param.points())
+      substitute_variables(lhs, param.points()),
+      substitute_variables(rhs, param.points())
     );
   };
   for (const std::vector<int>& seq_prototype : increasing_sequences(dots.size() - 2)) {

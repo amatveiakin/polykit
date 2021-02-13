@@ -213,7 +213,7 @@ using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
 
 // Whether expr is one w.r.t. shuffle multiplication.
-inline bool epsilon_pack_is_unity(const EpsilonPack& pack) {
+inline bool is_unity(const EpsilonPack& pack) {
   const auto* as_product = std::get_if<std::vector<Epsilon>>(&pack);
   return as_product && as_product->empty();
 }
@@ -262,7 +262,9 @@ inline EpsilonExpr EFormalSymbolSigned(const LiParam& li_param) {
 }
 
 
-EpsilonExpr epsilon_expr_substitute(
+// Gets a list {{y_1_1, y_1_2, ...}, ..., {y_n_1, y_n_2, ...}}, replaces
+// each variable x_i in expr with a product (y_i_1 * y_i_2 * ...)
+EpsilonExpr substitute_variables(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 
@@ -271,10 +273,10 @@ EpsilonExpr epsilon_expr_substitute(
 // after we substitute a cross ratio for each variable. One minus cross ratio
 // is always a cross ratio. One minus a product of cross ratio is usually not
 // and here we assume that it never is.
-EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr);
-EpsilonExpr epsilon_expr_keep_monsters(const EpsilonExpr& expr);
-EpsilonCoExpr epsilon_coexpr_without_monsters(const EpsilonCoExpr& expr);
-EpsilonCoExpr epsilon_coexpr_keep_monsters(const EpsilonCoExpr& expr);
+EpsilonExpr without_monsters(const EpsilonExpr& expr);
+EpsilonExpr keep_monsters(const EpsilonExpr& expr);
+EpsilonCoExpr without_monsters(const EpsilonCoExpr& expr);
+EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr);
 
 
 // Explicit rules allow to omit template types when calling the function.

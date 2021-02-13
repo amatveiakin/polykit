@@ -153,9 +153,7 @@ inline DeltaExpr D(X a, X b) {
 }
 
 
-DeltaExpr delta_expr_substitute(
-    const DeltaExpr& expr,
-    const std::vector<X>& new_points);
+DeltaExpr substitute_variables(const DeltaExpr& expr, SpanX new_points);
 
 DeltaExpr sort_term_multiples(const DeltaExpr& expr);
 DeltaExpr terms_with_unique_muptiples(const DeltaExpr& expr);

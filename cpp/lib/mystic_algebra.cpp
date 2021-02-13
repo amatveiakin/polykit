@@ -43,10 +43,10 @@ static LiParamZipElement glue_li_elements(
 static EpsilonExpr monom_mystic_product(
     const EpsilonPack& lhs,
     const EpsilonPack& rhs) {
-  if (epsilon_pack_is_unity(lhs)) {
+  if (is_unity(lhs)) {
     return EpsilonExpr::single(rhs);
   }
-  if (epsilon_pack_is_unity(rhs)) {
+  if (is_unity(rhs)) {
     return EpsilonExpr::single(lhs);
   }
   if (std::holds_alternative<std::vector<Epsilon>>(lhs) ||
@@ -162,7 +162,7 @@ static ThetaExpr monom_key_quasi_shuffle_product(
     ThetaExpr::Param::key_to_object(rhs_key));
 }
 
-ThetaExpr theta_expr_quasi_shuffle_product(
+ThetaExpr quasi_shuffle_product_expr(
     const absl::Span<const ThetaExpr>& expressions) {
   return outer_product_expanding(expressions, monom_key_quasi_shuffle_product,
     AnnFunctionOp("quasishuffle"));

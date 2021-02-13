@@ -3,7 +3,7 @@
 #include  "algebra.h"
 
 
-EpsilonExpr epsilon_expr_substitute(
+EpsilonExpr substitute_variables(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products) {
   return expr.mapped_expanding([&](const EpsilonPack& term) {
@@ -73,22 +73,22 @@ static bool is_monster(const EpsilonPack& term) {
   }, term);
 }
 
-EpsilonExpr epsilon_expr_without_monsters(const EpsilonExpr& expr) {
+EpsilonExpr without_monsters(const EpsilonExpr& expr) {
   return expr.filtered([](const EpsilonPack& term) {
     return !is_monster(term);
   });
 }
-EpsilonExpr epsilon_expr_keep_monsters(const EpsilonExpr& expr) {
+EpsilonExpr keep_monsters(const EpsilonExpr& expr) {
   return expr.filtered([](const EpsilonPack& term) {
     return is_monster(term);
   });
 }
-EpsilonCoExpr epsilon_coexpr_without_monsters(const EpsilonCoExpr& expr) {
+EpsilonCoExpr without_monsters(const EpsilonCoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return !absl::c_any_of(term, is_monster);
   });
 }
-EpsilonCoExpr epsilon_coexpr_keep_monsters(const EpsilonCoExpr& expr) {
+EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return absl::c_any_of(term, is_monster);
   });

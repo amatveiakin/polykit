@@ -124,14 +124,14 @@ CorrExpr QLiViaCorrFSymb(int weight, int num_vars) {
 }
 
 CorrExpr QLiNegViaCorrFSymb(int weight, int num_vars) {
-  return -corr_expr_substitute(
+  return -substitute_variables(
     QLiViaCorrFSymb(weight, num_vars),
     concat(seq_incl(2, num_vars), {1})
   );
 }
 
 CorrExpr PosCorrFSymb(int weight, const std::vector<int>& points) {
-  return corr_expr_substitute(
+  return substitute_variables(
     QLiViaCorrFSymb(
       weight,
       points.size()
@@ -144,7 +144,7 @@ CorrExpr PosCorrFSymb(int weight, const std::vector<int>& points) {
 }
 
 CorrExpr NegCorrFSymb(int weight, const std::vector<int>& points) {
-  return corr_expr_substitute(
+  return substitute_variables(
     QLiNegViaCorrFSymb(
       weight,
       points.size()
