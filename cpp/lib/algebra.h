@@ -1,3 +1,35 @@
+// Outer product functions.
+//
+// Outer product is a generic function that takes two linear expressions and a
+// monom product function and applies monom product to every element from the
+// cartesian product of the sets of terms of the two expression. That is,
+// given expressions
+//   A = a1 x1 + ... + an xn
+//   B = b1 y1 + ... + bm ym
+// and a monom product function f, we define outer_product(A, B, f) as
+//   (a1+b1) f(x1,y1) + (a1+b2) f(x1,y2) + (a2+b1) f(x2,y1) + ... + (an+bm) f(xn,ym)
+// For an example of an outer product see tensor_product below.
+//
+// The `annotation` argument describes annotations produced. See linear.h for
+// details on annotations.
+//
+// For performance reasons, monom product function is expected to operate in key
+// space. See linear.h for details on object space vs key space.
+//
+// This file contains three functions:
+//
+//   * `outer_product(lhs, rhs, monom_key_product, annotation)`
+//     `outer_product(expressions_vector, monom_key_product, annotation)`
+//     Generic form, as described above. The second form takes takes multiple
+//     expressions and computes outer product left to right.
+//
+//   * `outer_product_expanding` is similar to `outer_product` outer project,
+//     but `monom_key_product` produces an expression rather than one monom.
+//
+//   * `tensor_product` is a special case of an outer product. It uses a function
+//     called `monom_tensor_product` defined as part of linear expression params.
+//     Semantically it concatenates two monoms together.
+
 #pragma once
 
 #include <sstream>
@@ -135,7 +167,7 @@ LinearT outer_product(
 }
 
 
-// Similar to outer project, but monom_key_product produces an expr rather than one monom.
+// Similar to `outer_product`, but `monom_key_product` produces an expr rather than one monom.
 template<typename LinearT, typename MonomProdF>
 LinearT outer_product_expanding(
     const LinearT& lhs,

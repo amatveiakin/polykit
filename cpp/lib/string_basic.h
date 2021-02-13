@@ -1,13 +1,13 @@
 // General philosophy behind `to_string` and `dump_to_string`.
 //   * `to_string` gives a nicely formatted representation of a object
 //     that can and should be used for output. `to_string` is extensible:
-//     just define `to_string(const MyObject& my_object)`.
-//   * `dump_to_string` gives a human-readable but not necessarily convenient
+//     just define `to_string(const MyObject&)`.
+//   * `dump_to_string` gives a human-readable but not necessarily elegant
 //     representation of an object that can be used for debugging or for CHECK-s
 //     that are not expected to fail. `dump_to_string` defaults to `to_string`
 //     when the latter exists, but it's also auto-generated for some standard
 //     containers. `dump_to_string` is not extensible: defining `dump_to_string`
-//     for a user type T would not make `dump_to_string(std::vector<T>)` work.
+//     for a type T would not make `dump_to_string(std::vector<T>)` work.
 
 #pragma once
 

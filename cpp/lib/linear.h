@@ -1,3 +1,72 @@
+// Generic class for Linear expressions with integer coefficients.
+//
+// Linear expressions are strongly typed and polymorphic. I.e. each expression stores
+// objects of one particular type, but there can be many types of linear expressions.
+// A linear expression is essentially a map from type T (object) to integer (coefficient)
+// with a set of operation defined on it.
+//
+//
+// # Linear expression params
+//
+// The type of the underlying objects and some aspects of these operations are defined
+// in a special parameters structure that is passed to a linear expression as a template
+// parameter. See `SimpleLinearParam` for the full list of parameters.
+//
+//
+// # Important operations
+//
+// Constructing expressions:
+//   * `single(x)` constructs a linear expression 1*x from monom x.
+//   * `from_collection(container)` counts elements in a container, e.g.
+//     turns {a, a, b, c, a, c, c} into 3*x + b + 3*c.
+//
+// Manipulating expressions:
+//   * Arithmetics: addition (+, +=), subtraction(-, -=), multiplication by scalar (*, *=),
+//     division by scalar (dived_int, div_int). In case of division each coefficient must
+//     by divisible without a remainder or an IntegerDivisionError is thrown.
+//   * `mapped(f)` replaces each term a*x with a*f(x).
+//   * `mapped_expanding(f)` does the same, but f returns an expression rather than a monom.
+//   * `filtered(f)` keeps only terms a*x where f(x) is true.
+//   * `foreach(f)` iterates over the expression calling f(x, a) for every term a*x.
+//
+//
+// # Object space vs key space
+//
+// In order to optimize CPU and RAM usage linear expression stores objects in a compact
+// form. The convenient full form is called `ObjectT` and referred to as "object" and the
+// compact form is called `StorageT` and referred to as "key". The particular types of
+// ObjectT and StorageT and conversion functions between them are defined in linear
+// expression params.
+//
+// Most of the time it's ok to work in object space. This is true for all one-pass algorithms
+// like post hoc variable substitutions, output, etc. Only the most performance-critical
+// functions which do massive computations should concern themselves with key space.
+// In order to work in key space one needs to use the versions of methods that end with `_key`,
+// e.g. `mapped_key` instead of `mapped`, `foreach_key` instead of `foreach` etc.
+//
+//
+// # Vector space
+//
+// Vector space is the third space skin to object space and key space, but, generally
+// speaking, distinct from both of them. In vector space each monom must be a vector-like
+// type that supports indexing, slicing and concatenating. Vector space is used by
+// functions like `shuffle_product`, `to_lyndon_basis` and `comultiply` that treat the
+// monom as a sequence of "characters".
+//
+// Having vector space support is optional. Not all linear expression types have a vector
+// space and even if they do, it is not guaranteed that every particular expression of that
+// type is convertible to a vector space, e.g. an expression containing formal symbols
+// cannot be convrted to vector space.
+//
+//
+// # Annotations
+//
+// A linear expression can be annotated with a function used to create it. Annotations are
+// carried over with the epxression and all linear operations (+, -, *, div_int) applied to
+// the expression are applied to the annotations as well. Annotations are a convenient way
+// to keep track of the functions that went into an equation. Use `annotate` in order to add
+// a new annotations to an expression.
+
 #pragma once
 
 #include <algorithm>
@@ -13,6 +82,7 @@
 #include "util.h"
 
 
+// Params for a linear expression with StorageT == ObjectT.
 template<typename T>
 struct SimpleLinearParam {
   using ObjectT = T;

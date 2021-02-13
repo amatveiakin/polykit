@@ -1,13 +1,17 @@
+// Quasi-shuffle product.
+//
+// Quasi-shuffle rules:
+//   1 🟉 v = v
+//   u 🟉 1 = u
+//   ua 🟉 vb = (u 🟉 vb)a + (ua 🟉 v)b + (u 🟉 v)(a ⋄ b)
+// where ⋄ is the gluing operation.
+
 #pragma once
 
 #include <vector>
 
 
-// Returns quasi shuffle product of two words as a List of words.
-// Rules:
-//   1 🟉 v = v
-//   u 🟉 1 = u
-//   ua 🟉 vb = (u 🟉 vb)a + (ua 🟉 v)b + (u 🟉 v)(a ⋄ b)
+// Returns quasi-shuffle product of two words as a List of words.
 // Optimization potential: return Linear.
 // Optimization potential: pass Spans internally.
 template<typename T, typename F>

@@ -1,3 +1,6 @@
+// `LiParam` contains the full set of parameters required to compute a Li function
+// and, by extension, describes a formal symbol.
+
 #pragma once
 
 #include "absl/algorithm/container.h"

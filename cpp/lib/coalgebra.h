@@ -1,3 +1,23 @@
+// Functions related to comultiplication.
+//
+// Contains three main functions:
+//
+//   * `coproduct(lhs, rhs)` constructs a formal pair (lhs, rhs) that corresponds to
+//     one comultiplication term. This is not a mathematical operation, this is merely
+//     a tool for constructing the comultiplication.
+//
+//   * `comultiply(expression, form)` computes a specified comultiplication component.
+//     `form` must be a pair of integers such that the sum is equal to `expression`
+//     weight. The order of elements in `form` does not matter: comultiplication is
+//     always ordered so that the smaller weight goes first.
+//     Example: `comultiply(QLi4(...), {1,3})`
+//
+//   * `normalize_coproduct(coexpression): sorts coexpression sides, so that the
+//     smaller weight is always on the left. If weights are equal, puts the smaller
+//     value on the left. There is no need to call `normalize_coproduct` if using
+//     `coproduct` or `comultiply` to construct the coexpression, because these function
+//     do normalization internally.
+
 #pragma once
 
 #include "algebra.h"
@@ -73,9 +93,6 @@ CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   );
 }
 
-// Sorts co-expression sides, so that the smaller one is always on the left.
-// There is no need to call `normalize_coproduct` if using `coproduct` or `comultiply`
-// to construct the coexpression, because these function do so automaticaly.
 template<typename CoExprT>
 CoExprT normalize_coproduct(const CoExprT& expr) {
   CHECK(CoExprT::Param::coproduct_is_lie_algebra);

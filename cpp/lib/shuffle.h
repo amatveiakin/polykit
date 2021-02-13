@@ -1,3 +1,13 @@
+// Shuffle product.
+//
+// Shuffle rules:
+//   1 ⧢ v = v
+//   u ⧢ 1 = u
+//   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
+//
+// Shuffle can be applied to individual word or to entire linear expressions,
+// in which case the expressions must support vector form.
+
 #pragma once
 
 #include <vector>
@@ -6,11 +16,6 @@
 #include "util.h"
 
 
-// Returns shuffle product of two words as a List of words.
-// Rules:
-//   1 ⧢ v = v
-//   u ⧢ 1 = u
-//   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
   // Optimization potential: unroll.

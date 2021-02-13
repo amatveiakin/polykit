@@ -1,3 +1,5 @@
+// Compact continous containers. Specialized alternatives for std::vector.
+
 // Optimization potential: replace absl::InlineVector with a custom implementation
 //   that uses a 1-byte inline size and occupies 16 bytes (rather than 24) on x64.
 // Optimization potential: add uint_4 support in inlined vector.

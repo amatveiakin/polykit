@@ -1,3 +1,6 @@
+// Simple packing algorithm for integer sequences where each value is in [0, 16).
+// Stores two numbers per byte.
+
 #pragma once
 
 #include <array>

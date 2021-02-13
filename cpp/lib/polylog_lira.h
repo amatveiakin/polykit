@@ -1,3 +1,12 @@
+// The result of substituting cross ratios into a generic polylog function (Li).
+// The name "Lira" stands for "LI of a RAtio".
+//
+// The interface is similar to that of Li/CoLi, but it takes CompoundRatio-s instead
+// of variable products. Note that a CompoundRatio can be implicitly constructed from
+// a CrossRatio, meaning that the latter can be passed as well. Sample usages:
+//   * Lira(3,2)(CR(2,1,7,8), CR(3,6,1,2));
+//   * Lira(3,2)(CR(2,1,7,8), CR(3,4,5,6) * CR(3,6,1,2));
+
 #pragma once
 
 #include "coalgebra.h"
