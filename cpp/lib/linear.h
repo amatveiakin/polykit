@@ -708,6 +708,9 @@ std::ostream& to_ostream(
     os << "~~~" << fmt::newline();
     os << annotations;
   }
+  if (*current_formatting_config().new_line_after_expression) {
+    os << fmt::newline();
+  }
   os.flush();
   return os;
 }
@@ -725,6 +728,7 @@ std::ostream& to_ostream_grouped(
   using LinearT = Linear<ParamT>;
   using GroupT = std::invoke_result_t<GroupByF, typename ParamT::ObjectT>;
   const auto piece_to_ostream = [&](const LinearT& linear_piece) {
+    ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
     to_ostream(os, linear_piece, term_sorting_cmp, context);
   };
   if (linear.is_zero()) {
@@ -738,15 +742,19 @@ std::ostream& to_ostream_grouped(
   bool first = true;
   for (const auto& [group_id, linear_piece] : groups) {
     if (!first) {
-      os << "---\n";
+      os << "---" << fmt::newline();
     }
     first = false;
     os << group_header(group_id) << " ";
     piece_to_ostream(linear_piece);
   }
   if (*current_formatting_config().expression_include_annotations) {
-    os << "~~~\n" << linear.annotations();
+    os << "~~~" << fmt::newline() << linear.annotations();
   }
+  if (*current_formatting_config().new_line_after_expression) {
+    os << fmt::newline();
+  }
+  os.flush();
   return os;
 }
 

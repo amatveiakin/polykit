@@ -50,6 +50,7 @@ struct FormattingConfig {
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
+  std::optional<bool> new_line_after_expression;
 
   FormattingConfig& set_encoder(Encoder v) { encoder = v; return *this; }
   FormattingConfig& set_rich_text_format(RichTextFormat v) { rich_text_format = v; return *this; }
@@ -58,6 +59,7 @@ struct FormattingConfig {
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
   FormattingConfig& set_compact_expression(bool v) { compact_expression = v; return *this; }
+  FormattingConfig& set_new_line_after_expression(bool v) { new_line_after_expression = v; return *this; }
 
   void apply_overrides(const FormattingConfig& src);
 };

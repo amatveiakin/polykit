@@ -385,10 +385,10 @@ int main(int argc, char *argv[]) {
   loop_lira_expr = lira_expr_sort_args(loop_lira_expr);
 
 
-  // std::cout << "Via LiQuad " << lira_expr << "\n";
-  // std::cout << "Loops " << loop_expr_recursive << "\n";
-  // std::cout << "Via loops " << loop_lira_expr << "\n";
-  // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr) << "\n";
+  // std::cout << "Via LiQuad " << lira_expr;
+  // std::cout << "Loops " << loop_expr_recursive;
+  // std::cout << "Via loops " << loop_lira_expr;
+  // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr);
 
   // All possible ways of gluing 4 points together. Gives terms {1}-{6}.
   const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
@@ -472,10 +472,10 @@ int main(int argc, char *argv[]) {
   // const auto nfg1 = nfg + cycle(nfg, {{3,5}});
   // const auto nfg2 = nfg1 + cycle(nfg1, {{2,4}});  // only {2}
   // std::cout << "\n";
-  // std::cout << mfg << "\n";
-  // std::cout << nfg << "\n";
-  // std::cout << arg11_expr_type_2_to_column(mfg2) << "\n";
-  // std::cout << arg11_expr_type_2_to_column(nfg2) << "\n";
+  // std::cout << mfg;
+  // std::cout << nfg;
+  // std::cout << arg11_expr_type_2_to_column(mfg2);
+  // std::cout << arg11_expr_type_2_to_column(nfg2);
 
 
 
@@ -492,10 +492,10 @@ int main(int argc, char *argv[]) {
   const auto nfg2 = nfg1 + cycle(nfg1, {{2,4}});  // only {2}
 
   std::cout << "\n";
-  std::cout << mfg << "\n";
-  std::cout << nfg << "\n";
-  std::cout << arg11_expr_type_2_to_column(mfg2) << "\n";
-  std::cout << arg11_expr_type_2_to_column(nfg2) << "\n";
+  std::cout << mfg;
+  std::cout << nfg;
+  std::cout << arg11_expr_type_2_to_column(mfg2);
+  std::cout << arg11_expr_type_2_to_column(nfg2);
 
 
 
@@ -529,11 +529,11 @@ int main(int argc, char *argv[]) {
   // const auto eba1 = eba + cycle(eba, {{4,5}});
   // const auto eba2 = eba1 + cycle(eba1, {{2,8}});  // BEFORE: just one variable (how?)
 
-  std::cout << eb << "\n";
-  std::cout << eba << "\n";
-  // std::cout << eba1 << "\n";
-  // std::cout << eba2 << "\n";
-  // std::cout << arg11_expr_type_2_to_column(eba2) << "\n";
+  std::cout << eb;
+  std::cout << eba;
+  // std::cout << eba1;
+  // std::cout << eba2;
+  // std::cout << arg11_expr_type_2_to_column(eba2);
 
   const auto dbe =  // {1,2}
     + db
@@ -545,10 +545,10 @@ int main(int argc, char *argv[]) {
 
   const auto a1 = a - cycle(a, {{4,6}});
   const auto a2 = a1 - cycle(a1, {{2,7}});
-  // std::cout << "a " << a << "\n";
-  // std::cout << a1 << "\n";
-  // std::cout << a2 << "\n";
-  // std::cout << arg11_expr_type_2_to_column(a2) << "\n";
+  // std::cout << "a " << a;
+  // std::cout << a1;
+  // std::cout << a2;
+  // std::cout << arg11_expr_type_2_to_column(a2);
 
   // const auto df =
   //   + d
@@ -590,14 +590,14 @@ int main(int argc, char *argv[]) {
   //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 5)  // bad
   //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 6)  // bad
   //   // + cycle_pow(a, {{2,3,4,5,6,7,8}}, 7)  // bad
-  // ) << "\n";
+  // );
 
-  // std::cout << preshow(eb) << "\n";
+  // std::cout << preshow(eb);
 
   // std::cout << preshow(
   //   + eb
   //   // + cycle(eb, {{2,8}, {3,7}, {4,6}})
-  // ) << "\n";
+  // );
 
   // std::cout << preshow(
   //   + eb3
@@ -609,7 +609,7 @@ int main(int argc, char *argv[]) {
   //   - cycle(a, {{2,7}, {3,6}, {4,5}})
   //   + cycle(a, {{2,8}, {3,7}, {4,6}})
   //   + cycle(a, {{3,8}, {4,7}, {5,6}})
-  // ) << "\n";
+  // );
 
 #endif
 
@@ -663,10 +663,10 @@ int main(int argc, char *argv[]) {
   });
   // loop_expr2 = arg9_semi_lyndon(loop_expr2);
   loop_expr2 = to_canonical_permutation(arg9_semi_lyndon(loop_expr2));
-  std::cout << "Orig " << loop_expr << "\n";
-  std::cout << "New " << loop_expr2 << "\n";
-  std::cout << "Diff " << (loop_expr + loop_expr2) << "\n";
-  std::cout << to_lyndon_basis_3(lira_expr - loop_expr_to_lira_expr(loop_expr)) << "\n";
+  std::cout << "Orig " << loop_expr;
+  std::cout << "New " << loop_expr2;
+  std::cout << "Diff " << (loop_expr + loop_expr2);
+  std::cout << to_lyndon_basis_3(lira_expr - loop_expr_to_lira_expr(loop_expr));
   return 0;
 #endif
 
@@ -702,59 +702,59 @@ int main(int argc, char *argv[]) {
   const auto a1 = cycle(a, {{2,4}, {5,7}});
   const auto v = n + m - a + a1;  // NICE  ({1},{1},{2})
 
-  // std::cout << "a " << a << "\n";
-  // std::cout << "m " << m << "\n";
-  // std::cout << "v " << v << "\n";
-  // // std::cout << "b " << b << "\n";
-  // std::cout << "c " << c << "\n";
-  // std::cout << "d " << d << "\n";
-  // std::cout << "e " << e << "\n";
-  // std::cout << "f " << f << "\n";
-  // // std::cout << "g " << g << "\n";
-  // std::cout << "h " << h << "\n";
-  // std::cout << "i " << i << "\n";
-  // std::cout << "j " << j << "\n";
-  // std::cout << "k " << k << "\n";
-  // std::cout << "l " << l << "\n";
-  // // std::cout << "n " << n << "\n";
-  // std::cout << "o " << o << "\n";
-  // std::cout << "x " << x << "\n";
-  // std::cout << "y " << y << "\n";
-  // std::cout << "z " << z << "\n";
-  // std::cout << "u " << u << "\n";
-  // // std::cout << "w " << w << "\n";
+  // std::cout << "a " << a;
+  // std::cout << "m " << m;
+  // std::cout << "v " << v;
+  // // std::cout << "b " << b;
+  // std::cout << "c " << c;
+  // std::cout << "d " << d;
+  // std::cout << "e " << e;
+  // std::cout << "f " << f;
+  // // std::cout << "g " << g;
+  // std::cout << "h " << h;
+  // std::cout << "i " << i;
+  // std::cout << "j " << j;
+  // std::cout << "k " << k;
+  // std::cout << "l " << l;
+  // // std::cout << "n " << n;
+  // std::cout << "o " << o;
+  // std::cout << "x " << x;
+  // std::cout << "y " << y;
+  // std::cout << "z " << z;
+  // std::cout << "u " << u;
+  // // std::cout << "w " << w;
 
-  std::cout << "m " << m << "\n";
-  std::cout << "n " << n << "\n";
-  std::cout << "o " << o << "\n";
+  std::cout << "m " << m;
+  std::cout << "n " << n;
+  std::cout << "o " << o;
 
   // std::cout << (
   //   + o
   //   - n
   //   - cycle(n, {{2,3}, {4,7}, {5,6}})
-  // ) << "\n";
+  // );
 
-  // std::cout << "a " << a << "\n";
-  // std::cout << "m " << m << "\n";
-  // std::cout << "v " << v << "\n";
-  // std::cout << "b " << b << "\n";
-  // std::cout << "c " << c << "\n";
-  // std::cout << "d " << d << "\n";
-  // std::cout << "e " << e << "\n";
-  // std::cout << "f " << f << "\n";
-  // std::cout << "g " << g << "\n";
-  // std::cout << "h " << h << "\n";
-  // std::cout << "i " << i << "\n";
-  // std::cout << "j " << j << "\n";
-  // std::cout << "k " << k << "\n";
-  // std::cout << "l " << l << "\n";
-  // std::cout << "n " << n << "\n";
-  // std::cout << "o " << o << "\n";
-  // std::cout << "x " << x << "\n";
-  // std::cout << "y " << y << "\n";
-  // std::cout << "z " << z << "\n";
-  // std::cout << "u " << u << "\n";
-  // std::cout << "w " << w << "\n";
+  // std::cout << "a " << a;
+  // std::cout << "m " << m;
+  // std::cout << "v " << v;
+  // std::cout << "b " << b;
+  // std::cout << "c " << c;
+  // std::cout << "d " << d;
+  // std::cout << "e " << e;
+  // std::cout << "f " << f;
+  // std::cout << "g " << g;
+  // std::cout << "h " << h;
+  // std::cout << "i " << i;
+  // std::cout << "j " << j;
+  // std::cout << "k " << k;
+  // std::cout << "l " << l;
+  // std::cout << "n " << n;
+  // std::cout << "o " << o;
+  // std::cout << "x " << x;
+  // std::cout << "y " << y;
+  // std::cout << "z " << z;
+  // std::cout << "u " << u;
+  // std::cout << "w " << w;
 
   // std::cout << "===\n\n";
 
@@ -774,11 +774,11 @@ int main(int argc, char *argv[]) {
     - cycle(m, {{7,6,5,4,3,2}})
     - cycle(m, {{2,7}, {3,6}, {4,5}})
   ;
-  // std::cout << "n " << preshow(n) << "\n";
-  // std::cout << "m " << preshow(m) << "\n";
-  // std::cout << "o " << preshow(o) << "\n";
-  // std::cout << onm << "\n";
-  // std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm)) << "\n";
+  // std::cout << "n " << preshow(n);
+  // std::cout << "m " << preshow(m);
+  // std::cout << "o " << preshow(o);
+  // std::cout << onm;
+  // std::cout << arg9_expr_type_1_to_column(to_canonical_permutation(onm));
 
   // const auto qqq_tmpl =
   //   - LoopExpr::single({{2,1,4,3}, {2,1,5,4}, {2,1,5,7,6}})
@@ -789,16 +789,16 @@ int main(int argc, char *argv[]) {
   //   qqq += neg_one_pow(i) * loop_expr_substitute(qqq_tmpl, concat({1}, rotated_vector(seq_incl(2, 7), i)));
   // }
   // qqq = to_canonical_permutation(qqq);
-  // std::cout << qqq << "\n";
-  // std::cout << qqq + onm_c << "\n";
+  // std::cout << qqq;
+  // std::cout << qqq + onm_c;
 
 
   std::cout << "===\n\n";
 
   const auto p = n + m;
-  // std::cout << p << "\n";
+  // std::cout << p;
 
-  // std::cout << loop_expr_substitute(c, {{3,6}, {6,7}, {7,3}}) << "\n";
+  // std::cout << loop_expr_substitute(c, {{3,6}, {6,7}, {7,3}});
   // const auto q =
   //   + c
   //   + loop_expr_substitute(c, {{3,6}, {6,7}, {7,3}})
@@ -806,104 +806,104 @@ int main(int argc, char *argv[]) {
   // ;
 
   // const auto r = c + i;
-  // std::cout << r << "\n";
+  // std::cout << r;
   // const auto p1 = loop_expr_substitute(p, {{1,2}, {2,3}, {3,1}});
-  // std::cout << p1 << "\n";
-  // std::cout << r + p1 << "\n";
+  // std::cout << p1;
+  // std::cout << r + p1;
   // const auto d1 = loop_expr_substitute(d, {{4,2}, {2,4}, {5,7}, {7,5}});
   // const auto s = j + d1;
-  // std::cout << d1 << "\n";
-  // std::cout << s << "\n";
+  // std::cout << d1;
+  // std::cout << s;
 
   // const auto d1 = loop_expr_substitute(d, {{2,3}, {3,2}});
   // const auto t = j + d1;
-  // std::cout << j << "\n";
-  // std::cout << d1 << "\n";
-  // std::cout << t << "\n";
+  // std::cout << j;
+  // std::cout << d1;
+  // std::cout << t;
 
   // ZERO:  n - cycle(g, {{1,2}}) - a
   // ZERO (but above is simpler):  g - cycle(v, {{1,2}}) - cycle(a, {{1,4}, {5,7}}) + cycle(m, {{1,2}})
   // ZERO:  n + m - cycle(g + b, {{1,2}})
 
   const auto v1 = cycle(a, {{2,6}, {3,4,5}});
-  // std::cout << v1 << "\n";
+  // std::cout << v1;
   const auto va = v1 + m;
   const auto va1 = cycle(va, {{1,2,3}, {5,6}, {4,7}});
   const auto vb = b - va1;
-  // std::cout << va << "\n";
-  // std::cout << va1 << "\n";
-  // std::cout << vb << "\n";
-  // std::cout << cycle(vb, {{1,4}, {5,6}}) << "\n";
-  // std::cout << cycle(vb, {{1,4,7}, {5,6}}) << "\n";
-  // std::cout << cycle(vb, {{1,4}, {5,6,7}}) << "\n";
-  // std::cout << cycle(vb, {{1,6}, {5,4}}) << "\n";
+  // std::cout << va;
+  // std::cout << va1;
+  // std::cout << vb;
+  // std::cout << cycle(vb, {{1,4}, {5,6}});
+  // std::cout << cycle(vb, {{1,4,7}, {5,6}});
+  // std::cout << cycle(vb, {{1,4}, {5,6,7}});
+  // std::cout << cycle(vb, {{1,6}, {5,4}});
 
   // const auto k1 = cycle(k, {{1,2}});
   // const auto w = i + k1;
-  // // std::cout << k1 << "\n";
-  // // std::cout << w << "\n";
+  // // std::cout << k1;
+  // // std::cout << w;
 
   const auto a2 = cycle(a, {{2,4}, {5,7}});
   const auto b1 = cycle(b, {{1,2}});
-  // std::cout << n - a << "\n";
-  // std::cout << a2 << "\n";
-  // std::cout << n - a + a2 << "\n";
-  // std::cout << b1 << "\n";
-  // std::cout << n - a + a2 + b1 << "\n";
-  // std::cout << n - a + a2 + b1 - a << "\n";
-  // std::cout << n - a + a2 + b1 - a - v << "\n";
+  // std::cout << n - a;
+  // std::cout << a2;
+  // std::cout << n - a + a2;
+  // std::cout << b1;
+  // std::cout << n - a + a2 + b1;
+  // std::cout << n - a + a2 + b1 - a;
+  // std::cout << n - a + a2 + b1 - a - v;
   // ZERO:  n - a + a2 + b1 - a - v
 
   const auto m1 = cycle(m, {{1,2,5}, {6,7}});
   const auto m2 = cycle(m, {{2,5,6}, {4,7}});
   const auto fm = f + m1 + m2;  // NICE: {1,1,9,9}
-  // std::cout << m1 << "\n";
-  // std::cout << m2 << "\n";
-  // std::cout << fm << "\n";
+  // std::cout << m1;
+  // std::cout << m2;
+  // std::cout << fm;
 
   const auto efd = e + f + d;
-  // std::cout << efd << "\n";
+  // std::cout << efd;
 
-  // std::cout << cycle(fm, {{3,1}, {5,2}}) << "\n";
+  // std::cout << cycle(fm, {{3,1}, {5,2}});
   const auto c1 = cycle(c, {{4,7}, {5,6}});
   const auto c2 = c - c1;
-  // std::cout << c1 << "\n";
-  // std::cout << c2 << "\n";
-  // std::cout << cycle(c2, {{6,7}}) << "\n";
-  // std::cout << c2 + cycle(c2, {{6,7}}) << "\n";
-  // std::cout << c1 + j << "\n";
+  // std::cout << c1;
+  // std::cout << c2;
+  // std::cout << cycle(c2, {{6,7}});
+  // std::cout << c2 + cycle(c2, {{6,7}});
+  // std::cout << c1 + j;
 
   const auto c3 = cycle(c, {{1,2}});
   const auto c4 = c - c3;
-  // std::cout << c << "\n";
-  // std::cout << c3 << "\n";
-  // std::cout << c4 << "\n";
-  // std::cout << cycle(c4, {{1,6}}) << "\n";
-  // std::cout << c4 - cycle(c4, {{1,6}}) << "\n";
+  // std::cout << c;
+  // std::cout << c3;
+  // std::cout << c4;
+  // std::cout << cycle(c4, {{1,6}});
+  // std::cout << c4 - cycle(c4, {{1,6}});
 
   // const auto x1 =
   //   + x
   //   - cycle(fm, {{5,6}, {4,7}})
   //   - cycle(d, {{5,6}, {4,7}})
   // ;
-  // std::cout << x1 << "\n";
+  // std::cout << x1;
   // const auto x2 =
   //   + x
   //   + cycle(e, {{5,6}, {4,7}})
   // ;
-  // // std::cout << x2 << "\n";
+  // // std::cout << x2;
   // const auto x3 =
   //   + x2
   //   - cycle(m, {{1,2}, {4,6}, {3,7}})
   //   - m
   // ;
-  // // std::cout << x3 << "\n";
+  // // std::cout << x3;
   // const auto x4 =  // :(
   //   + x3
   //   + cycle(v, {{1,2}, {4,6}, {3,7}})
   //   - cycle(a, {{1,6}, {3,5}})
   // ;
-  // // std::cout << x4 << "\n";
+  // // std::cout << x4;
 
   const auto o0 =
     + o
@@ -922,10 +922,10 @@ int main(int argc, char *argv[]) {
   const auto m0 = m - cycle(m, {{2,6}});  //  ~=  m - cycle(m, {{3,5}})
   const auto v0 = v + cycle(v, {{1,6}});
 
-  std::cout << onm << "\n";
-  // std::cout << o0 << "\n";
-  std::cout << m0 << "\n";
-  // std::cout << v0 << "\n";
+  std::cout << onm;
+  // std::cout << o0;
+  std::cout << m0;
+  // std::cout << v0;
 
   // std::cout << "===\n\n";
 
@@ -933,10 +933,10 @@ int main(int argc, char *argv[]) {
 
   // std::cout << "===\n\n";
 
-  std::cout << arg9_expr_type_1_to_column(onm) << "\n";
-  // std::cout << arg9_expr_type_1_to_column(o0) << "\n";
-  std::cout << arg9_expr_type_1_to_column(m0) << "\n";
-  // std::cout << arg9_expr_type_1_to_column(v0) << "\n";
+  std::cout << arg9_expr_type_1_to_column(onm);
+  // std::cout << arg9_expr_type_1_to_column(o0);
+  std::cout << arg9_expr_type_1_to_column(m0);
+  // std::cout << arg9_expr_type_1_to_column(v0);
 
   // std::cout << "%%%\n\n";
 
@@ -944,18 +944,18 @@ int main(int argc, char *argv[]) {
   // const auto mc = to_canonical_permutation(m);
   // const auto vc = to_canonical_permutation(v);
 
-  // std::cout << o0c << "\n";
-  // std::cout << ac << "\n";
-  // std::cout << mc << "\n";
-  // std::cout << vc << "\n";
+  // std::cout << o0c;
+  // std::cout << ac;
+  // std::cout << mc;
+  // std::cout << vc;
 
   // std::cout << "===\n\n";
 
   // const auto mc1 = to_canonical_permutation(cycle(mc, {{4,6}, {3,7}}));
-  // std::cout << mc1 << "\n";
-  // std::cout << o0c + mc1 << "\n";
+  // std::cout << mc1;
+  // std::cout << o0c + mc1;
 
-  // std::cout << o0 + cycle(mc, {{4,6}, {3,7}}) << "\n";
+  // std::cout << o0 + cycle(mc, {{4,6}, {3,7}});
 #endif
 
 #if 0
@@ -964,7 +964,7 @@ int main(int argc, char *argv[]) {
   std::cout << to_canonical_permutation(
     + m0c
     - cycle(m0c, {{5,6}, {4,7}, {2,3}})
-  ) << "\n";
+  );
   const auto m0c1 = to_canonical_permutation(
     + m0c
     - cycle(m0c, {{5,6}, {4,7}, {2,3}})
@@ -979,13 +979,13 @@ int main(int argc, char *argv[]) {
     + m0c2
     + cycle(m0c2, {{1,3}})
   );
-  std::cout << m0c1 << "\n";
-  std::cout << m0c2 << "\n";
+  std::cout << m0c1;
+  std::cout << m0c2;
 
-  std::cout << arg9_expr_type_1_to_column(m0c1) << "\n";
-  std::cout << arg9_expr_type_1_to_column(m0c2) << "\n";
+  std::cout << arg9_expr_type_1_to_column(m0c1);
+  std::cout << arg9_expr_type_1_to_column(m0c2);
 
-  std::cout << m0c2x << "\n";
-  std::cout << arg9_expr_type_1_to_column(m0c2x) << "\n";
+  std::cout << m0c2x;
+  std::cout << arg9_expr_type_1_to_column(m0c2x);
 #endif
 }

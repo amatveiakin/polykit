@@ -14,6 +14,7 @@ static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
   .set_compact_expression(false)
+  .set_new_line_after_expression(true)
 ;
 
 
@@ -119,6 +120,7 @@ void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
   apply_field_override(compact_expression, src.compact_expression);
+  apply_field_override(new_line_after_expression, src.new_line_after_expression);
 }
 
 static void recompute_formatting_config() {
