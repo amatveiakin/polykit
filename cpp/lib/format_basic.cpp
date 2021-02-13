@@ -296,7 +296,7 @@ class UnicodeEncoder : public AbstractEncoder {
 
   std::string newline() override { return maybe_html_newline(); }
   std::string inf() override { return "∞"; }
-  std::string dot() override { return "⋅"; }
+  std::string dot() override { return ""; }
   std::string minus() override { return kMinusSign; }
   std::string tensor_prod() override { return "⊗"; }
   std::string coprod_lie() override { return hspace("∧"); }
@@ -396,9 +396,6 @@ class UnicodeEncoder : public AbstractEncoder {
     FATAL(absl::StrCat("There is no known superscript for '", std::string(1, ch), "'"));
   }
   static std::string string_to_subscript(const std::string& str) {
-    CHECK_EQ(str.size(), 1) << str
-      << "Unicode encoder doesn't support multi-character subscripts: there are "
-      << "no subscript commas in Unicode, so there is no way to separate the indices.";
     std::string ret;
     for (const char ch : str) {
       ret += char_to_subscript(ch);
@@ -406,9 +403,6 @@ class UnicodeEncoder : public AbstractEncoder {
     return ret;
   }
   static std::string string_to_superscript(const std::string& str) {
-    CHECK_EQ(str.size(), 1) << str
-      << "Unicode encoder doesn't support multi-character superscripts: there are "
-      << "no superscript commas in Unicode, so there is no way to separate the indices.";
     std::string ret;
     for (const char ch : str) {
       ret += char_to_superscript(ch);
@@ -418,20 +412,25 @@ class UnicodeEncoder : public AbstractEncoder {
 
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
-    return absl::StrCat(main, str_join(indices, "", string_to_subscript));
+    const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
+      return s.length() == 1;
+    }) ? "" : ",";
+    return absl::StrCat(main, str_join(indices, separator, string_to_subscript));
   }
   std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     return absl::StrCat(
       string_to_subscript(left_index),
-      main,
-      str_join(right_indices, "", string_to_subscript)
+      sub(main, right_indices)
     );
   }
 
   std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
-    return absl::StrCat(main, str_join(indices, "", string_to_superscript));
+    const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
+      return s.length() == 1;
+    }) ? "" : "˒";
+    return absl::StrCat(main, str_join(indices, separator, string_to_superscript));
   }
 
   std::string var(int idx) override {
