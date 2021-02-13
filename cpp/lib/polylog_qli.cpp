@@ -143,7 +143,7 @@ static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const P
   CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of QLi points: " << num_points;
   const int num_pairs = num_points / 2;
   for (const auto& seq : all_sequences(2, num_pairs)) {
-    const int num_pairs_included = absl::c_accumulate(seq, 0);
+    const int num_pairs_included = sum(seq);
     if (num_pairs_included < 2) {
       continue;
     }

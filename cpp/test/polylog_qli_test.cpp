@@ -142,8 +142,7 @@ TEST_P(SubsetSumFormulaTest, QLiSymm_SubsetSumFormula) {
   for (int num_args = 4; num_args <= total_points(); num_args += 2) {
     for (const auto& seq : increasing_sequences(total_points(), num_args)) {
       const auto args = mapped(seq, [](int x) { return x + 1; });
-      const int sign_proto = absl::c_accumulate(args, 0) + num_args / 2;
-      const int sign = neg_one_pow(sign_proto);
+      const int sign = neg_one_pow(sum(args) + num_args / 2);
       expr += sign * QLiSymmVec(weight(), args);
     }
   }

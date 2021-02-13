@@ -28,7 +28,7 @@ public:
   const std::vector<CompoundRatio>& ratios() const { return ratios_; }
 
   int depth() const { return ratios().size(); }
-  int total_weight() const { return foreweight_ + absl::c_accumulate(weights_, 0) - 1; }
+  int total_weight() const { return foreweight_ + sum(weights_) - 1; }
   int sign() const { return neg_one_pow(depth()); }
 
   auto as_tie() const { return std::tie(weights_, ratios_); }

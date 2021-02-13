@@ -317,3 +317,8 @@ template<typename Container>
 bool all_equal(const Container& c) {
   return absl::c_adjacent_find(c, std::not_equal_to<>()) == c.end();
 }
+
+template<typename Container>
+auto sum(const Container& c) {
+  return absl::c_accumulate(c, 0);
+}
