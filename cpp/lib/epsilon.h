@@ -11,7 +11,7 @@
 #include "polylog_li_param.h"
 
 
-constexpr int kMaxComplementVariables = 7;
+constexpr int kMaxComplementVariables = 15;
 
 namespace internal {
 constexpr int kEpsilonControlBits = 1;
