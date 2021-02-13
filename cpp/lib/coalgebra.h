@@ -50,7 +50,7 @@ CoExprT coproduct(const ExprT& lhs, const ExprT& rhs) {
 template<typename CoExprT, typename ExprT>
 CoExprT comultiply(const ExprT& expr, std::pair<int, int> form) {
   CHECK(CoExprT::Param::coproduct_is_lie_algebra);
-  if (expr.zero()) {
+  if (expr.is_zero()) {
     return {};
   }
   const int weight = expr.weight();

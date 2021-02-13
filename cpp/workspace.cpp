@@ -318,8 +318,8 @@ void list_all_degenerations(const LoopExpr& expr) {
     }
     CHECK(degenerations_seen.insert(groups).second);
     const auto expr_degenerated = loop_expr_degenerate(expr, groups);
-    // if (!expr_degenerated.zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
-    if (!expr_degenerated.zero() && has_common_variable_in_each_term(expr_degenerated)) {
+    // if (!expr_degenerated.is_zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
+    if (!expr_degenerated.is_zero() && has_common_variable_in_each_term(expr_degenerated)) {
       std::cout << permutation_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
     }
   };

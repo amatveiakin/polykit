@@ -158,7 +158,7 @@ public:
     return ret;
   }
 
-  bool zero() const { return data_.empty(); }
+  bool is_zero() const { return data_.empty(); }
   int size() const { return data_.size(); }
   int l1_norm() const {
     int ret = 0;
@@ -166,7 +166,7 @@ public:
     return ret;
   }
   int weight() const {
-    CHECK(!zero());
+    CHECK(!is_zero());
     return ParamT::object_to_weight(element().first);  // must be the same for each term
   }
 
@@ -337,7 +337,7 @@ public:
   }
 
   bool operator==(const BasicLinear& other) const {
-    return ((*this) - other).zero();
+    return ((*this) - other).is_zero();
   }
   bool operator!=(const BasicLinear& other) const {
     return !(*this == other);
@@ -412,7 +412,7 @@ struct LinearAnnotation {
   BasicLinearAnnotation expression;
   std::vector<std::string> errors;
 
-  bool empty() const { return expression.zero() && errors.empty(); }
+  bool empty() const { return expression.is_zero() && errors.empty(); }
   bool has_errors() const { return !errors.empty(); }
 };
 
@@ -476,8 +476,8 @@ public:
     return ret;
   }
 
-  bool zero() const { return main_.zero(); }  // TODO: rename to `is_zero`
-  bool blank() const { return main_.zero() && annotations_.empty(); }  // TODO: rename to `is_blank`
+  bool is_zero() const { return main_.is_zero(); }
+  bool is_blank() const { return main_.is_zero() && annotations_.empty(); }
   int size() const { return main_.size(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
@@ -648,14 +648,14 @@ public:
 private:
   template<typename SourceLinearT, typename F>
   void add_annotations(const SourceLinearT& other, int coeff, F func) {
-    if (other.blank()) {
+    if (other.is_blank()) {
       return;
     }
     const LinearAnnotation other_annotations{
       other.annotations().expression.mapped(func),
       other.annotations().errors
     };
-    if (blank()) {
+    if (is_blank()) {
       annotations_ = other_annotations;
       return;
     }
@@ -684,7 +684,7 @@ std::ostream& to_ostream(
     const CompareF& sorting_cmp,
     const ContextT& context) {
   const int line_limit = *current_formatting_config().expression_line_limit;
-  if (!linear.zero()) {
+  if (!linear.is_zero()) {
     const int size = linear.size();
     os << "# " << size << " " << en_plural(size, "term");
     os << ", |coeff| = " << linear.l1_norm();
@@ -727,7 +727,7 @@ std::ostream& to_ostream_grouped(
   const auto piece_to_ostream = [&](const LinearT& linear_piece) {
     to_ostream(os, linear_piece, term_sorting_cmp, context);
   };
-  if (linear.zero()) {
+  if (linear.is_zero()) {
     piece_to_ostream(linear);
     return os;
   }

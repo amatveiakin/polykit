@@ -115,7 +115,7 @@ LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode) {
         FATAL(absl::StrCat("Bad number of distinct elements: ", distinct));
       }
       replacement *= coeff;
-      CHECK(!replacement.zero());
+      CHECK(!replacement.is_zero());
       if (mode == LyndonMode::hard ||
           (expr_symm - original_expr + replacement).l1_norm() <= expr_symm.l1_norm()) {
         return replacement;

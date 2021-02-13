@@ -223,7 +223,7 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
 }
 
 static LoopExpr arg11_shuffle_cluster(const LoopExpr& expr) {
-  if (expr.zero() || expr.element().first.size() != 4) {
+  if (expr.is_zero() || expr.element().first.size() != 4) {
     return expr;  // TODO: Generalize !!!
   }
 
