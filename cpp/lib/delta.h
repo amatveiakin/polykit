@@ -1,3 +1,15 @@
+// DeltaExpr is a linear expression where each term is a tensor product of residuals of
+// two variables.
+//
+// Example:
+//   -2 (x1 - x2)*(x1 - x2)*(x1 - x2)
+//    + (x1 - x2)*(x2 - x3)*(x1 - x4)
+//
+// The expression is always normalized so that in each residual the variable with smaller
+// index goes first. The order of variables does not affect the sign: (x2 - x1) == (x1 - x2).
+// If any factor contains two equal variable or contains at least one variable that is
+// equal to infinity, the entire term is discarded.
+
 #pragma once
 
 #include <algorithm>

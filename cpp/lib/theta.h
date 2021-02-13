@@ -1,3 +1,14 @@
+// ThetaExpr is a linear expression where each term is a tensor product with each factor
+// equal to one of the two:
+//
+//   >  a difference (x_i - x_j), as in DeltaExpr, or
+//
+//            (x_{i_1} - x_{j_1}) * ... * (x_{i_n} - x_{j_n})
+//   >  1  -  -----------------------------------------------  ,  n >= 2
+//            (x_{k_1} - x_{l_1}) * ... * (x_{k_n} - x_{l_n})
+//
+// Alternatively, an entire term may be a formal symbol corresponding to a Lira function.
+
 #pragma once
 
 #include <array>
@@ -27,14 +38,6 @@ private:
   CompoundRatio ratio_;
 };
 
-// Represents one of the two:
-//
-//   >  (x_i - x_j)
-//
-//            (x_{i_1} - x_{j_1}) * ... * (x_{i_n} - x_{j_n})
-//   >  1  -  -----------------------------------------------  ,  n >= 2
-//            (x_{k_1} - x_{l_1}) * ... * (x_{k_n} - x_{l_n})
-//
 using Theta = std::variant<Delta, ThetaComplement>;
 
 using ThetaPack = std::variant<std::vector<Theta>, LiraParam>;
@@ -198,6 +201,9 @@ ThetaCoExpr substitute_ratios(
     const std::vector<CompoundRatio>& ratios);
 
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
+
+// Requires that each term is a product of Delta-s. Will fail if any term contains
+// a ThetaComplement or is a formal symbol.
 DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr);
 
 ThetaExpr update_foreweight(const ThetaExpr& expr, int new_foreweight);

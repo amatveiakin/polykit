@@ -1,3 +1,9 @@
+// EpsilonExpr is a linear expression where each term is a tensor product with each factor
+//   > either equals to x_i,
+//   > or equals to (1 - x_{j_1}*...*x_{j_m}).
+//
+// Alternatively, an entire term may be a formal symbol corresponding to a Li function.
+
 #pragma once
 
 #include <bitset>
