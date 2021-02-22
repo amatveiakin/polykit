@@ -58,3 +58,9 @@ DeltaExpr CorrVec(SpanX points) {
 ProjectionExpr CorrVecPr(SpanX points, DeltaProjector projector) {
   return CorrVec_wrapper<ProjectionExpr>(points.as_x(), projector);
 }
+
+DeltaExpr eval_formal_symbols(const CorrExpr& expr) {
+  return expr.mapped_expanding([](const CorrFSymb& formal_symbol) {
+    return CorrVec(formal_symbol.points).without_annotations();
+  });
+}

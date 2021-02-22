@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "corr_expression.h"
 #include "delta.h"
 #include "projection.h"
 
@@ -23,6 +24,9 @@ ProjectionExpr IVecPr(SpanX points, DeltaProjector projector);
 
 DeltaExpr CorrVec(SpanX points);
 ProjectionExpr CorrVecPr(SpanX points, DeltaProjector projector);
+
+DeltaExpr eval_formal_symbols(const CorrExpr& expr);
+
 
 template<typename... Args>
 DeltaExpr I(Args... args) {
