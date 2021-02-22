@@ -53,6 +53,9 @@ public:
   bool operator==(const Delta& other) const { return as_pair() == other.as_pair(); }
   bool operator!=(const Delta& other) const { return as_pair() != other.as_pair(); }
   bool operator< (const Delta& other) const { return as_pair() <  other.as_pair(); }
+  bool operator<=(const Delta& other) const { return as_pair() <= other.as_pair(); }
+  bool operator> (const Delta& other) const { return as_pair() >  other.as_pair(); }
+  bool operator>=(const Delta& other) const { return as_pair() >= other.as_pair(); }
 
   std::pair<int, int> as_pair() const { return {a_, b_}; }
 

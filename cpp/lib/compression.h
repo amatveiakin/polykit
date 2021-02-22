@@ -30,7 +30,11 @@ public:
   const internal::CompressedBlobData& data() const { return data_; };
 
   bool operator==(const CompressedBlob& other) const { return data_ == other.data_; }
+  bool operator!=(const CompressedBlob& other) const { return data_ != other.data_; }
   bool operator< (const CompressedBlob& other) const { return data_ <  other.data_; }
+  bool operator<=(const CompressedBlob& other) const { return data_ <= other.data_; }
+  bool operator> (const CompressedBlob& other) const { return data_ >  other.data_; }
+  bool operator>=(const CompressedBlob& other) const { return data_ >= other.data_; }
   template <typename H>
   friend H AbslHashValue(H h, const CompressedBlob& blob) {
     return H::combine(std::move(h), blob.data_);
