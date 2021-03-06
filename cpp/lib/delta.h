@@ -182,6 +182,10 @@ inline DeltaExpr D(X a, X b) {
 
 DeltaExpr substitute_variables(const DeltaExpr& expr, SpanX new_points);
 
+// Expects: points.size() == 6
+// Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6.
+DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points);
+
 DeltaExpr sort_term_multiples(const DeltaExpr& expr);
 DeltaExpr terms_with_unique_muptiples(const DeltaExpr& expr);
 DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr);

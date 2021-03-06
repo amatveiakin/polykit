@@ -57,6 +57,25 @@ DeltaExpr substitute_variables(const DeltaExpr& expr, SpanX new_points_span) {
   return ret;
 }
 
+DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points) {
+  return expr.mapped_expanding([&](const std::vector<Delta>& term) {
+    return tensor_product(absl::MakeConstSpan(
+      mapped(term, [&](const Delta& d) -> DeltaExpr {
+        const auto [p1, p2, p3, p4, p5, p6] = to_array<6>(points);
+        if (d == Delta(p6,p5)) {
+          return D(p6,p1) - D(p1,p2) + D(p2,p3) - D(p3,p4) + D(p4,p5);
+        } else if (d == Delta(p6,p4)) {
+          return D(p4,p2) + D(p3,p1) - D(p1,p5) + D(p6,p1) - D(p1,p2) - D(p3,p4) + D(p4,p5);
+        } else if (d == Delta(p6,p2)) {
+          return D(p6,p1) - D(p1,p5) + D(p5,p3) - D(p3,p4) + D(p4,p2);
+        } else {
+          return DeltaExpr::single({d});
+        }
+      })
+    ));
+  });
+}
+
 DeltaExpr sort_term_multiples(const DeltaExpr& expr) {
   return expr.mapped([&](const std::vector<Delta>& term) {
     return sorted(term);

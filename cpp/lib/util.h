@@ -292,7 +292,7 @@ bool all_unique(const Container& v) {
 
 template<size_t N, typename T>
 std::array<T, N> to_array(std::vector<T> v) {
-  CHECK_EQ(v.size(), N);
+  CHECK_EQ(v.size(), N) << dump_to_string(v);
   std::array<T, N> ret;
   absl::c_move(v, ret.begin());
   return ret;
