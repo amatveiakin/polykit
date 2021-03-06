@@ -141,9 +141,6 @@ constexpr int kMinCompoundRatioComponents = 2;
 // A product of several cross ratios. Represented as a collection of "loops" with
 // non-overlapping variables. The first half of each loop is the numerator and the
 // second half is the denominator.
-// The class is designed to store only very specific combinations of cross ratios
-// that arise while computing polylog symbols. Trying to multiply arbitrary cross
-// ratios will likely result in an error.
 class CompoundRatio {
 public:
   CompoundRatio() {}

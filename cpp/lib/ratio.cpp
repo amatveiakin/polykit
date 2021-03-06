@@ -1,5 +1,6 @@
 #include "ratio.h"
 
+#include "delta.h"
 #include "format.h"
 #include "set_util.h"
 
@@ -81,54 +82,74 @@ void CompoundRatio::check() const {
   }
 }
 
+static void cancel_fraction(std::multiset<Delta>& a, std::multiset<Delta>& b) {
+  for (auto a_it = a.begin(); a_it != a.end();) {
+    const auto b_it = b.find(*a_it);
+    if (b_it != b.end()) {
+      a_it = a.erase(a_it);
+      b.erase(b_it);
+    } else {
+      ++a_it;
+    }
+  }
+
+}
+
+// Optimization potential: store CompoundRatio as numerator+denominator, convert
+// to loops only for outputting.
 void CompoundRatio::normalize() {
   check();
-  bool simplification_found = false;
-  do {
-    simplification_found = false;
-    // Do no use `range` of here since `loops_.size()` changes during iteration.
-    for (int i = 0; i < loops_.size(); ++i) {
-      for (int j = i+1; j < loops_.size(); ++j) {
-        std::vector<int> a = loops_.at(i);
-        std::vector<int> b = loops_.at(j);
-        const std::vector<int> common = set_intersection(a, b);
-        const int an = a.size();
-        const int bn = b.size();
-        const int num_common = common.size();
-        CHECK_LE(num_common, 2) << to_string(*this);
-        if (num_common == 2) {
-          simplification_found = true;
-          int c1 = common[0];
-          int c2 = common[1];
-          if (a[(absl::c_find(a, c2) - a.begin() + 1) % an] != c1) {
-            std::swap(c1, c2);
-          }
-          const int ap1 = absl::c_find(a, c1) - a.begin();
-          const int ap2 = (ap1 + an - 1) % an;
-          const int bp1 = absl::c_find(b, c1) - b.begin();
-          const int bp2 = (bp1 + 1) % bn;
-          CHECK_EQ(a[ap2], c2) << dump_to_string(a) << " + " << dump_to_string(b);
-          CHECK_EQ(b[bp2], c2) << dump_to_string(a) << " + " << dump_to_string(b);
-          if (bp1 < bp2) {
-            a.insert(a.begin() + ap1, b.begin(), b.begin() + bp1);
-            a.insert(a.begin() + ap1, b.begin() + bp2 + 1, b.end());
-          } else {
-            a.insert(a.begin() + ap1, b.begin() + bp2 + 1, b.begin() + bp1);
-          }
-          loops_[i] = a;
-          loops_.erase(loops_.begin() + j);
-        }
-      }
+
+  // Convert to fraction
+  std::multiset<Delta> numerator;
+  std::multiset<Delta> denominator;
+  for (auto& loop : loops_) {
+    const int n = loop.size();
+    for (int i : range(n)) {
+      Delta d(loop[i], loop[(i+1)%n]);
+      (i%2 == 0 ? numerator : denominator).insert(d);
     }
-  } while (simplification_found);
-  for (auto& l : loops_) {
-    normalize_loop(l);
+  }
+
+  // Simplify fraction
+  cancel_fraction(numerator, denominator);
+  cancel_fraction(denominator, numerator);
+
+  // Convert back to loops
+  CHECK_EQ(numerator.size(), denominator.size());
+  loops_.clear();
+  while (!numerator.empty()) {
+    loops_.push_back({});
+    auto& loop = loops_.back();
+    const auto num_it = numerator.begin();
+    const int first_point = num_it->a();
+    int current_point = num_it->b();
+    numerator.erase(num_it);
+    loop.push_back(first_point);
+    auto* container = &denominator;
+    while (current_point != first_point) {
+      loop.push_back(current_point);
+      const auto it = absl::c_find_if(*container, [&](Delta d) {
+        return d.contains(current_point);
+      });
+      CHECK(it != container->end());
+      current_point = it->other_point(current_point);
+      container->erase(it);
+      container = (container == &numerator) ? &denominator : &numerator;
+    }
+    CHECK(container == &numerator);
+  }
+  CHECK(denominator.empty());
+
+  // Finalize
+  for (auto& loop : loops_) {
+    normalize_loop(loop);
   }
   absl::c_sort(loops_);
   check();
 }
 
-// Note. There are other reducible expression of the form (1 - CompoundRatio),
+// Note. There are other reducible expressions of the form (1 - CompoundRatio),
 // but this is the only one relevant to our task.
 std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio) {
   if (ratio.loops_.size() == 1) {

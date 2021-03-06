@@ -50,6 +50,9 @@ public:
 
   bool is_nil() const { return a_ == b_; }
 
+  bool contains(int point) const { return point == a_ || point == b_; }
+  int other_point(int point) const;
+
   bool operator==(const Delta& other) const { return as_pair() == other.as_pair(); }
   bool operator!=(const Delta& other) const { return as_pair() != other.as_pair(); }
   bool operator< (const Delta& other) const { return as_pair() <  other.as_pair(); }
@@ -74,6 +77,15 @@ inline std::string to_string(const Delta& d) {
   return fmt::brackets(absl::StrCat(d.a(), ",", d.b()));
 }
 
+inline int Delta::other_point(int point) const {
+  if (point == a_) {
+    return b_;
+  } else if (point == b_) {
+    return a_;
+  } else {
+    FATAL(absl::StrCat("Point ", point, " not found in ", to_string(*this)));
+  }
+}
 
 namespace internal {
 using DeltaDiffT = unsigned char;
