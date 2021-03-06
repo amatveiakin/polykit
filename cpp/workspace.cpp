@@ -11,6 +11,8 @@
 
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
+#include "lib/delta_parse.h"
+#include "lib/file_util.h"
 #include "lib/format.h"
 #include "lib/iterated_integral.h"
 #include "lib/lexicographical.h"
