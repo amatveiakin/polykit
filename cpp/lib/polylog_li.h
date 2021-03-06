@@ -17,7 +17,7 @@
 //   * Simple form: `Li(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})`
 //     where w_i are weights and each argument is itself a product of x_i. E.g.:
 //     `Li(1,3)({1},{2,3})` == 1_Li_1_3(x1, x2*x3) == I(0, 1, x1, 0, 0, x1*x2*x3)
-//     Note that the simple form allows only foreweight == 1.
+//     Use `LiN` instead of `Li` for foreweight equal to N.
 //   * Vector form: `LiVec(foreweight, vector_of_weights, vector_of_arguments)`
 
 #pragma once
@@ -43,25 +43,27 @@ EpsilonCoExpr CoLiVec(const LiParam& param);
 namespace internal {
 class LiFixedWeights {
 public:
-  LiFixedWeights(std::vector<int> weights)
-    : weights_(std::move(weights)) {}
+  LiFixedWeights(int foreweight, std::vector<int> weights)
+    : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
   EpsilonExpr operator()(std::initializer_list<Args>... args) const {
-    return LiVec(1, weights_, std::vector({std::vector(args)...}));
+    return LiVec(foreweight_, weights_, std::vector({std::vector(args)...}));
   }
 private:
+  int foreweight_;
   std::vector<int> weights_;
 };
 
 class CoLiFixedWeights {
 public:
-  CoLiFixedWeights(std::vector<int> weights)
-    : weights_(std::move(weights)) {}
+  CoLiFixedWeights(int foreweight, std::vector<int> weights)
+    : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
   EpsilonCoExpr operator()(std::initializer_list<Args>... args) const {
-    return CoLiVec(1, weights_, std::vector({std::vector(args)...}));
+    return CoLiVec(foreweight_, weights_, std::vector({std::vector(args)...}));
   }
 private:
+  int foreweight_;
   std::vector<int> weights_;
 };
 }  // namespace internal
@@ -69,14 +71,24 @@ private:
 
 // Usage:
 //   Li(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})
-template<typename... Args>
-internal::LiFixedWeights Li(Args... args) {
-  return {{args...}};
-}
+template<typename... Args> internal::LiFixedWeights Li (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li1(Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li2(Args... args) { return {2, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li3(Args... args) { return {3, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li4(Args... args) { return {4, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li5(Args... args) { return {5, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li6(Args... args) { return {6, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li7(Args... args) { return {7, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li8(Args... args) { return {8, {args...}}; }
 
 // Usage:
 //   CoLi(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})
-template<typename... Args>
-internal::CoLiFixedWeights CoLi(Args... args) {
-  return {{args...}};
-}
+template<typename... Args> internal::CoLiFixedWeights CoLi (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi1(Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi2(Args... args) { return {2, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi3(Args... args) { return {3, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi4(Args... args) { return {4, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi5(Args... args) { return {5, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi6(Args... args) { return {6, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi7(Args... args) { return {7, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi8(Args... args) { return {8, {args...}}; }

@@ -34,25 +34,27 @@ ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr);
 namespace internal {
 class LiraFixedWeights {
 public:
-  LiraFixedWeights(std::vector<int> weights)
-    : weights_(std::move(weights)) {}
+  LiraFixedWeights(int foreweight, std::vector<int> weights)
+    : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
   ThetaExpr operator()(Args&&... args) const {
-    return LiraVec(1, weights_, std::vector<CompoundRatio>{std::forward<Args>(args)...});
+    return LiraVec(foreweight_, weights_, std::vector<CompoundRatio>{std::forward<Args>(args)...});
   }
 private:
+  int foreweight_;
   std::vector<int> weights_;
 };
 
 class CoLiraFixedWeights {
 public:
-  CoLiraFixedWeights(std::vector<int> weights)
-    : weights_(std::move(weights)) {}
+  CoLiraFixedWeights(int foreweight, std::vector<int> weights)
+    : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
   ThetaCoExpr operator()(Args&&... args) const {
-    return CoLiraVec(1, weights_, std::vector<CompoundRatio>{std::forward<Args>(args)...});
+    return CoLiraVec(foreweight_, weights_, std::vector<CompoundRatio>{std::forward<Args>(args)...});
   }
 private:
+  int foreweight_;
   std::vector<int> weights_;
 };
 }  // namespace internal
@@ -60,14 +62,24 @@ private:
 
 // Usage:
 //   Lira(w_1, ..., w_n)(r_1, ..., r_n)
-template<typename... Args>
-internal::LiraFixedWeights Lira(Args... args) {
-  return {{args...}};
-}
+template<typename... Args> internal::LiraFixedWeights Lira (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira1(Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira2(Args... args) { return {2, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira3(Args... args) { return {3, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira4(Args... args) { return {4, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira5(Args... args) { return {5, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira6(Args... args) { return {6, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira7(Args... args) { return {7, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira8(Args... args) { return {8, {args...}}; }
 
 // Usage:
 //   CoLira(w_1, ..., w_n)(r_1, ..., r_n)
-template<typename... Args>
-internal::CoLiraFixedWeights CoLira(Args... args) {
-  return {{args...}};
-}
+template<typename... Args> internal::CoLiraFixedWeights CoLira (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira1(Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira2(Args... args) { return {2, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira3(Args... args) { return {3, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira4(Args... args) { return {4, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira5(Args... args) { return {5, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira6(Args... args) { return {6, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira7(Args... args) { return {7, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira8(Args... args) { return {8, {args...}}; }

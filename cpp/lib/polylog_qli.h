@@ -49,29 +49,29 @@ DeltaExpr QLiSymm_dispatch(int weight, Args... args) {
 }  // namespace internal
 
 
-template<typename... Args> inline DeltaExpr QLi1(Args... args) { return internal::QLi_dispatch(1, args...); }
-template<typename... Args> inline DeltaExpr QLi2(Args... args) { return internal::QLi_dispatch(2, args...); }
-template<typename... Args> inline DeltaExpr QLi3(Args... args) { return internal::QLi_dispatch(3, args...); }
-template<typename... Args> inline DeltaExpr QLi4(Args... args) { return internal::QLi_dispatch(4, args...); }
-template<typename... Args> inline DeltaExpr QLi5(Args... args) { return internal::QLi_dispatch(5, args...); }
-template<typename... Args> inline DeltaExpr QLi6(Args... args) { return internal::QLi_dispatch(6, args...); }
-template<typename... Args> inline DeltaExpr QLi7(Args... args) { return internal::QLi_dispatch(7, args...); }
-template<typename... Args> inline DeltaExpr QLi8(Args... args) { return internal::QLi_dispatch(8, args...); }
+template<typename... Args> DeltaExpr QLi1(Args... args) { return internal::QLi_dispatch(1, args...); }
+template<typename... Args> DeltaExpr QLi2(Args... args) { return internal::QLi_dispatch(2, args...); }
+template<typename... Args> DeltaExpr QLi3(Args... args) { return internal::QLi_dispatch(3, args...); }
+template<typename... Args> DeltaExpr QLi4(Args... args) { return internal::QLi_dispatch(4, args...); }
+template<typename... Args> DeltaExpr QLi5(Args... args) { return internal::QLi_dispatch(5, args...); }
+template<typename... Args> DeltaExpr QLi6(Args... args) { return internal::QLi_dispatch(6, args...); }
+template<typename... Args> DeltaExpr QLi7(Args... args) { return internal::QLi_dispatch(7, args...); }
+template<typename... Args> DeltaExpr QLi8(Args... args) { return internal::QLi_dispatch(8, args...); }
 
-template<typename... Args> inline DeltaExpr QLiNeg1(Args... args) { return internal::QLiNeg_dispatch(1, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg2(Args... args) { return internal::QLiNeg_dispatch(2, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg3(Args... args) { return internal::QLiNeg_dispatch(3, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg4(Args... args) { return internal::QLiNeg_dispatch(4, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg5(Args... args) { return internal::QLiNeg_dispatch(5, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg6(Args... args) { return internal::QLiNeg_dispatch(6, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg7(Args... args) { return internal::QLiNeg_dispatch(7, args...); }
-template<typename... Args> inline DeltaExpr QLiNeg8(Args... args) { return internal::QLiNeg_dispatch(8, args...); }
+template<typename... Args> DeltaExpr QLiNeg1(Args... args) { return internal::QLiNeg_dispatch(1, args...); }
+template<typename... Args> DeltaExpr QLiNeg2(Args... args) { return internal::QLiNeg_dispatch(2, args...); }
+template<typename... Args> DeltaExpr QLiNeg3(Args... args) { return internal::QLiNeg_dispatch(3, args...); }
+template<typename... Args> DeltaExpr QLiNeg4(Args... args) { return internal::QLiNeg_dispatch(4, args...); }
+template<typename... Args> DeltaExpr QLiNeg5(Args... args) { return internal::QLiNeg_dispatch(5, args...); }
+template<typename... Args> DeltaExpr QLiNeg6(Args... args) { return internal::QLiNeg_dispatch(6, args...); }
+template<typename... Args> DeltaExpr QLiNeg7(Args... args) { return internal::QLiNeg_dispatch(7, args...); }
+template<typename... Args> DeltaExpr QLiNeg8(Args... args) { return internal::QLiNeg_dispatch(8, args...); }
 
-template<typename... Args> inline DeltaExpr QLiSymm1(Args... args) { return internal::QLiSymm_dispatch(1, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm2(Args... args) { return internal::QLiSymm_dispatch(2, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm3(Args... args) { return internal::QLiSymm_dispatch(3, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm4(Args... args) { return internal::QLiSymm_dispatch(4, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm5(Args... args) { return internal::QLiSymm_dispatch(5, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm6(Args... args) { return internal::QLiSymm_dispatch(6, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm7(Args... args) { return internal::QLiSymm_dispatch(7, args...); }
-template<typename... Args> inline DeltaExpr QLiSymm8(Args... args) { return internal::QLiSymm_dispatch(8, args...); }
+template<typename... Args> DeltaExpr QLiSymm1(Args... args) { return internal::QLiSymm_dispatch(1, args...); }
+template<typename... Args> DeltaExpr QLiSymm2(Args... args) { return internal::QLiSymm_dispatch(2, args...); }
+template<typename... Args> DeltaExpr QLiSymm3(Args... args) { return internal::QLiSymm_dispatch(3, args...); }
+template<typename... Args> DeltaExpr QLiSymm4(Args... args) { return internal::QLiSymm_dispatch(4, args...); }
+template<typename... Args> DeltaExpr QLiSymm5(Args... args) { return internal::QLiSymm_dispatch(5, args...); }
+template<typename... Args> DeltaExpr QLiSymm6(Args... args) { return internal::QLiSymm_dispatch(6, args...); }
+template<typename... Args> DeltaExpr QLiSymm7(Args... args) { return internal::QLiSymm_dispatch(7, args...); }
+template<typename... Args> DeltaExpr QLiSymm8(Args... args) { return internal::QLiSymm_dispatch(8, args...); }
