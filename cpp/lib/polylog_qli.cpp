@@ -12,17 +12,17 @@ struct Point {
   bool odd = true;
 };
 
-// Note: "pos" in "lido_pos_node_func" corresponds to the index in the
+// Note: "pos" in "qli_pos_node_func" corresponds to the index in the
 // function name: "QLi+"; "neg" in "neg_cross_ratio" stands for the fact
 // that this is one minus cross ratio. There is no mistake in this mismatch.
-static DeltaExpr lido_pos_node_func(const std::vector<Point>& p) {
+static DeltaExpr qli_pos_node_func(const std::vector<Point>& p) {
   CHECK_EQ(p.size(), 4);
   return p[0].odd
     ?  neg_cross_ratio(p[0].x, p[1].x, p[2].x, p[3].x)
     : -neg_cross_ratio(p[1].x, p[2].x, p[3].x, p[0].x);
 }
 
-static DeltaExpr lido_neg_node_func(const std::vector<Point>& p) {
+static DeltaExpr qli_neg_node_func(const std::vector<Point>& p) {
   CHECK_EQ(p.size(), 4);
   return p[0].odd
     ?  neg_inv_cross_ratio(p[0].x, p[1].x, p[2].x, p[3].x)
@@ -33,7 +33,7 @@ template<typename ResultT, typename QLiNodeT, typename ProjectorT>
 static ResultT QLi_impl(
     int weight,
     const std::vector<Point>& points,
-    const QLiNodeT& lido_node_func,
+    const QLiNodeT& qli_node_func,
     const ProjectorT& projector) {
   const int num_points = points.size();
   CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of QLi points: " << num_points;
@@ -44,22 +44,22 @@ static ResultT QLi_impl(
     for (int i : range(num_points - 3)) {
       const auto foundation = concat(slice(points, 0, i+1), slice(points, i+3));
       ret += tensor_product(
-        projector(lido_node_func(slice(points, i, i+4))),
-        QLi_impl<ResultT>(weight - 1, foundation, lido_node_func, projector)
+        projector(qli_node_func(slice(points, i, i+4))),
+        QLi_impl<ResultT>(weight - 1, foundation, qli_node_func, projector)
       );
     }
     return ret;
   };
   if (weight == min_weight) {
     if (num_points == 4) {
-      return projector(lido_node_func(points));
+      return projector(qli_node_func(points));
     } else {
       return subsums();
     }
   } else {
     ResultT ret = tensor_product(
       projector(cross_ratio(mapped(points, [](Point p) { return p.x; }))),
-      QLi_impl<ResultT>(weight - 1, points, lido_node_func, projector)
+      QLi_impl<ResultT>(weight - 1, points, qli_node_func, projector)
     );
     if (num_points > 4) {
       ret += subsums();
@@ -72,7 +72,7 @@ template<typename ResultT, typename QLiNodeT, typename ProjectorT>
 static ResultT QLi_generic_wrapper(
     int weight,
     const std::vector<X>& points,
-    const QLiNodeT& lido_node_func,
+    const QLiNodeT& qli_node_func,
     const ProjectorT& projector) {
   if (points.size() == 2) {
     CHECK_GE(weight, 1);
@@ -82,7 +82,7 @@ static ResultT QLi_generic_wrapper(
   for (int i : range(points.size())) {
     tagged_points.push_back({points[i], (i+1) % 2 == 1});
   }
-  return QLi_impl<ResultT>(weight, tagged_points, lido_node_func, projector);
+  return QLi_impl<ResultT>(weight, tagged_points, qli_node_func, projector);
 }
 
 
@@ -91,7 +91,7 @@ static ResultT QLi_wrapper(
     int weight,
     const std::vector<X>& points,
     const ProjectorT& projector) {
-  return QLi_generic_wrapper<ResultT>(weight, points, lido_pos_node_func, projector)
+  return QLi_generic_wrapper<ResultT>(weight, points, qli_pos_node_func, projector)
     .annotate(fmt::function_num_args(
       fmt::sub_num(fmt::opname("QLi"), {weight}),
       points
@@ -114,7 +114,7 @@ static ResultT QLiNeg_wrapper(
     const ProjectorT& projector) {
   return (
       neg_one_pow(weight) *
-      QLi_generic_wrapper<ResultT>(weight, points, lido_neg_node_func, projector)
+      QLi_generic_wrapper<ResultT>(weight, points, qli_neg_node_func, projector)
     ).annotate(fmt::function_num_args(
       fmt::sub_num(fmt::super(fmt::opname("QLi"), {"-"}), {weight}),
       points
@@ -132,8 +132,8 @@ ProjectionExpr QLiNegVecPr(int weight, SpanX points, DeltaProjector projector) {
 
 template<typename ResultT, typename ProjectorT>
 static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const ProjectorT& projector) {
-  auto lido_base = [&](const std::vector<X>& args) {
-    return QLi_generic_wrapper<ResultT>(weight, args, lido_pos_node_func, projector);
+  auto qli_base = [&](const std::vector<X>& args) {
+    return QLi_generic_wrapper<ResultT>(weight, args, qli_pos_node_func, projector);
   };
   ResultT ret;
   const int num_points = points.size();
@@ -155,7 +155,7 @@ static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const P
         args.push_back(points[2*pair_idx+1]);
       }
     }
-    ret += sign * lido_base(args);
+    ret += sign * qli_base(args);
   }
   return ret.annotate(fmt::function(
     fmt::sub_num(fmt::opname("QLiSymm"), {weight}),
