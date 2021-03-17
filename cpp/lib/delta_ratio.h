@@ -10,6 +10,7 @@ inline DeltaExpr cross_ratio(X a, X b, X c, X d) {
 
 template<typename T>
 DeltaExpr cross_ratio(const T& v) {
+  CHECK(v.size() % 2 == 0) << dump_to_string(v);
   DeltaExpr ret;
   const int n = v.size();
   for (int i : range(n)) {

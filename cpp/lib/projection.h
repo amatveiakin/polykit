@@ -45,6 +45,8 @@ inline ProjectionExpr project_on_x13(const DeltaExpr& expr) { return project_on(
 inline ProjectionExpr project_on_x14(const DeltaExpr& expr) { return project_on(14, expr); }
 inline ProjectionExpr project_on_x15(const DeltaExpr& expr) { return project_on(15, expr); }
 
+ProjectionExpr involute_projected(const DeltaExpr& expr, const std::vector<int>& involution, int axis);
+
 
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct);
 ProjectionExpr terms_with_min_distinct_variables(const ProjectionExpr& expr, int min_distinct);
