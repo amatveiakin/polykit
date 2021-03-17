@@ -10,5 +10,9 @@ of the tests skipping the most expensive ones. To run every single test use
 
 Tested compilers: Clang 10.0.0, MSVC 14.0 (C/C++ compiler version 19.27.29112).
 
+C++/Python bindings are supported only in Linux/MacOS builds for now. The
+recommended way of compiling Python bindings in Windows is via Windows Subsystem
+for Linux (WSL).
+
 Note. If working with Unicode in Windows command prompt, type `chcp 65001`.
 For best performance it is also suggested to use "DejaVu Sans Mono" font.

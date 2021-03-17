@@ -81,14 +81,29 @@ std::vector<T> appended(std::vector<T> c, T element) {
   return c;
 }
 
-template<typename Container>
+namespace internal {
+template <typename T>
+class HasIterator {
+private:
+  typedef char YesType[1];
+  typedef char NoType[2];
+  template <typename U> static YesType& test(const typename U::iterator*);
+  template <typename U> static NoType& test(...);
+public:
+  enum { value = sizeof(test<T>(nullptr)) == sizeof(YesType) };
+};
+}  // namespace internal
+
+// Add `enable_if` to remove collision with `concat` from pybind11/detail/descr.h
+template<typename Container,
+    typename = std::enable_if_t<internal::HasIterator<Container>::value>>
 Container concat(Container a, Container b) {
   a.insert(a.end(), std::move_iterator(b.begin()), std::move_iterator(b.end()));
   return a;
 }
 
-template <class Container, class... ContainerTail,
-    class = std::enable_if_t<(std::is_same_v<Container, ContainerTail> && ...)>>
+template<typename Container, typename... ContainerTail,
+    typename = std::enable_if_t<(std::is_same_v<Container, ContainerTail> && ...)>>
 Container concat(Container head, ContainerTail... tail) {
   return concat(head, concat(tail...));
 }

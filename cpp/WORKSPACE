@@ -21,3 +21,20 @@ http_archive(
   sha256 = "2db427be8b258ad401177c411c2a7c2f6bc78548a04f1a23576cc62616d9cd38",
   build_file = "gmock.BUILD",
 )
+
+# Rules for pybind11, based on https://github.com/pybind/pybind11_bazel
+http_archive(
+  name = "pybind11_bazel",
+  urls = ["https://github.com/pybind/pybind11_bazel/archive/26973c0ff320cb4b39e45bc3e4297b82bc3a6c09.zip"],
+  strip_prefix = "pybind11_bazel-26973c0ff320cb4b39e45bc3e4297b82bc3a6c09",
+  sha256 = "a5666d950c3344a8b0d3892a88dc6b55c8e0c78764f9294e806d69213c03f19d",
+)
+http_archive(
+  name = "pybind11",
+  urls = ["https://github.com/pybind/pybind11/archive/v2.6.2.tar.gz"],
+  strip_prefix = "pybind11-2.6.2",
+  sha256 = "8ff2fff22df038f5cd02cea8af56622bc67f5b64534f1b83b9f133b8366acff2",
+  build_file = "@pybind11_bazel//:pybind11.BUILD",
+)
+load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+python_configure(name = "local_config_python")

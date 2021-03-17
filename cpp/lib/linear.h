@@ -47,7 +47,7 @@
 //
 // # Vector space
 //
-// Vector space is the third space skin to object space and key space, but, generally
+// Vector space is the third space akin to object space and key space, but, generally
 // speaking, distinct from both of them. In vector space each monom must be a vector-like
 // type that supports indexing, slicing and concatenating. Vector space is used by
 // functions like `shuffle_product`, `to_lyndon_basis` and `comultiply` that treat the
@@ -62,7 +62,7 @@
 // # Annotations
 //
 // A linear expression can be annotated with a function used to create it. Annotations are
-// carried over with the epxression and all linear operations (+, -, *, div_int) applied to
+// carried over with the expression and all linear operations (+, -, *, div_int) applied to
 // the expression are applied to the annotations as well. Annotations are a convenient way
 // to keep track of the functions that went into an equation. Use `annotate` in order to add
 // a new annotations to an expression.
@@ -181,6 +181,7 @@ public:
       return 0;
     }
   }
+  const absl::flat_hash_map<StorageT, int>& data() const { return data_; }
 
   void add_to(const ObjectT& obj, int x) {
     add_to_key(ParamT::object_to_key(obj), x);

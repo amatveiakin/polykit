@@ -1,3 +1,5 @@
+package(default_visibility = ["//:__subpackages__"])
+
 platform(
   name = "windows-clang-cl",
   constraint_values = [

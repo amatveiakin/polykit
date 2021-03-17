@@ -1,0 +1,37 @@
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+
+pybind_extension(
+    name = "delta",
+    srcs = ["delta.cpp"],
+    deps = ["//:math"],
+)
+
+pybind_extension(
+    name = "polylog_qli",
+    srcs = ["polylog_qli.cpp"],
+    deps = ["//:polylog"],
+)
+
+py_library(
+    name = "polykit_util",
+    srcs = [
+        "format.py",
+        "linear.py",
+    ],
+)
+
+py_library(
+    name = "polykit",
+    srcs = ["polykit.py"],
+    deps = [":polykit_util"],
+    data = [
+        ":delta.so",
+        ":polylog_qli.so",
+    ],
+)
+
+py_binary(
+    name = "py_workspace",
+    srcs = ["py_workspace.py"],
+    deps = [":polykit"],
+)
