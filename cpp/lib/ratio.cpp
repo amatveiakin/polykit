@@ -113,7 +113,7 @@ void CompoundRatio::normalize() {
 
   // Simplify fraction
   cancel_fraction(numerator, denominator);
-  cancel_fraction(denominator, numerator);
+  cancel_fraction(denominator, numerator);  // TODO: Check if the other direction is needed
 
   // Convert back to loops
   CHECK_EQ(numerator.size(), denominator.size());

@@ -1,6 +1,8 @@
 // Note: Cutting formulas are the same as in `iterated_integral`.
 // Difference: Epsilon instead of Delta, `..._3_point` implementation.
 
+// TODO: Check if foreweigth is off by one compared to Danya'a definitions.
+
 #include "polylog_li.h"
 
 #include "absl/types/span.h"
