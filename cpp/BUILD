@@ -51,6 +51,7 @@ cc_library(
         "lib/delta_ratio.h",
         "lib/epsilon.h",
         "lib/format.h",
+        "lib/lazy.h",
         "lib/linear.h",
         "lib/lyndon.h",
         "lib/polylog_li_param.h",
