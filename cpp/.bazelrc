@@ -1,6 +1,11 @@
 build:msvc --cxxopt="/std:c++17"
 build:msvc --copt /wd4267  # "conversion from 'size_t' to 'type', possible loss of data"
 
+# `clang-cl` config is based on `msvc` config
+build:clang-cl --cxxopt="/std:c++17"
+build:clang-cl --copt /wd4267  # "conversion from 'size_t' to 'type', possible loss of data"
+build:clang-cl --copt "-Wno-builtin-macro-redefined"  # for __DATE__, __TIME__, __TIMESTAMP__
+
 build:clang --repo_env=CC=clang
 build:clang --cxxopt="-std=c++17"
 
