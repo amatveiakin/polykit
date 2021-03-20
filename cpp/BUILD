@@ -51,7 +51,6 @@ cc_library(
         "lib/delta_ratio.h",
         "lib/epsilon.h",
         "lib/format.h",
-        "lib/lazy.h",
         "lib/linear.h",
         "lib/lyndon.h",
         "lib/polylog_li_param.h",
@@ -63,6 +62,9 @@ cc_library(
         "lib/summation.h",
         "lib/theta.h",
         "lib/x.h",
+        "lib/lazy/lazy.h",
+        "lib/lazy/lazy_arithmetic.h",
+        "lib/lazy/lazy_delta.h",
     ],
     srcs = [
         "lib/corr_expression.cpp",
