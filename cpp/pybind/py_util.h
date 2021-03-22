@@ -34,3 +34,11 @@ void py_register_lazy_expr(const pybind11::module_& module, const char* name) {
     .def(int() * py::self)
   ;
 }
+
+template<typename PyT>
+void py_register_py_expr(const pybind11::module_& module, const char* name) {
+  namespace py = pybind11;
+  py::class_<PyT>(module, name)
+    .def_readonly("data", &PyT::data)
+  ;
+}

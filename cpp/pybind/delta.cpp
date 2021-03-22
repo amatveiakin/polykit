@@ -36,10 +36,6 @@ PYBIND11_MODULE(delta, m) {
   ;
 
   py_register_lazy_expr<LazyDeltaExpr>(m, "LazyDeltaExpr");
-
-  py::class_<PyDeltaExpr>(m, "PyDeltaExpr")
-    .def_readonly("data", &PyDeltaExpr::data)
-  ;
-
+  py_register_py_expr<PyDeltaExpr>(m, "PyDeltaExpr");
   m.def("eval_lazy_delta", &eval_lazy_delta, "Evaluates a LazyDeltaExpr");
 }

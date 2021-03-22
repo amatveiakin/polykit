@@ -6,6 +6,6 @@
 
 using LazyDeltaExpr = LazyExpr<DeltaExpr>;
 
-LazyDeltaExpr substitute_variables_lazy(const LazyExpr<DeltaExpr>& subexpr, const std::vector<X>& new_points) {
+LazyDeltaExpr substitute_variables_lazy(const LazyDeltaExpr& subexpr, const std::vector<X>& new_points) {
   return MAKE_LAZY(substitute_variables, subexpr, new_points);
 }

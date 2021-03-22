@@ -29,6 +29,15 @@ pybind_extension(
 )
 
 pybind_extension(
+    name = "projection",
+    srcs = ["projection.cpp"],
+    deps = [
+        "//:math",
+        ":py_util",
+    ],
+)
+
+pybind_extension(
     name = "x",
     srcs = ["x.cpp"],
     deps = ["//:math"],
@@ -52,6 +61,7 @@ py_library(
         ":delta.so",
         ":lyndon.so",
         ":polylog_qli.so",
+        ":projection.so",
         ":x.so",
     ],
 )
