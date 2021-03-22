@@ -17,6 +17,12 @@ pybind_extension(
 )
 
 pybind_extension(
+    name = "lyndon",
+    srcs = ["lyndon.cpp"],
+    deps = ["//:math"],
+)
+
+pybind_extension(
     name = "polylog_qli",
     srcs = ["polylog_qli.cpp"],
     deps = ["//:polylog"],
@@ -44,6 +50,7 @@ py_library(
     deps = [":polykit_util"],
     data = [
         ":delta.so",
+        ":lyndon.so",
         ":polylog_qli.so",
         ":x.so",
     ],

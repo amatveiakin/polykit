@@ -31,7 +31,7 @@ static constexpr char default_lazy_name[] = "<?>";
 template<typename T>
 T evaluate_lazy(T value) { return value; }
 template<typename ResultT>
-auto evaluate_lazy(const LazyExpr<ResultT>& subexpr) { return subexpr.evaluate(); }
+ResultT evaluate_lazy(const LazyExpr<ResultT>& subexpr) { return subexpr.evaluate(); }
 // TODO: Add negative overloads for absl::Span, SpanX, std::string_view and other non-owning wrappers.
 //   Better yet: add extensible type trait `is_non_owning` so that `lazy` doesn't have to depend on `x`.
 

@@ -1,10 +1,12 @@
 import format
 import linear
 from util import args_to_iterable
-from pybind import x, delta, polylog_qli
+from pybind import lyndon, x, delta, polylog_qli
 
 
 Linear = linear.Linear
+
+to_lyndon_basis = lyndon.to_lyndon_basis
 
 X = x.X
 Inf = x.Inf

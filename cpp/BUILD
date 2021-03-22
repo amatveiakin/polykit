@@ -77,6 +77,7 @@ cc_library(
         "lib/lazy/lazy.h",
         "lib/lazy/lazy_arithmetic.h",
         "lib/lazy/lazy_delta.h",
+        "lib/lazy/lazy_lyndon.h",
     ],
     srcs = [
         "lib/corr_expression.cpp",
