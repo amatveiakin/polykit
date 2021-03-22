@@ -27,7 +27,7 @@ def _gen_ops():
     global minus, otimes, cotimes, shuffle
     minus = "−" if enable_unicode else "-"
     otimes = _monofont_op_correction("⊗") if enable_unicode else "*"
-    cotimes = _monofont_op_correction("∧") if enable_unicode else "^"
+    cotimes = _monofont_op_correction(" ∧ ") if enable_unicode else " ^ "
     shuffle = _monofont_op_correction("⧢") if enable_unicode else "#"
 
 _gen_ops()

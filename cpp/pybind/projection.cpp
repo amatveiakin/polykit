@@ -24,4 +24,5 @@ PYBIND11_MODULE(projection, m) {
   m.def("eval_lazy_projection", &eval_lazy_projection, "Evaluates a LazyProjectionExpr");
 
   m.def("project_on", &project_on_lazy, "Projects a LazyDeltaExpr onto an axis");
+  m.def("involute_projected", &involute_projected_lazy);
 }

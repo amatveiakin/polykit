@@ -13,13 +13,23 @@ Inf = x.Inf
 
 Delta = delta.Delta
 LazyDeltaExpr = delta.LazyDeltaExpr
+LazyDeltaCoExpr = delta.LazyDeltaCoExpr
+substitute_variables = delta.substitute_variables
+involute = delta.involute
+coproduct = delta.coproduct
+comultiply = delta.comultiply
 
 LazyProjectionExpr = projection.LazyProjectionExpr
 project_on = projection.project_on
+involute_projected = projection.involute_projected
 
 class DeltaExpr(Linear):
     def obj_to_str(self, obj):
         return format.otimes.join([str(o) for o in obj])
+
+class DeltaCoExpr(Linear):
+    def obj_to_str(self, obj):
+        return format.cotimes.join([format.otimes.join([str(o) for o in subobj]) for subobj in obj])
 
 class ProjectionExpr(Linear):
     def obj_to_str(self, obj):
@@ -28,6 +38,8 @@ class ProjectionExpr(Linear):
 def eval_expr(lazy_expr):
     if isinstance(lazy_expr, LazyDeltaExpr):
         return DeltaExpr.from_pairs(delta.eval_lazy_delta(lazy_expr).data)
+    if isinstance(lazy_expr, LazyDeltaCoExpr):
+        return DeltaCoExpr.from_pairs(delta.eval_lazy_codelta(lazy_expr).data)
     if isinstance(lazy_expr, LazyProjectionExpr):
         return ProjectionExpr.from_pairs(projection.eval_lazy_projection(lazy_expr).data)
     raise TypeError("`eval_expr` expected a lazy expression type, got {}".format(
