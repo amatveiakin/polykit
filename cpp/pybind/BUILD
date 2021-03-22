@@ -34,6 +34,7 @@ py_library(
     srcs = [
         "format.py",
         "linear.py",
+        "util.py",
     ],
 )
 
