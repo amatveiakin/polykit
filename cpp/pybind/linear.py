@@ -22,23 +22,23 @@ class Linear:
 
     # Counts the number of each element in the list
     # Example:  ["a", "b", "a"]  ->  {"a": 2, "b": 1}
-    @staticmethod
-    def count(l):
+    @classmethod
+    def count(cls, l):
         cnt = {}
         for item in l:
             cnt[item] = cnt.get(item, 0) + 1
-        return Linear(cnt)
+        return cls(cnt)
 
     # Example:  [("a", 2), ("b", 1)]  ->  {"a": 2, "b": 1}
-    @staticmethod
-    def from_pairs(l):
+    @classmethod
+    def from_pairs(cls, l):
         data = {}
         for obj, coeff in l:
             data[obj] = coeff
-        return Linear(data)
+        return cls(data)
 
     def copy(self):
-        return Linear(self.data.copy())
+        return self.__class__(self.data.copy())
 
     # TODO: Split into annotations and no annotations
     def items(self):
@@ -66,7 +66,7 @@ class Linear:
         return self
 
     def __neg__(self):
-        return Linear() - self
+        return self.__class__() - self
 
     def __add__(self, other):
         ret = self.copy()
@@ -101,16 +101,16 @@ class Linear:
 
     def mapped_obj(self, func):
         # Don't use a list comprehension in case func is not injective
-        ret = Linear()
+        ret = self.__class__()
         for obj, coeff in self.items():
-            ret += Linear({func(obj): coeff})
+            ret += self.__class__({func(obj): coeff})
         return ret
 
     def mapped_coeff(self, func):
-        return Linear({obj: func(coeff) for obj, coeff in self.items()})
+        return self.__class__({obj: func(coeff) for obj, coeff in self.items()})
 
     def filtered_obj(self, predicate):
-        return Linear({obj: coeff for obj, coeff in self.items() if predicate(obj)})
+        return self.__class__({obj: coeff for obj, coeff in self.items() if predicate(obj)})
 
     def has_annotations(self):
         return len(self.annotations()) > 0
@@ -122,20 +122,20 @@ class Linear:
         return self.filtered_obj(lambda e: not isinstance(e, Annotation))
 
     def annotated(self, s):
-        return self + Linear({Annotation(s): 1})
+        return self + self.__class__({Annotation(s): 1})
 
     def annotated_with_function(self, name, args):
         return self.annotated(name + "(" + ",".join([str(x) for x in args]) + ")")
 
-    def to_str(self, element_to_str):
+    def obj_to_str(self, obj):
+        return str(obj)
+
+    def __str__(self):
         return (
-            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])
+            "\n".join([format.coeff(coeff) + self.obj_to_str(obj) for obj, coeff in sorted(self.items())])
             if self.data
             else format.coeff(0)
         )
-
-    def __str__(self):
-        return self.to_str(str)
 
 
 # Returns a / b; asserts that the result is an integer.

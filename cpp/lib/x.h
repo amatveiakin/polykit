@@ -10,6 +10,7 @@ class X {
 public:
   static constexpr int kMaxVariableIndex = 15;  // max 4-bit unsigned int value
   static constexpr int kInf = 1000;
+  static_assert(kInf > kMaxVariableIndex);
 
   constexpr X() {}
   constexpr X(int idx) : idx_(idx) {

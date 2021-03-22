@@ -5,8 +5,7 @@
 #include "lib/polylog_qli.h"
 
 
-// LazyDeltaExpr lazy_qli(int weight, std::vector<X> points) {  // TODO:
-LazyDeltaExpr lazy_qli(int weight, std::vector<int> points) {
+LazyDeltaExpr lazy_qli(int weight, std::vector<X> points) {
   return make_lazy("QLi", &QLiVec, weight, points);
 }
 

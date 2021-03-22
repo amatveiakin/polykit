@@ -4,34 +4,25 @@
 
 #include "lib/lazy/lazy_arithmetic.h"
 #include "lib/lazy/lazy_delta.h"
+#include "py_util.h"
 
 
 namespace py = pybind11;
 
-// TODO: Add annotations.
-struct PyDeltaExpr {
-  using ObjectT = std::vector<Delta>;
-  py::list data;  // list of pairs: (ObjectT, int)
-};
+using PyDeltaExpr = PyLinear<LazyDeltaExpr>;
 
 PyDeltaExpr eval_lazy_delta(const LazyDeltaExpr& expr) {
-  py::list data;
-  expr.evaluate().main().foreach([&](const auto& key, int coeff) {
-    py::tuple obj = py::cast(key);
-    py::tuple obj_coeff = py::cast(std::pair{obj, coeff});
-    data.append(obj_coeff);
+  return eval_lazy_expr(expr, [](const std::vector<Delta>& term) {
+    return py::tuple(py::cast(term));
   });
-  return PyDeltaExpr{data};
 }
 
 
 PYBIND11_MODULE(delta, m) {
   py::class_<Delta>(m, "Delta")
-    // .def(py::init<X, X>())  // TODO:
-    .def(py::init<int, int>())
-    // TODO: Make `a` and `b` read-only attributes (def_property + py::cpp_function(&MyClass::getData))
-    .def("a", &Delta::a)
-    .def("b", &Delta::b)
+    .def(py::init<X, X>())
+    .def_property_readonly("a", &Delta::a)
+    .def_property_readonly("b", &Delta::b)
     .def("is_nil", &Delta::is_nil)
     .def(py::self == py::self)
     .def(py::self != py::self)
@@ -44,15 +35,7 @@ PYBIND11_MODULE(delta, m) {
     .def("__repr__", py::overload_cast<const Delta&>(&to_string))
   ;
 
-  py::class_<LazyDeltaExpr>(m, "LazyDeltaExpr")
-    .def("description", &LazyDeltaExpr::description)
-    .def(+py::self)
-    .def(-py::self)
-    .def(py::self + py::self)
-    .def(py::self - py::self)
-    .def(py::self * int())
-    .def(int() * py::self)
-  ;
+  py_register_lazy_expr<LazyDeltaExpr>(m, "LazyDeltaExpr");
 
   py::class_<PyDeltaExpr>(m, "PyDeltaExpr")
     .def_readonly("data", &PyDeltaExpr::data)
