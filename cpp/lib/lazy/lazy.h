@@ -16,10 +16,17 @@ public:
   LazyExpr(std::function<ResultT()> function, std::string description)
     : function_(std::move(function)), description_(std::move(description)) {}
 
+  // const ResultT& evaluate() const {
+  //   if (result_ == nullptr) {
+  //     result_ = std::make_shared<ResultT>(function_());
+  //   }
+  //   return *result_;
+  // }
   ResultT evaluate() const { return function_(); }
   const std::string& description() const { return description_; }
 
 private:
+  // mutable std::shared_ptr<const ResultT> result_;
   std::function<ResultT()> function_;
   std::string description_;
 };

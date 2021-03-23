@@ -1,1 +1,1 @@
-bazel run --config=clang pybind:py_workspace
+bazel run -c opt --config=clang pybind:py_workspace

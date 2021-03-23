@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
 
 
-#if 0
+#if 1
   // auto qli6 =
   //   + Lira(1,1)(CR(1,4,5,6), CR(1,2,3,4))
   //   - Lira(1,1)(CR(1,2,5,6), CR(3,4,5,2))
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
   absl::c_iota(arg_order, 0);
   do {
     auto expr = to_lyndon_basis(project_on_x5(QLiVec(6, substitute({1,2,1,3,4,5}, arg_order))));
-    expr = terms_with_min_distinct_variables(expr, 4);
+    // expr = terms_with_min_distinct_variables(expr, 4);
     if (!expr.is_zero()) {
       // std::cout << expr;
       checksum += expr.l1_norm();
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-#if 1
+#if 0
   static auto countains_var = [](const auto& expr, int var) {
     bool contains = false;
     expr.foreach([&](const auto& term, int) {
