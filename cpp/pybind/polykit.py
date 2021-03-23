@@ -1,10 +1,6 @@
-import format
-import linear
 from util import args_to_iterable
 from pybind import lyndon, x, delta, projection, polylog_qli
 
-
-Linear = linear.Linear
 
 to_lyndon_basis = lyndon.to_lyndon_basis
 
@@ -12,39 +8,16 @@ X = x.X
 Inf = x.Inf
 
 Delta = delta.Delta
-LazyDeltaExpr = delta.LazyDeltaExpr
-LazyDeltaCoExpr = delta.LazyDeltaCoExpr
+DeltaExpr = delta.DeltaExpr
+DeltaCoExpr = delta.DeltaCoExpr
 substitute_variables = delta.substitute_variables
 involute = delta.involute
 coproduct = delta.coproduct
 comultiply = delta.comultiply
 
-LazyProjectionExpr = projection.LazyProjectionExpr
+ProjectionExpr = projection.ProjectionExpr
 project_on = projection.project_on
 involute_projected = projection.involute_projected
-
-class DeltaExpr(Linear):
-    def obj_to_str(self, obj):
-        return format.otimes.join([str(o) for o in obj])
-
-class DeltaCoExpr(Linear):
-    def obj_to_str(self, obj):
-        return format.cotimes.join([format.otimes.join([str(o) for o in subobj]) for subobj in obj])
-
-class ProjectionExpr(Linear):
-    def obj_to_str(self, obj):
-        return "({})".format(", ".join([str(o) for o in obj]))
-
-def eval_expr(lazy_expr):
-    if isinstance(lazy_expr, LazyDeltaExpr):
-        return DeltaExpr.from_pairs(delta.eval_lazy_delta(lazy_expr).data)
-    if isinstance(lazy_expr, LazyDeltaCoExpr):
-        return DeltaCoExpr.from_pairs(delta.eval_lazy_codelta(lazy_expr).data)
-    if isinstance(lazy_expr, LazyProjectionExpr):
-        return ProjectionExpr.from_pairs(projection.eval_lazy_projection(lazy_expr).data)
-    raise TypeError("`eval_expr` expected a lazy expression type, got {}".format(
-        type(lazy_expr).__name__
-    ))
 
 QLi = polylog_qli.QLi
 QLiNeg = polylog_qli.QLiNeg

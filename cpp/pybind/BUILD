@@ -47,8 +47,6 @@ pybind_extension(
 py_library(
     name = "polykit_util",
     srcs = [
-        "format.py",
-        "linear.py",
         "util.py",
     ],
 )

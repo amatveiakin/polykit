@@ -1,14 +1,14 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/lazy/lazy_polylog_qli.h"
+#include "lib/polylog_qli.h"
 
 
 namespace py = pybind11;
 
-
 PYBIND11_MODULE(polylog_qli, m) {
-  m.def("QLi", &lazy_qli, "Creates a lazy expression for QLi");
-  m.def("QLiNeg", &lazy_qli_neg, "Creates a lazy expression for QLiNeg");
-  m.def("QLiSymm", &lazy_qli_symm, "Creates a lazy expression for QLiSymm");
+  // TODO: Add Python binding for SpanX instead
+  m.def("QLi", [](int weight, const std::vector<X>& points) { return QLiVec(weight, points); });
+  m.def("QLiNeg", [](int weight, const std::vector<X>& points) { return QLiNegVec(weight, points); });
+  m.def("QLiSymm", [](int weight, const std::vector<X>& points) { return QLiSymmVec(weight, points); });
 }

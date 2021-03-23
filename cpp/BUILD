@@ -74,12 +74,6 @@ cc_library(
         "lib/summation.h",
         "lib/theta.h",
         "lib/x.h",
-        "lib/lazy/lazy.h",
-        "lib/lazy/lazy_arithmetic.h",
-        "lib/lazy/lazy_delta.h",
-        "lib/lazy/lazy_lyndon.h",
-        "lib/lazy/lazy_polylog_qli.h",
-        "lib/lazy/lazy_projection.h",
     ],
     srcs = [
         "lib/corr_expression.cpp",

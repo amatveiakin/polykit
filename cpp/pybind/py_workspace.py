@@ -2,7 +2,7 @@ import itertools
 
 from profiler import Profiler
 
-from polykit import eval_expr, to_lyndon_basis
+from polykit import to_lyndon_basis
 from polykit import coproduct, comultiply
 from polykit import X, Inf, Delta, substitute_variables, project_on, involute, involute_projected
 from polykit import QLi, QLi1, QLi2, QLi3, QLi4, QLi5, QLi6, QLi7, QLi8
@@ -12,22 +12,11 @@ from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, pro
 
 
 # e1 = QLi2(1,2,3,4,5,6)
-# assert eval_expr(to_lyndon_basis(project_on_x1(e1))) == eval_expr(project_on_x1(to_lyndon_basis(e1)))
-
-# TODO: Benchmark full computations in python VS python arithmetic VS everything in C++
+# assert to_lyndon_basis(project_on_x1(e1)) == project_on_x1(to_lyndon_basis(e1))
 
 # expr = QLi1(1,2,3,4) + QLi1(1,3,2,4)
-# print(expr.description())
-# print(eval_expr(expr))
-
-# print("===")
-
-# expr2 = eval_expr(QLi1(1,2,3,4)) + eval_expr(QLi1(1,3,2,4))
-# print(expr2)
-
-# print("===")
-
-# print(eval_expr(comultiply(QLi3(1,2,3,Inf), (1,2))))
+# print(expr)
+# print(comultiply(QLi3(1,2,3,Inf), (1,2)))
 
 
 def substitute(points, new_indices):
@@ -37,7 +26,7 @@ def substitute(points, new_indices):
 profiler = Profiler()
 checksum = 0
 for arg_order in itertools.permutations([1,2,3,4,5]):
-    expr = eval_expr(to_lyndon_basis(project_on_x5(QLi6(substitute([1,2,1,3,4,5], arg_order)))))
+    expr = to_lyndon_basis(project_on_x5(QLi6(substitute([1,2,1,3,4,5], arg_order))))
     checksum += expr.l1_norm()
 profiler.finish("all")
 print("Checksum = {}".format(checksum))
