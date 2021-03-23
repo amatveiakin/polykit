@@ -4,7 +4,7 @@ from profiler import Profiler
 
 from polykit import to_lyndon_basis
 from polykit import coproduct, comultiply
-from polykit import X, Inf, Delta, substitute_variables, project_on, involute, involute_projected
+from polykit import X, Inf, Delta, DeltaExpr, substitute_variables, project_on, involute, involute_projected
 from polykit import QLi, QLi1, QLi2, QLi3, QLi4, QLi5, QLi6, QLi7, QLi8
 from polykit import QLiNeg, QLiNeg1, QLiNeg2, QLiNeg3, QLiNeg4, QLiNeg5, QLiNeg6, QLiNeg7, QLiNeg8
 from polykit import QLiSymm, QLiSymm1, QLiSymm2, QLiSymm3, QLiSymm4, QLiSymm5, QLiSymm6, QLiSymm7, QLiSymm8

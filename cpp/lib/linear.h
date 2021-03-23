@@ -479,7 +479,7 @@ public:
 
   bool is_zero() const { return main_.is_zero(); }
   bool is_blank() const { return main_.is_zero() && annotations_.empty(); }
-  int size() const { return main_.size(); }
+  int size() const { return main_.size(); }  // TODO: Rename to num_terms (here and in BasicLinear)?
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
 

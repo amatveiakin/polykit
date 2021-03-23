@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "pybind11/functional.h"
 #include "pybind11/operators.h"
 #include "pybind11/pybind11.h"
 
@@ -9,17 +10,51 @@
 template<typename LinearT>
 void py_register_linear(const pybind11::module_& module, const char* name) {
   namespace py = pybind11;
-  // TODO: Expose more functions
+  // TODO: Allow to customize Python ObjectT and use tuples instead of lists
+  //   (need to update all high-order functions and `single`)
+  using ObjectT = typename LinearT::ObjectT;
   py::class_<LinearT>(module, name)
+    .def_static("single", &LinearT::single)
+    .def("is_zero", &LinearT::is_zero)
+    .def("is_blank", &LinearT::is_blank)
+    .def("size", &LinearT::size)
+    .def("l1_norm", &LinearT::l1_norm)
+    .def("__getitem__", &LinearT::operator[])
+    .def("add_to", &LinearT::add_to)
+    .def("element", &LinearT::element)
+    .def("pop", &LinearT::pop)
+    // TODO: Expose iterable interface instead
+    .def("foreach", [](const LinearT& self, const std::function<void(ObjectT, int)>& func) {
+      self.foreach(func);
+    })
+    // limitation: `mapped` can return only linear of the same type
+    .def("mapped", [](const LinearT& self, const std::function<ObjectT(ObjectT)>& func) {
+      return self.mapped(func);
+    })
+    // limitation: `mapped_expanding` can return only linear of the same type
+    .def("mapped_expanding", [](const LinearT& self, const std::function<LinearT(ObjectT)>& func) {
+      return self.mapped_expanding(func);
+    })
+    .def("filtered", [](const LinearT& self, const std::function<bool(ObjectT)>& func) {
+      return self.filtered(func);
+    })
+    .def("termwise_abs", &LinearT::termwise_abs)
+    .def("annotate", &LinearT::annotate)
+    .def("without_annotations", &LinearT::without_annotations)
     .def(+py::self)
     .def(-py::self)
     .def(py::self + py::self)
     .def(py::self - py::self)
     .def(py::self * int())
     .def(int() * py::self)
-    .def("is_zero", &LinearT::is_zero)
-    .def("size", &LinearT::size)
-    .def("l1_norm", &LinearT::l1_norm)
+    .def("dived_int", &LinearT::dived_int)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    .def(py::self += py::self)
+    .def(py::self -= py::self)
+#pragma clang diagnostic pop
+    .def(py::self *= int())
+    .def("div_int", &LinearT::div_int)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def("__str__", [](const LinearT& expr) { std::stringstream ss; ss << expr; return ss.str(); })
