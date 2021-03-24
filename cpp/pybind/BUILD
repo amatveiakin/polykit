@@ -1,7 +1,8 @@
+package(default_visibility = ["//:__subpackages__"])
+
 load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
-
 
 
 cc_library(
@@ -81,11 +82,21 @@ py_library(
     ],
 )
 
+py_library(
+    name = "delta_matrix",
+    srcs = ["delta_matrix.py"],
+    deps = [
+        requirement("numpy"),
+        ":polykit",
+    ],
+)
+
 py_binary(
     name = "py_workspace",
     srcs = ["py_workspace.py"],
     deps = [
         requirement("numpy"),
-        ":polykit"
+        ":delta_matrix",
+        ":polykit",
     ],
 )

@@ -1,4 +1,4 @@
-from util import args_to_iterable
+from pybind.util import args_to_iterable
 from pybind import lyndon, x, delta, projection, ratio, polylog_qli, polylog_lira
 
 
