@@ -177,9 +177,14 @@ public:
   const std::vector<std::vector<int>>& loops() const { return loops_; };
 
   static std::optional<CompoundRatio> one_minus(const CompoundRatio& ratio);
+  // static CompoundRatio inverse(const CompoundRatio& ratio);  // TODO: add `inverse` (+ pybind)
 
   bool operator==(const CompoundRatio& other) const { return loops_ == other.loops_; }
+  bool operator!=(const CompoundRatio& other) const { return loops_ != other.loops_; }
   bool operator< (const CompoundRatio& other) const { return loops_ <  other.loops_; }
+  bool operator<=(const CompoundRatio& other) const { return loops_ <= other.loops_; }
+  bool operator> (const CompoundRatio& other) const { return loops_ >  other.loops_; }
+  bool operator>=(const CompoundRatio& other) const { return loops_ >= other.loops_; }
 
   template <typename H>
   friend H AbslHashValue(H h, const CompoundRatio& ratio) {
@@ -213,4 +218,5 @@ CompoundRatioCompressed compress_compound_ratio(const CompoundRatio& ratio);
 CompoundRatio uncompress_compound_ratio(Decompressor& decompressor);
 CompoundRatio uncompress_compound_ratio(const CompoundRatioCompressed& data);
 
+// TODO: `template<CrossRatioNormalization Normalization>`
 std::string to_string(const CompoundRatio& ratio);

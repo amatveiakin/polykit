@@ -1,5 +1,5 @@
 from util import args_to_iterable
-from pybind import lyndon, x, delta, projection, polylog_qli
+from pybind import lyndon, x, delta, projection, ratio, polylog_qli, polylog_lira
 
 
 to_lyndon_basis = lyndon.to_lyndon_basis
@@ -19,9 +19,16 @@ ProjectionExpr = projection.ProjectionExpr
 project_on = projection.project_on
 involute_projected = projection.involute_projected
 
+CrossRatio = ratio.CrossRatio
+CompoundRatio = ratio.CompoundRatio
+
 QLi = polylog_qli.QLi
 QLiNeg = polylog_qli.QLiNeg
 QLiSymm = polylog_qli.QLiSymm
+
+Lira = polylog_lira.Lira
+
+def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
 def project_on_x1 (expr): return project_on(1,  expr)
 def project_on_x2 (expr): return project_on(2,  expr)
@@ -65,3 +72,20 @@ def QLiSymm5(*points): return QLiSymm(5, args_to_iterable(points))
 def QLiSymm6(*points): return QLiSymm(6, args_to_iterable(points))
 def QLiSymm7(*points): return QLiSymm(7, args_to_iterable(points))
 def QLiSymm8(*points): return QLiSymm(8, args_to_iterable(points))
+
+def Lira1(*weights):
+    return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira2(*weights):
+    return lambda *ratios: Lira(2, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira3(*weights):
+    return lambda *ratios: Lira(3, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira4(*weights):
+    return lambda *ratios: Lira(4, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira5(*weights):
+    return lambda *ratios: Lira(5, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira6(*weights):
+    return lambda *ratios: Lira(6, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira7(*weights):
+    return lambda *ratios: Lira(7, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira8(*weights):
+    return lambda *ratios: Lira(8, args_to_iterable(weights), args_to_iterable(ratios))

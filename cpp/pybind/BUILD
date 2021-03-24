@@ -26,6 +26,12 @@ pybind_extension(
 )
 
 pybind_extension(
+    name = "polylog_lira",
+    srcs = ["polylog_lira.cpp"],
+    deps = ["//:polylog"],
+)
+
+pybind_extension(
     name = "polylog_qli",
     srcs = ["polylog_qli.cpp"],
     deps = ["//:polylog"],
@@ -38,6 +44,12 @@ pybind_extension(
         "//:math",
         ":py_util",
     ],
+)
+
+pybind_extension(
+    name = "ratio",
+    srcs = ["ratio.cpp"],
+    deps = ["//:math"],
 )
 
 pybind_extension(
@@ -61,8 +73,10 @@ py_library(
     data = [
         ":delta.so",
         ":lyndon.so",
+        ":polylog_lira.so",
         ":polylog_qli.so",
         ":projection.so",
+        ":ratio.so",
         ":x.so",
     ],
 )
