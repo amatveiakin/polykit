@@ -144,9 +144,22 @@ class BasicLinear {
 public:
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
+  using ContainerT = absl::flat_hash_map<StorageT, int>;
+  using const_key_iterator = typename ContainerT::const_iterator;
+
+  class const_iterator {
+  public:
+    explicit const_iterator(const_key_iterator it) : it_(std::move(it)) {}
+    std::pair<ObjectT, int> operator*() const { return {ParamT::key_to_object(it_->first), it_->second}; }
+    const_iterator& operator++() { ++it_; return *this; };
+    bool operator==(const const_iterator& other) const { return it_ == other.it_; }
+    bool operator!=(const const_iterator& other) const { return !(*this == other); }
+  private:
+    const_key_iterator it_;
+  };
 
   BasicLinear() {}
-  explicit BasicLinear(absl::flat_hash_map<StorageT, int> data) : data_(std::move(data)) {}
+  explicit BasicLinear(ContainerT data) : data_(std::move(data)) {}
   ~BasicLinear() {}
 
   static BasicLinear single(const ObjectT& obj) {
@@ -170,6 +183,11 @@ public:
     return ParamT::object_to_weight(element().first);  // must be the same for each term
   }
 
+  const_key_iterator begin_key() const { return data_.begin(); }
+  const_key_iterator end_key() const { return data_.end(); }
+  const_iterator begin() const { return const_iterator(begin_key()); }
+  const_iterator end() const { return const_iterator(end_key()); }
+
   int operator[](const ObjectT& obj) const {
     return coeff_for_key(ParamT::object_to_key(obj));
   }
@@ -181,7 +199,7 @@ public:
       return 0;
     }
   }
-  const absl::flat_hash_map<StorageT, int>& data() const { return data_; }
+  const ContainerT& data() const { return data_; }
 
   void add_to(const ObjectT& obj, int x) {
     add_to_key(ParamT::object_to_key(obj), x);
@@ -353,7 +371,7 @@ private:
     }
   }
 
-  absl::flat_hash_map<StorageT, int> data_;
+  ContainerT data_;
 };
 
 template<typename ParamT>
@@ -444,6 +462,8 @@ public:
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
   using BasicLinearMain = BasicLinear<ParamT>;
+  using const_iterator = typename BasicLinearMain::const_iterator;
+  using const_key_iterator = typename BasicLinearMain::const_key_iterator;
 
   Linear() {}
   explicit Linear(BasicLinearMain main, LinearAnnotation annotations)
@@ -483,6 +503,11 @@ public:
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
 
+  const_key_iterator begin_key() const { return main_.begin_key(); }
+  const_key_iterator end_key() const { return main_.end_key(); }
+  const_iterator begin() const { return main_.begin(); }
+  const_iterator end() const { return main_.end(); }
+
   int operator[](const ObjectT& obj) const { return main_[obj]; }
   int coeff_for_key(const StorageT& key) const { return main_.coeff_for_key(key); }
   void add_to(const ObjectT& obj, int x) { return main_.add_to(obj, x); }
@@ -492,7 +517,7 @@ public:
   std::pair<ObjectT, int> pop() { return main_.pop(); }
   std::pair<StorageT, int> pop_key() { return main_.pop_key(); }
 
-  // TODO: Replace `foreach` with `begin/end`. This will be more natural and allow breaking early.
+  // TODO: Replace `foreach` usages with range-based for.
   template<typename F>
   void foreach(F func) const { return main_.foreach(func); }
   template<typename F>
@@ -676,6 +701,22 @@ private:
 template<typename ParamT>
 Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
   return linear * scalar;
+}
+
+template<typename ParamT>
+class LinearKeyView {
+public:
+  explicit LinearKeyView(const Linear<ParamT>* linear) : linear_(linear) {}
+  using const_iterator = typename Linear<ParamT>::const_key_iterator;
+  const_iterator begin() const { return linear_->begin_key(); };
+  const_iterator end() const { return linear_->end_key(); };
+private:
+  const Linear<ParamT>* linear_;
+};
+
+template<typename ParamT>
+LinearKeyView<ParamT> key_view(const Linear<ParamT>* linear) {  // take pointer: avoid binding to temporary
+  return LinearKeyView<ParamT>(linear);
 }
 
 template<typename ParamT, typename CompareF, typename ContextT>

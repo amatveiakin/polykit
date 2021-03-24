@@ -16,7 +16,8 @@ class DeltaExprMatrixBuilder:
 
     def add_expr(self, expr):
         col = []
-        expr.foreach(lambda monom, coeff: col.append((self._monom_to_row(monom), coeff)))
+        for monom, coeff in expr:
+            col.append((self._monom_to_row(monom), coeff))
         self.sparse_columns.append(col)
 
     def make_np_array(self):
