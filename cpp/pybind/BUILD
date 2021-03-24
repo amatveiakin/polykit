@@ -21,6 +21,12 @@ pybind_extension(
 )
 
 pybind_extension(
+    name = "iterated_integral",
+    srcs = ["iterated_integral.cpp"],
+    deps = ["//:polylog"],
+)
+
+pybind_extension(
     name = "lyndon",
     srcs = ["lyndon.cpp"],
     deps = ["//:math"],
@@ -73,6 +79,7 @@ py_library(
     deps = [":polykit_util"],
     data = [
         ":delta.so",
+        ":iterated_integral.so",
         ":lyndon.so",
         ":polylog_lira.so",
         ":polylog_qli.so",

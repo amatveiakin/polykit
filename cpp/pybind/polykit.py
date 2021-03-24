@@ -1,5 +1,5 @@
 from pybind.util import args_to_iterable
-from pybind import lyndon, x, delta, projection, ratio, polylog_qli, polylog_lira
+from pybind import lyndon, x, delta, projection, ratio, iterated_integral, polylog_qli, polylog_lira
 
 
 to_lyndon_basis = lyndon.to_lyndon_basis
@@ -29,6 +29,11 @@ QLiSymm = polylog_qli.QLiSymm
 Lira = polylog_lira.Lira
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
+
+def I(*points):
+    return iterated_integral.IVec(args_to_iterable(points))
+def Corr(*points):
+    return iterated_integral.CorrVec(args_to_iterable(points))
 
 def project_on_x1 (expr): return project_on(1,  expr)
 def project_on_x2 (expr): return project_on(2,  expr)

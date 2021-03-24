@@ -13,6 +13,9 @@ ThetaExpr TRatio(const CompoundRatio& ratio) {
 }
 
 ThetaExpr TComplement(const CompoundRatio& ratio) {
+  if (ratio.is_unity()) {
+    return {};
+  }
   auto one_minus_ratio = CompoundRatio::one_minus(ratio);
   return one_minus_ratio.has_value()
     ? TRatio(std::move(one_minus_ratio.value()))
