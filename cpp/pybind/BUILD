@@ -1,4 +1,7 @@
+load("@pip//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+
 
 
 cc_library(
@@ -67,5 +70,8 @@ py_library(
 py_binary(
     name = "py_workspace",
     srcs = ["py_workspace.py"],
-    deps = [":polykit"],
+    deps = [
+        requirement("numpy"),
+        ":polykit"
+    ],
 )
