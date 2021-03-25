@@ -5,7 +5,7 @@
 //   u ⧢ 1 = u
 //   ua ⧢ vb = (u ⧢ vb)a + (ua ⧢ v)b
 //
-// Shuffle can be applied to individual word or to entire linear expressions,
+// Shuffle can be applied to individual words or to entire linear expressions,
 // in which case the expressions must support vector form.
 
 #pragma once
@@ -15,15 +15,21 @@
 #include "algebra.h"
 #include "util.h"
 #include "shuffle_unrolled.h"
+#include "shuffle_unrolled_multi.h"
 
 
-// By default shuffle is unrolled in release mode. To override, set SHUFFLE_UNROLL to 0 or 1.
-#ifndef SHUFFLE_UNROLL
+// By default shuffle is unrolled in release mode. To override, set UNROLL_SHUFFLE to 0 or 1.
+#ifndef UNROLL_SHUFFLE
 #  ifdef NDEBUG
-#    define SHUFFLE_UNROLL 1
+#    define UNROLL_SHUFFLE 1
 #  else
-#    define SHUFFLE_UNROLL 0
+#    define UNROLL_SHUFFLE 0
 #  endif
+#endif
+
+// Disabled by default, as it only gives a small performance benefit.
+#ifndef UNROLL_SHUFFLE_MULTI
+#  define UNROLL_SHUFFLE_MULTI 0
 #endif
 
 template<typename MonomT>
@@ -38,7 +44,7 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT&
   if (v.empty()) {
     return LinearT::single_key(u);
   }
-#if SHUFFLE_UNROLL
+#if UNROLL_SHUFFLE
   {
     auto unrolled_ret = shuffle_product_unrolled(u, v);
     if (!unrolled_ret.is_zero()) {
@@ -76,6 +82,15 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
   } else if (words.size() == 2) {
     return shuffle_product(words[0], words[1]);
   } else {
+    #if UNROLL_SHUFFLE_MULTI
+      {
+        // May change `words` order, but that's ok: shuffle is commutative.
+        auto unrolled_ret = shuffle_product_unrolled_multi(words);
+        if (!unrolled_ret.is_zero()) {
+          return unrolled_ret;
+        }
+      }
+    #endif
     MonomT w_tail = words.back();
     words.pop_back();
     const LinearT shuffle_product_head = shuffle_product(words);

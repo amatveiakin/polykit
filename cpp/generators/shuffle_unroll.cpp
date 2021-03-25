@@ -8,10 +8,10 @@
 
 std::string shuffle_unrolled(int n, int m) {
   std::vector<std::string> u, v;
-  for (int i = 0; i < n; ++i) {
+  for (int i : range(n)) {
     u.push_back(absl::Substitute("u[$0]", i));
   }
-  for (int i = 0; i < m; ++i) {
+  for (int i : range(m)) {
     v.push_back(absl::Substitute("v[$0]", i));
   }
   std::vector<std::string> lines;
@@ -37,9 +37,9 @@ void generate_shuffle_unrolled() {
   std::cout << R"(#include "linear.h")" "\n\n\n";
   constexpr int max_len = 6;
   std::map<int, std::map<int, std::string>> function_names;
-  for (int n = 1; n <= max_len; ++n) {
+  for (int n : range_incl(1, max_len)) {
     function_names[n] = {};
-    for (int m = n; m <= max_len; ++m) {
+    for (int m : range_incl(n, max_len)) {
       if (n + m <= max_len) {
         function_names[n][m] = shuffle_unrolled(n, m);
       }
@@ -67,69 +67,6 @@ void generate_shuffle_unrolled() {
   std::cout << "  return {};\n";
   std::cout << "}\n";
 }
-
-#if 0
-std::string shuffle_power_unrolled(int len, int rep) {
-  constexpr int kThreshold = 100;
-  Word v;
-  for (int i = 0; i < len; ++i) {
-    v.push_back(i);
-  }
-  auto prod = shuffle_product(std::vector<Word>(rep, v));
-  auto unrolled_expr = prod.mapped<StringExpr>([&](const Word& w) {
-    std::vector<std::string> terms;
-    for (const int ch : w) {
-      if (ch < kThreshold) {
-        const int idx = ch;
-        terms.push_back(absl::StrCat("w[", idx, "]"));
-      }
-    }
-    return absl::StrCat("WordExpr::single({", str_join(terms, ", "), "})");
-  });
-  std::string function_name = absl::StrCat("shuffle_power_unrolled_len_", len, "_pow_", rep);
-  std::cout << "WordExpr " << function_name << "(const Word& w) {\n";
-  std::cout << "  return (\n" << unrolled_expr.main() << "  );\n";
-  std::cout << "}\n";
-  std::cout << "\n";
-  return function_name;
-}
-
-void generate_shuffle_power_unrolled() {
-  std::cout << R"(#include "shuffle_unrolled.h")" "\n\n";
-  std::cout << R"(#include "absl/strings/str_cat.h")" "\n\n\n";
-  constexpr int max_len = 10;
-  std::map<int, std::map<int, std::string>> function_names;
-  for (int len = 1; len <= max_len; ++len) {
-    function_names[len] = {};
-    for (int rep = 2; rep <= max_len; ++rep) {
-      if (len * rep <= max_len) {
-        function_names[len][rep] = shuffle_power_unrolled(len, rep);
-      }
-    }
-  }
-  std::cout << "WordExpr shuffle_power_unrolled(Word word, int pow) {\n";
-  std::cout << "  switch (word.size()) {\n";
-  for (const auto& [len, functions_outer] : function_names) {
-    if (functions_outer.empty()) {
-      continue;
-    }
-    std::cout << "    case " << len << ":\n";
-    std::cout << "    switch (pow) {\n";
-    for (const auto& [rep, func] : functions_outer) {
-      std::cout << "      case " << pad_left(std::to_string(rep), 2) << ": return " << func << "(word);\n";
-    }
-    std::cout << "    }\n";
-    std::cout << "    break;\n";
-  }
-  std::cout << "  }";
-  std::cout << R"(
-  FATAL(absl::StrCat(
-      "Shuffle power unroll doesn't exit for word = ",
-      to_string(word), "; power = ", pow));
-  )";
-  std::cout << "}\n";
-}
-#endif
 
 
 int main(int argc, char *argv[]) {

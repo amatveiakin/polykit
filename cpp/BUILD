@@ -72,6 +72,7 @@ cc_library(
         "lib/ratio.h",
         "lib/shuffle.h",
         "lib/shuffle_unrolled.h",
+        "lib/shuffle_unrolled_multi.h",
         "lib/summation.h",
         "lib/theta.h",
         "lib/x.h",
