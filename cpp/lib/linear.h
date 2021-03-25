@@ -159,7 +159,16 @@ public:
   };
 
   BasicLinear() {}
-  explicit BasicLinear(ContainerT data) : data_(std::move(data)) {}
+  explicit BasicLinear(ContainerT data) : data_(std::move(data)) {
+    for (auto it = data_.begin(); it != data_.end(); ) {
+      auto next = it;
+      ++next;
+      if (it->second == 0) {
+        data_.erase(it);
+      }
+      it = next;
+    }
+  }
   ~BasicLinear() {}
 
   static BasicLinear single(const ObjectT& obj) {

@@ -81,8 +81,16 @@ int main(int argc, char *argv[]) {
   );
 
 
+  Profiler profiler;
+  auto expr = QLi6(1,2,3,4,5,6);
+  profiler.finish("expr");
+  expr = to_lyndon_basis(expr);
+  profiler.finish("lyndon");
+  std::cout << "Checksum = " << expr.l1_norm() << "\n";  // 32844
 
-#if 1
+
+
+#if 0
   // auto qli6 =
   //   + Lira(1,1)(CR(1,4,5,6), CR(1,2,3,4))
   //   - Lira(1,1)(CR(1,2,5,6), CR(3,4,5,2))
