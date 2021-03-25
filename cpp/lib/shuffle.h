@@ -14,11 +14,20 @@
 
 #include "algebra.h"
 #include "util.h"
+#include "shuffle_unrolled.h"
 
+
+// By default shuffle is unrolled in release mode. To override, set SHUFFLE_UNROLL to 0 or 1.
+#ifndef SHUFFLE_UNROLL
+#  ifdef NDEBUG
+#    define SHUFFLE_UNROLL 1
+#  else
+#    define SHUFFLE_UNROLL 0
+#  endif
+#endif
 
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
-  // Optimization potential: unroll.
   using LinearT = Linear<SimpleLinearParam<MonomT>>;
   if (u.empty() && v.empty()) {
     return {};
@@ -29,6 +38,14 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT&
   if (v.empty()) {
     return LinearT::single_key(u);
   }
+#if SHUFFLE_UNROLL
+  {
+    auto unrolled_ret = shuffle_product_unrolled(u, v);
+    if (!unrolled_ret.is_zero()) {
+      return unrolled_ret;
+    }
+  }
+#endif
   const auto a = u.back();
   const auto b = v.back();
   MonomT u_trunc = u;
@@ -50,6 +67,7 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT&
 // Returns  w1 ⧢ w2 ⧢ ... ⧢ wn
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
+  // Optimization potential: unroll for 3-4 words.
   using LinearT = Linear<SimpleLinearParam<MonomT>>;
   if (words.size() == 0) {
     return {};

@@ -71,6 +71,7 @@ cc_library(
         "lib/quasi_shuffle.h",
         "lib/ratio.h",
         "lib/shuffle.h",
+        "lib/shuffle_unrolled.h",
         "lib/summation.h",
         "lib/theta.h",
         "lib/x.h",
@@ -143,14 +144,6 @@ cc_test(
         ":polylog",
         ":test_util",
     ],
-)
-
-cc_binary(
-    name = "shuffle_unroll",
-    srcs = ["generators/shuffle_unroll.cpp"],
-    deps = [
-        ":math",
-    ]
 )
 
 cc_binary(

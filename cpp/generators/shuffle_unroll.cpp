@@ -1,43 +1,41 @@
 #include <iostream>
 #include <sstream>
 
+#include "absl/strings/substitute.h"
+
 #include "lib/shuffle.h"
 
 
 std::string shuffle_unrolled(int n, int m) {
-  constexpr int kThreshold = 100;
-  Word u, v;
+  std::vector<std::string> u, v;
   for (int i = 0; i < n; ++i) {
-    u.push_back(i);
+    u.push_back(absl::Substitute("u[$0]", i));
   }
   for (int i = 0; i < m; ++i) {
-    v.push_back(i + kThreshold);
+    v.push_back(absl::Substitute("v[$0]", i));
   }
-  auto prod = shuffle_product(u, v);
-  auto unrolled_expr = prod.mapped<StringExpr>([&](const Word& w) {
-    std::vector<std::string> terms;
-    for (const int ch : w) {
-      if (ch < kThreshold) {
-        const int idx = ch;
-        terms.push_back(absl::StrCat("u[", idx, "]"));
-      } else {
-        const int idx = ch - kThreshold;
-        terms.push_back(absl::StrCat("v[", idx, "]"));
-      }
-    }
-    return absl::StrCat("WordExpr::single({", str_join(terms, ", "), "})");
-  });
+  std::vector<std::string> lines;
+  for (const auto& [term, coeff] : shuffle_product(u, v)) {
+    CHECK_EQ(coeff, 1);
+    lines.push_back(absl::Substitute("  ret.add_to_key({$0}, $1);", str_join(term, ", "), coeff));
+  }
+  absl::c_sort(lines);
   std::string function_name = absl::StrCat("shuffle_product_unrolled_", n, "_", m);
-  std::cout << "WordExpr " << function_name << "(const Word& u, const Word& v) {\n";
-  std::cout << "  return (\n" << unrolled_expr.main() << "  );\n";
+  std::cout << "template<typename MonomT>\n";
+  std::cout << "Linear<SimpleLinearParam<MonomT>> " << function_name << "(const MonomT& u, const MonomT& v) {\n";
+  std::cout << "  Linear<SimpleLinearParam<MonomT>> ret;\n";
+  for (const auto& line : lines) {
+    std::cout << line << "\n";
+  }
+  std::cout << "  return ret;\n";
   std::cout << "}\n";
   std::cout << "\n";
   return function_name;
 }
 
 void generate_shuffle_unrolled() {
-  std::cout << R"(#include "shuffle_unrolled.h")" "\n\n\n";
-  constexpr int max_len = 8;
+  std::cout << R"(#include "linear.h")" "\n\n\n";
+  constexpr int max_len = 6;
   std::map<int, std::map<int, std::string>> function_names;
   for (int n = 1; n <= max_len; ++n) {
     function_names[n] = {};
@@ -47,7 +45,8 @@ void generate_shuffle_unrolled() {
       }
     }
   }
-  std::cout << "WordExpr shuffle_product_unrolled(Word u, Word v) {\n";
+  std::cout << "template<typename MonomT>\n";
+  std::cout << "Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled(MonomT u, MonomT v) {\n";
   std::cout << "  if (u.size() > v.size()) {\n";
   std::cout << "    std::swap(u, v);\n";
   std::cout << "  }\n";
@@ -57,18 +56,19 @@ void generate_shuffle_unrolled() {
       continue;
     }
     std::cout << "    case " << n << ":\n";
-    std::cout << "    switch (v.size()) {\n";
+    std::cout << "      switch (v.size()) {\n";
     for (const auto& [m, func] : functions_outer) {
-      std::cout << "      case " << pad_left(std::to_string(m), 2) << ": return " << func << "(u, v);\n";
+      std::cout << "        case " << pad_left(std::to_string(m), 1) << ": return " << func << "(u, v);\n";
     }
-    std::cout << "    }\n";
-    std::cout << "    break;\n";
+    std::cout << "      }\n";
+    std::cout << "      break;\n";
   }
   std::cout << "  }\n";
   std::cout << "  return {};\n";
   std::cout << "}\n";
 }
 
+#if 0
 std::string shuffle_power_unrolled(int len, int rep) {
   constexpr int kThreshold = 100;
   Word v;
@@ -129,6 +129,7 @@ void generate_shuffle_power_unrolled() {
   )";
   std::cout << "}\n";
 }
+#endif
 
 
 int main(int argc, char *argv[]) {
