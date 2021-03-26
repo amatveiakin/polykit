@@ -1,4 +1,7 @@
+import itertools
 import numpy as np
+
+from polykit import substitute_variables
 
 
 class DeltaExprMatrixBuilder:
@@ -19,6 +22,12 @@ class DeltaExprMatrixBuilder:
         for monom, coeff in expr:
             col.append((self._monom_to_row(monom), coeff))
         self.sparse_columns.append(col)
+
+    # def add_expr_permutations(self, expr, num_points, num_args):
+    #     assert num_points >= num_args
+    #     for points in itertools.permutations(range(num_points)):
+    #         # TODO: Optimize case num_points >= num_args+1 (skip tail permutations)
+    #         self.add_expr(substitute_variables(expr, points[num_args:]))
 
     def make_np_array(self):
         num_rows = self.next_row_id
