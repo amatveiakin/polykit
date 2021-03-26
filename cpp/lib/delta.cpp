@@ -113,7 +113,16 @@ DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vect
   absl::flat_hash_set<int> indices_set(indices.begin(), indices.end());
   return expr.filtered([&](const std::vector<Delta>& term) {
     return absl::c_all_of(term, [&](const Delta& d) {
-      return indices_set.count(d.a()) > 0 && indices_set.count(d.b()) > 0;
+      return indices_set.contains(d.a()) && indices_set.contains(d.b());
+    });
+  });
+}
+
+DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>& indices) {
+  absl::flat_hash_set<int> indices_set(indices.begin(), indices.end());
+  return expr.filtered([&](const std::vector<Delta>& term) {
+    return !absl::c_any_of(term, [&](const Delta& d) {
+      return indices_set.contains(d.a()) && indices_set.contains(d.b());
     });
   });
 }

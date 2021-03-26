@@ -193,6 +193,7 @@ DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr);
 DeltaExpr terms_with_num_distinct_variables(const DeltaExpr& expr, int num_distinct);
 DeltaExpr terms_with_min_distinct_variables(const DeltaExpr& expr, int min_distinct);
 DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vector<int>& indices);
+DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>& indices);
 
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 

@@ -6,7 +6,9 @@ from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import to_lyndon_basis
 from polykit import coproduct, comultiply
-from polykit import X, Inf, Delta, DeltaExpr, substitute_variables, project_on, involute, involute_projected
+from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
+from polykit import project_on, involute, involute_projected
+from polykit import terms_containing_only_variables, terms_without_variables
 from polykit import CrossRatio, CompoundRatio, CR
 from polykit import I, Corr
 from polykit import QLi, QLi1, QLi2, QLi3, QLi4, QLi5, QLi6, QLi7, QLi8

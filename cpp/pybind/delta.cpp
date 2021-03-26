@@ -19,6 +19,8 @@ PYBIND11_MODULE(delta, m) {
     .def_property_readonly("a", &Delta::a)
     .def_property_readonly("b", &Delta::b)
     .def("is_nil", &Delta::is_nil)
+    .def("contains", &Delta::contains)
+    .def("other_point", &Delta::other_point)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def(py::self <  py::self)
@@ -36,6 +38,9 @@ PYBIND11_MODULE(delta, m) {
   // TODO: Test&Fix: pybind probably can't result function overloads across modules
   m.def("substitute_variables", &substitute_variables_wrapper, "Substitutes variable into a DeltaExpr; can substitute Inf");
   m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
+
+  m.def("terms_containing_only_variables", &terms_containing_only_variables);
+  m.def("terms_without_variables", &terms_without_variables);
 
   m.def("coproduct", &coproduct<DeltaCoExpr, DeltaExpr>);
   m.def("comultiply", &comultiply<DeltaCoExpr, DeltaExpr>);

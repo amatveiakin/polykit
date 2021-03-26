@@ -12,6 +12,8 @@ DeltaExpr = delta.DeltaExpr
 DeltaCoExpr = delta.DeltaCoExpr
 substitute_variables = delta.substitute_variables
 involute = delta.involute
+terms_containing_only_variables = delta.terms_containing_only_variables
+terms_without_variables = delta.terms_without_variables
 coproduct = delta.coproduct
 comultiply = delta.comultiply
 
