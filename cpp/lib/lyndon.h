@@ -67,6 +67,9 @@ LinearT to_lyndon_basis(const LinearT& expression) {
   while (!terms_to_convert.empty()) {
     const auto [word_orig, coeff] = *terms_to_convert.begin();
     terms_to_convert.erase(terms_to_convert.begin());
+    if (coeff == 0) {
+      continue;
+    }
 
     const auto& lyndon_words = lyndon_factorize(word_orig);
     CHECK(!lyndon_words.empty());
