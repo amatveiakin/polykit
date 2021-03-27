@@ -21,7 +21,7 @@ private:
 
 
 std::string loops_description(const Loops& loops);
-LoopsInvariant loops_invariant(Loops loops);
+LoopsInvariant loops_invariant(const Loops& loops);
 
 class LoopsNames {
 public:
@@ -37,7 +37,9 @@ private:
 extern LoopsNames loops_names;
 
 
-struct LoopExprParam : public SimpleLinearParam<Loops> {
+// TODO: Rename LoopExpr -> LoopsExpr (also function names including `loop_expr`)
+struct LoopExprParam : public SimpleLinearParam<Loops>,
+                              IdentityVectorLinearParamMixin<Loops> {
   static std::string object_to_string(const ObjectT& loops);
 };
 
@@ -46,6 +48,7 @@ using LoopExpr = Linear<LoopExprParam>;
 // TODO: Force using this, disable on-the-fly name generation (?)
 void generate_loops_names(const std::vector<LoopExpr>& expressions);
 
+LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr);  // will NOT group five-term relations
 LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr);
 
 // Sorts elements within each loop, adjusting signs accordingly.
@@ -75,6 +78,9 @@ LiraExpr lira_expr_sort_args(const LiraExpr& expr);
 LoopExpr cut_loops(const std::vector<int>& points);
 
 LoopExpr reverse_loops(const LoopExpr& expr);
+
+// There must be 5 vars: 1,2,3,4,5. Each loop must be sorted.
+LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr);
 
 
 // TODO: Clean up this super ad hoc function.

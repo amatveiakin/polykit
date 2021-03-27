@@ -35,31 +35,51 @@ std::string loops_description(const Loops& loops) {
   );
 }
 
-LoopsInvariant loops_invariant(Loops loops) {
-  std::vector<int> five_loop;
-  const auto it = absl::c_find_if(loops, [](const std::vector<int>& loop) {
-    return loop.size() == 5;}
-  );
-  CHECK(it != loops.end());
-  std::vector<int> invariant{static_cast<int>(it - loops.begin())};
-  five_loop = *it;
-  loops.erase(it);
-  for (int num_loops_to_include : range_incl(2, loops.size())) {
-    for (const auto include_five_loop : {false, true}) {
-      std::vector<int> loops_common_elements;
-      for (const auto& loops_to_include : increasing_sequences(loops.size(), num_loops_to_include)) {
-        Loops loops_group;
-        if (include_five_loop) {
-          loops_group.push_back(five_loop);
-        }
-        for (const int idx : loops_to_include) {
-          loops_group.push_back(loops.at(idx));
-        }
-        loops_common_elements.push_back(set_intersection_size(loops_group));
+static void update_loops_invariant(
+    const Loops& four_loops,
+    const std::optional<std::vector<int>>& five_loop,
+    std::vector<int>& invariant) {
+  for (int num_loops_to_include : range_incl(2, four_loops.size())) {
+    std::vector<int> loops_common_elements;
+    for (const auto& loops_to_include : increasing_sequences(four_loops.size(), num_loops_to_include)) {
+      Loops loops_group;
+      if (five_loop) {
+        loops_group.push_back(*five_loop);
       }
-      // append_vector(invariant, sorted(loops_common_elements));  // Note: enable sorting to account for shuffles
-      append_vector(invariant, loops_common_elements);
+      for (const int idx : loops_to_include) {
+        loops_group.push_back(four_loops.at(idx));
+      }
+      loops_common_elements.push_back(set_intersection_size(loops_group));
     }
+    // append_vector(invariant, sorted(loops_common_elements));  // Note: enable sorting to account for shuffles
+    append_vector(invariant, loops_common_elements);
+  }
+}
+
+LoopsInvariant loops_invariant(const Loops& loops) {
+  std::vector<int> invariant;
+  std::optional<std::vector<int>> five_loop;
+  Loops four_loops = loops;
+  {
+    const auto it = absl::c_find_if(four_loops, [](const std::vector<int>& loop) {
+      return loop.size() == 5;
+    });
+    if (it != four_loops.end()) {
+      int five_loop_pos = static_cast<int>(it - four_loops.begin());
+      invariant.push_back(five_loop_pos);
+      five_loop = *it;
+      four_loops.erase(it);
+    } else {
+      invariant.push_back(-1);
+    }
+  }
+  CHECK(absl::c_all_of(four_loops, [](const std::vector<int>& loop) {
+    return loop.size() == 4;
+  })) << dump_to_string(loops);
+
+  update_loops_invariant(four_loops, std::nullopt, invariant);
+  if (five_loop) {
+    update_loops_invariant(four_loops, five_loop, invariant);
   }
   return invariant;
 }
@@ -91,6 +111,17 @@ void generate_loops_names(const std::vector<LoopExpr>& expressions) {
   for (const auto& expr : expressions) {
     std::stringstream() << expr;
   }
+}
+
+LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr) {
+  return expr.mapped<LoopExpr>([](const LiraParamOnes& term) {
+    Loops ret;
+    for (const auto& r : term.ratios()) {
+      CHECK(!r.is_unity());
+      ret.push_back(to_vector(r.as_ratio().indices()));
+    }
+    return ret;
+  });
 }
 
 LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
@@ -224,7 +255,8 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
 
 static LoopExpr arg11_shuffle_cluster(const LoopExpr& expr) {
   if (expr.is_zero() || expr.element().first.size() != 4) {
-    return expr;  // TODO: Generalize !!!
+    std::cout << "WARNING: skipping arg11_shuffle_cluster\n";
+    return expr;  // TODO: Generalize!
   }
 
   struct LoopsAndCoeff {
@@ -404,6 +436,34 @@ LoopExpr cut_loops(const std::vector<int>& points) {
 LoopExpr reverse_loops(const LoopExpr& expr) {
   return expr.mapped([](const Loops& loops) {
     return reversed(loops);
+  });
+}
+
+LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr) {
+  static LoopExpr basis =
+    - LoopExpr::single({{1,2,3,4}})
+    + LoopExpr::single({{1,2,3,5}})
+    - LoopExpr::single({{1,2,4,5}})
+    + LoopExpr::single({{1,3,4,5}})
+  ;
+  return expr.mapped_expanding([](const Loops& term) {
+    std::vector<LoopExpr> term_shuffled = mapped(term, [&](const std::vector<int>& vars) -> LoopExpr {
+      // if (vars == {1,2,3,4} || vars == {1,2,3,5} || vars == {1,2,4,5} || vars == {1,3,4,5}) {
+      if (basis[{vars}] != 0) {
+        return LoopExpr::single({vars});
+      } else if (vars == std::vector{2,3,4,5}) {
+        return basis;
+      } else {
+        FATAL(absl::StrCat("Unexpected term: ", dump_to_string(vars)));
+      }
+    });
+    return outer_product(
+      absl::MakeConstSpan(term_shuffled),
+      [](const Loops& lhs, const Loops& rhs) {
+        return concat(lhs, rhs);
+      },
+      AnnNone()
+    );
   });
 }
 

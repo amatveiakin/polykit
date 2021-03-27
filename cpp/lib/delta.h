@@ -197,6 +197,11 @@ DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>&
 
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
+// For using together with `DeltaExpr::filter`
+inline int count_var(const DeltaExpr::ObjectT& term, int var) {
+  return absl::c_count_if(term, [&](const Delta& d) { return d.contains(var); });
+};
+
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);
 
 // Explicit rules allow to omit template types when calling the function.

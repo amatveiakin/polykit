@@ -1,5 +1,6 @@
 from pybind.util import args_to_iterable
-from pybind import lyndon, x, delta, projection, ratio, iterated_integral, polylog_qli, polylog_lira
+from pybind import lyndon, x, delta, projection, ratio, iterated_integral
+from pybind import polylog_qli, polylog_lira, loops
 
 
 to_lyndon_basis = lyndon.to_lyndon_basis
@@ -29,6 +30,8 @@ QLiNeg = polylog_qli.QLiNeg
 QLiSymm = polylog_qli.QLiSymm
 
 Lira = polylog_lira.Lira
+
+loops_matrix = loops.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
