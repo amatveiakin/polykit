@@ -4,13 +4,14 @@
 
 
 int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
+// TODO: What was meant here? `ratios_sorted` is unused!
   std::vector<std::array<int, 4>> ratios_sorted;
   for (const auto& r : ratios) {
     if (!r.is_unity()) {
       ratios_sorted.push_back(sorted(r.as_ratio().indices()));
     }
   };
-  return num_distinct_elements(ratios);
+  return num_distinct_elements_unsorted(ratios);
 }
 
 int num_ratio_points(const std::vector<Ratio>& ratios) {
@@ -72,7 +73,7 @@ LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode) {
       const auto original_expr = coeff * LiraExpr::single(formal_symbol);
       const auto& ratios = formal_symbol.ratios();
       CHECK_EQ(ratios.size(), 3);
-      const int distinct = num_distinct_elements(ratios);
+      const int distinct = num_distinct_elements_unsorted(ratios);
       LiraExpr replacement;
       if (distinct == 3) {
         //  abc  acb  bac  bca  cab  cba  -- original expr
@@ -165,7 +166,7 @@ std::pair<LiraExpr, LiraExpr> lira_expr_cancel_shuffle(const LiraExpr& expr) {
     }
     bool is_shuffle = false;
     if (value.size() == 3) {
-      if (num_distinct_elements(mapped(value, [](const Value& v) { return v.coeff; })) == 1) {
+      if (num_distinct_elements_unsorted(mapped(value, [](const Value& v) { return v.coeff; })) == 1) {
         auto keys = mapped(value, [](const Value& v) {
           return lira_param_to_key(v.term);
         });
@@ -373,7 +374,7 @@ LiraExpr lira_expr_substitute(
 Snowpal& Snowpal::add_ball(std::vector<int> points) {
   CHECK(!points.empty());
   absl::c_sort(points);
-  CHECK_EQ(points.size(), num_distinct_elements(points)) << dump_to_string(points);
+  CHECK_EQ(points.size(), num_distinct_elements_unsorted(points)) << dump_to_string(points);
   auto* node = splitting_tree_.node_for_points(points);
   node->split(points, splitting_tree_);
   expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);

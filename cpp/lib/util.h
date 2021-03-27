@@ -290,19 +290,29 @@ Container reversed(Container c) {
 }
 
 template<typename T>
-void keep_unique(std::vector<T>& v) {
+void keep_unique_sorted(std::vector<T>& v) {
   v.erase(std::unique(v.begin(), v.end()), v.end());
 }
 
 template<typename Container>
-int num_distinct_elements(Container v) {
+int num_distinct_elements_sorted(Container v) {
   absl::c_sort(v);
   return std::unique(v.begin(), v.end()) - v.begin();
 }
+template<typename Container>
+int num_distinct_elements_unsorted(Container v) {
+  absl::c_sort(v);
+  return num_distinct_elements_sorted(v);
+}
 
 template<typename Container>
-bool all_unique(const Container& v) {
-  return num_distinct_elements(v) == v.size();
+bool all_unique_sorted(const Container& v) {
+  return absl::c_adjacent_find(v) == v.end();
+}
+template<typename Container>
+bool all_unique_unsorted(Container v) {
+  absl::c_sort(v);
+  return all_unique_sorted(v);
 }
 
 template<size_t N, typename T>
@@ -336,4 +346,23 @@ bool all_equal(const Container& c) {
 template<typename Container>
 auto sum(const Container& c) {
   return absl::c_accumulate(c, 0);
+}
+
+// Optimization potential: O(N*log(N)) sort for large N.
+template<typename Container, typename Compare>
+[[nodiscard]] int sort_with_sign(Container& v, const Compare& comp) {
+  int sign = 1;
+  for (EACH : range(v.size())) {
+    for (int i : range(v.size() - 1)) {
+      if (comp(v[i+1], v[i])) {
+        std::swap(v[i], v[i+1]);
+        sign *= -1;
+      }
+    }
+  }
+  return sign;
+}
+template<typename Container>
+[[nodiscard]] int sort_with_sign(Container& v) {
+  return sort_with_sign(v, std::less<>());
 }

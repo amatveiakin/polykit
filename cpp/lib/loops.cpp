@@ -192,7 +192,7 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
       auto new_loop = mapped(loop, [&](int p) {
         return substitutions.contains(p) ? substitutions.at(p) : p;
       });
-      if (!all_unique(new_loop)) {
+      if (!all_unique_unsorted(new_loop)) {
         return {};
       }
       new_loops.push_back(std::move(new_loop));
@@ -238,7 +238,7 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
   std::vector<int> running_loop;
   int running_loop_new_position = -1;
   for (const auto& [loop, positions] : loop_positions) {
-    if (all_unique(positions)) {
+    if (all_unique_unsorted(positions)) {
       CHECK(running_loop.empty()) << group;
       running_loop = loop;
       auto missing_positions = set_difference({0,1,2,3}, positions);

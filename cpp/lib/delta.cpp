@@ -14,7 +14,7 @@ static int num_distinct_variables(const std::vector<Delta>& term) {
     elements.push_back(d.a());
     elements.push_back(d.b());
   }
-  return num_distinct_elements(elements);
+  return num_distinct_elements_unsorted(elements);
 }
 
 

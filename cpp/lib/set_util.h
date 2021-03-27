@@ -48,7 +48,7 @@ std::vector<T> set_union(const std::vector<T>& a, const std::vector<T>& b) {
 
 template<typename T>
 std::vector<T> set_union(const std::vector<std::vector<T>>& sets) {
-  return keep_unique(sorted(flatten(sets)));
+  return keep_unique_sorted(sorted(flatten(sets)));
 }
 
 template<typename T>

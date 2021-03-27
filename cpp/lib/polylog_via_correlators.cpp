@@ -39,7 +39,7 @@ CorrExpr CorrQLiImpl(int weight, int num_vars) {
       continue;
     }
     const auto odd_args = odd_elements(args);
-    if (odd_args.size() == num_distinct_elements(odd_args)) {
+    if (odd_args.size() == num_distinct_elements_unsorted(odd_args)) {
       const int missing_odd = total_odd_vars - odd_args.size();
       const int coeff = neg_one_pow(missing_odd + num_args);
       ret.add_to(CorrFSymb{args}, coeff);
@@ -58,7 +58,7 @@ CorrExpr CorrQLiNegAltImpl(int weight, int num_vars) {
       continue;
     }
     const auto odd_args = odd_elements(args);
-    if (odd_args.size() == num_distinct_elements(odd_args)) {
+    if (odd_args.size() == num_distinct_elements_unsorted(odd_args)) {
       const int missing_odd = total_odd_vars - odd_args.size();
       const int coeff = neg_one_pow(missing_odd + 1);
       ret.add_to(CorrFSymb{args}, coeff);
@@ -74,7 +74,7 @@ CorrExpr CorrQLiSymmImpl(int weight, int num_vars) {
   for (const auto& w : nondecreasing_sequences(num_vars, num_args)) {
     const auto args = mapped(w, [](int x) { return x + 1; });
     const auto odd_args = odd_elements(args);
-    if (odd_args.size() == num_distinct_elements(odd_args)) {
+    if (odd_args.size() == num_distinct_elements_unsorted(odd_args)) {
       const int missing_odd = total_odd_vars - odd_args.size();
       const int coeff = neg_one_pow(missing_odd + num_args);
       ret.add_to(CorrFSymb{args}, coeff);

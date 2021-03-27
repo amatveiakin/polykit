@@ -421,21 +421,6 @@ inline LiraExpr LiraE(std::vector<RatioOrUnity> ratios) {
 }
 
 
-// Optimization potential: O(N*log(N)) sort.
-template<typename ContainerT>
-int sort_with_sign(ContainerT& v) {
-  int sign = 1;
-  for (EACH : range(v.size())) {
-    for (int j : range(v.size() - 1)) {
-      if (v[j] > v[j+1]) {
-        std::swap(v[j], v[j+1]);
-        sign *= -1;
-      }
-    }
-  }
-  return sign;
-}
-
 int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios);
 int num_ratio_points(const std::vector<Ratio>& ratios);
 bool are_ratios_independent(const std::vector<Ratio>& ratios);

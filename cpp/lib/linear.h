@@ -700,7 +700,7 @@ private:
       annotations_.errors.push_back("");  // will display simply "<?>"
     }
     absl::c_sort(annotations_.errors);
-    keep_unique(annotations_.errors);
+    keep_unique_sorted(annotations_.errors);
   }
 
   BasicLinearMain main_;

@@ -50,13 +50,13 @@ ProjectionExpr involute_projected(const DeltaExpr& expr, const std::vector<int>&
 
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct) {
   return expr.filtered_key([&](const ProjectionExpr::StorageT& term) {
-    return num_distinct_elements(term) == num_distinct;
+    return num_distinct_elements_unsorted(term) == num_distinct;
   });
 }
 
 ProjectionExpr terms_with_min_distinct_variables(const ProjectionExpr& expr, int min_distinct) {
   return expr.filtered_key([&](const ProjectionExpr::StorageT& term) {
-    return num_distinct_elements(term) >= min_distinct;
+    return num_distinct_elements_unsorted(term) >= min_distinct;
   });
 }
 
@@ -64,7 +64,7 @@ void print_sorted_by_num_distinct_variables(std::ostream& os, const ProjectionEx
   to_ostream_grouped(
     os, expr, std::less<>{},
     [](const auto& term) {
-      return num_distinct_elements(term);
+      return num_distinct_elements_unsorted(term);
     },
     std::less<>{},
     [](int num_vars) {

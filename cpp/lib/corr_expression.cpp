@@ -18,11 +18,11 @@ static CorrCoExpr normalize_corr_coproduct(const CorrCoExpr& expr) {
     //   for (const CorrFSymb& fsymb : term) {
     //     CHECK_GE(fsymb.points.size(), 2);
     //     if (fsymb.points.size() == 2) {  // weight == 1
-    //       if (num_distinct_elements(fsymb.points) == 1) {
+    //       if (num_distinct_elements_unsorted(fsymb.points) == 1) {
     //         return false;
     //       }
     //     } else {
-    //       if (num_distinct_elements(fsymb.points) <= 2) {
+    //       if (num_distinct_elements_unsorted(fsymb.points) <= 2) {
     //         return false;
     //       }
     //     }
