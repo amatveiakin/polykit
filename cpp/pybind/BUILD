@@ -110,6 +110,7 @@ py_binary(
     srcs = ["py_workspace.py"],
     deps = [
         requirement("numpy"),
+        requirement("progress"),
         ":delta_matrix",
         ":polykit",
     ],

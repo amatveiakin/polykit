@@ -13,6 +13,8 @@ DeltaExpr = delta.DeltaExpr
 DeltaCoExpr = delta.DeltaCoExpr
 substitute_variables = delta.substitute_variables
 involute = delta.involute
+terms_with_num_distinct_variables = delta.terms_with_num_distinct_variables
+terms_with_min_distinct_variables = delta.terms_with_min_distinct_variables
 terms_containing_only_variables = delta.terms_containing_only_variables
 terms_without_variables = delta.terms_without_variables
 coproduct = delta.coproduct
@@ -22,12 +24,17 @@ ProjectionExpr = projection.ProjectionExpr
 project_on = projection.project_on
 involute_projected = projection.involute_projected
 
+sorted_by_num_distinct_variables = projection.sorted_by_num_distinct_variables
+
 CrossRatio = ratio.CrossRatio
 CompoundRatio = ratio.CompoundRatio
 
 QLi = polylog_qli.QLi
 QLiNeg = polylog_qli.QLiNeg
 QLiSymm = polylog_qli.QLiSymm
+QLiPr = polylog_qli.QLiPr
+QLiNegPr = polylog_qli.QLiNegPr
+QLiSymmPr = polylog_qli.QLiSymmPr
 
 Lira = polylog_lira.Lira
 

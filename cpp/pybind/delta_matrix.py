@@ -1,7 +1,7 @@
-import itertools
 import numpy as np
 
 from polykit import substitute_variables
+from util import to_hashable
 
 
 class DeltaExprMatrixBuilder:
@@ -11,7 +11,7 @@ class DeltaExprMatrixBuilder:
         self.next_row_id = 0
 
     def _monom_to_row(self, monom):
-        monom_tuple = tuple(monom)
+        monom_tuple = to_hashable(monom)
         if not monom_tuple in self.monoms_to_rows:
             self.monoms_to_rows[monom_tuple] = self.next_row_id
             self.next_row_id += 1

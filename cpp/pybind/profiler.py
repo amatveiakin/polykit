@@ -12,5 +12,6 @@ class Profiler:
         if not self.active:
             return
         end = time.time()
-        print(f"Profiler: {stage_name} took {end - self.start} seconds")
+        duration = end - self.start
+        print(f"Profiler: {stage_name} took {duration:.3f} seconds")
         self.start = end

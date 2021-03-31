@@ -47,6 +47,7 @@ void py_register_linear(const pybind11::module_& module, const char* name) {
   //   (need to update all high-order functions and `single`)
   using ObjectT = typename LinearT::ObjectT;
   py::class_<LinearT>(module, name)
+    .def(py::init<>())
     .def_static("single", &LinearT::single)
     .def("is_zero", &LinearT::is_zero)
     .def("is_blank", &LinearT::is_blank)
@@ -91,6 +92,7 @@ void py_register_linear(const pybind11::module_& module, const char* name) {
     .def("div_int", &LinearT::div_int)
     .def(py::self == py::self)
     .def(py::self != py::self)
+    // TODO: Cosider `set_new_line_after_expression(false)`: Python `print` adds new line automatically
     .def("__str__", [](const LinearT& expr) { std::stringstream ss; ss << expr; return ss.str(); })
   ;
 }

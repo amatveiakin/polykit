@@ -39,6 +39,8 @@ PYBIND11_MODULE(delta, m) {
   m.def("substitute_variables", &substitute_variables_wrapper, "Substitutes variable into a DeltaExpr; can substitute Inf");
   m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
 
+  m.def("terms_with_num_distinct_variables", &terms_with_num_distinct_variables);
+  m.def("terms_with_min_distinct_variables", &terms_with_min_distinct_variables);
   m.def("terms_containing_only_variables", &terms_containing_only_variables);
   m.def("terms_without_variables", &terms_without_variables);
 
