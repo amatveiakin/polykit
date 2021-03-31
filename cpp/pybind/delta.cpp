@@ -8,11 +8,6 @@
 
 namespace py = pybind11;
 
-// TODO: Add Python binding for SpanX instead
-DeltaExpr substitute_variables_wrapper(const DeltaExpr& expr, const std::vector<X>& new_points) {
-  return substitute_variables(expr, new_points);
-}
-
 PYBIND11_MODULE(delta, m) {
   py::class_<Delta>(m, "Delta")
     .def(py::init<X, X>())
@@ -35,8 +30,7 @@ PYBIND11_MODULE(delta, m) {
   py_register_linear<DeltaExpr>(m, "DeltaExpr");
   py_register_linear<DeltaCoExpr>(m, "DeltaCoExpr");
 
-  // TODO: Test&Fix: pybind probably can't result function overloads across modules
-  m.def("substitute_variables", &substitute_variables_wrapper, "Substitutes variable into a DeltaExpr; can substitute Inf");
+  m.def("substitute_variables", &substitute_variables, "Substitutes variable into a DeltaExpr; can substitute Inf");
   m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
 
   m.def("terms_with_num_distinct_variables", &terms_with_num_distinct_variables);

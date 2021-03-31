@@ -23,14 +23,14 @@
 #include "projection.h"
 
 
-DeltaExpr QLiVec(int weight, SpanX points);
-ProjectionExpr QLiVecPr(int weight, SpanX points, DeltaProjector projector);
+DeltaExpr QLiVec(int weight, XArgs points);
+ProjectionExpr QLiVecPr(int weight, XArgs points, DeltaProjector projector);
 
-DeltaExpr QLiNegVec(int weight, SpanX points);
-ProjectionExpr QLiNegVecPr(int weight, SpanX points, DeltaProjector projector);
+DeltaExpr QLiNegVec(int weight, XArgs points);
+ProjectionExpr QLiNegVecPr(int weight, XArgs points, DeltaProjector projector);
 
-DeltaExpr QLiSymmVec(int weight, SpanX points);
-ProjectionExpr QLiSymmVecPr(int weight, SpanX points, DeltaProjector projector);
+DeltaExpr QLiSymmVec(int weight, XArgs points);
+ProjectionExpr QLiSymmVecPr(int weight, XArgs points, DeltaProjector projector);
 
 
 namespace internal {

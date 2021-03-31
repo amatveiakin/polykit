@@ -19,11 +19,11 @@
 #include "projection.h"
 
 
-DeltaExpr IVec(SpanX points);
-ProjectionExpr IVecPr(SpanX points, DeltaProjector projector);
+DeltaExpr IVec(XArgs points);
+ProjectionExpr IVecPr(XArgs points, DeltaProjector projector);
 
-DeltaExpr CorrVec(SpanX points);
-ProjectionExpr CorrVecPr(SpanX points, DeltaProjector projector);
+DeltaExpr CorrVec(XArgs points);
+ProjectionExpr CorrVecPr(XArgs points, DeltaProjector projector);
 
 DeltaExpr eval_formal_symbols(const CorrExpr& expr);
 

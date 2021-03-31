@@ -49,43 +49,25 @@ inline std::string to_string(const X& x) {
 }
 
 
-class SpanX {
+class XArgs {
 public:
-  SpanX(absl::Span<const X> points) : span_(points) {}
-  SpanX(absl::Span<const int> points) : span_(points) {}
-  SpanX(const std::vector<X>& points) : SpanX(absl::MakeConstSpan(points)) {}
-  SpanX(const std::vector<int>& points) : SpanX(absl::MakeConstSpan(points)) {}
-  SpanX(std::initializer_list<int> points) : SpanX(absl::Span<const int>(points)) {}
+  XArgs(absl::Span<const X> points) : data_(to_vector(points)) {}
+  XArgs(absl::Span<const int> points) : data_(mapped(points, X::Var)) {}
+  XArgs(std::vector<X> points) : data_(std::move(points)) {}
+  XArgs(const std::vector<int>& points) : XArgs(absl::Span<const int>(points)) {}
+  XArgs(std::initializer_list<int> points) : XArgs(absl::Span<const int>(points)) {}
 
-  std::vector<X> as_x() const {
-    return std::visit(overloaded{
-      [](const absl::Span<const int> s) {
-        return mapped(s, [](int p) { return X(p); });
-      },
-      [](const absl::Span<const X> s) {
-        return std::vector(s.begin(), s.end());
-      },
-    }, span_);
-  }
+  const std::vector<X>& as_x() const { return data_; }
 
   // Will crash if the list contains infinities.
   std::vector<int> as_int() const {
-    return std::visit(overloaded{
-      [](const absl::Span<const int> s) {
-        return std::vector(s.begin(), s.end());
-      },
-      [](const absl::Span<const X> s) {
-        return mapped(s, [](X x) { return x.var(); });
-      },
-    }, span_);
+    return mapped(data_, [](X x) { return x.var(); });
   }
 
   std::vector<std::string> as_string() const {
-    return std::visit([](const auto& s) {
-      return mapped_to_string(s);
-    }, span_);
+    return mapped_to_string(data_);
   }
 
 private:
-  std::variant<absl::Span<const int>, absl::Span<const X>> span_;
+  std::vector<X> data_;
 };

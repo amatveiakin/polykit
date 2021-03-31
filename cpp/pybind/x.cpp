@@ -1,5 +1,6 @@
 #include "pybind11/operators.h"
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "lib/x.h"
 
@@ -22,7 +23,15 @@ PYBIND11_MODULE(x, m) {
     .def("__repr__", py::overload_cast<const X&>(&to_string))
   ;
 
-  py::implicitly_convertible<int, X>();
+  py::class_<XArgs>(m, "XArgs")
+    .def(py::init<std::vector<int>>())
+    .def(py::init<std::vector<X>>())
+  ;
 
   m.attr("Inf") = Inf;
+
+  py::implicitly_convertible<int, X>();
+
+  py::implicitly_convertible<std::vector<int>, XArgs>();
+  py::implicitly_convertible<std::vector<X>, XArgs>();
 }

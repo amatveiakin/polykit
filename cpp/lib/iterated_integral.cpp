@@ -36,11 +36,11 @@ static ResultT IVec_wrapper(const std::vector<X>& points, const ProjectorT& proj
   );
 }
 
-DeltaExpr IVec(SpanX points) {
+DeltaExpr IVec(XArgs points) {
   return IVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-ProjectionExpr IVecPr(SpanX points, DeltaProjector projector) {
+ProjectionExpr IVecPr(XArgs points, DeltaProjector projector) {
   return IVec_wrapper<ProjectionExpr>(points.as_x(), projector);
 }
 
@@ -51,11 +51,11 @@ ResultT CorrVec_wrapper(const std::vector<X>& points, const ProjectorT& projecto
   );
 }
 
-DeltaExpr CorrVec(SpanX points) {
+DeltaExpr CorrVec(XArgs points) {
   return CorrVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
 }
 
-ProjectionExpr CorrVecPr(SpanX points, DeltaProjector projector) {
+ProjectionExpr CorrVecPr(XArgs points, DeltaProjector projector) {
   return CorrVec_wrapper<ProjectionExpr>(points.as_x(), projector);
 }
 

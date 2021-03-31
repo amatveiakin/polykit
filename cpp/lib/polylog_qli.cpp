@@ -98,11 +98,11 @@ static ResultT QLi_wrapper(
     ));
 }
 
-DeltaExpr QLiVec(int weight, SpanX points) {
+DeltaExpr QLiVec(int weight, XArgs points) {
   return QLi_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-ProjectionExpr QLiVecPr(int weight, SpanX points, DeltaProjector projector) {
+ProjectionExpr QLiVecPr(int weight, XArgs points, DeltaProjector projector) {
   return QLi_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }
 
@@ -121,11 +121,11 @@ static ResultT QLiNeg_wrapper(
     ));
 }
 
-DeltaExpr QLiNegVec(int weight, SpanX points) {
+DeltaExpr QLiNegVec(int weight, XArgs points) {
   return QLiNeg_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-ProjectionExpr QLiNegVecPr(int weight, SpanX points, DeltaProjector projector) {
+ProjectionExpr QLiNegVecPr(int weight, XArgs points, DeltaProjector projector) {
   return QLiNeg_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }
 
@@ -163,10 +163,10 @@ static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const P
   ));
 }
 
-DeltaExpr QLiSymmVec(int weight, SpanX points) {
+DeltaExpr QLiSymmVec(int weight, XArgs points) {
   return QLiSymm_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
 }
 
-ProjectionExpr QLiSymmVecPr(int weight, SpanX points, DeltaProjector projector) {
+ProjectionExpr QLiSymmVecPr(int weight, XArgs points, DeltaProjector projector) {
   return QLiSymm_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }

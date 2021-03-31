@@ -24,7 +24,7 @@ TEST(LoopsTest, LoopsLiraConversionReversible) {
 TEST(LoopsTest, CurLoopsEquivalentToLiQuad) {
   const int num_points = 9;  // should work for any odd number
   auto theta_expr = sum_looped_vec(
-    [&](SpanX args) {
+    [&](XArgs args) {
       return LiQuad(num_points / 2 - 1, args.as_int());
     },
     num_points,
