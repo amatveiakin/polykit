@@ -21,12 +21,6 @@ pybind_extension(
 )
 
 pybind_extension(
-    name = "iterated_integral",
-    srcs = ["iterated_integral.cpp"],
-    deps = ["//:polylog"],
-)
-
-pybind_extension(
     name = "loops",
     srcs = ["loops.cpp"],
     deps = ["//:polylog"],
@@ -39,14 +33,8 @@ pybind_extension(
 )
 
 pybind_extension(
-    name = "polylog_lira",
-    srcs = ["polylog_lira.cpp"],
-    deps = ["//:polylog"],
-)
-
-pybind_extension(
-    name = "polylog_qli",
-    srcs = ["polylog_qli.cpp"],
+    name = "polylog",
+    srcs = ["polylog.cpp"],
     deps = ["//:polylog"],
 )
 
@@ -76,11 +64,9 @@ py_library(
     deps = [":polykit_util"],
     data = [
         ":expressions.so",
-        ":iterated_integral.so",
         ":loops.so",
         ":lyndon.so",
-        ":polylog_lira.so",
-        ":polylog_qli.so",
+        ":polylog.so",
         ":ratio.so",
         ":x.so",
     ],

@@ -1,6 +1,5 @@
 from pybind.util import args_to_iterable
-from pybind import lyndon, x, expressions, ratio, iterated_integral
-from pybind import polylog_qli, polylog_lira, loops
+from pybind import lyndon, x, expressions, ratio, polylog, loops
 
 
 to_lyndon_basis = lyndon.to_lyndon_basis
@@ -28,23 +27,21 @@ sorted_by_num_distinct_variables = expressions.sorted_by_num_distinct_variables
 CrossRatio = ratio.CrossRatio
 CompoundRatio = ratio.CompoundRatio
 
-QLi = polylog_qli.QLi
-QLiNeg = polylog_qli.QLiNeg
-QLiSymm = polylog_qli.QLiSymm
-QLiPr = polylog_qli.QLiPr
-QLiNegPr = polylog_qli.QLiNegPr
-QLiSymmPr = polylog_qli.QLiSymmPr
+QLi = polylog.QLi
+QLiNeg = polylog.QLiNeg
+QLiSymm = polylog.QLiSymm
+QLiPr = polylog.QLiPr
+QLiNegPr = polylog.QLiNegPr
+QLiSymmPr = polylog.QLiSymmPr
 
-Lira = polylog_lira.Lira
+Lira = polylog.Lira
 
 loops_matrix = loops.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
-def I(*points):
-    return iterated_integral.IVec(args_to_iterable(points))
-def Corr(*points):
-    return iterated_integral.CorrVec(args_to_iterable(points))
+def I(*points): return polylog.IVec(args_to_iterable(points))
+def Corr(*points): return polylog.CorrVec(args_to_iterable(points))
 
 def project_on_x1 (expr): return project_on(1,  expr)
 def project_on_x2 (expr): return project_on(2,  expr)
@@ -89,19 +86,11 @@ def QLiSymm6(*points): return QLiSymm(6, args_to_iterable(points))
 def QLiSymm7(*points): return QLiSymm(7, args_to_iterable(points))
 def QLiSymm8(*points): return QLiSymm(8, args_to_iterable(points))
 
-def Lira1(*weights):
-    return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira2(*weights):
-    return lambda *ratios: Lira(2, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira3(*weights):
-    return lambda *ratios: Lira(3, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira4(*weights):
-    return lambda *ratios: Lira(4, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira5(*weights):
-    return lambda *ratios: Lira(5, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira6(*weights):
-    return lambda *ratios: Lira(6, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira7(*weights):
-    return lambda *ratios: Lira(7, args_to_iterable(weights), args_to_iterable(ratios))
-def Lira8(*weights):
-    return lambda *ratios: Lira(8, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira1(*weights): return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira2(*weights): return lambda *ratios: Lira(2, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira3(*weights): return lambda *ratios: Lira(3, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira4(*weights): return lambda *ratios: Lira(4, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira5(*weights): return lambda *ratios: Lira(5, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira6(*weights): return lambda *ratios: Lira(6, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira7(*weights): return lambda *ratios: Lira(7, args_to_iterable(weights), args_to_iterable(ratios))
+def Lira8(*weights): return lambda *ratios: Lira(8, args_to_iterable(weights), args_to_iterable(ratios))
