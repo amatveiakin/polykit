@@ -1,5 +1,5 @@
 from pybind.util import args_to_iterable
-from pybind import lyndon, x, delta, projection, ratio, iterated_integral
+from pybind import lyndon, x, expressions, ratio, iterated_integral
 from pybind import polylog_qli, polylog_lira, loops
 
 
@@ -8,23 +8,22 @@ to_lyndon_basis = lyndon.to_lyndon_basis
 X = x.X
 Inf = x.Inf
 
-Delta = delta.Delta
-DeltaExpr = delta.DeltaExpr
-DeltaCoExpr = delta.DeltaCoExpr
-substitute_variables = delta.substitute_variables
-involute = delta.involute
-terms_with_num_distinct_variables = delta.terms_with_num_distinct_variables
-terms_with_min_distinct_variables = delta.terms_with_min_distinct_variables
-terms_containing_only_variables = delta.terms_containing_only_variables
-terms_without_variables = delta.terms_without_variables
-coproduct = delta.coproduct
-comultiply = delta.comultiply
+Delta = expressions.Delta
+DeltaExpr = expressions.DeltaExpr
+DeltaCoExpr = expressions.DeltaCoExpr
+ProjectionExpr = expressions.ProjectionExpr
 
-ProjectionExpr = projection.ProjectionExpr
-project_on = projection.project_on
-involute_projected = projection.involute_projected
-
-sorted_by_num_distinct_variables = projection.sorted_by_num_distinct_variables
+substitute_variables = expressions.substitute_variables
+coproduct = expressions.coproduct
+comultiply = expressions.comultiply
+involute = expressions.involute
+project_on = expressions.project_on
+involute_projected = expressions.involute_projected
+terms_with_num_distinct_variables = expressions.terms_with_num_distinct_variables
+terms_with_min_distinct_variables = expressions.terms_with_min_distinct_variables
+terms_containing_only_variables = expressions.terms_containing_only_variables
+terms_without_variables = expressions.terms_without_variables
+sorted_by_num_distinct_variables = expressions.sorted_by_num_distinct_variables
 
 CrossRatio = ratio.CrossRatio
 CompoundRatio = ratio.CompoundRatio

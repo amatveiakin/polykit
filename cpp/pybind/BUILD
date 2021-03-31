@@ -12,8 +12,8 @@ cc_library(
 
 
 pybind_extension(
-    name = "delta",
-    srcs = ["delta.cpp"],
+    name = "expressions",
+    srcs = ["expressions.cpp"],
     deps = [
         "//:math",
         ":py_util",
@@ -51,15 +51,6 @@ pybind_extension(
 )
 
 pybind_extension(
-    name = "projection",
-    srcs = ["projection.cpp"],
-    deps = [
-        "//:math",
-        ":py_util",
-    ],
-)
-
-pybind_extension(
     name = "ratio",
     srcs = ["ratio.cpp"],
     deps = ["//:math"],
@@ -84,13 +75,12 @@ py_library(
     srcs = ["polykit.py"],
     deps = [":polykit_util"],
     data = [
-        ":delta.so",
+        ":expressions.so",
         ":iterated_integral.so",
         ":loops.so",
         ":lyndon.so",
         ":polylog_lira.so",
         ":polylog_qli.so",
-        ":projection.so",
         ":ratio.so",
         ":x.so",
     ],

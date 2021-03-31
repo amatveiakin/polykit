@@ -51,7 +51,7 @@ ProjectionExpr involute_projected(const DeltaExpr& expr, const std::vector<int>&
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct);
 ProjectionExpr terms_with_min_distinct_variables(const ProjectionExpr& expr, int min_distinct);
 
-// For using together with `DeltaExpr::filter`
+// For using together with `ProjectionExpr::filter`
 inline int count_var(const ProjectionExpr::ObjectT& term, int var) {
   return absl::c_count(term, var);
 };
