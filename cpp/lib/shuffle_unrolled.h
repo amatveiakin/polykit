@@ -1,6 +1,16 @@
 #include "linear.h"
 
 
+// By default shuffle is unrolled in release mode. To override, set UNROLL_SHUFFLE to 0 or 1.
+#ifndef UNROLL_SHUFFLE
+#  ifdef NDEBUG
+#    define UNROLL_SHUFFLE 1
+#  else
+#    define UNROLL_SHUFFLE 0
+#  endif
+#endif
+
+#if UNROLL_SHUFFLE
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled_1_1(const MonomT& u, const MonomT& v) {
   Linear<SimpleLinearParam<MonomT>> ret;
@@ -156,3 +166,4 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled(MonomT u, MonomT v) {
   }
   return {};
 }
+#endif

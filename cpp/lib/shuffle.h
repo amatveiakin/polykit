@@ -18,20 +18,6 @@
 #include "shuffle_unrolled_multi.h"
 
 
-// By default shuffle is unrolled in release mode. To override, set UNROLL_SHUFFLE to 0 or 1.
-#ifndef UNROLL_SHUFFLE
-#  ifdef NDEBUG
-#    define UNROLL_SHUFFLE 1
-#  else
-#    define UNROLL_SHUFFLE 0
-#  endif
-#endif
-
-// Disabled by default, as it only gives a small performance benefit.
-#ifndef UNROLL_SHUFFLE_MULTI
-#  define UNROLL_SHUFFLE_MULTI 0
-#endif
-
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
   using LinearT = Linear<SimpleLinearParam<MonomT>>;
@@ -82,7 +68,7 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
   } else if (words.size() == 2) {
     return shuffle_product(words[0], words[1]);
   } else {
-    #if UNROLL_SHUFFLE_MULTI
+#if UNROLL_SHUFFLE_MULTI
       {
         // May change `words` order, but that's ok: shuffle is commutative.
         auto unrolled_ret = shuffle_product_unrolled_multi(words);
@@ -90,7 +76,7 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
           return unrolled_ret;
         }
       }
-    #endif
+#endif
     MonomT w_tail = words.back();
     words.pop_back();
     const LinearT shuffle_product_head = shuffle_product(words);

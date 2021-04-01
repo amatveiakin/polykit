@@ -1,6 +1,12 @@
 #include "linear.h"
 
 
+// Disabled by default, as it only gives a small performance benefit.
+#ifndef UNROLL_SHUFFLE_MULTI
+#  define UNROLL_SHUFFLE_MULTI 0
+#endif
+
+#if UNROLL_SHUFFLE_MULTI
 template<typename MonomT>
 Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled_1_1_1(const MonomT& v0, const MonomT& v1, const MonomT& v2) {
   Linear<SimpleLinearParam<MonomT>> ret;
@@ -328,3 +334,4 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled_multi(std::vector<Mon
   }
   return {};
 }
+#endif
