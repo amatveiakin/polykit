@@ -19,6 +19,7 @@ static const FormattingConfig default_formatting_config = FormattingConfig()
 
 
 static thread_local std::vector<FormattingConfig> formatting_config_stack;
+static thread_local FormattingConfig default_formatting_config_overrides;
 static thread_local FormattingConfig aggregated_formatting_config = default_formatting_config;
 
 // This is marked as thread-local to avoid nasty race consitions, but
@@ -125,6 +126,7 @@ void FormattingConfig::apply_overrides(const FormattingConfig& src) {
 
 static void recompute_formatting_config() {
   aggregated_formatting_config = default_formatting_config;
+  aggregated_formatting_config.apply_overrides(default_formatting_config_overrides);
   for (const auto& config : formatting_config_stack) {
     aggregated_formatting_config.apply_overrides(config);
   }
@@ -139,6 +141,17 @@ ScopedFormatting::~ScopedFormatting() {
   formatting_config_stack.pop_back();
   recompute_formatting_config();
 }
+
+void set_default_formatting(const FormattingConfig& config) {
+  default_formatting_config_overrides = config;
+  recompute_formatting_config();
+}
+
+void reset_default_formatting() {
+  default_formatting_config_overrides = {};
+  recompute_formatting_config();
+}
+
 
 ScopedRichTextOptions::ScopedRichTextOptions(std::ostream& os, const RichTextOptions& options) {
   stream = &os;

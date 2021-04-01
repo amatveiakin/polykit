@@ -9,22 +9,20 @@
 
 namespace py = pybind11;
 
-std::string sorted_by_num_distinct_variables(const DeltaExpr& expr) {
+static std::string sorted_by_num_distinct_variables(const DeltaExpr& expr) {
   std::stringstream ss;
   print_sorted_by_num_distinct_variables(ss, expr);
   return ss.str();
 }
 
-std::string sorted_by_num_distinct_variables(const ProjectionExpr& expr) {
+static std::string sorted_by_num_distinct_variables(const ProjectionExpr& expr) {
   std::stringstream ss;
   print_sorted_by_num_distinct_variables(ss, expr);
   return ss.str();
 }
 
 
-// Define all linear expression in one file for overloaded functions to work.
-PYBIND11_MODULE(expressions, m) {
-  // === DeltaExpr ===
+void pybind_delta(py::module_& m) {
   py::class_<Delta>(m, "Delta")
     .def(py::init<X, X>())
     .def_property_readonly("a", &Delta::a)
@@ -58,8 +56,9 @@ PYBIND11_MODULE(expressions, m) {
   m.def("terms_without_variables", &terms_without_variables);
 
   m.def("sorted_by_num_distinct_variables", py::overload_cast<const DeltaExpr&>(&sorted_by_num_distinct_variables));
+}
 
-  // === ProjectionExpr ===
+void pybind_projection(py::module_& m) {
   py_register_linear<ProjectionExpr>(m, "ProjectionExpr");
 
   m.def("project_on", &project_on, "Projects a DeltaExpr onto an axis");
@@ -69,4 +68,9 @@ PYBIND11_MODULE(expressions, m) {
   m.def("terms_with_min_distinct_variables", py::overload_cast<const ProjectionExpr&, int>(&terms_with_min_distinct_variables));
 
   m.def("sorted_by_num_distinct_variables", py::overload_cast<const ProjectionExpr&>(&sorted_by_num_distinct_variables));
+}
+
+void pybind_expressions(py::module_& m) {
+  pybind_delta(m);
+  pybind_projection(m);
 }

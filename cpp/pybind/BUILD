@@ -10,44 +10,24 @@ cc_library(
     hdrs = ["py_util.h"],
 )
 
-
+# Everything should be in the same `pybind_extension` extension, otherwise things depending
+# on static variables (such as formatting config overrides) wouldn't work.
 pybind_extension(
-    name = "expressions",
-    srcs = ["expressions.cpp"],
+    name = "pylib",
+    srcs = [
+        "expressions.cpp",
+        "formatting.cpp",
+        "loops.cpp",
+        "lyndon.cpp",
+        "polylog.cpp",
+        "pylib.cpp",
+        "ratio.cpp",
+        "x.cpp",
+    ],
     deps = [
-        "//:math",
+        "//:polylog",
         ":py_util",
     ],
-)
-
-pybind_extension(
-    name = "loops",
-    srcs = ["loops.cpp"],
-    deps = ["//:polylog"],
-)
-
-pybind_extension(
-    name = "lyndon",
-    srcs = ["lyndon.cpp"],
-    deps = ["//:math"],
-)
-
-pybind_extension(
-    name = "polylog",
-    srcs = ["polylog.cpp"],
-    deps = ["//:polylog"],
-)
-
-pybind_extension(
-    name = "ratio",
-    srcs = ["ratio.cpp"],
-    deps = ["//:math"],
-)
-
-pybind_extension(
-    name = "x",
-    srcs = ["x.cpp"],
-    deps = ["//:math"],
 )
 
 
@@ -62,14 +42,7 @@ py_library(
     name = "polykit",
     srcs = ["polykit.py"],
     deps = [":polykit_util"],
-    data = [
-        ":expressions.so",
-        ":loops.so",
-        ":lyndon.so",
-        ":polylog.so",
-        ":ratio.so",
-        ":x.so",
-    ],
+    data = [":pylib.so"],
 )
 
 py_library(

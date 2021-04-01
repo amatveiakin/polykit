@@ -77,6 +77,6 @@ std::vector<std::vector<int>> loops_matrix() {
   return mat;
 }
 
-PYBIND11_MODULE(loops, m) {
+void pybind_loops(py::module_& m) {
   m.def("loops_matrix", &loops_matrix);
 }

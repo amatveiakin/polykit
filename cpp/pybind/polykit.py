@@ -1,47 +1,54 @@
 from pybind.util import args_to_iterable
-from pybind import lyndon, x, expressions, ratio, polylog, loops
+from pybind import pylib
 
 
-to_lyndon_basis = lyndon.to_lyndon_basis
+Encoder = pylib.Encoder
+RichTextFormat = pylib.RichTextFormat
+AnnotationSorting = pylib.AnnotationSorting
+NoLineLimit = pylib.NoLineLimit
+set_formatting = pylib.set_formatting
+reset_formatting = pylib.reset_formatting
 
-X = x.X
-Inf = x.Inf
+to_lyndon_basis = pylib.to_lyndon_basis
 
-Delta = expressions.Delta
-DeltaExpr = expressions.DeltaExpr
-DeltaCoExpr = expressions.DeltaCoExpr
-ProjectionExpr = expressions.ProjectionExpr
+X = pylib.X
+Inf = pylib.Inf
 
-substitute_variables = expressions.substitute_variables
-coproduct = expressions.coproduct
-comultiply = expressions.comultiply
-involute = expressions.involute
-project_on = expressions.project_on
-involute_projected = expressions.involute_projected
-terms_with_num_distinct_variables = expressions.terms_with_num_distinct_variables
-terms_with_min_distinct_variables = expressions.terms_with_min_distinct_variables
-terms_containing_only_variables = expressions.terms_containing_only_variables
-terms_without_variables = expressions.terms_without_variables
-sorted_by_num_distinct_variables = expressions.sorted_by_num_distinct_variables
+Delta = pylib.Delta
+DeltaExpr = pylib.DeltaExpr
+DeltaCoExpr = pylib.DeltaCoExpr
+ProjectionExpr = pylib.ProjectionExpr
 
-CrossRatio = ratio.CrossRatio
-CompoundRatio = ratio.CompoundRatio
+substitute_variables = pylib.substitute_variables
+coproduct = pylib.coproduct
+comultiply = pylib.comultiply
+involute = pylib.involute
+project_on = pylib.project_on
+involute_projected = pylib.involute_projected
+terms_with_num_distinct_variables = pylib.terms_with_num_distinct_variables
+terms_with_min_distinct_variables = pylib.terms_with_min_distinct_variables
+terms_containing_only_variables = pylib.terms_containing_only_variables
+terms_without_variables = pylib.terms_without_variables
+sorted_by_num_distinct_variables = pylib.sorted_by_num_distinct_variables
 
-QLi = polylog.QLi
-QLiNeg = polylog.QLiNeg
-QLiSymm = polylog.QLiSymm
-QLiPr = polylog.QLiPr
-QLiNegPr = polylog.QLiNegPr
-QLiSymmPr = polylog.QLiSymmPr
+CrossRatio = pylib.CrossRatio
+CompoundRatio = pylib.CompoundRatio
 
-Lira = polylog.Lira
+QLi = pylib.QLi
+QLiNeg = pylib.QLiNeg
+QLiSymm = pylib.QLiSymm
+QLiPr = pylib.QLiPr
+QLiNegPr = pylib.QLiNegPr
+QLiSymmPr = pylib.QLiSymmPr
 
-loops_matrix = loops.loops_matrix
+Lira = pylib.Lira
+
+loops_matrix = pylib.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
-def I(*points): return polylog.IVec(args_to_iterable(points))
-def Corr(*points): return polylog.CorrVec(args_to_iterable(points))
+def I(*points): return pylib.IVec(args_to_iterable(points))
+def Corr(*points): return pylib.CorrVec(args_to_iterable(points))
 
 def project_on_x1 (expr): return project_on(1,  expr)
 def project_on_x2 (expr): return project_on(2,  expr)

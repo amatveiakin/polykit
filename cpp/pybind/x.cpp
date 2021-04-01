@@ -7,8 +7,7 @@
 
 namespace py = pybind11;
 
-
-PYBIND11_MODULE(x, m) {
+void pybind_x(py::module_& m) {
   py::class_<X>(m, "X")
     .def(py::init<int>())
     .def(py::init<X>())

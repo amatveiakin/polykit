@@ -92,7 +92,13 @@ void py_register_linear(const pybind11::module_& module, const char* name) {
     .def("div_int", &LinearT::div_int)
     .def(py::self == py::self)
     .def(py::self != py::self)
-    // TODO: Cosider `set_new_line_after_expression(false)`: Python `print` adds new line automatically
-    .def("__str__", [](const LinearT& expr) { std::stringstream ss; ss << expr; return ss.str(); })
+    .def("__str__", [](const LinearT& expr) {
+      // Python `print` adds a trailing newline automatically.
+      // TODO: Debug why `set_new_line_after_expression` has no effect.
+      ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
+      std::stringstream ss;
+      ss << expr;
+      return ss.str();
+    })
   ;
 }

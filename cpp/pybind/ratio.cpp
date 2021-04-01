@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(ratio, m) {
+void pybind_ratio(py::module_& m) {
   constexpr auto kNormalization = CrossRatioNormalization::rotation_only;
 
   py::class_<CrossRatio>(m, "CrossRatio")

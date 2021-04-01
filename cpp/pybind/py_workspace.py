@@ -6,6 +6,7 @@ from progress.bar import Bar
 from profiler import Profiler
 from delta_matrix import DeltaExprMatrixBuilder
 
+from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
 from polykit import to_lyndon_basis
 from polykit import coproduct, comultiply
 from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
@@ -36,6 +37,8 @@ def with_progress(generator):
 
 def iterate_permutations(n):
     return with_progress(itertools.permutations(list(range(1, n+1))))
+
+set_formatting(encoder=Encoder.unicode)
 
 profiler = Profiler()
 

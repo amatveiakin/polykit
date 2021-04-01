@@ -8,7 +8,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(lyndon, m) {
+void pybind_lyndon(py::module_& m) {
   const char kLyndonDescription[] = "Converts an expression to Lyndon basis";
   m.def("to_lyndon_basis", &to_lyndon_basis<DeltaExpr>, kLyndonDescription);
   m.def("to_lyndon_basis", &to_lyndon_basis<ProjectionExpr>, kLyndonDescription);

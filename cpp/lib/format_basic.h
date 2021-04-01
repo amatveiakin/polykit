@@ -72,6 +72,12 @@ public:
   ~ScopedFormatting();
 };
 
+// Changes default formatting config. This function exists for the sake of Python bindings.
+// Prefer `ScopedFormatting` in C++ code.
+// Note: has lower priority that `ScopedFormatting`, even if applied afterwards!
+void set_default_formatting(const FormattingConfig& config);
+void reset_default_formatting();
+
 
 // Console assumes white-on-black, so "pale" colors are darker.
 // HTML and LaTeX assume black-on-white, so "pale" colors are brighter.

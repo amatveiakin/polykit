@@ -9,7 +9,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(polylog, m) {
+void pybind_polylog(py::module_& m) {
   m.def("IVec", &IVec);
   m.def("CorrVec", &CorrVec);
 
