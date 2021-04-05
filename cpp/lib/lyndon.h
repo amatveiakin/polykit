@@ -56,7 +56,12 @@ inline std::vector<Container> lyndon_factorize(const Container& word, const Comp
 // Continue until the queue is empty. Now the list of known Lyndon words contains
 // entire expression in Lyndon basis.
 //
-// Optimization potential: Unroll lyndon for words of 1-2-3 characters.
+// Optimization potential: Unroll Lyndon for words of 3-4 characters (consider
+//   autogeneration, as for shuffle).
+// Optimization potential: In case of words of 1-2 characters there is no need
+//   to build the priority queue. In order to keep the ability to compute Lyndon
+//   basis for a mixed-weight expression, we could check length when filling the
+//   queue.
 template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
   auto expr = to_vector_expression(expression.without_annotations());
@@ -74,16 +79,30 @@ LinearT to_lyndon_basis(const LinearT& expression) {
   absl::flat_hash_map<VectorT, int> terms_converted;
 
   while (!terms_to_convert.empty()) {
-    const auto [word_orig, coeff] = *terms_to_convert.begin();
+    const auto [word, coeff] = *terms_to_convert.begin();
     terms_to_convert.erase(terms_to_convert.begin());
     if (coeff == 0) {
       continue;
     }
 
-    const auto& lyndon_words = lyndon_factorize(word_orig, &LinearT::Param::lyndon_compare);
+    if (word.size() == 1) {
+      terms_converted[word] += coeff;
+      continue;
+    } else if (word.size() == 2) {
+      if (LinearT::Param::lyndon_compare(word[0], word[1])) {
+        terms_converted[word] += coeff;
+      } else if (LinearT::Param::lyndon_compare(word[1], word[0])) {
+        terms_converted[{word[1], word[0]}] -= coeff;
+      } else {
+        // though away: zero
+      }
+      continue;
+    }
+
+    const auto& lyndon_words = lyndon_factorize(word, &LinearT::Param::lyndon_compare);
     CHECK(!lyndon_words.empty());
     if (lyndon_words.size() == 1) {
-      terms_converted[word_orig] += coeff;
+      terms_converted[word] += coeff;
       continue;
     }
 
@@ -95,8 +114,8 @@ LinearT to_lyndon_basis(const LinearT& expression) {
 
     auto shuffle_expr = shuffle_product(lyndon_words).template cast_to<VectorLinearT>();
     shuffle_expr.div_int(denominator);
-    CHECK_EQ(shuffle_expr.coeff_for_key(word_orig), 1);
-    shuffle_expr.add_to_key(word_orig, -1);
+    CHECK_EQ(shuffle_expr.coeff_for_key(word), 1);
+    shuffle_expr.add_to_key(word, -1);
 
     for (const auto& [key, inner_coeff] : key_view(&shuffle_expr)) {
       const auto it = terms_converted.find(key);

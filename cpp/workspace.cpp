@@ -56,7 +56,15 @@ int main(int argc, char *argv[]) {
   );
 
 
+  Profiler profiler;
+  auto expr = QLi6(1,2,3,4,5,6,7,8);
+  profiler.finish("expr");
+  auto coexpr = comultiply(expr, {2,2,2});
+  profiler.finish("comultiply");
+  std::cout << "Checksum = " << expr.l1_norm() << "\n";
 
+
+#if 0
   // const int num_points = 9;
   // Profiler profiler;
   // auto qli_expr = sum_looped_vec(
@@ -115,4 +123,5 @@ int main(int argc, char *argv[]) {
   // std::cout << expr;
   // expr = loops_var5_shuffle_internally(expr);
   // std::cout << expr;
+#endif
 }
