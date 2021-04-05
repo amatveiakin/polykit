@@ -9,6 +9,8 @@
 
 namespace py = pybind11;
 
+static constexpr char kLyndonDescription[] = "Converts an expression to Lyndon basis";
+
 static std::string sorted_by_num_distinct_variables(const DeltaExpr& expr) {
   std::stringstream ss;
   print_sorted_by_num_distinct_variables(ss, expr);
@@ -44,11 +46,12 @@ void pybind_delta(py::module_& m) {
   py_register_linear<DeltaExpr>(m, "DeltaExpr");
   py_register_linear<DeltaCoExpr>(m, "DeltaCoExpr");
 
-  m.def("substitute_variables", &substitute_variables, "Substitutes variable into a DeltaExpr; can substitute Inf");
-  m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
-
+  m.def("to_lyndon_basis", &to_lyndon_basis<DeltaExpr>, kLyndonDescription);
   m.def("coproduct_vec", &coproduct_vec<DeltaExpr>);
   m.def("comultiply", &comultiply<DeltaExpr>);
+
+  m.def("substitute_variables", &substitute_variables, "Substitutes variable into a DeltaExpr; can substitute Inf");
+  m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
 
   m.def("terms_with_num_distinct_variables", py::overload_cast<const DeltaExpr&, int>(&terms_with_num_distinct_variables));
   m.def("terms_with_min_distinct_variables", py::overload_cast<const DeltaExpr&, int>(&terms_with_min_distinct_variables));
@@ -60,6 +63,8 @@ void pybind_delta(py::module_& m) {
 
 void pybind_projection(py::module_& m) {
   py_register_linear<ProjectionExpr>(m, "ProjectionExpr");
+
+  m.def("to_lyndon_basis", &to_lyndon_basis<ProjectionExpr>, kLyndonDescription);
 
   m.def("project_on", &project_on, "Projects a DeltaExpr onto an axis");
   m.def("involute_projected", &involute_projected);

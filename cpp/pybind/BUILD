@@ -18,7 +18,6 @@ pybind_extension(
         "expressions.cpp",
         "formatting.cpp",
         "loops.cpp",
-        "lyndon.cpp",
         "polylog.cpp",
         "pylib.cpp",
         "ratio.cpp",
