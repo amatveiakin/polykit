@@ -62,6 +62,19 @@ def describe(matrix_builder):
 
 
 #   TODO:
+#   TODO: write result to file !!!
+def prepare(expr):
+    return comultiply(expr, (2,2,2))
+for args_tmpl in with_progress(itertools.permutations([2,3,4,5,6,7,8])):
+    if (args_tmpl[0] > args_tmpl[1]):
+        continue
+    args = [1] + list(args_tmpl)
+    expr = QLi6(args)
+    matrix_builder.add_expr(prepare(expr))
+describe(matrix_builder)
+
+
+#   TODO:
 # def prepare(expr):
 #     return comultiply(expr, (3,3))
 # for args in iterate_permutations(7):
@@ -70,12 +83,12 @@ def describe(matrix_builder):
 # describe(matrix_builder)
 
 
-def prepare(expr):
-    return to_lyndon_basis(expr)
-for args in iterate_permutations(7):
-    expr = QLi4(substitute([1,2,3,4,5,6], args))
-    matrix_builder.add_expr(prepare(expr))
-describe(matrix_builder)  # 231
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations(7):
+#     expr = QLi4(substitute([1,2,3,4,5,6], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 231
 
 
 # def prepare(expr):
