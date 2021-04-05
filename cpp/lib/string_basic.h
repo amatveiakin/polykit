@@ -62,22 +62,25 @@ namespace internal {
 template<typename T>
 constexpr std::string_view get_type_name() {
 #if defined(__clang__)
-  constexpr auto prefix = std::string_view{"[T = "};
-  constexpr auto suffix = "]";
-  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+  constexpr std::string_view prefix = "[T = ";
+  constexpr std::string_view suffix = "]";
+  constexpr std::string_view function = __PRETTY_FUNCTION__;
 #elif defined(__GNUC__)
-  constexpr auto prefix = std::string_view{"with T = "};
-  constexpr auto suffix = "; ";
-  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+  constexpr std::string_view prefix = "with T = ";
+  constexpr std::string_view suffix = "; ";
+  constexpr std::string_view function = __PRETTY_FUNCTION__;
 #elif defined(__MSC_VER)
-  constexpr auto prefix = std::string_view{"get_type_name<"};
-  constexpr auto suffix = ">(void)";
-  constexpr auto function = std::string_view{__FUNCSIG__};
+  constexpr std::string_view prefix = "get_type_name<";
+  constexpr std::string_view suffix = ">(void)";
+  constexpr std::string_view function = __FUNCSIG__;
 #else
   return typeid(T).name();
 #endif
   const auto start = function.find(prefix) + prefix.size();
   const auto end = function.find(suffix);
+  if (start == std::string_view::npos || end == std::string_view::npos || start >= end) {
+    return typeid(T).name();
+  }
   const auto size = end - start;
   return function.substr(start, size);
 }
