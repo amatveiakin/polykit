@@ -69,14 +69,6 @@ int num_ratio_points(const std::vector<CrossRatioN>& ratios);
 bool are_ratios_independent(const std::vector<CrossRatioN>& ratios);
 
 
-enum class LyndonMode {
-  hard,  // convert each term to Lyndon basis
-  soft,  // only convert terms to Lyndon basis if it makes the expression smaller
-};
-
-LiraExpr to_lyndon_basis_2(const LiraExpr& expr);
-LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode = LyndonMode::hard);
-
 LiraExpr without_unities(const LiraExpr& expr);
 LiraExpr keep_distinct_ratios(const LiraExpr& expr);
 LiraExpr keep_independent_ratios(const LiraExpr& expr);

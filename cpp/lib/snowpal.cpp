@@ -116,8 +116,7 @@ Snowpal& Snowpal::add_ball(std::vector<int> points) {
   expr_ = keep_distinct_ratios(expr_);
   // expr_ = keep_independent_ratios(expr_);
   // expr_ = normalize_inverse(expr_);
-  // expr_ = to_lyndon_basis_2(expr_);
-  expr_ = to_lyndon_basis_3(expr_, LyndonMode::soft);
+  expr_ = to_lyndon_basis(expr_);
   return *this;
 }
 
