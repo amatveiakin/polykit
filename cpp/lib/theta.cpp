@@ -78,12 +78,12 @@ ThetaCoExpr substitute_ratios(
     const EpsilonCoExpr& expr,
     const std::vector<CompoundRatio>& ratios) {
   return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
-    CHECK_EQ(term.size(), kThetaCoExprComponents);
+    CHECK_EQ(term.size(), kThetaCoExprParts);
     const std::vector<ThetaExpr> multipliers =
       mapped(term, [&](const EpsilonPack& pack) {
         return substitute_ratios(EpsilonExpr::single(pack), ratios);
       });
-    static_assert(kThetaCoExprComponents == 2);
+    static_assert(kThetaCoExprParts == 2);
     return outer_product<ThetaCoExpr>(
       multipliers[0],
       multipliers[1],

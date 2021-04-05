@@ -1,4 +1,4 @@
-// Tests for iterated comultiplication (with 3 or more components).
+// Tests for iterated comultiplication (with 3 or more parts).
 
 #include "gtest/gtest.h"
 

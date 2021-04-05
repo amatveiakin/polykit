@@ -43,7 +43,7 @@ using CorrExpr = Linear<internal::CorrExprParam>;
 CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_points);
 
 
-constexpr int kCorrCoExprComponents = 2;
+constexpr int kCorrCoExprParts = 2;
 
 using CoCorrFSymb = std::vector<CorrFSymb>;
 
@@ -54,7 +54,7 @@ inline std::string to_string(const CoCorrFSymb& fsymb) {
 namespace internal {
 struct CorrCoExprParam {
   using ObjectT = CoCorrFSymb;
-  using StorageT = PVector<CorrExprParam::StorageT, kCorrCoExprComponents>;
+  using StorageT = PVector<CorrExprParam::StorageT, kCorrCoExprParts>;
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
   static StorageT object_to_key(const ObjectT& obj) {

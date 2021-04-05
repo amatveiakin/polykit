@@ -59,12 +59,12 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
 }
 
 ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
-  return expr.mapped_expanding([&](const std::array<ThetaPack, kThetaCoExprComponents>& term) {
+  return expr.mapped_expanding([&](const std::array<ThetaPack, kThetaCoExprParts>& term) {
     const std::array multipliers =
       mapped_array(term, [&](const ThetaPack& pack) {
         return eval_formal_symbols(ThetaExpr::single(pack));
       });
-    static_assert(kThetaCoExprComponents == 2);
+    static_assert(kThetaCoExprParts == 2);
     return outer_product<ThetaCoExpr>(
       multipliers[0],
       multipliers[1],

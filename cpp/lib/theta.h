@@ -63,7 +63,7 @@ inline std::string to_string(const ThetaPack& pack) {
 }
 
 
-constexpr int kThetaCoExprComponents = 2;
+constexpr int kThetaCoExprParts = 2;
 
 namespace internal {
 using ThetaStorageType = std::variant<Delta, CompoundRatioCompressed>;
@@ -156,8 +156,8 @@ struct ThetaExprParam {
 };
 
 struct ThetaCoExprParam {
-  using ObjectT = std::array<ThetaPack, kThetaCoExprComponents>;
-  using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprComponents>;
+  using ObjectT = std::array<ThetaPack, kThetaCoExprParts>;
+  using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprParts>;
   static StorageT object_to_key(const ObjectT& obj) {
     return mapped_array(obj, ThetaExprParam::object_to_key);
   }

@@ -93,10 +93,10 @@ auto comultiply(const ExprT& expr, std::vector<int> form) {
   const int weight = expr.weight();
   CHECK_EQ(sum(form), weight)
       << "Cannot comultiply an expression of weight " << weight
-      << " into components " << str_join(form, " + ") << " = " << sum(form);
+      << " into parts " << str_join(form, " + ") << " = " << sum(form);
   CHECK(form.size() >= 2) << dump_to_string(form);
   CHECK(form.size() == 2 || all_equal(form))
-      << "Comultiplication into three or more unequal components is not supported: " << dump_to_string(form);
+      << "Comultiplication into three or more unequal parts is not supported: " << dump_to_string(form);
   absl::c_sort(form);  // avoid unnecessary work in `normalize_coproduct`
 
   using MonomT = typename ExprT::StorageT;
@@ -148,17 +148,17 @@ auto comultiply(const ExprT& expr, std::vector<int> form) {
 
 
 template<typename CoExprT, typename F>
-CoExprT filter_coexpr_predicate(const CoExprT& expr, int component, const F& predicate) {
+CoExprT filter_coexpr_predicate(const CoExprT& expr, int part, const F& predicate) {
   return expr.filtered([&](const typename CoExprT::ObjectT& term) {
-    return predicate(term.at(component));
+    return predicate(term.at(part));
   });
 }
 
 template<typename CoExprT>
 CoExprT filter_coexpr(
-    const CoExprT& expr, int component, const typename CoExprT::ObjectT::value_type& value) {
+    const CoExprT& expr, int part, const typename CoExprT::ObjectT::value_type& value) {
   return filter_coexpr_predicate(
-    expr, component,
+    expr, part,
     [&](const typename CoExprT::ObjectT::value_type& x) {
       return x == value;
     }

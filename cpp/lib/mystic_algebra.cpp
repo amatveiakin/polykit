@@ -107,7 +107,8 @@ EpsilonCoExpr mystic_product(
       const std::vector<EpsilonPack> rhs_term =
           EpsilonCoExpr::Param::key_to_object(rhs_key);
       CHECK_EQ(lhs_term.size(), rhs_term.size());
-      CHECK_EQ(lhs_term.size(), 2) << "more coproduct component are not supported yet";
+      // Seems like there is no reason for this limitation anymore. TODO: Consider if this can be removed.
+      CHECK_EQ(lhs_term.size(), 2) << "more coproduct parts are not supported yet";
       return coproduct(
         monom_mystic_product(lhs_term[0], rhs_term[0]),
         monom_mystic_product(lhs_term[1], rhs_term[1])
