@@ -121,6 +121,7 @@ struct ThetaExprParam {
   using ProductT = ThetaProductStorageType;
   using StorageT = ThetaPackStorageType;
   using VectorT = ProductT;
+  LYNDON_COMPARE_DEFAULT
   static StorageT object_to_key(const ObjectT& obj) {
     return theta_pack_to_key(obj);
   }

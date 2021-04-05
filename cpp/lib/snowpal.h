@@ -381,6 +381,7 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
   using VectorT = std::vector<RatioOrUnity>;
   static VectorT key_to_vector(const StorageT& key) { return key.ratios(); }
   static StorageT vector_to_key(const VectorT& vec) { return LiraParamOnes(vec); }
+  LYNDON_COMPARE_DEFAULT
 
   static std::string object_to_string(const LiraParamOnes& param) {
     return object_to_string(param, nullptr);
@@ -442,6 +443,8 @@ LiraExpr keep_independent_ratios(const LiraExpr& expr);
 LiraExpr normalize_inverse(const LiraExpr& expr);
 
 LiraExpr fully_normalize_ratios(const LiraExpr& expr);
+
+DeltaCoExpr lira_expr_comultiply(const LiraExpr& expr);
 
 
 using Substitution = std::array<const SplittingTree::Node*, 2>;

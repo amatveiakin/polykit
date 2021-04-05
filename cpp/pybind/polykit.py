@@ -20,7 +20,6 @@ DeltaCoExpr = pylib.DeltaCoExpr
 ProjectionExpr = pylib.ProjectionExpr
 
 substitute_variables = pylib.substitute_variables
-coproduct = pylib.coproduct
 comultiply = pylib.comultiply
 involute = pylib.involute
 project_on = pylib.project_on

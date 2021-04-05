@@ -55,16 +55,64 @@ int main(int argc, char *argv[]) {
     .set_annotation_sorting(AnnotationSorting::length)
   );
 
-  const std::vector points = {1,2,1,3,1,4,5,4};
-  const int num_points = points.size();
-  auto source = LiQuad(num_points / 2 - 1, points);
 
-  std::cout << source;
-  auto lira_expr = without_unities(theta_expr_to_lira_expr_without_products(source.without_annotations()));
-  auto expr = lira_expr_to_loop_expr(lira_expr);
-  std::cout << expr;
-  expr = normalize_loops_expr(expr);
-  std::cout << expr;
-  expr = loops_var5_shuffle_internally(expr);
-  std::cout << expr;
+
+  // const int num_points = 9;
+  // Profiler profiler;
+  // auto qli_expr = sum_looped_vec(
+  //   [&](SpanX args) {
+  //     return QLiVec(6, args);
+  //   },
+  //   num_points,
+  //   seq_incl(1, num_points - 1)
+  // );
+  // profiler.finish("expr");
+  // auto qli_comult = comultiply(qli_expr, {2,2,2});
+  // profiler.finish("comultiply");
+  // std::cout << "Comult " << qli_comult;
+
+
+  // auto expr =
+  //   // QLi6(1,2,3,4,5,6)  // zero
+  //   // theta_expr_to_delta_expr(Lira4(2,1)(CR(1,2,3,4), CR(1,4,5,2)))  // zero
+  //   Corr(1,2,3,4,5,6,7)  // not zero
+  // ;
+  // std::cout << comultiply(expr, {2,2,2});
+
+
+
+  auto liquad_expr = LiQuad(3, {1,2,3,4,5,6,7,8});
+  std::cout << "LiQuad formal " << liquad_expr;
+  auto liquad_coexpr = lira_expr_comultiply(theta_expr_to_lira_expr_without_products(liquad_expr));
+  std::cout << "LiQuad " << liquad_coexpr;
+
+  auto qli_expr = QLi6(1,2,3,4,5,6,7,8);
+  Profiler profiler;
+  auto qli_comult = comultiply(qli_expr, {2,2,2});  // not zero
+  profiler.finish("comultiply");
+  // std::cout << "Comult " << prnt::header_only(qli_comult);
+  std::cout << "Comult " << qli_comult;
+
+  // std::cout << "Diff " << qli_comult + 2*liquad_coexpr;
+  std::cout << "Diff " << qli_comult + liquad_coexpr;
+
+
+
+  // auto expr = QLi6(1,2,3,4,5,6);
+  // std::cout << comultiply(expr, {1,2,3});  // zero
+
+
+
+  // const std::vector points = {1,2,1,3,1,4,5,4};
+  // const int num_points = points.size();
+  // auto source = LiQuad(num_points / 2 - 1, points);
+
+  // std::cout << source;
+  // auto lira_expr = without_unities(theta_expr_to_lira_expr_without_products(source.without_annotations()));
+  // auto expr = lira_expr_to_loop_expr(lira_expr);
+  // std::cout << expr;
+  // expr = normalize_loops_expr(expr);
+  // std::cout << expr;
+  // expr = loops_var5_shuffle_internally(expr);
+  // std::cout << expr;
 }

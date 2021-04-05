@@ -13,7 +13,7 @@ CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_
 
 
 static CorrCoExpr normalize_corr_coproduct(const CorrCoExpr& expr) {
-  return normalize_coproduct(expr)
+  return internal::normalize_coproduct(expr)
     // .filtered([](const CoCorrFSymb& term) {
     //   for (const CorrFSymb& fsymb : term) {
     //     CHECK_GE(fsymb.points.size(), 2);

@@ -129,9 +129,11 @@ extern DeltaAlphabetMapping delta_alphabet_mapping;
 
 
 namespace internal {
-struct DeltaExprParam : IdentityVectorLinearParamMixin<PVector<DeltaDiffT, 10>> {
+struct DeltaExprParam {
   using ObjectT = std::vector<Delta>;
   using StorageT = PVector<DeltaDiffT, 10>;
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_DEFAULT
   static StorageT object_to_key(const ObjectT& obj) {
     return mapped_to_pvector<StorageT>(obj, [](const Delta& d) -> DeltaDiffT {
       return delta_alphabet_mapping.to_alphabet(d);
@@ -157,6 +159,8 @@ struct DeltaCoExprParam {
   using ObjectT = std::vector<std::vector<Delta>>;
   using PartStorageT = DeltaExprParam::StorageT;
   using StorageT = PVector<PartStorageT, 2>;
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_LENGTH_FIRST
   static StorageT object_to_key(const ObjectT& obj) {
     return mapped_to_pvector<StorageT>(obj, DeltaExprParam::object_to_key);
   }
@@ -208,6 +212,6 @@ void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& e
 inline DeltaCoExpr coproduct(const DeltaExpr& lhs, const DeltaExpr& rhs) {
   return coproduct<DeltaCoExpr>(lhs, rhs);
 }
-inline DeltaCoExpr comultiply(const DeltaExpr& expr, std::pair<int, int> form) {
+inline DeltaCoExpr comultiply(const DeltaExpr& expr, const std::vector<int>& form) {
   return comultiply<DeltaCoExpr>(expr, form);
 }

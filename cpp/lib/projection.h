@@ -4,9 +4,11 @@
 
 
 namespace internal {
-struct ProjectionExprParam : public IdentityVectorLinearParamMixin<PVector<unsigned char, 10>> {
+struct ProjectionExprParam {
   using ObjectT = std::vector<int>;
   using StorageT = PVector<unsigned char, 10>;
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_DEFAULT
   static StorageT object_to_key(const ObjectT& obj) {
     return to_pvector<StorageT>(obj);
   }

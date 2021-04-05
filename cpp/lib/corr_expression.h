@@ -45,7 +45,7 @@ CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_
 
 constexpr int kCorrCoExprComponents = 2;
 
-using CoCorrFSymb = std::array<CorrFSymb, kCorrCoExprComponents>;
+using CoCorrFSymb = std::vector<CorrFSymb>;
 
 inline std::string to_string(const CoCorrFSymb& fsymb) {
   return str_join(fsymb, fmt::coprod_lie());
@@ -54,12 +54,14 @@ inline std::string to_string(const CoCorrFSymb& fsymb) {
 namespace internal {
 struct CorrCoExprParam {
   using ObjectT = CoCorrFSymb;
-  using StorageT = std::array<CorrExprParam::StorageT, kCorrCoExprComponents>;
+  using StorageT = PVector<CorrExprParam::StorageT, kCorrCoExprComponents>;
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_LENGTH_FIRST
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_array(obj, CorrExprParam::object_to_key);
+    return mapped_to_pvector<StorageT>(obj, CorrExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
-    return mapped_array(key, CorrExprParam::key_to_object);
+    return mapped(key, CorrExprParam::key_to_object);
   }
   static std::string object_to_string(const ObjectT& obj) {
     return to_string(obj);

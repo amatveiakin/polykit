@@ -1,3 +1,5 @@
+// TODO: Test coproduct_is_lie_algebra == false.
+
 #include "lib/coalgebra.h"
 
 #include "gtest/gtest.h"
@@ -39,6 +41,20 @@ TEST(ComultiplyTest, Form_1_1) {
   );
 }
 
+TEST(ComultiplyTest, Form_1_2) {
+  EXPECT_EXPR_EQ(
+    comultiply(
+      + SV({1,2,3})
+      ,
+      {1, 2}
+    ),
+    (
+      + CoSV({{1}, {2,3}})
+      - CoSV({{3}, {1,2}})
+    )
+  );
+}
+
 TEST(ComultiplyTest, Form_2_2) {
   EXPECT_EXPR_EQ(
     comultiply(
@@ -65,7 +81,21 @@ TEST(ComultiplyTest, Zero) {
   );
 }
 
-TEST(CoalgebraUtilTest, FilterCoexpr) {
+TEST(CoproductTest, IteratedComultiplication_2_2_2) {
+  EXPECT_EXPR_EQ(
+    comultiply(
+      + SV({4,3,1,2,5,6})
+      ,
+      {2, 2, 2}
+    ),
+    (
+      + CoSV({{1,2}, {3,4}, {5,6}})
+      + CoSV({{1,2}, {5,6}, {3,4}})
+    )
+  );
+}
+
+TEST(CoalgebraUtilTest, FilterCoExpr) {
   EXPECT_EXPR_EQ(
     filter_coexpr_predicate(
       CoLi(1,5)({1},{2}),

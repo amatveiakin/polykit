@@ -49,12 +49,17 @@ inline std::string to_string(const X& x) {
 }
 
 
+// TODO: Pass this by const reference everywhere.
 class XArgs {
 public:
   XArgs(absl::Span<const X> points) : data_(to_vector(points)) {}
   XArgs(absl::Span<const int> points) : data_(mapped(points, X::Var)) {}
   XArgs(std::vector<X> points) : data_(std::move(points)) {}
-  XArgs(const std::vector<int>& points) : XArgs(absl::Span<const int>(points)) {}
+  XArgs(const std::vector<int>& points) : XArgs(absl::MakeConstSpan(points)) {}
+  template<size_t N>
+  XArgs(const std::array<X, N>& points) : XArgs(absl::MakeConstSpan(points)) {}
+  template<size_t N>
+  XArgs(const std::array<int, N>& points) : XArgs(absl::MakeConstSpan(points)) {}
   XArgs(std::initializer_list<int> points) : XArgs(absl::Span<const int>(points)) {}
 
   const std::vector<X>& as_x() const { return data_; }

@@ -108,16 +108,45 @@ struct SimpleLinearParam {
   // static constexpr bool coproduct_is_lie_algebra = ...;
 };
 
-// TODO: Find a way to avoid repeating storage type when using this.
-template<typename StorageT>
-struct IdentityVectorLinearParamMixin {
-  using VectorT = StorageT;
-  // TODO: Why is `std::move` needed (suggested by clang)?
-  static const VectorT& key_to_vector(const StorageT& key) { return key; }
-  static VectorT key_to_vector(StorageT&& key) { return std::move(key); }
-  static const StorageT& vector_to_key(const VectorT& vec) { return vec; }
+// TODO: Implement mixins without macros. Idea: make a template that's used like this:
+// sturct MyLinearParam : LinearParam<
+//   MyStorageType,  // StorageT
+//   object_form_identical -OR- MyObjectType,
+//   vector_form_identical -OR- vector_not_supported -OR- MyObjectType,
+//   default_object_to_str | lyndon_compare_default | lyndon_compare_length_first  // Specify any subset
+// > {
+//   ...
+// };
+// Also consider: https://brevzin.github.io/c++/2019/12/02/named-arguments/
+
+template<typename T>
+bool compare_length_first(const T& lhs, const T& rhs) {
+  const auto lhs_size = lhs.size();
+  const auto rhs_size = rhs.size();
+  return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
+}
+
+// TODO: Why is `std::move` needed (suggested by clang)?
+#define IDENTITY_VECTOR_FORM                                                   \
+  using VectorT = StorageT;                                                    \
+  static const VectorT& key_to_vector(const StorageT& key) { return key; }     \
+  static VectorT key_to_vector(StorageT&& key) { return std::move(key); }      \
+  static const StorageT& vector_to_key(const VectorT& vec) { return vec; }     \
   static StorageT vector_to_key(VectorT&& vec) { return std::move(vec); }
-};
+
+#define LYNDON_COMPARE_DEFAULT                                                 \
+  static bool lyndon_compare(                                                  \
+      const typename VectorT::value_type& lhs,                                 \
+      const typename VectorT::value_type& rhs) {                               \
+    return lhs < rhs;                                                          \
+  }
+
+#define LYNDON_COMPARE_LENGTH_FIRST                                            \
+  static bool lyndon_compare(                                                  \
+      const typename VectorT::value_type& lhs,                                 \
+      const typename VectorT::value_type& rhs) {                               \
+    return compare_length_first(lhs, rhs);                                     \
+  }
 
 
 template<typename BaseParamT>
@@ -816,8 +845,8 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
 
 
 
-// Optimization potential: mark IdentityVectorLinearParamMixin as no-op and
-// return a reference to the original expression; but forbid dangling reference!
+// Optimization potential: mark IDENTITY_VECTOR_FORM as no-op and return a
+// reference to the original expression; but forbid dangling reference!
 template<typename LinearT>
 auto to_vector_expression(const LinearT& expr) {
   return expr.template mapped_key<Linear<VectorLinearParam<typename LinearT::Param>>>([](auto vec) {

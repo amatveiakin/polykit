@@ -8,7 +8,7 @@ from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
 from polykit import to_lyndon_basis
-from polykit import coproduct, comultiply
+from polykit import comultiply
 from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
 from polykit import ProjectionExpr, project_on, involute, involute_projected
 from polykit import terms_with_num_distinct_variables, terms_with_min_distinct_variables, terms_containing_only_variables, terms_without_variables
@@ -35,6 +35,7 @@ def with_progress(generator):
         bar.next()
     bar.finish()
 
+# TODO: Parallelize via `multiprocessing`
 def iterate_permutations(n):
     return with_progress(itertools.permutations(list(range(1, n+1))))
 
@@ -58,6 +59,15 @@ def describe(matrix_builder):
 # print(mat)
 # rank = np.linalg.matrix_rank(mat)
 # print("rank = {}".format(rank))
+
+
+#   TODO:
+# def prepare(expr):
+#     return comultiply(expr, (3,3))
+# for args in iterate_permutations(7):
+#     expr = QLi6(substitute([1,2,3,4,5,6], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)
 
 
 def prepare(expr):

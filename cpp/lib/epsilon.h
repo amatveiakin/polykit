@@ -150,6 +150,7 @@ struct EpsilonExprParam {
   using ProductT = PVector<EpsilonStorageType, 8>;
   using StorageT = std::variant<ProductT, LiParamCompressed>;
   using VectorT = ProductT;
+  LYNDON_COMPARE_DEFAULT
   static StorageT object_to_key(const ObjectT& obj) {
     return std::visit(overloaded{
       [](const std::vector<Epsilon>& product) -> StorageT {
@@ -288,7 +289,4 @@ EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr);
 // Explicit rules allow to omit template types when calling the function.
 inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
   return coproduct<EpsilonCoExpr>(lhs, rhs);
-}
-inline EpsilonCoExpr comultiply(const EpsilonExpr& expr, std::pair<int, int> form) {
-  return comultiply<EpsilonCoExpr>(expr, form);
 }

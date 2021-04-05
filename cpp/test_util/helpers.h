@@ -3,8 +3,9 @@
 #include "lib/coalgebra.h"
 
 
-struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>>,
-                               IdentityVectorLinearParamMixin<std::vector<int>> {
+struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>> {
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_DEFAULT
   static std::string object_to_string(const ObjectT& obj) {
     return fmt::parens(str_join(obj, ", "));
   }
@@ -17,6 +18,8 @@ struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>>,
 };
 
 struct SimpleVectorCoExprParam : SimpleLinearParam<std::vector<std::vector<int>>> {
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_LENGTH_FIRST
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_lie(), SimpleVectorExprParam::object_to_string);
   }
@@ -40,6 +43,6 @@ inline SimpleVectorCoExpr CoSV(std::vector<std::vector<int>> data) {
 inline SimpleVectorCoExpr coproduct(const SimpleVectorExpr& lhs, const SimpleVectorExpr& rhs) {
   return coproduct<SimpleVectorCoExpr>(lhs, rhs);
 }
-inline SimpleVectorCoExpr comultiply(const SimpleVectorExpr& expr, std::pair<int, int> form) {
+inline SimpleVectorCoExpr comultiply(const SimpleVectorExpr& expr, const std::vector<int>& form) {
   return comultiply<SimpleVectorCoExpr>(expr, form);
 }

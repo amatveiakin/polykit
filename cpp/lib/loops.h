@@ -38,8 +38,9 @@ extern LoopsNames loops_names;
 
 
 // TODO: Rename LoopExpr -> LoopsExpr (also function names including `loop_expr`)
-struct LoopExprParam : public SimpleLinearParam<Loops>,
-                              IdentityVectorLinearParamMixin<Loops> {
+struct LoopExprParam : public SimpleLinearParam<Loops> {
+  IDENTITY_VECTOR_FORM
+  LYNDON_COMPARE_LENGTH_FIRST
   static std::string object_to_string(const ObjectT& loops);
 };
 

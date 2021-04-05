@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compare.h"
 #include "linear.h"
 #include "shuffle.h"
 #include "util.h"
@@ -7,21 +8,25 @@
 
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 // Such split always exists and is unique (Chen–Fox–Lyndon theorem).
-template<typename Container>
-inline std::vector<Container> lyndon_factorize(const Container& word) {
+//
+// TODO: Consider returning a vector of `Span`s instead: (a) this could be faster;
+//   (b) this way Linear::StorageT == std::array would be supported. Open question:
+//   how to implement shuffle afterwards?
+template<typename Container, typename Compare>
+inline std::vector<Container> lyndon_factorize(const Container& word, const Compare& comp) {
   const int n = word.size();
   int start = 0;
   int k = start;
   int m = start + 1;
   std::vector<Container> ret;
   while (k < n) {
-    if (m >= n || word[k] > word[m]) {
+    if (m >= n || comp(word[m], word[k])) {
       const int l = m - k;
       ret.push_back(Container(word.begin() + start, word.begin() + start + l));
       start += l;
       k = start;
       m = start + 1;
-    } else if (word[k] < word[m]) {
+    } else if (comp(word[k], word[m])) {
       k = start;
       m++;
     } else {
@@ -50,6 +55,8 @@ inline std::vector<Container> lyndon_factorize(const Container& word) {
 //     everything else into the common queue.
 // Continue until the queue is empty. Now the list of known Lyndon words contains
 // entire expression in Lyndon basis.
+//
+// Optimization potential: Unroll lyndon for words of 1-2-3 characters.
 template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
   auto expr = to_vector_expression(expression.without_annotations());
@@ -58,9 +65,11 @@ LinearT to_lyndon_basis(const LinearT& expression) {
   // Optimization potential: Replace std::map with a heap. Note: std::make_heap and
   //   std::pop_heap can be used as-is, but std::push_heap needs to be replaced with
   //   a custom implementation that supports data merges.
-  std::map<VectorT, int, std::greater<>> terms_to_convert(
-    expr.main().data().begin(), expr.main().data().end()
-  );
+  std::map terms_to_convert{
+    expr.main().data().begin(),
+    expr.main().data().end(),
+    cmp::lexicographical(cmp::greater_from_less(&LinearT::Param::lyndon_compare))
+  };
   // Not using a linear to avoid discarding terms with coeff == 0 in the process.
   absl::flat_hash_map<VectorT, int> terms_converted;
 
@@ -71,7 +80,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
       continue;
     }
 
-    const auto& lyndon_words = lyndon_factorize(word_orig);
+    const auto& lyndon_words = lyndon_factorize(word_orig, &LinearT::Param::lyndon_compare);
     CHECK(!lyndon_words.empty());
     if (lyndon_words.size() == 1) {
       terms_converted[word_orig] += coeff;
