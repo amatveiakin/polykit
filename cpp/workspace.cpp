@@ -16,6 +16,7 @@
 #include "lib/format.h"
 #include "lib/iterated_integral.h"
 #include "lib/lexicographical.h"
+#include "lib/lira_ones.h"
 #include "lib/loops.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"

@@ -1,22 +1,11 @@
 #pragma once
 
 #include "format.h"
-#include "sequence_iteration.h"
+#include "lira_ones.h"
 #include "ratio.h"
+#include "sequence_iteration.h"
 #include "set_util.h"
 #include "theta.h"
-
-
-inline CrossRatioN to_cross_ratio(const CompoundRatio& compound_ratio) {
-  CHECK_EQ(compound_ratio.loops().size(), 1) << "Only cross ratios are supported";
-  return CrossRatioN(to_array<4>(compound_ratio.loops().front()));
-}
-
-inline CrossRatioNOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
-  return compound_ratio.is_unity()
-    ? CrossRatioNOrUnity::unity()
-    : to_cross_ratio(compound_ratio);
-}
 
 
 static constexpr auto kMetaVariablesColors = std::array{
@@ -340,100 +329,6 @@ inline std::string short_form_to_string(const ShortFormRatio& tmpl, CrossRatioN 
 }
 
 
-// Represents a particular case of LiraParam, namely
-//   n_Li_1_1..._1(x_1, ..., x_n),  where each x_i each a single cross-ratio
-class LiraParamOnes {
-public:
-  LiraParamOnes() {}
-  explicit LiraParamOnes(std::vector<CrossRatioNOrUnity> ratios) : ratios_(std::move(ratios)) {
-    CHECK_GT(ratios_.size(), 0);
-  }
-
-  int foreweight() const { return ratios_.size(); }
-  std::vector<int> weights() const { return std::vector<int>(ratios_.size(), 1); }
-  const std::vector<CrossRatioNOrUnity>& ratios() const { return ratios_; }
-
-  int depth() const { return ratios().size(); }
-  int total_weight() const { return ratios_.size() * 2 - 1; }
-  int sign() const { return neg_one_pow(depth()); }
-
-  bool operator==(const LiraParamOnes& other) const { return ratios_ == other.ratios_; }
-  bool operator< (const LiraParamOnes& other) const { return ratios_ <  other.ratios_; }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const LiraParamOnes& param) {
-    return H::combine(std::move(h), param.ratios_);
-  }
-
-private:
-  std::vector<CrossRatioNOrUnity> ratios_;
-};
-
-
-struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
-  using VectorT = std::vector<CrossRatioNOrUnity>;
-  static VectorT key_to_vector(const StorageT& key) { return key.ratios(); }
-  static StorageT vector_to_key(const VectorT& vec) { return LiraParamOnes(vec); }
-  LYNDON_COMPARE_DEFAULT
-
-  static std::string object_to_string(const LiraParamOnes& param) {
-    return object_to_string(param, nullptr);
-  }
-  static std::string object_to_string(
-      const LiraParamOnes& param, const ShortFormRatioStorage* short_forms) {
-    return fmt::function(
-      lira_param_function_name(param.foreweight(), param.weights()),
-      mapped(param.ratios(), [&](const CrossRatioNOrUnity& ratio) {
-        if (ratio.is_unity()) {
-          return fmt::unity();
-        }
-        if (short_forms) {
-          const auto& points = ratio.as_ratio();
-          auto short_form = short_forms->get_short_form_ratio(points);
-          return short_form.has_value()
-            ? short_form_to_string(*short_form, points)
-            : ratio_to_string(ratio, metavar_to_string_by_name);
-        } else {
-          return ratio_to_string(ratio, metavar_to_string_by_name);
-        }
-      }),
-      HSpacing::sparse
-    );
-  }
-};
-
-using LiraExpr = Linear<LiraExprParam>;
-
-inline LiraExpr LiraE(std::vector<CrossRatioNOrUnity> ratios) {
-  return LiraExpr::single(LiraParamOnes(std::move(ratios)));
-}
-
-
-int num_distinct_ratio_variables(const std::vector<CrossRatioNOrUnity>& ratios);
-int num_ratio_points(const std::vector<CrossRatioN>& ratios);
-bool are_ratios_independent(const std::vector<CrossRatioN>& ratios);
-
-enum class LyndonMode {
-  hard,  // convert each term to Lyndon basis
-  soft,  // only convert terms to Lyndon basis if it makes the expression smaller
-};
-
-LiraExpr to_lyndon_basis_2(const LiraExpr& expr);
-LiraExpr to_lyndon_basis_3(const LiraExpr& expr, LyndonMode mode = LyndonMode::hard);
-
-LiraExpr without_unities(const LiraExpr& expr);
-LiraExpr keep_distinct_ratios(const LiraExpr& expr);
-LiraExpr keep_independent_ratios(const LiraExpr& expr);
-
-// Applies rule:
-//   {x_1, ..., x_n} = (-1)^n * {1/x_1, ..., 1/x_n}
-LiraExpr normalize_inverse(const LiraExpr& expr);
-
-LiraExpr fully_normalize_ratios(const LiraExpr& expr);
-
-DeltaCoExpr lira_expr_comultiply(const LiraExpr& expr);
-
-
 using Substitution = std::array<const SplittingTree::Node*, 2>;
 
 struct ZeroOrInf {};
@@ -464,8 +359,6 @@ std::variant<const SplittingTree::Node*, std::array<int, 2>> find_central_node(
 RatioSubstitutionResult ratio_substitute(
     const CrossRatioNOrUnity& ratio,
     const SplittingTree& tree);
-
-LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr);
 
 LiraExpr lira_expr_substitute(
     const LiraExpr& expr,

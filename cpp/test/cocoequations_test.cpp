@@ -1,4 +1,4 @@
-// Tests for iterated comultiplication (with 3 or more parts).
+// Tests for iterated comultiplication (with 3 or more components).
 
 #include "gtest/gtest.h"
 
@@ -8,7 +8,7 @@
 #include "lib/polylog_liquad.h"
 #include "lib/polylog_lira.h"
 #include "lib/profiler.h"
-#include "lib/snowpal.h"
+#include "lib/lira_ones.h"
 #include "lib/summation.h"
 #include "test_util/matchers.h"
 

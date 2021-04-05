@@ -101,6 +101,7 @@ cc_library(
     name = "polylog",
     hdrs = [
         "lib/iterated_integral.h",
+        "lib/lira_ones.h",
         "lib/loops.h",
         "lib/mystic_algebra.h",
         "lib/polylog_li.h",
@@ -112,6 +113,7 @@ cc_library(
     ],
     srcs = [
         "lib/iterated_integral.cpp",
+        "lib/lira_ones.cpp",
         "lib/loops.cpp",
         "lib/mystic_algebra.cpp",
         "lib/polylog_li.cpp",
