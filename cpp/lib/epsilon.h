@@ -218,6 +218,7 @@ struct EpsilonCoExprParam {
 
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
 using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
+template<> struct CoExprForExpr<EpsilonExpr> { using type = EpsilonCoExpr; };
 
 // Whether expr is one w.r.t. shuffle multiplication.
 inline bool is_unity(const EpsilonPack& pack) {
@@ -284,9 +285,3 @@ EpsilonExpr without_monsters(const EpsilonExpr& expr);
 EpsilonExpr keep_monsters(const EpsilonExpr& expr);
 EpsilonCoExpr without_monsters(const EpsilonCoExpr& expr);
 EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr);
-
-
-// Explicit rules allow to omit template types when calling the function.
-inline EpsilonCoExpr coproduct(const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
-  return coproduct<EpsilonCoExpr>(lhs, rhs);
-}

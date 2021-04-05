@@ -46,6 +46,8 @@ loops_matrix = pylib.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
+def coproduct(*parts): return pylib.coproduct_vec(args_to_iterable(parts))
+
 def I(*points): return pylib.IVec(args_to_iterable(points))
 def Corr(*points): return pylib.CorrVec(args_to_iterable(points))
 

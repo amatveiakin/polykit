@@ -108,7 +108,7 @@ EpsilonCoExpr mystic_product(
           EpsilonCoExpr::Param::key_to_object(rhs_key);
       CHECK_EQ(lhs_term.size(), rhs_term.size());
       CHECK_EQ(lhs_term.size(), 2) << "more coproduct component are not supported yet";
-      return coproduct<EpsilonCoExpr>(
+      return coproduct(
         monom_mystic_product(lhs_term[0], rhs_term[0]),
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );

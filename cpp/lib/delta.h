@@ -177,6 +177,7 @@ struct DeltaCoExprParam {
 
 using DeltaExpr = Linear<internal::DeltaExprParam>;
 using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
+template<> struct CoExprForExpr<DeltaExpr> { using type = DeltaCoExpr; };
 
 inline DeltaExpr D(X a, X b) {
   Delta d(a, b);
@@ -207,11 +208,3 @@ inline int count_var(const DeltaExpr::ObjectT& term, int var) {
 };
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);
-
-// Explicit rules allow to omit template types when calling the function.
-inline DeltaCoExpr coproduct(const DeltaExpr& lhs, const DeltaExpr& rhs) {
-  return coproduct<DeltaCoExpr>(lhs, rhs);
-}
-inline DeltaCoExpr comultiply(const DeltaExpr& expr, const std::vector<int>& form) {
-  return comultiply<DeltaCoExpr>(expr, form);
-}

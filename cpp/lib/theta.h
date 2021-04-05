@@ -174,6 +174,7 @@ struct ThetaCoExprParam {
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
 using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
+template<> struct CoExprForExpr<ThetaExpr> { using type = ThetaCoExpr; };
 
 
 // Whether expr is one w.r.t. shuffle multiplication.

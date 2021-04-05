@@ -28,6 +28,7 @@ struct SimpleVectorCoExprParam : SimpleLinearParam<std::vector<std::vector<int>>
 
 using SimpleVectorExpr = Linear<SimpleVectorExprParam>;
 using SimpleVectorCoExpr = Linear<SimpleVectorCoExprParam>;
+template<> struct CoExprForExpr<SimpleVectorExpr> { using type = SimpleVectorCoExpr; };
 
 
 inline SimpleVectorExpr SV(std::vector<int> data) {
@@ -36,13 +37,4 @@ inline SimpleVectorExpr SV(std::vector<int> data) {
 
 inline SimpleVectorCoExpr CoSV(std::vector<std::vector<int>> data) {
   return SimpleVectorCoExpr::single(std::move(data));
-}
-
-
-// Explicit rules allow to omit template types when calling the function.
-inline SimpleVectorCoExpr coproduct(const SimpleVectorExpr& lhs, const SimpleVectorExpr& rhs) {
-  return coproduct<SimpleVectorCoExpr>(lhs, rhs);
-}
-inline SimpleVectorCoExpr comultiply(const SimpleVectorExpr& expr, const std::vector<int>& form) {
-  return comultiply<SimpleVectorCoExpr>(expr, form);
 }

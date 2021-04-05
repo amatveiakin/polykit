@@ -13,6 +13,14 @@
 //     weight. The order of elements in `form` does not matter: comultiplication is
 //     always ordered so that the smaller weight goes first.
 //     Example: `comultiply(QLi4(...), {1,3})`
+//
+// Also contains a type trait `CoExprForExpr`. When defining a new coexpression
+// one should extend it like this:
+//
+//   template<> struct CoExprForExpr<MyExpr> { using type = MyCoExpr; };
+//
+// This will enable `coproduct` for `MyExpr`. It will also enable `comultiply` iff
+// `MyCoExpr` supports Lyndon.
 
 #pragma once
 
@@ -20,12 +28,19 @@
 #include "lyndon.h"
 
 
-// TODO: Remove overrides for `coproduct` and `comultiply`. Instead introduce an
-//   extendable type trait `CoExprForExpr` and use it to deduce result types.
+template<typename ExprT>
+struct CoExprForExpr {
+  // using type = ...
+};
+
+template<typename ExprT>
+using CoExprForExpr_t = typename CoExprForExpr<ExprT>::type;
+
 
 namespace internal {
-template<typename CoExprT, typename ExprT>
-CoExprT to_coexpr(ExprT expr) {
+template<typename ExprT>
+auto to_coexpr(ExprT expr) {
+  using CoExprT = CoExprForExpr_t<ExprT>;
   using CoMonomT = typename CoExprT::StorageT;
   constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
   if constexpr (is_lie_algebra) {
@@ -44,10 +59,11 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
 }  // namespace internal
 
 
-template<typename CoExprT, typename ExprT>
-CoExprT coproduct_vec(const std::vector<ExprT>& expr) {
+template<typename ExprT>
+auto coproduct_vec(const std::vector<ExprT>& expr) {
+  using CoExprT = CoExprForExpr_t<ExprT>;
   constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
-  const auto coexpr = mapped(expr, internal::to_coexpr<CoExprT, ExprT>);
+  const auto coexpr = mapped(expr, internal::to_coexpr<ExprT>);
   auto ret = outer_product<CoExprT>(
     coexpr,
     [](const auto& u, const auto& v) {
@@ -62,16 +78,17 @@ CoExprT coproduct_vec(const std::vector<ExprT>& expr) {
   }
 }
 
-template<typename CoExprT, typename... Args>
-CoExprT coproduct(Args&&... args) {
-  return coproduct_vec<CoExprT>(std::vector{std::forward<Args>(args)...});
+template<typename... Args>
+auto coproduct(Args&&... args) {
+  return coproduct_vec(std::vector{std::forward<Args>(args)...});
 }
 
-template<typename CoExprT, typename ExprT>
-CoExprT comultiply(const ExprT& expr, std::vector<int> form) {
+template<typename ExprT>
+auto comultiply(const ExprT& expr, std::vector<int> form) {
+  using CoExprT = CoExprForExpr_t<ExprT>;
   static_assert(CoExprT::Param::coproduct_is_lie_algebra);
   if (expr.is_zero()) {
-    return {};
+    return CoExprT{};
   }
   const int weight = expr.weight();
   CHECK_EQ(sum(form), weight)
@@ -100,13 +117,13 @@ CoExprT comultiply(const ExprT& expr, std::vector<int> form) {
     const auto span = absl::MakeConstSpan(monom_vec);
     if (form.size() == 2) {
       const int split = form[0];
-      ret += coeff * coproduct<CoExprT>(
+      ret += coeff * coproduct(
         make_copart(span.subspan(0, split)),
         make_copart(span.subspan(split))
       );
       if (form[0] != form[1]) {
         const int split = form[1];
-        ret -= coeff * coproduct<CoExprT>(
+        ret -= coeff * coproduct(
           make_copart(span.subspan(split)),
           make_copart(span.subspan(0, split))
         );
@@ -119,7 +136,7 @@ CoExprT comultiply(const ExprT& expr, std::vector<int> form) {
         part_begin += part_weight;
       }
       CHECK_EQ(part_begin, span.size());
-      ret += coeff * coproduct_vec<CoExprT>(parts);
+      ret += coeff * coproduct_vec(parts);
     }
   });
   return ret.copy_annotations_mapped(

@@ -8,7 +8,7 @@ from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
 from polykit import to_lyndon_basis
-from polykit import comultiply
+from polykit import coproduct, comultiply
 from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
 from polykit import ProjectionExpr, project_on, involute, involute_projected
 from polykit import terms_with_num_distinct_variables, terms_with_min_distinct_variables, terms_containing_only_variables, terms_without_variables
