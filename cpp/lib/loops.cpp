@@ -126,17 +126,17 @@ LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr) {
 
 LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
   return expr.mapped_expanding([](const auto& loops) {
-    using RatioExpr = Linear<SimpleLinearParam<std::vector<RatioOrUnity>>>;
+    using RatioExpr = Linear<SimpleLinearParam<std::vector<CrossRatioNOrUnity>>>;
     const std::vector<RatioExpr> ratio_exprs =
       mapped(loops, [](const std::vector<int>& loop) -> RatioExpr {
         switch (loop.size()) {
           case 4: {
-            return RatioExpr::single({Ratio(loop)});
+            return RatioExpr::single({CrossRatioN(loop)});
           }
           case 5: {
             RatioExpr ret;
             for (int i : range(5)) {
-              ret += neg_one_pow(i) * RatioExpr::single({Ratio(removed_index(loop, i))});
+              ret += neg_one_pow(i) * RatioExpr::single({CrossRatioN(removed_index(loop, i))});
             }
             return ret;
           }
@@ -390,13 +390,13 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr) {
 LiraExpr lira_expr_sort_args(const LiraExpr& expr) {
   return expr.mapped_expanding([](const LiraParamOnes& term) {
     int sign = 1;
-    auto lira = LiraParamOnes(mapped(term.ratios(), [&](const RatioOrUnity& r) -> RatioOrUnity {
+    auto lira = LiraParamOnes(mapped(term.ratios(), [&](const CrossRatioNOrUnity& r) -> CrossRatioNOrUnity {
       if (r.is_unity()) {
         return r;
       }
       auto indices = r.as_ratio().indices();
       sign *= sort_with_sign(indices);
-      return Ratio(indices);
+      return CrossRatioN(indices);
     }));
     return sign * LiraExpr::single(lira);
   });

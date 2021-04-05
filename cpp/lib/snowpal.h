@@ -7,21 +7,14 @@
 #include "theta.h"
 
 
-using Ratio = CrossRatioN;
-using RatioOrUnity = CrossRatioNOrUnity;
-
-inline Ratio R(int a, int b, int c, int d) {
-  return Ratio(std::array{a, b, c, d});
-}
-
-inline Ratio to_cross_ratio(const CompoundRatio& compound_ratio) {
+inline CrossRatioN to_cross_ratio(const CompoundRatio& compound_ratio) {
   CHECK_EQ(compound_ratio.loops().size(), 1) << "Only cross ratios are supported";
-  return Ratio(to_array<4>(compound_ratio.loops().front()));
+  return CrossRatioN(to_array<4>(compound_ratio.loops().front()));
 }
 
-inline RatioOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
+inline CrossRatioNOrUnity to_cross_ratio_or_unity(const CompoundRatio& compound_ratio) {
   return compound_ratio.is_unity()
-    ? RatioOrUnity::unity()
+    ? CrossRatioNOrUnity::unity()
     : to_cross_ratio(compound_ratio);
 }
 
@@ -75,7 +68,7 @@ std::string var_to_string(int var, const MetaVarPrinter& metavar_to_string) {
 }
 
 template<typename MetaVarPrinter>
-std::string ratio_to_string(const RatioOrUnity& r, const MetaVarPrinter& metavar_to_string) {
+std::string ratio_to_string(const CrossRatioNOrUnity& r, const MetaVarPrinter& metavar_to_string) {
   return r.is_unity()
     ? fmt::unity()
     : fmt::brackets(str_join(r.as_ratio().indices(), ",", [&](int x) {
@@ -95,8 +88,8 @@ private:
 struct ShortFormRatio {
   std::string letter;
   int node_index;
-  Ratio normal_form;
-  absl::flat_hash_map<Ratio, int> usage_stats;
+  CrossRatioN normal_form;
+  absl::flat_hash_map<CrossRatioN, int> usage_stats;
 };
 
 class ShortFormRatioStorage {
@@ -107,7 +100,7 @@ public:
     }
   }
 
-  std::optional<ShortFormRatio> get_short_form_ratio(Ratio ratio) const {
+  std::optional<ShortFormRatio> get_short_form_ratio(CrossRatioN ratio) const {
     const auto it = ratios_.find(sorted(ratio.indices()));
     if (it != ratios_.end()) {
       return it->second;
@@ -115,7 +108,7 @@ public:
     return absl::nullopt;
   }
 
-  void record_usage_stats(Ratio usage) {
+  void record_usage_stats(CrossRatioN usage) {
     const auto it = ratios_.find(sorted(usage.indices()));
     if (it != ratios_.end()) {
       it->second.usage_stats[usage]++;
@@ -126,7 +119,7 @@ public:
     for (auto& [key, ratio] : ratios_) {
       if (!ratio.usage_stats.empty()) {
         int max_usage = 0;
-        Ratio max_usage_form;
+        CrossRatioN max_usage_form;
         for (const auto& [form, usage_count] : ratio.usage_stats) {
           CHECK_GT(usage_count, 0);
           if (usage_count > max_usage) {
@@ -134,7 +127,7 @@ public:
             max_usage_form = form;
           }
         }
-        const Ratio new_normal_form = max_usage_form;
+        const CrossRatioN new_normal_form = max_usage_form;
         CHECK(sorted(ratio.normal_form.indices()) == sorted(new_normal_form.indices()));
         ratio.normal_form = new_normal_form;
       }
@@ -205,7 +198,7 @@ public:
       return it - indices.begin() + 1;
     }
 
-    //  Should be the same, but faster.
+    // Optimization potential: Use this. Should be the same, but faster.
     // int nbr_idx_for_point(int point) const {
     //   int nbr_idx = 1;
     //   if (parent != nullptr) {
@@ -301,7 +294,7 @@ public:
             // fmt::sub_num(letter, missing),
             letter + str_join(missing, ""),
             node->node_index,
-            Ratio(mapped_array(to_array<4>(points), [&](int nbr_idx) {
+            CrossRatioN(mapped_array(to_array<4>(points), [&](int nbr_idx) {
               return make_metavar(node->node_index, nbr_idx);
             }))
           });
@@ -339,7 +332,7 @@ private:
 };
 
 
-inline std::string short_form_to_string(const ShortFormRatio& tmpl, Ratio value) {
+inline std::string short_form_to_string(const ShortFormRatio& tmpl, CrossRatioN value) {
   return fmt::colored(
     dependent_cross_ratio_formula(tmpl.normal_form, tmpl.letter, value),
     TextColor::orange  // Idea: color should depend on the group element order
@@ -352,13 +345,13 @@ inline std::string short_form_to_string(const ShortFormRatio& tmpl, Ratio value)
 class LiraParamOnes {
 public:
   LiraParamOnes() {}
-  explicit LiraParamOnes(std::vector<RatioOrUnity> ratios) : ratios_(std::move(ratios)) {
+  explicit LiraParamOnes(std::vector<CrossRatioNOrUnity> ratios) : ratios_(std::move(ratios)) {
     CHECK_GT(ratios_.size(), 0);
   }
 
   int foreweight() const { return ratios_.size(); }
   std::vector<int> weights() const { return std::vector<int>(ratios_.size(), 1); }
-  const std::vector<RatioOrUnity>& ratios() const { return ratios_; }
+  const std::vector<CrossRatioNOrUnity>& ratios() const { return ratios_; }
 
   int depth() const { return ratios().size(); }
   int total_weight() const { return ratios_.size() * 2 - 1; }
@@ -373,12 +366,12 @@ public:
   }
 
 private:
-  std::vector<RatioOrUnity> ratios_;
+  std::vector<CrossRatioNOrUnity> ratios_;
 };
 
 
 struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
-  using VectorT = std::vector<RatioOrUnity>;
+  using VectorT = std::vector<CrossRatioNOrUnity>;
   static VectorT key_to_vector(const StorageT& key) { return key.ratios(); }
   static StorageT vector_to_key(const VectorT& vec) { return LiraParamOnes(vec); }
   LYNDON_COMPARE_DEFAULT
@@ -390,11 +383,9 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
       const LiraParamOnes& param, const ShortFormRatioStorage* short_forms) {
     return fmt::function(
       lira_param_function_name(param.foreweight(), param.weights()),
-      mapped(param.ratios(), [&](const RatioOrUnity& ratio) {
+      mapped(param.ratios(), [&](const CrossRatioNOrUnity& ratio) {
         if (ratio.is_unity()) {
           return fmt::unity();
-          // return to_string(ratio);
-          // return "  " + to_string(ratio) + "  ";
         }
         if (short_forms) {
           const auto& points = ratio.as_ratio();
@@ -402,10 +393,6 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
           return short_form.has_value()
             ? short_form_to_string(*short_form, points)
             : ratio_to_string(ratio, metavar_to_string_by_name);
-          // auto full = ratio_to_string(ratio, metavar_to_string_by_name);
-          // return short_form.has_value()
-          //   ? short_form_to_string(*short_form, points) + " " + full
-          //   : full;
         } else {
           return ratio_to_string(ratio, metavar_to_string_by_name);
         }
@@ -417,14 +404,14 @@ struct LiraExprParam : SimpleLinearParam<LiraParamOnes> {
 
 using LiraExpr = Linear<LiraExprParam>;
 
-inline LiraExpr LiraE(std::vector<RatioOrUnity> ratios) {
+inline LiraExpr LiraE(std::vector<CrossRatioNOrUnity> ratios) {
   return LiraExpr::single(LiraParamOnes(std::move(ratios)));
 }
 
 
-int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios);
-int num_ratio_points(const std::vector<Ratio>& ratios);
-bool are_ratios_independent(const std::vector<Ratio>& ratios);
+int num_distinct_ratio_variables(const std::vector<CrossRatioNOrUnity>& ratios);
+int num_ratio_points(const std::vector<CrossRatioN>& ratios);
+bool are_ratios_independent(const std::vector<CrossRatioN>& ratios);
 
 enum class LyndonMode {
   hard,  // convert each term to Lyndon basis
@@ -451,7 +438,7 @@ using Substitution = std::array<const SplittingTree::Node*, 2>;
 
 struct ZeroOrInf {};
 
-using RatioSubstitutionResult = std::variant<ZeroOrInf, RatioOrUnity>;
+using RatioSubstitutionResult = std::variant<ZeroOrInf, CrossRatioNOrUnity>;
 
 
 // Returns one of the two things:
@@ -475,7 +462,7 @@ std::variant<const SplittingTree::Node*, std::array<int, 2>> find_central_node(
     const SplittingTree::Node* node);
 
 RatioSubstitutionResult ratio_substitute(
-    const RatioOrUnity& ratio,
+    const CrossRatioNOrUnity& ratio,
     const SplittingTree& tree);
 
 LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr);

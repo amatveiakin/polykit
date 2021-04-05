@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
   auto analyze_snowpal = [&](const Snowpal& snowpal) {
     absl::flat_hash_set<std::array<int, 4>> ratios;
     snowpal.expr().foreach([&](const LiraParamOnes& formal_symbol, int) {
-      for (const RatioOrUnity& r : formal_symbol.ratios()) {
+      for (const CrossRatioNOrUnity& r : formal_symbol.ratios()) {
         if (!r.is_unity()) {
           ratios.insert(sorted(r.as_ratio().indices()));
         }

@@ -5,7 +5,7 @@
 #include "polylog_qli.h"
 
 
-int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
+int num_distinct_ratio_variables(const std::vector<CrossRatioNOrUnity>& ratios) {
 // TODO: What was meant here? `ratios_sorted` is unused!
   std::vector<std::array<int, 4>> ratios_sorted;
   for (const auto& r : ratios) {
@@ -16,7 +16,7 @@ int num_distinct_ratio_variables(const std::vector<RatioOrUnity>& ratios) {
   return num_distinct_elements_unsorted(ratios);
 }
 
-int num_ratio_points(const std::vector<Ratio>& ratios) {
+int num_ratio_points(const std::vector<CrossRatioN>& ratios) {
   absl::flat_hash_set<int> all_points;
   for (const auto& r : ratios) {
     all_points.insert(r.indices().begin(), r.indices().end());
@@ -26,7 +26,7 @@ int num_ratio_points(const std::vector<Ratio>& ratios) {
 
 // TODO: Check if this is a valid criterion
 // Optimiation potential: try to avoid exponential explosion
-bool are_ratios_independent(const std::vector<Ratio>& ratios) {
+bool are_ratios_independent(const std::vector<CrossRatioN>& ratios) {
   if (num_ratio_points(ratios) < ratios.size() + 3) {
     return false;
   }
@@ -144,7 +144,7 @@ std::vector<Container> all_permutations(const Container& c) {
 }
 
 std::pair<LiraExpr, LiraExpr> lira_expr_cancel_shuffle(const LiraExpr& expr) {
-  using Key = std::array<RatioOrUnity, 3>;
+  using Key = std::array<CrossRatioNOrUnity, 3>;
   struct Value {
     LiraParam term;
     int coeff;
@@ -206,7 +206,7 @@ std::pair<LiraExpr, LiraExpr> lira_expr_cancel_shuffle(const LiraExpr& expr) {
 
 LiraExpr without_unities(const LiraExpr& expr) {
   return expr.filtered([](const LiraParamOnes& formal_symbol) {
-    return absl::c_none_of(formal_symbol.ratios(), [](const RatioOrUnity& r) {
+    return absl::c_none_of(formal_symbol.ratios(), [](const CrossRatioNOrUnity& r) {
       return r.is_unity();
     });
   });
@@ -221,7 +221,7 @@ LiraExpr keep_distinct_ratios(const LiraExpr& expr) {
 
 LiraExpr keep_independent_ratios(const LiraExpr& expr) {
   return expr.filtered([](const LiraParamOnes& formal_symbol) {
-    std::vector<Ratio> ratios;
+    std::vector<CrossRatioN> ratios;
     for (const auto& r : formal_symbol.ratios()) {
       if (r.is_unity()) {
         return false;
@@ -234,7 +234,7 @@ LiraExpr keep_independent_ratios(const LiraExpr& expr) {
 
 LiraExpr normalize_inverse(const LiraExpr& expr) {
   return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
-    static auto is_normal = [](const RatioOrUnity& r) {
+    static auto is_normal = [](const CrossRatioNOrUnity& r) {
       return r.is_unity() || r.as_ratio()[1] <= r.as_ratio()[3];
     };
     auto ratios = formal_symbol.ratios();
@@ -245,7 +245,7 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
     //   if (normal_ratios <= ratios.size() / 2) { ... }
     const auto marker_it = absl::c_max_element(
       ratios,
-      [](const RatioOrUnity& r1, const RatioOrUnity& r2) {
+      [](const CrossRatioNOrUnity& r1, const CrossRatioNOrUnity& r2) {
         if (r2.is_unity()) {
           return false;
         }
@@ -259,7 +259,7 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
     if (is_normal(*marker_it)) {
       for (auto& r : ratios) {
         if (!r.is_unity()) {
-          r = Ratio::inverse(r.as_ratio());
+          r = CrossRatioN::inverse(r.as_ratio());
         }
       }
       return neg_one_pow(ratios.size()) * LiraExpr::single(LiraParamOnes(ratios));
@@ -272,13 +272,13 @@ LiraExpr normalize_inverse(const LiraExpr& expr) {
 LiraExpr fully_normalize_ratios(const LiraExpr& expr) {
   return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) -> LiraExpr {
     int sign = 1;
-    auto new_ratios = mapped(formal_symbol.ratios(), [&](const RatioOrUnity& r) -> RatioOrUnity {
+    auto new_ratios = mapped(formal_symbol.ratios(), [&](const CrossRatioNOrUnity& r) -> CrossRatioNOrUnity {
       if (r.is_unity()) {
         return r;
       }
       auto indices = r.as_ratio().indices();
       sign *= sort_with_sign(indices);
-      return Ratio(indices);
+      return CrossRatioN(indices);
     });
     return sign * LiraExpr::single(LiraParamOnes(new_ratios));
   });
@@ -313,7 +313,7 @@ std::variant<const SplittingTree::Node*, std::array<int, 2>> find_central_node(
 }
 
 RatioSubstitutionResult ratio_substitute(
-    const RatioOrUnity& ratio,
+    const CrossRatioNOrUnity& ratio,
     const SplittingTree& tree) {
   if (ratio.is_unity()) {
     return ratio;
@@ -327,7 +327,7 @@ RatioSubstitutionResult ratio_substitute(
       auto new_points = mapped_array(old_points, [&](int p) {
         return central_node->metavar_for_point(p);
       });
-      return RatioOrUnity(Ratio(new_points));
+      return CrossRatioNOrUnity(CrossRatioN(new_points));
     },
     [&](std::array<int, 2> bad_pair) -> RatioSubstitutionResult {
       const int dist = std::abs(
@@ -336,7 +336,7 @@ RatioSubstitutionResult ratio_substitute(
       );
       CHECK(1 <= dist && dist <= 3) << dist;
       if (dist == 2) {
-        return RatioOrUnity::unity();
+        return CrossRatioNOrUnity::unity();
       } else {
         return ZeroOrInf{};
       }
@@ -370,11 +370,11 @@ LiraExpr lira_expr_substitute(
     const LiraExpr& expr,
     const SplittingTree& tree) {
   return expr.mapped_expanding([&](const LiraParamOnes& formal_symbol) {
-    std::vector<RatioOrUnity> new_ratios;
-    for (const RatioOrUnity& ratio: formal_symbol.ratios()) {
+    std::vector<CrossRatioNOrUnity> new_ratios;
+    for (const CrossRatioNOrUnity& ratio: formal_symbol.ratios()) {
       auto ratio_subst = ratio_substitute(ratio, tree);
-      if (std::holds_alternative<RatioOrUnity>(ratio_subst)) {
-        new_ratios.push_back(std::get<RatioOrUnity>(ratio_subst));
+      if (std::holds_alternative<CrossRatioNOrUnity>(ratio_subst)) {
+        new_ratios.push_back(std::get<CrossRatioNOrUnity>(ratio_subst));
       } else {
         return LiraExpr{};
       }
