@@ -1,13 +1,21 @@
 // General philosophy behind `to_string` and `dump_to_string`.
-//   * `to_string` gives a nicely formatted representation of a object
-//     that can and should be used for output. `to_string` is extensible:
-//     just define `to_string(const MyObject&)`.
-//   * `dump_to_string` gives a human-readable but not necessarily elegant
-//     representation of an object that can be used for debugging or for CHECK-s
-//     that are not expected to fail. `dump_to_string` defaults to `to_string`
-//     when the latter exists, but it's also auto-generated for some standard
-//     containers. `dump_to_string` is not extensible: defining `dump_to_string`
-//     for a type T would not make `dump_to_string(std::vector<T>)` work.
+//
+// `to_string` gives a nicely formatted representation of a object that can
+// and should be used for output. `to_string` is extensible: just define
+// `to_string(const MyClass&)`.
+//
+// `dump_to_string` gives a human-readable but not necessarily elegant
+// representation of an object that can be used for debugging or for CHECK-s
+// that are not expected to fail. `dump_to_string(obj)` tries to print `obj`
+// with various printers in the following order:
+//   * if `dump_to_string_impl(obj)` exists, call it;
+//   * if `to_string(obj)` exists, call it;
+//   * if `obj` is a supported std/absl container, print its content;
+//   * print implementation-defined `obj` type name (this is not particularly
+//     useful, but it allows to freely use `dump_to_string` in generic code
+//     without worrying that a non-printable type breaks it).
+// In order to extend `dump_to_string`, define `dump_to_string_impl(const MyClass&)`,
+// not `dump_to_string(const MyClass&)`!
 
 #pragma once
 
@@ -49,6 +57,31 @@ std::string str_join(const T& container, std::string separator) {
 
 
 namespace internal {
+// Returns type name, unmangled if possible. Unmangling is supported for clang, gcc and MSVC.
+// From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
+template<typename T>
+constexpr std::string_view get_type_name() {
+#if defined(__clang__)
+  constexpr auto prefix = std::string_view{"[T = "};
+  constexpr auto suffix = "]";
+  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+#elif defined(__GNUC__)
+  constexpr auto prefix = std::string_view{"with T = "};
+  constexpr auto suffix = "; ";
+  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+#elif defined(__MSC_VER)
+  constexpr auto prefix = std::string_view{"get_type_name<"};
+  constexpr auto suffix = ">(void)";
+  constexpr auto function = std::string_view{__FUNCSIG__};
+#else
+  return typeid(T).name();
+#endif
+  const auto start = function.find(prefix) + prefix.size();
+  const auto end = function.find(suffix);
+  const auto size = end - start;
+  return function.substr(start, size);
+}
+
 class DumpToStringHelper {
 private:
   template<typename Container>
@@ -67,6 +100,17 @@ private:
   }
 
   template <typename T>
+  class HasDumpToStringImpl {
+  private:
+    typedef char YesType[1];
+    typedef char NoType[2];
+    template <typename U> static YesType& test(decltype(dump_to_string_impl(std::declval<U>())));
+    template <typename U> static NoType& test(...);
+  public:
+    enum { value = sizeof(test<T>("")) == sizeof(YesType) };
+  };
+
+  template <typename T>
   class HasToString {
   private:
     typedef char YesType[1];
@@ -77,11 +121,9 @@ private:
     enum { value = sizeof(test<T>("")) == sizeof(YesType) };
   };
 
-  // This is not particularly useful, but it allows to freely use `dump_to_string`
-  // in generic code without worrying that a non-printable type would break it.
   template<typename T>
   static std::string auto_dump(const T&) {
-    return absl::StrCat("<", typeid(T).name(), ">");
+    return absl::StrCat("<", get_type_name<T>(), ">");
   }
 
   template<typename T, typename U>
@@ -112,8 +154,8 @@ private:
     return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return dump_impl(e); }), "]");
   }
 
-  template<typename T>
-  static std::string auto_dump(const std::set<T>& v) {
+  template<typename T, typename Comp>
+  static std::string auto_dump(const std::set<T, Comp>& v) {
     return absl::StrCat("{", str_join(set_to_vector(v), ", ", [](const auto& e) { return dump_impl(e); }), "}");
   }
   template<typename T>
@@ -121,8 +163,8 @@ private:
     return absl::StrCat("{", str_join(set_to_vector(v), ", ", [](const auto& e) { return dump_impl(e); }), "}");
   }
 
-  template<typename K, typename V>
-  static std::string auto_dump(const std::map<K, V>& v) {
+  template<typename K, typename V, typename Comp>
+  static std::string auto_dump(const std::map<K, V, Comp>& v) {
     return absl::StrCat("{", str_join(map_to_vector(v), ", ", [](const auto& e) {
       return absl::StrCat(dump_impl(e.first), " => ", dump_impl(e.second));
     }), "}");
@@ -136,14 +178,19 @@ private:
 
 public:
   template<typename T>
-  static typename std::enable_if_t<!HasToString<T>::value, std::string>
+  static typename std::enable_if_t<HasDumpToStringImpl<T>::value, std::string>
   dump_impl(T& v) {
-    return auto_dump(v);
+    return dump_to_string_impl(v);
   }
   template<typename T>
-  static typename std::enable_if_t<HasToString<T>::value, std::string>
+  static typename std::enable_if_t<!HasDumpToStringImpl<T>::value && HasToString<T>::value, std::string>
   dump_impl(T& v) {
     return to_string(v);
+  }
+  template<typename T>
+  static typename std::enable_if_t<!HasDumpToStringImpl<T>::value && !HasToString<T>::value, std::string>
+  dump_impl(T& v) {
+    return auto_dump(v);
   }
 };
 }  // namespace internal

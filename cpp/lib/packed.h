@@ -237,6 +237,11 @@ template<typename, typename = void> struct is_pvector : std::false_type {};
 template<typename T, int N> struct is_pvector<PVector<T, N>> : std::true_type {};
 template<typename T> inline constexpr bool is_pvector_v = is_pvector<T>::value;
 
+template<typename T, int N>
+std::string dump_to_string_impl(const PVector<T, N>& v) {
+  return dump_to_string(static_cast<const internal::pvector_base_type<T, N>&>(v));
+}
+
 
 template<typename Dst, typename In>
 auto to_pvector(absl::Span<const In> src) {
