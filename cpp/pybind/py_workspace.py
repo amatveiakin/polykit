@@ -1,5 +1,7 @@
+import glob
 import itertools
 import math
+from pathlib import Path
 import numpy as np
 from progress.bar import Bar
 
@@ -24,20 +26,42 @@ from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, pro
 from polykit import loops_matrix
 
 
+# TODO: How to get project folder from `bazel run`?
+RESULTS_FOLDER = '/mnt/c/Danya/results/'
+
+
 def substitute(points, new_indices):
     return [new_indices[p - 1] for p in points]
 
-def with_progress(generator):
-    values = list(generator)
-    bar = Bar('Computing...', max=len(values))
+def with_progress(values):
+    bar = Bar('Computing...', max=len(values), suffix='%(index)d/%(max)d   ETA %(eta_td)s')
     for p in values:
         yield p
         bar.next()
     bar.finish()
 
 # TODO: Parallelize via `multiprocessing`
-def iterate_permutations(n):
-    return with_progress(itertools.permutations(list(range(1, n+1))))
+def iterate_permutations(n, *, filter=None):
+    values = [
+        p
+        for p
+        in itertools.permutations(list(range(1, n+1)))
+        if filter is None or filter(p)
+    ]
+    return with_progress(values)
+
+def get_matrix_filename():
+    folder = RESULTS_FOLDER
+    file_prefix = 'matrix-'
+    extension = '.npy'
+    existing_files = glob.glob(f'{folder}{file_prefix}*{extension}')
+    max_existing_index = 0
+    for f in existing_files:
+        index = Path(f).stem[len(file_prefix):]
+        max_existing_index = max(max_existing_index, int(index))
+    new_index = max_existing_index + 1
+    return f'{folder}{file_prefix}{new_index}{extension}'
+
 
 set_formatting(encoder=Encoder.unicode)
 
@@ -49,6 +73,9 @@ def describe(matrix_builder):
     global profiler
     profiler.finish("expr")
     mat = matrix_builder.make_np_array()
+    filename = get_matrix_filename()
+    np.save(filename, mat)
+    print(f'Saved to {filename}')
     rank = np.linalg.matrix_rank(mat)
     profiler.finish("rank")
     print(f"{mat.shape} => {rank}")
@@ -62,19 +89,15 @@ def describe(matrix_builder):
 
 
 #   TODO:
-#   TODO: write result to file !!!
 def prepare(expr):
     return comultiply(expr, (2,2,2))
-for args_tmpl in with_progress(itertools.permutations([2,3,4,5,6,7,8])):
-    if (args_tmpl[0] > args_tmpl[1]):
-        continue
-    args = [1] + list(args_tmpl)
+for args in iterate_permutations(8, filter = lambda p: p[0] == 1 and p[1] < p[2]):
     expr = QLi6(args)
     matrix_builder.add_expr(prepare(expr))
 describe(matrix_builder)
 
 
-#   TODO:
+# #   TODO:
 # def prepare(expr):
 #     return comultiply(expr, (3,3))
 # for args in iterate_permutations(7):
@@ -167,6 +190,8 @@ describe(matrix_builder)
 
 
 
+# def projector(expr):
+#     return project_on_x6(terms_without_variables(expr, [1]))
 # def prepare(expr):
 #     return to_lyndon_basis(expr)
 # for args in itertools.permutations([1,2,3,4,5,6]):
