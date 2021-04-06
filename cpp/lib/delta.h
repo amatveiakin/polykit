@@ -170,6 +170,9 @@ struct DeltaCoExprParam {
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
   }
+  static int object_to_weight(const ObjectT& obj) {
+    return sum(mapped(obj, [](const auto& part) { return part.size(); }));
+  }
   static constexpr bool coproduct_is_lie_algebra = true;
 };
 }  // namespace internal

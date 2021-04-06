@@ -161,11 +161,11 @@ std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio
   return std::nullopt;
 }
 
+// Compressor doesn't support zeroes, hence kCompressionSizeBump
 static constexpr int kCompressionSizeBump = 1;
 
 void compress_compound_ratio(const CompoundRatio& ratio, Compressor& compressor) {
   const auto& loops = ratio.loops();
-  // Compressor doesn't support zeroes, hence kCompressionSizeBump
   compressor.add_segment({int(loops.size()) + kCompressionSizeBump});
   for (const auto& l : loops) {
     compressor.add_segment(l);
@@ -175,8 +175,8 @@ void compress_compound_ratio(const CompoundRatio& ratio, Compressor& compressor)
 CompoundRatio uncompress_compound_ratio(Decompressor& decompressor) {
   std::vector<std::vector<int>> loops;
   const std::vector<int> size_vec = decompressor.next_segment();
-  CHECK_EQ(size_vec.size(), kCompressionSizeBump);
-  const int size = size_vec.front() - 1;
+  CHECK_EQ(size_vec.size(), 1);
+  const int size = size_vec.front() - kCompressionSizeBump;
   for (EACH : range(size)) {
     loops.push_back(decompressor.next_segment());
   }

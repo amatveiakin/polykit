@@ -7,7 +7,7 @@
 #include "zip.h"
 
 
-constexpr int kForeweight = 1;
+constexpr int kForeweight = 0;
 
 static EpsilonExpr to_expression(const EpsilonPack& pack) {
   return std::visit(overloaded{

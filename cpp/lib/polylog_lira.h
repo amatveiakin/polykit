@@ -62,7 +62,8 @@ private:
 
 // Usage:
 //   Lira(w_1, ..., w_n)(r_1, ..., r_n)
-template<typename... Args> internal::LiraFixedWeights Lira (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira (Args... args) { return {0, {args...}}; }
+template<typename... Args> internal::LiraFixedWeights Lira0(Args... args) { return {0, {args...}}; }
 template<typename... Args> internal::LiraFixedWeights Lira1(Args... args) { return {1, {args...}}; }
 template<typename... Args> internal::LiraFixedWeights Lira2(Args... args) { return {2, {args...}}; }
 template<typename... Args> internal::LiraFixedWeights Lira3(Args... args) { return {3, {args...}}; }
@@ -74,7 +75,8 @@ template<typename... Args> internal::LiraFixedWeights Lira8(Args... args) { retu
 
 // Usage:
 //   CoLira(w_1, ..., w_n)(r_1, ..., r_n)
-template<typename... Args> internal::CoLiraFixedWeights CoLira (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira (Args... args) { return {0, {args...}}; }
+template<typename... Args> internal::CoLiraFixedWeights CoLira0(Args... args) { return {0, {args...}}; }
 template<typename... Args> internal::CoLiraFixedWeights CoLira1(Args... args) { return {1, {args...}}; }
 template<typename... Args> internal::CoLiraFixedWeights CoLira2(Args... args) { return {2, {args...}}; }
 template<typename... Args> internal::CoLiraFixedWeights CoLira3(Args... args) { return {3, {args...}}; }

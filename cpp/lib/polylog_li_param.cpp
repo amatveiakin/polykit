@@ -7,9 +7,12 @@
 #include "util.h"
 
 
+// Compressor doesn't support zeroes, hence kCompressionForeweightBump
+static constexpr int kCompressionForeweightBump = 2;
+
 LiParamCompressed li_param_to_key(const LiParam& param) {
   Compressor compressor;
-  compressor.add_segment({param.foreweight()});
+  compressor.add_segment({param.foreweight() + kCompressionForeweightBump});
   compressor.add_segment(param.weights());
   for (const auto& p : param.points()) {
     compressor.add_segment(p);
@@ -19,15 +22,16 @@ LiParamCompressed li_param_to_key(const LiParam& param) {
 
 LiParam key_to_li_param(const LiParamCompressed& key) {
   Decompressor decompressor(key);
-  std::vector<int> foreweight = decompressor.next_segment();
-  CHECK_EQ(foreweight.size(), 1);
+  std::vector<int> foreweight_vec = decompressor.next_segment();
+  CHECK_EQ(foreweight_vec.size(), 1);
+  const int foreweight = foreweight_vec.front() - kCompressionForeweightBump;
   std::vector<int> weights = decompressor.next_segment();
   std::vector<std::vector<int>> points;
   while (!decompressor.done()) {
     points.push_back(decompressor.next_segment());
   }
   CHECK(decompressor.done());
-  return LiParam(foreweight.front(), std::move(weights), std::move(points));
+  return LiParam(foreweight, std::move(weights), std::move(points));
 }
 
 std::string to_string(const LiParam& param) {

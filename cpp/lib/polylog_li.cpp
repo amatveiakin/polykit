@@ -1,8 +1,6 @@
 // Note: Cutting formulas are the same as in `iterated_integral`.
 // Difference: Epsilon instead of Delta, `..._3_point` implementation.
 
-// TODO: Check if foreweigth is off by one compared to Danya'a definitions.
-
 #include "polylog_li.h"
 
 #include "absl/types/span.h"
@@ -28,7 +26,7 @@ static constexpr inline bool is_one (int index) { return index == kOne; }
 
 std::vector<int> weights_to_dots(int foreweight, const std::vector<int>& weights) {
   std::vector<int> dots;
-  for (EACH : range(foreweight)) {
+  for (EACH : range(foreweight + 1)) {
     dots.push_back(kZero);
   }
   dots.push_back(kOne);
@@ -50,14 +48,14 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   CHECK_GE(dots.size(), 3) << dump_to_string(dots_orig);
   CHECK(is_var(dots.back())) << dump_to_string(dots_orig);
 
-  const int foreweight = absl::c_find_if_not(dots, is_zero) - dots.begin();
-  CHECK_GT(foreweight, 0) << dump_to_string(dots_orig);
+  const int first_nonzero = absl::c_find_if_not(dots, is_zero) - dots.begin();
+  CHECK_GT(first_nonzero, 0) << dump_to_string(dots_orig);
 
   int common_vars = 0;
-  if (is_var(dots[foreweight])) {
+  if (is_var(dots[first_nonzero])) {
     // Cancel common multipliers
-    common_vars = dots[foreweight];
-    dots[foreweight] = kOne;
+    common_vars = dots[first_nonzero];
+    dots[first_nonzero] = kOne;
     for (int i : range(2, dots.size())) {
       int& dot = dots[i];
       if (is_var(dot)) {
@@ -70,7 +68,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
   std::vector<std::vector<int>> points;
   int cur_weight = 0;
   int prev_vars = 0;
-  for (int i : range(foreweight + 1, dots.size())) {
+  for (int i : range(first_nonzero + 1, dots.size())) {
     const int dot = dots[i];
     CHECK(!is_one(dot)) << dump_to_string(dots_orig);
     if (is_var(dot)) {
@@ -85,6 +83,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
       ++cur_weight;
     }
   }
+  const int foreweight = first_nonzero - 1;
   return LiParam(foreweight, std::move(weights), std::move(points));
 }
 

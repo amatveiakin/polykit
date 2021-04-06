@@ -94,6 +94,7 @@ def QLiSymm6(*points): return QLiSymm(6, args_to_iterable(points))
 def QLiSymm7(*points): return QLiSymm(7, args_to_iterable(points))
 def QLiSymm8(*points): return QLiSymm(8, args_to_iterable(points))
 
+def Lira0(*weights): return lambda *ratios: Lira(0, args_to_iterable(weights), args_to_iterable(ratios))
 def Lira1(*weights): return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))
 def Lira2(*weights): return lambda *ratios: Lira(2, args_to_iterable(weights), args_to_iterable(ratios))
 def Lira3(*weights): return lambda *ratios: Lira(3, args_to_iterable(weights), args_to_iterable(ratios))

@@ -53,7 +53,7 @@ TEST(CocoequationsTest, QLi6_Arg8_Sum_Comult_2_2_2) {
 #endif
 
 TEST(CocoequationsTest, Lira4_Comult_2_2_2) {
-  const auto expr = theta_expr_to_delta_expr(Lira4(2,1)(CR(1,2,3,4), CR(1,4,5,2)));
+  const auto expr = theta_expr_to_delta_expr(Lira3(2,1)(CR(1,2,3,4), CR(1,4,5,2)));
   EXPECT_EXPR_ZERO(comultiply(expr, {2,2,2}));
 }
 

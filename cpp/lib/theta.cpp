@@ -3,7 +3,6 @@
 #include "algebra.h"
 
 
-
 ThetaExpr TRatio(const CompoundRatio& ratio) {
   ThetaExpr ret;
   for (const std::vector<int>& l : ratio.loops()) {
@@ -123,12 +122,13 @@ DeltaExpr theta_expr_to_delta_expr(const ThetaExpr& expr) {
 ThetaExpr update_foreweight(
     const ThetaExpr& expr,
     int new_foreweight) {
+  static constexpr int kStartingForeweight = 0;
   return expr.without_annotations().mapped<ThetaExpr>([&](const ThetaPack& term) -> ThetaPack {
     if (is_unity(term)) {
       return term;
     } else if (std::holds_alternative<LiraParam>(term)) {
       const LiraParam& param = std::get<LiraParam>(term);
-      CHECK_EQ(param.foreweight(), 1);
+      CHECK_EQ(param.foreweight(), kStartingForeweight);
       return LiraParam(new_foreweight, param.weights(), param.ratios());
     } else {
       FATAL("Expected a unity or a formal symbol, got " + to_string(term));

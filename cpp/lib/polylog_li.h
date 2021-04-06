@@ -1,13 +1,15 @@
 // Traditional polylogarithm defined as an iterated integral of cumulative products:
 //
-//     1_Li_1...1 (x1, ..., xn) = I(0, 1, x1, x1*x2, ..., x1*...*xn)
+//     0_Li_1...1 (x1, ..., xn) = I(0, 1, x1, x1*x2, ..., x1*...*xn)
 //     ^    ^^^^^  ^^^^^^^^^^^
 //     |   weights    points
 // foreweight
 //
 // The number of weights must be equal to the number of points. Increasing weight k
 // by n means adding n zeros before xk. Increasing foreweight by n means adding n zeros
-// in the beginning.
+// in the beginning. Foreweight must be greater than or equal to zero.
+//   TODO: Support (foreweight == -1) for "no zeros in the beginning".
+// Each weight must be greater than or equal to one.
 //
 // This file also contains a function called CoLi, which is a specific form of Li
 // comultiplication. It combines symbols and formal symbols and is used as part of a
@@ -16,7 +18,7 @@
 // The functions come in two forms (examples use Li, but the same is true for CoLi):
 //   * Simple form: `Li(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})`
 //     where w_i are weights and each argument is itself a product of x_i. E.g.:
-//     `Li(1,3)({1},{2,3})` == 1_Li_1_3(x1, x2*x3) == I(0, 1, x1, 0, 0, x1*x2*x3)
+//     `Li(1,3)({1},{2,3})` == 0_Li_1_3(x1, x2*x3) == I(0, 1, x1, 0, 0, x1*x2*x3)
 //     Use `LiN` instead of `Li` for foreweight equal to N.
 //   * Vector form: `LiVec(foreweight, vector_of_weights, vector_of_arguments)`
 
@@ -71,7 +73,8 @@ private:
 
 // Usage:
 //   Li(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})
-template<typename... Args> internal::LiFixedWeights Li (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li (Args... args) { return {0, {args...}}; }
+template<typename... Args> internal::LiFixedWeights Li0(Args... args) { return {0, {args...}}; }
 template<typename... Args> internal::LiFixedWeights Li1(Args... args) { return {1, {args...}}; }
 template<typename... Args> internal::LiFixedWeights Li2(Args... args) { return {2, {args...}}; }
 template<typename... Args> internal::LiFixedWeights Li3(Args... args) { return {3, {args...}}; }
@@ -83,7 +86,8 @@ template<typename... Args> internal::LiFixedWeights Li8(Args... args) { return {
 
 // Usage:
 //   CoLi(w_1, ..., w_n)({p_1_1, ..., p_1_k}, ..., {p_n_1, ..., p_n_l})
-template<typename... Args> internal::CoLiFixedWeights CoLi (Args... args) { return {1, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi (Args... args) { return {0, {args...}}; }
+template<typename... Args> internal::CoLiFixedWeights CoLi0(Args... args) { return {0, {args...}}; }
 template<typename... Args> internal::CoLiFixedWeights CoLi1(Args... args) { return {1, {args...}}; }
 template<typename... Args> internal::CoLiFixedWeights CoLi2(Args... args) { return {2, {args...}}; }
 template<typename... Args> internal::CoLiFixedWeights CoLi3(Args... args) { return {3, {args...}}; }

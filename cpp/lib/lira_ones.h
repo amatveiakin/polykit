@@ -19,7 +19,7 @@ public:
   const std::vector<CrossRatioNOrUnity>& ratios() const { return ratios_; }
 
   int depth() const { return ratios().size(); }
-  int total_weight() const { return ratios_.size() * 2 - 1; }
+  int total_weight() const { return ratios_.size() * 2; }
   int sign() const { return neg_one_pow(depth()); }
 
   bool operator==(const LiraParamOnes& other) const { return ratios_ == other.ratios_; }

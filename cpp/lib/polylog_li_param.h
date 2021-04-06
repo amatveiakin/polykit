@@ -16,7 +16,7 @@ public:
       : foreweight_(foreweight), weights_(std::move(weights)), points_(std::move(points)) {
     CHECK_EQ(weights_.size(), points_.size());
     CHECK_GT(weights_.size(), 0);
-    CHECK_GE(foreweight_, 1);
+    CHECK_GE(foreweight_, 0);
     CHECK(absl::c_all_of(weights_, [](int w) { return w >= 1; }));
     for (auto& p : points_) {
       absl::c_sort(p);
@@ -28,7 +28,7 @@ public:
   const std::vector<std::vector<int>>& points() const { return points_; }
 
   int depth() const { return points().size(); }
-  int total_weight() const { return foreweight_ + sum(weights_) - 1; }
+  int total_weight() const { return foreweight_ + sum(weights_); }
   int sign() const { return neg_one_pow(depth()); }
 
   auto as_tie() const { return std::tie(weights_, points_); }

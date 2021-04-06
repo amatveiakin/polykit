@@ -21,7 +21,7 @@ from polykit import QLi, QLi1, QLi2, QLi3, QLi4, QLi5, QLi6, QLi7, QLi8
 from polykit import QLiNeg, QLiNeg1, QLiNeg2, QLiNeg3, QLiNeg4, QLiNeg5, QLiNeg6, QLiNeg7, QLiNeg8
 from polykit import QLiSymm, QLiSymm1, QLiSymm2, QLiSymm3, QLiSymm4, QLiSymm5, QLiSymm6, QLiSymm7, QLiSymm8
 from polykit import QLiPr
-from polykit import Lira, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
+from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
 from polykit import loops_matrix
 
@@ -317,11 +317,11 @@ describe(matrix_builder)
 # #     matrix_builder.add_expr(expr)
 # describe(matrix_builder)  # 72
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 86
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 92
 # # matrix_builder.add_expr(prepare(QLi6(1,2,1,3,1,4,5,2)))
@@ -336,15 +336,15 @@ describe(matrix_builder)
 #     matrix_builder.add_expr(expr)
 # describe(matrix_builder)  # 42
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 86
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 92
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira5(1,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
+#     expr = Lira4(1,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 92
 
@@ -352,19 +352,19 @@ describe(matrix_builder)
 # def prepare(expr):
 #     return to_lyndon_basis(project_on_x5(expr))
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 62
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira4(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
+#     expr = Lira3(2,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 74
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira5(1,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
+#     expr = Lira4(1,1)(CR(substitute([1,2,3,4], args)), CR(substitute([1,4,5,2], args)))
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 74
 # for args in itertools.permutations([1,2,3,4,5]):
-#     expr = Lira5(1,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
+#     expr = Lira4(1,1)(CR(substitute([1,2,3,4], args)), CompoundRatio())
 #     matrix_builder.add_expr(prepare(expr))
 # describe(matrix_builder)  # 82
 

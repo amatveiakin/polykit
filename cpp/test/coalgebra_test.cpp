@@ -114,8 +114,8 @@ TEST(CoalgebraUtilTest, FilterCoExpr) {
       }
     ),
     (
-      - coproduct(EFormalSymbolPositive(LiParam(1, {5}, {{1,2}})), EVar(1))
-      + coproduct(EFormalSymbolPositive(LiParam(1, {5}, {{1,2}})), EComplementIndexList({1}))
+      - coproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EVar(1))
+      + coproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EComplementIndexList({1}))
     )
   );
 }

@@ -5,27 +5,28 @@
 #include "sequence_iteration.h"
 #include "util.h"
 
+constexpr int kStartingForeweight = 0;
 
 static LiraParam concat_format_symbols(const LiraParam& lhs, const LiraParam& rhs) {
-  CHECK_EQ(lhs.foreweight(), 1) << to_string(lhs);
-  CHECK_EQ(rhs.foreweight(), 1) << to_string(rhs);
+  CHECK_EQ(lhs.foreweight(), kStartingForeweight) << to_string(lhs);
+  CHECK_EQ(rhs.foreweight(), kStartingForeweight) << to_string(rhs);
   return LiraParam(
-    1,
+    kStartingForeweight,
     concat(lhs.weights(), rhs.weights()),
     concat(lhs.ratios(), rhs.ratios())
   );
 }
 
 static LiraParam infuse_format_symbol(const LiraParam& lhs, const LiraParam& rhs) {
-  CHECK_EQ(lhs.foreweight(), 1) << to_string(lhs);
-  CHECK_EQ(rhs.foreweight(), 1) << to_string(rhs);
+  CHECK_EQ(lhs.foreweight(), kStartingForeweight) << to_string(lhs);
+  CHECK_EQ(rhs.foreweight(), kStartingForeweight) << to_string(rhs);
   CHECK_EQ(lhs.depth(), 1) << to_string(lhs);
   CHECK_GE(rhs.depth(), 1) << to_string(rhs);
   std::vector<int> weights = rhs.weights();
   std::vector<CompoundRatio> ratios = rhs.ratios();
   weights.front() += lhs.weights().front();
   ratios.front() *= lhs.ratios().front();
-  return LiraParam(1, std::move(weights), std::move(ratios));
+  return LiraParam(kStartingForeweight, std::move(weights), std::move(ratios));
 }
 
 
@@ -39,14 +40,14 @@ ThetaExpr LiQuadImpl(const std::vector<int>& points, bool sigma) {
   const int sigma_sign = sigma ? -1 : 1;
   if (n == 4) {
     return sigma_sign *
-      TFormalSymbol(LiraParam(1, {1}, {ratio_from_points(points)}));
+      TFormalSymbol(LiraParam(kStartingForeweight, {1}, {ratio_from_points(points)}));
   }
   ThetaExpr ret;
   int last = n - 1;
   for (int a = 1; a < n; a += 2) {
     for (int b = a+1; b < n; b += 2) {
       const std::vector indices = {0, a, b, last};
-      const LiraParam lower_part(1, {1},
+      const LiraParam lower_part(kStartingForeweight, {1},
         {ratio_from_points(choose_indices(points, {0, a, b, last}))});
       std::vector<ThetaExpr> upper_parts;
       if (a != 1) {
