@@ -38,11 +38,6 @@
 #include "lib/zip.h"
 
 
-LoopExpr normalize_loops_expr(const LoopExpr& expr) {
-  return arg9_semi_lyndon(fully_normalize_loops(expr));
-}
-
-
 int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -52,17 +47,55 @@ int main(int argc, char *argv[]) {
     .set_encoder(Encoder::unicode)
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
-    // .set_expression_line_limit(10)
+    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     .set_annotation_sorting(AnnotationSorting::length)
   );
 
 
-  auto liquad_expr = LiQuad(3, {1,2,3,4,5,6,7,8});
-  std::cout << "LiQuad formal " << liquad_expr;
-  auto lira_expr = theta_expr_to_lira_expr_without_products(liquad_expr);
-  std::cout << lira_expr;
-  auto delta_expr = lira_expr_comultiply(lira_expr);
-  std::cout << delta_expr;
-  std::cout << "Lira weight = " << lira_expr.element().first.total_weight() << "\n";
-  std::cout << "Delta weight = " << delta_expr.weight() << "\n";
+  const int w = 2;
+  auto lhs =
+    - corr_comultiply(CorrQLi   (4, {1,2,3,4,5,6}), {1,3})
+  ;
+  auto rhs =
+    + corr_coproduct(CorrQLiNeg(1, {2,3}), CorrQLi(3, {1,2,3,4,5,6}))
+    + corr_coproduct(CorrQLiNeg(1, {2,3,4,5}), CorrQLi(3, {1,2,5,6}))
+    + corr_coproduct(CorrQLiNeg(1, {4,5}), CorrQLi(3, {1,2,3,4,5,6}))
+    + corr_coproduct(CorrQLiNeg(3, {2,3,4,5}), CorrQLi(1, {1,2,5,6}))
+    + corr_coproduct(CorrQLi   (1, {1,2}), CorrQLi(3, {1,2,3,4,5,6}))
+    + corr_coproduct(CorrQLi   (1, {1,2,3,4}), CorrQLi(3, {1,4,5,6}))
+    + corr_coproduct(CorrQLi   (1, {3,4}), CorrQLi(3, {1,2,3,4,5,6}))
+    + corr_coproduct(CorrQLi   (1, {3,4,5,6}), CorrQLi(3, {1,2,3,6}))
+    + corr_coproduct(CorrQLi   (1, {5,6}), CorrQLi(3, {1,2,3,4,5,6}))
+    + corr_coproduct(CorrQLi   (3, {1,2,3,4}), CorrQLi(1, {1,4,5,6}))
+    + corr_coproduct(CorrQLi   (3, {3,4,5,6}), CorrQLi(1, {1,2,3,6}))
+    + corr_coproduct(CorrQLi   (3, {1,2,3,4,5,6}), CorrQLi(1, {1,6}))
+  ;
+  CHECK(lhs == rhs);
+  std::cout << "\n\n";
+  std::cout << lhs.annotations();
+  std::cout << "=\n";
+  std::cout << rhs.annotations();
+  std::cout << "=\n";
+  std::cout << lhs.main();
+
+  std::cout << "\n\n";
+  for (const auto& expr : {
+    + corr_coproduct(CorrQLiNeg(1, {2,3}), CorrQLi(3, {1,2,3,4,5,6})),
+    + corr_coproduct(CorrQLiNeg(1, {2,3,4,5}), CorrQLi(3, {1,2,5,6})),
+    + corr_coproduct(CorrQLiNeg(1, {4,5}), CorrQLi(3, {1,2,3,4,5,6})),
+    + corr_coproduct(CorrQLiNeg(3, {2,3,4,5}), CorrQLi(1, {1,2,5,6})),
+    + corr_coproduct(CorrQLi   (1, {1,2}), CorrQLi(3, {1,2,3,4,5,6})),
+    + corr_coproduct(CorrQLi   (1, {1,2,3,4}), CorrQLi(3, {1,4,5,6})),
+    + corr_coproduct(CorrQLi   (1, {3,4}), CorrQLi(3, {1,2,3,4,5,6})),
+    + corr_coproduct(CorrQLi   (1, {3,4,5,6}), CorrQLi(3, {1,2,3,6})),
+    + corr_coproduct(CorrQLi   (1, {5,6}), CorrQLi(3, {1,2,3,4,5,6})),
+    + corr_coproduct(CorrQLi   (3, {1,2,3,4}), CorrQLi(1, {1,4,5,6})),
+    + corr_coproduct(CorrQLi   (3, {3,4,5,6}), CorrQLi(1, {1,2,3,6})),
+    + corr_coproduct(CorrQLi   (3, {1,2,3,4,5,6}), CorrQLi(1, {1,6})),
+  }) {
+    std::cout << "(\n";
+    std::cout << expr.main();
+    std::cout << ")\n";
+    std::cout << "+\n";
+  }
 }
