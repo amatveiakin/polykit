@@ -210,7 +210,8 @@ public:
   }
 
   bool is_zero() const { return data_.empty(); }
-  int size() const { return data_.size(); }
+  int num_terms() const { return data_.size(); }
+  int l0_norm() const { return num_terms(); }
   int l1_norm() const {
     int ret = 0;
     foreach_key([&](const auto&, int coeff) { ret += std::abs(coeff); });
@@ -537,7 +538,8 @@ public:
 
   bool is_zero() const { return main_.is_zero(); }
   bool is_blank() const { return main_.is_zero() && annotations_.empty(); }
-  int size() const { return main_.size(); }  // TODO: Rename to num_terms (here and in BasicLinear)?
+  int num_terms() const { return main_.num_terms(); }
+  int l0_norm() const { return main_.l0_norm(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
 
@@ -765,8 +767,8 @@ std::ostream& to_ostream(
     const ContextT& context) {
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.is_zero()) {
-    const int size = linear.size();
-    os << "# " << size << " " << en_plural(size, "term");
+    const int num_terms = linear.num_terms();
+    os << "# " << num_terms << " " << en_plural(num_terms, "term");
     os << ", |coeff| = " << linear.l1_norm();
     if (line_limit > 0) {
       os << ":" << fmt::newline();

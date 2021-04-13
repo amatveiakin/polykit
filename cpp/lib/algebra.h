@@ -80,14 +80,14 @@ static std::string short_linear_description(const LinearT& expr) {
   const auto& annotations = expr.annotations();
   if (annotations.empty() || annotations.has_errors()) {
     return "<?>";
-  } else if (annotations.expression.size() == 1) {
+  } else if (annotations.expression.num_terms() == 1) {
     ScopedFormatting sf(FormattingConfig().set_compact_expression(true));
     std::stringstream ss;
     ss << annotations.expression;
     return trimed(ss.str());
   } else {
-    return absl::StrCat("<", annotations.expression.size(), " ",
-        en_plural(annotations.expression.size(), "term"), ">");
+    return absl::StrCat("<", annotations.expression.num_terms(), " ",
+        en_plural(annotations.expression.num_terms(), "term"), ">");
   }
 }
 

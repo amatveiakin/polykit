@@ -226,7 +226,7 @@ LoopExpr loop_expr_cycle(
 }
 
 static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
-  CHECK(group.size() == 3) << group;
+  CHECK(group.num_terms() == 3) << group;
   const int coeff = group.element().second;
   absl::flat_hash_map<std::vector<int>, std::vector<int>> loop_positions;
   group.foreach([&](const Loops& loops, int term_coeff) {
@@ -270,11 +270,11 @@ static LoopExpr arg11_shuffle_cluster(const LoopExpr& expr) {
   });
   LoopExpr ret;
   for (const auto& [_, group] : loops_groups) {
-    if (group.size() == 1 || group.size() == 2 || group.size() == 4) {
+    if (group.num_terms() == 1 || group.num_terms() == 2 || group.num_terms() == 4) {
       ret += group;
       continue;
     }
-    if (group.size() == 6) {
+    if (group.num_terms() == 6) {
       std::vector<std::pair<Loops, int>> group_elements;
       group.foreach([&](const Loops& loops, int coeff) {
         group_elements.push_back({loops, coeff});

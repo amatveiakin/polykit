@@ -15,9 +15,9 @@ inline ProjectionExpr Pr(std::initializer_list<int> data) {
 
 TEST(QLiTest, QLi4_Arg6) {
   auto expr = QLi4(1,2,3,4,5,6);
-  EXPECT_EQ(expr.size(), 2560);
+  EXPECT_EQ(expr.num_terms(), 2560);
   auto lyndon = to_lyndon_basis(expr);
-  EXPECT_EQ(lyndon.size(), 1272);
+  EXPECT_EQ(lyndon.num_terms(), 1272);
   auto lyndon_then_project = project_on_x1(lyndon);
   auto project_then_lyndon = to_lyndon_basis(project_on_x1(expr));
   EXPECT_EXPR_EQ(lyndon_then_project, project_then_lyndon);
