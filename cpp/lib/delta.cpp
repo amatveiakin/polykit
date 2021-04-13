@@ -18,11 +18,11 @@ static int num_distinct_variables(const std::vector<Delta>& term) {
 }
 
 
-DeltaExpr substitute_variables(const DeltaExpr& expr, XArgs new_points_span) {
+DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {
   constexpr int kMaxChar = std::numeric_limits<unsigned char>::max();
   constexpr int kNoReplacement = kMaxChar;
   constexpr int kNil = kMaxChar - 1;
-  const auto new_points = new_points_span.as_x();
+  const auto& new_points = new_points_arg.as_x();
   std::array<unsigned char, kMaxChar> replacements;
   replacements.fill(kNoReplacement);
   const int num_src_vars = new_points.size();

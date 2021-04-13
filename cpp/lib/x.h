@@ -49,7 +49,6 @@ inline std::string to_string(const X& x) {
 }
 
 
-// TODO: Pass this by const reference everywhere.
 class XArgs {
 public:
   XArgs(absl::Span<const X> points) : data_(to_vector(points)) {}
