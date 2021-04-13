@@ -177,7 +177,7 @@ public:
   const std::vector<std::vector<int>>& loops() const { return loops_; };
 
   static std::optional<CompoundRatio> one_minus(const CompoundRatio& ratio);
-  // static CompoundRatio inverse(const CompoundRatio& ratio);  // TODO: add `inverse` (+ pybind)
+  static CompoundRatio inverse(const CompoundRatio& ratio);
 
   bool operator==(const CompoundRatio& other) const { return loops_ == other.loops_; }
   bool operator!=(const CompoundRatio& other) const { return loops_ != other.loops_; }

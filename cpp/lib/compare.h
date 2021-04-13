@@ -19,12 +19,11 @@ auto lexicographical(const F& comp) {
   };
 }
 
-// TODO: Finish
-// template<typename Object, typename Projected>
-// auto projected(Projected (*projector)(const Object&)) {
-//   return [=](const Object& lhs, const Object& rhs) {
-//     return projector(lhs) < projector(rhs);
-//   };
-// }
+template<typename Projector>
+auto projected(const Projector& projector) {
+  return [=](const auto& a, const auto& b) -> bool {
+    return projector(a) < projector(b);
+  };
+}
 
 }  // namespace cmp

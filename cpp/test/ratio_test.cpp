@@ -40,4 +40,12 @@ TEST(CompoundRatioTest, ThreeCommonVariables) {
 
 TEST(CompoundRatioTest, Inverse) {
   EXPECT_TRUE((CR(1,2,3,4) * CR(2,3,4,1)).is_unity());
+  {
+    const CompoundRatio r = CR(1,2,3,4) * CR(5,6,7,8);
+    EXPECT_TRUE((r * CompoundRatio::inverse(r)).is_unity());
+  }
+  {
+    const CompoundRatio r = CR(1,2,3,4) * CR(1,4,5,2) * CR(3,4,5,6);
+    EXPECT_TRUE((r * CompoundRatio::inverse(r)).is_unity());
+  }
 }

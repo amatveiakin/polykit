@@ -58,7 +58,6 @@ void py_register_linear(const pybind11::module_& module, const char* name) {
     .def("add_to", &LinearT::add_to)
     .def("element", &LinearT::element)
     .def("pop", &LinearT::pop)
-    // TODO: Expose iterable interface instead
     .def("foreach", [](const LinearT& self, const std::function<void(ObjectT, int)>& func) {
       self.foreach(func);
     })
@@ -94,7 +93,6 @@ void py_register_linear(const pybind11::module_& module, const char* name) {
     .def(py::self != py::self)
     .def("__str__", [](const LinearT& expr) {
       // Python `print` adds a trailing newline automatically.
-      // TODO: Debug why `set_new_line_after_expression` has no effect.
       ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
       std::stringstream ss;
       ss << expr;

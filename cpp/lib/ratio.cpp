@@ -92,7 +92,6 @@ static void cancel_fraction(std::multiset<Delta>& a, std::multiset<Delta>& b) {
       ++a_it;
     }
   }
-
 }
 
 // Optimization potential: store CompoundRatio as numerator+denominator, convert
@@ -113,7 +112,6 @@ void CompoundRatio::normalize() {
 
   // Simplify fraction
   cancel_fraction(numerator, denominator);
-  cancel_fraction(denominator, numerator);  // TODO: Check if the other direction is needed
 
   // Convert back to loops
   CHECK_EQ(numerator.size(), denominator.size());
@@ -159,6 +157,12 @@ std::optional<CompoundRatio> CompoundRatio::one_minus(const CompoundRatio& ratio
     }
   }
   return std::nullopt;
+}
+
+CompoundRatio CompoundRatio::inverse(const CompoundRatio& ratio) {
+  return CompoundRatio::from_loops(mapped(ratio.loops_, [](const auto& l) {
+    return rotated_vector(l, 1);
+  }));
 }
 
 // Compressor doesn't support zeroes, hence kCompressionSizeBump

@@ -12,7 +12,7 @@ static ParserRegex whitespace_re(R"(\s+)");
 static ParserRegex integer_re(R"([0-9]+)");
 
 
-// TODO: Support Unicode (e..g Unioncode minus and tensor signs); maybe you these:
+// TODO: Support Unicode (e.g. Unioncode minus and tensor signs); maybe you these:
 //   static std::wstring utf8_to_wstring(const std::string& s) { return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(s); }
 //   static std::string wstring_to_utf8(const std::wstring& s) { return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(s); }
 
