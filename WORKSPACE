@@ -15,6 +15,14 @@ http_archive(
 )
 
 http_archive(
+  name = "eigen",
+  urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3/eigen-3.3.zip"],
+  strip_prefix = "eigen-3.3",
+  sha256 = "06f41901d54e67052a8722a6a3cbb3cdca21839a2a391a1c842e90a9f1abb9c5",
+  build_file = "eigen.BUILD",
+)
+
+http_archive(
   name = "googletest",
   urls = ["https://github.com/google/googletest/archive/703bd9caab50b139428cea1aaff9974ebee5742e.zip"],
   strip_prefix = "googletest-703bd9caab50b139428cea1aaff9974ebee5742e",

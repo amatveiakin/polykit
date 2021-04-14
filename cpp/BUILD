@@ -152,5 +152,6 @@ cc_binary(
         ":polylog",
         "@absl//absl/debugging:failure_signal_handler",
         "@absl//absl/debugging:symbolize",
+        "@eigen//:eigen",
     ]
 )
