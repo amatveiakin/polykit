@@ -33,8 +33,12 @@ pybind_extension(
 py_library(
     name = "polykit_util",
     srcs = [
+        "profiler.py",
         "util.py",
     ],
+    deps = [
+        requirement("psutil"),
+    ]
 )
 
 py_library(

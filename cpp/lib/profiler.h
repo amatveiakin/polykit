@@ -5,7 +5,7 @@
 #include <string>
 
 
-// TODO: Rename to `Timer`.
+// TODO: Add user time and system time.
 class Profiler {
 public:
   Profiler() {
