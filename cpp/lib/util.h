@@ -341,7 +341,7 @@ bool all_equal(const Container& c) {
 
 template<typename Container>
 auto sum(const Container& c) {
-  return absl::c_accumulate(c, 0);
+  return absl::c_accumulate(c, typename Container::value_type());
 }
 
 // Optimization potential: O(N*log(N)) sort for large N.
