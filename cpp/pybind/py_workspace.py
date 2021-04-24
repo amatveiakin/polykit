@@ -9,7 +9,7 @@ from profiler import Profiler
 from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
-from polykit import to_lyndon_basis
+from polykit import tensor_product, to_lyndon_basis
 from polykit import coproduct, comultiply
 from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
 from polykit import ProjectionExpr, project_on, involute, involute_projected

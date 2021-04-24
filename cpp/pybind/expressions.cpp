@@ -46,6 +46,7 @@ void pybind_delta(py::module_& m) {
   py_register_linear<DeltaExpr>(m, "DeltaExpr");
   py_register_linear<DeltaCoExpr>(m, "DeltaCoExpr");
 
+  m.def("tensor_product_vec", [](const std::vector<DeltaExpr>& expressions) { return tensor_product(absl::MakeConstSpan(expressions)); });
   m.def("to_lyndon_basis", &to_lyndon_basis<DeltaExpr>, kLyndonDescription);
   m.def("coproduct_vec", &coproduct_vec<DeltaExpr>);
   m.def("comultiply", &comultiply<DeltaExpr>);
@@ -64,6 +65,7 @@ void pybind_delta(py::module_& m) {
 void pybind_projection(py::module_& m) {
   py_register_linear<ProjectionExpr>(m, "ProjectionExpr");
 
+  m.def("tensor_product_vec", [](const std::vector<ProjectionExpr>& expressions) { return tensor_product(absl::MakeConstSpan(expressions)); });
   m.def("to_lyndon_basis", &to_lyndon_basis<ProjectionExpr>, kLyndonDescription);
 
   m.def("project_on", &project_on, "Projects a DeltaExpr onto an axis");
