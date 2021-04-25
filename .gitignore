@@ -1,0 +1,16 @@
+# VS Code
+.vscode/
+
+# MSVC
+Asan/
+Release/
+Debug/
+*.vcxproj.*
+.vs/
+
+# bazel
+bazel-*/
+
+# Binaries
+__pycache__/
+*.exe

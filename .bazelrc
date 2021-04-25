@@ -1,0 +1,5 @@
+build:msvc --cxxopt="/std:c++17"
+build:msvc --copt /wd4267  # "conversion from 'size_t' to 'type', possible loss of data"
+
+build:clang --repo_env=CC=clang
+build:clang --cxxopt="-std=c++17"
