@@ -39,8 +39,10 @@ cc_library(
         "lib/compression.cpp",
         "lib/file_util.cpp",
         "lib/format_basic.cpp",
+        "lib/packed.cpp",
         "lib/parse.cpp",
         "lib/sequence_iteration.cpp",
+        "lib/string.cpp",
     ],
     deps = [
         "@absl//absl/algorithm:container",

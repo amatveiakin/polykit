@@ -45,14 +45,9 @@ inline std::string pad_left(std::string str, int length, char padding = ' ') {
 }
 
 
-inline std::string en_plural(
+std::string to_string_with_thousand_sep(int64_t value);
+
+std::string en_plural(
     int number,
     const std::string& singular,
-    const std::string& plural = {}) {
-  number = std::abs(number);
-  const bool use_plural = number % 100 == 11 || number % 10 != 1;
-  return use_plural
-      ? (plural.empty() ? singular + "s" : plural)
-      : singular;
-}
-
+    const std::string& plural = {});

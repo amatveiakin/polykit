@@ -51,51 +51,8 @@ int main(int argc, char *argv[]) {
     .set_annotation_sorting(AnnotationSorting::length)
   );
 
-
-  const int w = 2;
-  auto lhs =
-    - corr_comultiply(CorrQLi   (4, {1,2,3,4,5,6}), {1,3})
-  ;
-  auto rhs =
-    + corr_coproduct(CorrQLiNeg(1, {2,3}), CorrQLi(3, {1,2,3,4,5,6}))
-    + corr_coproduct(CorrQLiNeg(1, {2,3,4,5}), CorrQLi(3, {1,2,5,6}))
-    + corr_coproduct(CorrQLiNeg(1, {4,5}), CorrQLi(3, {1,2,3,4,5,6}))
-    + corr_coproduct(CorrQLiNeg(3, {2,3,4,5}), CorrQLi(1, {1,2,5,6}))
-    + corr_coproduct(CorrQLi   (1, {1,2}), CorrQLi(3, {1,2,3,4,5,6}))
-    + corr_coproduct(CorrQLi   (1, {1,2,3,4}), CorrQLi(3, {1,4,5,6}))
-    + corr_coproduct(CorrQLi   (1, {3,4}), CorrQLi(3, {1,2,3,4,5,6}))
-    + corr_coproduct(CorrQLi   (1, {3,4,5,6}), CorrQLi(3, {1,2,3,6}))
-    + corr_coproduct(CorrQLi   (1, {5,6}), CorrQLi(3, {1,2,3,4,5,6}))
-    + corr_coproduct(CorrQLi   (3, {1,2,3,4}), CorrQLi(1, {1,4,5,6}))
-    + corr_coproduct(CorrQLi   (3, {3,4,5,6}), CorrQLi(1, {1,2,3,6}))
-    + corr_coproduct(CorrQLi   (3, {1,2,3,4,5,6}), CorrQLi(1, {1,6}))
-  ;
-  CHECK(lhs == rhs);
-  std::cout << "\n\n";
-  std::cout << lhs.annotations();
-  std::cout << "=\n";
-  std::cout << rhs.annotations();
-  std::cout << "=\n";
-  std::cout << lhs.main();
-
-  std::cout << "\n\n";
-  for (const auto& expr : {
-    + corr_coproduct(CorrQLiNeg(1, {2,3}), CorrQLi(3, {1,2,3,4,5,6})),
-    + corr_coproduct(CorrQLiNeg(1, {2,3,4,5}), CorrQLi(3, {1,2,5,6})),
-    + corr_coproduct(CorrQLiNeg(1, {4,5}), CorrQLi(3, {1,2,3,4,5,6})),
-    + corr_coproduct(CorrQLiNeg(3, {2,3,4,5}), CorrQLi(1, {1,2,5,6})),
-    + corr_coproduct(CorrQLi   (1, {1,2}), CorrQLi(3, {1,2,3,4,5,6})),
-    + corr_coproduct(CorrQLi   (1, {1,2,3,4}), CorrQLi(3, {1,4,5,6})),
-    + corr_coproduct(CorrQLi   (1, {3,4}), CorrQLi(3, {1,2,3,4,5,6})),
-    + corr_coproduct(CorrQLi   (1, {3,4,5,6}), CorrQLi(3, {1,2,3,6})),
-    + corr_coproduct(CorrQLi   (1, {5,6}), CorrQLi(3, {1,2,3,4,5,6})),
-    + corr_coproduct(CorrQLi   (3, {1,2,3,4}), CorrQLi(1, {1,4,5,6})),
-    + corr_coproduct(CorrQLi   (3, {3,4,5,6}), CorrQLi(1, {1,2,3,6})),
-    + corr_coproduct(CorrQLi   (3, {1,2,3,4,5,6}), CorrQLi(1, {1,6})),
-  }) {
-    std::cout << "(\n";
-    std::cout << expr.main();
-    std::cout << ")\n";
-    std::cout << "+\n";
-  }
+  auto expr = QLi8(1,2,3,4);
+  auto coexpr = comultiply(expr, {2,2,2,2});
+  std::cout << "Checksum = " << expr.l1_norm() << "\n";
+  std::cout << pvector_stats << "\n";
 }

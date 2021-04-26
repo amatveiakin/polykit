@@ -15,8 +15,10 @@
 #include <climits>
 #include <cstddef>
 #include <limits>
+#include <typeindex>
 
 #include "absl/algorithm/container.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 
@@ -219,18 +221,55 @@ private:
 };
 
 
+struct PVectorStats {
+  using Key = std::pair<std::type_index, int>;  // (type, inlined size)
+  struct Value {
+    int64_t num_inlined = 0;
+    int64_t num_heap = 0;
+  };
+  absl::flat_hash_map<Key, Value> data;
+};
+
+extern PVectorStats pvector_stats;
+
+std::ostream& operator<<(std::ostream& os, const PVectorStats& stats);
+
 // TODO: Private inheritance + re-export methods manually to make sure interfaces are the same.
-// Optimization potential: add a togglable PVector stats collector to know how many
-//   heap representations were used; destructor is probably the right place, since
-//   PVectors very rarely shrink.
-//   Stretch goal: add PVector tags to distinguish between different expression types.
 template<typename T, int N>
 class PVector : public internal::pvector_base_type<T, N> {
 private:
+  static constexpr bool kCanInline = internal::should_use_inlined_vector<T, N>::value;
+  static constexpr size_t kInlineSize = internal::inlined_vector_size<T, N>::value;  // meaningful only if kCanInline is true
   using ParentT = internal::pvector_base_type<T, N>;
+
 public:
   static constexpr int inlined_size = N;
   using ParentT::ParentT;
+
+  bool is_inlined() const {
+    if constexpr (kCanInline) {
+      return
+        reinterpret_cast<const char*>(this) <= reinterpret_cast<const char*>(this->data()) &&
+        reinterpret_cast<const char*>(this->data()) < reinterpret_cast<const char*>(this) + sizeof(PVector)
+      ;
+    } else {
+      return false;
+    }
+  }
+  ~PVector() {
+#ifdef PVECTOR_STATS
+    // Idea: add PVector tags to distinguish between different expression types.
+    auto& value = pvector_stats.data[{typeid(T), kInlineSize}];
+    if constexpr (!kCanInline) {
+      value.num_inlined = -1;
+    }
+    if (is_inlined()) {
+      ++value.num_inlined;
+    } else {
+      ++value.num_heap;
+    }
+#endif
+  }
 };
 
 template<typename, typename = void> struct is_pvector : std::false_type {};

@@ -324,6 +324,17 @@ auto to_vector(const Container& c) {
   return std::vector<typename Container::value_type>(c.begin(), c.end());
 }
 
+// Specializations for map types remove `const` from key
+// TODO: Consider auto detection (https://stackoverflow.com/a/35293958/3092679) here and in dump_to_string.
+template<typename Key, typename T, typename Compare>
+auto to_vector(const std::map<Key, T, Compare>& c) {
+  return std::vector<typename std::pair<Key, T>>(c.begin(), c.end());
+}
+template<typename Key, typename T, typename Hash, typename Eq>
+auto to_vector(const absl::flat_hash_map<Key, T, Hash, Eq>& c) {
+  return std::vector<typename std::pair<Key, T>>(c.begin(), c.end());
+}
+
 template<typename DstElement, typename Container>
 auto to_vector(const Container& c) {
   return std::vector<DstElement>(c.begin(), c.end());
