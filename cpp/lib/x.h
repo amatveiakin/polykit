@@ -38,6 +38,11 @@ public:
   bool operator> (const X& other) const { return idx_ >  other.idx_; }
   bool operator>=(const X& other) const { return idx_ >= other.idx_; }
 
+  template <typename H>
+  friend H AbslHashValue(H h, const X& x) {
+    return H::combine(std::move(h), x.idx_);
+  }
+
 private:
   int idx_ = 0;
 };
@@ -60,6 +65,8 @@ public:
   template<size_t N>
   XArgs(const std::array<int, N>& points) : XArgs(absl::MakeConstSpan(points)) {}
   XArgs(std::initializer_list<int> points) : XArgs(absl::Span<const int>(points)) {}
+
+  size_t size() const { return data_.size(); }
 
   const std::vector<X>& as_x() const { return data_; }
 
