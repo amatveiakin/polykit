@@ -1,5 +1,3 @@
-// TODO: Add annotations
-
 #include "polylog_lira.h"
 
 #include "polylog_li.h"
@@ -9,36 +7,36 @@ ThetaExpr LiraVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<CompoundRatio>& ratios) {
-  std::vector<std::vector<int>> points;
-  for (int i : range_incl(1, ratios.size())) {
-    points.push_back({i});
-  }
-  return substitute_ratios(
-    LiVec(foreweight, weights, points),
-    ratios
-  );
+  return LiraVec(LiraParam(foreweight, weights, ratios));
 }
 
 ThetaExpr LiraVec(const LiraParam& param) {
-  return LiraVec(param.foreweight(), param.weights(), param.ratios());
+  std::vector<std::vector<int>> points;
+  for (int i : range_incl(1, param.ratios().size())) {
+    points.push_back({i});
+  }
+  return substitute_ratios(
+    LiVec(param.foreweight(), param.weights(), points),
+    param.ratios()
+  ).annotate(to_string(param));
 }
 
 ThetaCoExpr CoLiraVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<CompoundRatio>& ratios) {
-  std::vector<std::vector<int>> points;
-  for (int i : range_incl(1, ratios.size())) {
-    points.push_back({i});
-  }
-  return substitute_ratios(
-    CoLiVec(foreweight, weights, points),
-    ratios
-  );
+  return CoLiraVec(LiraParam(foreweight, weights, ratios));
 }
 
 ThetaCoExpr CoLiraVec(const LiraParam& param) {
-  return CoLiraVec(param.foreweight(), param.weights(), param.ratios());
+  std::vector<std::vector<int>> points;
+  for (int i : range_incl(1, param.ratios().size())) {
+    points.push_back({i});
+  }
+  return substitute_ratios(
+    CoLiVec(param.foreweight(), param.weights(), points),
+    param.ratios()
+  ).annotate(fmt::comult() + to_string(param));;
 }
 
 

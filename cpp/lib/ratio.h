@@ -218,5 +218,4 @@ CompoundRatioCompressed compress_compound_ratio(const CompoundRatio& ratio);
 CompoundRatio uncompress_compound_ratio(Decompressor& decompressor);
 CompoundRatio uncompress_compound_ratio(const CompoundRatioCompressed& data);
 
-// TODO: `template<CrossRatioNormalization Normalization>`
 std::string to_string(const CompoundRatio& ratio);

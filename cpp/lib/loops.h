@@ -48,6 +48,7 @@ struct LoopExprParam : public SimpleLinearParam<Loops> {
 using LoopExpr = Linear<LoopExprParam>;
 
 // TODO: Force using this, disable on-the-fly name generation (?)
+//   OR mark names generated on-the-fly
 void generate_loops_names(const std::vector<LoopExpr>& expressions);
 
 LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr);  // will NOT group five-term relations
