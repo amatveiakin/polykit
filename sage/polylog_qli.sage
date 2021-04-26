@@ -1,17 +1,3 @@
-# TODO: Benchmark:
-#   * Polykit: pure C++
-#   * Polykit: pure Python
-#   * Polykit: Python with C++ Linear
-#   * Sage: naive implementation
-#   * Sage: FreeAlgebra default implementation
-#   * Sage: FreeAlgebra 'letterplace' implementation
-#   * Sage: precomputation + substitution  (?)
-#   * PolyLogTools: public version
-#   * PolyLogTools: updated by Gangl & Co
-
-# TODO: Benchmark Lyndon
-
-
 diff_to_generator = {}
 generator_names = []
 max_variables = 16
