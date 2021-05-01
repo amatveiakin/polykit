@@ -36,6 +36,7 @@ CompoundRatio = pylib.CompoundRatio
 QLi = pylib.QLi
 QLiNeg = pylib.QLiNeg
 QLiSymm = pylib.QLiSymm
+# TODO: Make 'projector' optional argument instead, here and in QLiN
 QLiPr = pylib.QLiPr
 QLiNegPr = pylib.QLiNegPr
 QLiSymmPr = pylib.QLiSymmPr

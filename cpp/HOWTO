@@ -4,9 +4,8 @@
    the dependencies, build and run the project. Internet connection is required
    for the first run.
 
-To execute tests, use `test_all`. Despite the name is calls most but not all
-of the tests skipping the most expensive ones. To run every single test use
-`test_extra`.
+To execute tests use: `test` for a limited set fast of tests, `test_extra` to
+run most tests, and `test_everything` to run all tests (slow).
 
 Tested compilers: Clang 10.0.0, MSVC 14.0 (C/C++ compiler version 19.27.29112).
 
