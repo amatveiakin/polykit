@@ -165,24 +165,19 @@ CompoundRatio CompoundRatio::inverse(const CompoundRatio& ratio) {
   }));
 }
 
-// Compressor doesn't support zeroes, hence kCompressionSizeBump
-static constexpr int kCompressionSizeBump = 1;
-
 void compress_compound_ratio(const CompoundRatio& ratio, Compressor& compressor) {
   const auto& loops = ratio.loops();
-  compressor.add_segment({int(loops.size()) + kCompressionSizeBump});
+  compressor.push_value(loops.size());
   for (const auto& l : loops) {
-    compressor.add_segment(l);
+    compressor.push_segment(l);
   }
 }
 
 CompoundRatio uncompress_compound_ratio(Decompressor& decompressor) {
   std::vector<std::vector<int>> loops;
-  const std::vector<int> size_vec = decompressor.next_segment();
-  CHECK_EQ(size_vec.size(), 1);
-  const int size = size_vec.front() - kCompressionSizeBump;
+  const int size = decompressor.pop_value();
   for (EACH : range(size)) {
-    loops.push_back(decompressor.next_segment());
+    loops.push_back(decompressor.pop_segment());
   }
   return CompoundRatio::from_loops(std::move(loops));
 }

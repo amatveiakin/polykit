@@ -1,7 +1,6 @@
-// Simple packing algorithm for integer sequences where each value is in [0, 16).
-// Stores two numbers per byte.
-//
-// TODO: Gracious fallback for out-of-range numbers, remove "kFooSizeBump" workarounds.
+// Simple packing algorithm for integers within signed char range, [-128, 127].
+// Efficiently packs small non-negative integers (compresses two ints into one byte).
+// The exact bound of "small" is a subject to change (15 at the moment).
 
 #pragma once
 
@@ -14,11 +13,18 @@
 #include "packed.h"
 
 
-constexpr int kCompressionSentinel = 0;
+namespace internal {
+static_assert(CHAR_BIT % 2 == 0);
 constexpr int kCompressionValuesPerByte = 2;  // Note: some code implicitly assumes it's 2
 constexpr int kCompressionShift = CHAR_BIT / kCompressionValuesPerByte;
-constexpr int kCompressionMaxValue = (1 << kCompressionShift) - 1;
 constexpr int kCompressionLowerValueMask = (1 << kCompressionShift) - 1;
+constexpr int kCompressionOverflowFlag = kCompressionLowerValueMask - 1;
+}  // namespace internal
+
+constexpr int kCompressionMinValue = std::numeric_limits<char>::min();
+constexpr int kCompressionMaxValue = std::numeric_limits<char>::max();
+constexpr int kCompressionMinEfficientValue = 0;
+constexpr int kCompressionMaxEfficientValue = internal::kCompressionOverflowFlag - 1;
 
 
 namespace internal {
@@ -48,16 +54,16 @@ private:
 
 namespace internal {
 template<typename T>
-struct IsCompressedBlob { static constexpr bool value = false; };
+struct IsCompressedBlob : std::false_type {};
 template<typename T>
-struct IsCompressedBlob<CompressedBlob<T>> { static constexpr bool value = true; };
+struct IsCompressedBlob<CompressedBlob<T>> : std::true_type {};
 }  // namespace internal
 
 
 class Compressor {
 public:
-  // `data` must not contain kCompressionSentinel.
-  void add_segment(absl::Span<const int> data);
+  void push_value(int value);
+  void push_segment(absl::Span<const int> data);
 
   template<typename CompressedBlobT>
   CompressedBlobT result() && {
@@ -76,8 +82,14 @@ public:
   template<typename Tag>
   Decompressor(const CompressedBlob<Tag>& compressed_blob) : Decompressor(compressed_blob.data()) {}
 
+  // Be careful with `done`! A class that relies on it cannot be nested within larger
+  // class compression blob.
+  // TODO: In order to improve safety, add `push_blob`/`pop_blob` instead of passing a
+  // Compressor/Decompressor to member classes.
   bool done() const;
-  std::vector<int> next_segment();
+
+  int pop_value();
+  std::vector<int> pop_segment();
 
 private:
   Decompressor(const internal::CompressedBlobData& compressed);
@@ -85,41 +97,3 @@ private:
   std::vector<int> decompressed_;
   absl::Span<const int> remainder_;
 };
-
-
-inline bool compression_value_ok(int ch) {
-  return 0 <= ch && ch <= kCompressionMaxValue && ch != kCompressionSentinel;
-};
-
-inline unsigned char compress_pair_no_check(int a, int b) {
-  return (a << kCompressionShift) + b;
-}
-
-inline void decompress_pair(unsigned char compressed, int& a, int& b) {
-  a = compressed >> kCompressionShift;
-  b = compressed & kCompressionLowerValueMask;
-}
-
-template<int N>
-std::array<unsigned char, N/2> compress_array(const std::array<int, N>& data) {
-  static_assert(N % 2 == 0);
-  CHECK(absl::c_all_of(data, compression_value_ok)) << dump_to_string(data);
-  std::array<unsigned char, N/2> ret;
-  int dst = 0;
-  for (int i = 0; i < data.size(); i += kCompressionValuesPerByte) {
-    ret[dst] = compress_pair_no_check(data[i], data[i+1]);
-    ++dst;
-  }
-  return ret;
-}
-
-template<int N>
-std::array<int, N*2> decompress_array(const std::array<unsigned char, N>& compressed) {
-  std::array<int, N*2> ret;
-  int dst = 0;
-  for (unsigned char ch : compressed) {
-    decompress_pair(ch, ret[dst], ret[dst+1]);
-    dst += kCompressionValuesPerByte;
-  }
-  return ret;
-}

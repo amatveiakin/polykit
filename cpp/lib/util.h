@@ -24,6 +24,10 @@ inline int neg_one_pow(int power) {
   return 1 - power % 2 * 2;
 }
 
+inline int div_round_up(int a, int b) {
+  return (a + b - 1) / b;
+}
+
 class IntegerDivisionError : public std::runtime_error {
 public:
   IntegerDivisionError() : std::runtime_error("Integer division error") {}
