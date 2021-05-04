@@ -1,5 +1,4 @@
 import functools
-
 from dataclasses import dataclass
 
 from . import format

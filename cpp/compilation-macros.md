@@ -1,6 +1,3 @@
-<!-- TODO: Point to this file from README -->
-
-
 ## Optimization and profiling
 
 `UNROLL_SHUFFLE` (bool; default = only in release builds).

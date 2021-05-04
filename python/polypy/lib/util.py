@@ -17,11 +17,22 @@ def get_one_item(container):
 def removed_indices(l, indices):
     return [l[i] for i in range(len(l)) if i not in indices]
 
+def is_iterable(v):
+    try:
+        iter(v)
+    except TypeError:
+        return False
+    else:
+        return True
+
 # For vararg functions that can alternatively accept an iterable.
-# Always assumes that 1-arg version is an iterable.
 def args_to_iterable(args):
     assert len(args) > 0
-    return args if len(args) > 1 else args[0]
+    return args[0] if len(args) == 1 and is_iterable(args[0]) else args
+
+# Attempts to turn value into an immutable object that can be used as dict key.
+def to_hashable(v):
+    return tuple(map(to_hashable, v)) if isinstance(v, (tuple, list)) else v
 
 # Generates all possible words of a given length in an alphabet
 # of a given size, in lexicographic order.

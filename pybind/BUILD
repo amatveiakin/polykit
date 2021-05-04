@@ -42,7 +42,7 @@ py_library(
 py_library(
     name = "polykit",
     srcs = ["polykit.py"],
-    deps = ["//pybind/py_lib:polykit_util"],
+    deps = ["//python:polypy_lib"],
     data = [":py_bindings.so"],
 )
 

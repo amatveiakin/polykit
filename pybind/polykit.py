@@ -1,4 +1,4 @@
-from py_lib.util import args_to_iterable
+from python.polypy.lib.util import args_to_iterable
 from pybind import py_bindings as pb
 
 

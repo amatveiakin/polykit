@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from progress.bar import Bar
 
-from py_lib.profiler import Profiler
+from python.polypy.lib.profiler import Profiler
 from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit

@@ -12,7 +12,10 @@ is required for on first run.
 
 **For pure Python code**
 
-Install Python3.
+Install Python3. Note that PyPy has better performance than the default
+(CPython) interpreter.
+
+Bazel is not required.
 
 **For Python code with C++ bindings**
 
@@ -28,11 +31,15 @@ Follow the steps for C++ and for Python. In additional to that:
 
 # Execute
 
-For C++ workspace execute `run` (e.g. `run.bat` on Windows and `run.sh` on
-Linux/MacOS). For Python execute `run_pybind`.
+Go the corresponding folder (`cpp`, `python` or `pybind`) and execute `run`
+(i.e. `run.bat` on Windows and `run.sh` on Linux/MacOS). This will compile and
+run the file called `workspace.<ext>`.
 
-To execute tests use: `test` for a limited set fast of tests, `test_extra` to
-run most tests, and `test_everything` to run all tests (slow).
+To execute tests use: `test` for the default set of tests, `test_extra` to run
+most tests, and `test_everything` to run all tests (slow).
+
+There exist several macros that affect C++ (and thus pybind) behavior. For more
+information see `cpp/compilation-macros.md`.
 
 
 # Troubleshooting
