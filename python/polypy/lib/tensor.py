@@ -101,7 +101,7 @@ def d_monoms_with_n_distinct_chars(
         expr,          # Linear[Tuple[D]]
         min_distinct,  # int
     ):
-    return expr.without_annotations().filtered_obj(lambda monom: d_monoms_distinct_chars(monom) >= min_distinct)
+    return expr.filtered_obj(lambda monom: d_monoms_distinct_chars(monom) >= min_distinct)
 
 
 def d_expr_weight(
@@ -126,7 +126,7 @@ def d_expr_to_lyndon_basis(
         expr: Linear,  # Linear[Tuple[D]]
     ):
     return to_lyndon_basis(
-        expr.without_annotations().mapped_obj(_to_word)
+        expr.mapped_obj(_to_word)
     ).mapped_obj(_from_word)
 
 
@@ -136,7 +136,6 @@ def d_expr_to_lyndon_basis(
 def d_expr_check_simple_invariants(
         expr: Linear,  # Linear[Tuple[D]]
     ):
-    expr = expr.without_annotations()
     if expr == Linear():
         return
     weight = d_expr_weight(expr)
@@ -149,7 +148,6 @@ def d_expr_check_simple_invariants(
 def d_expr_check_integratability(
         expr: Linear,  # Linear[Tuple[D]]
     ):
-    expr = expr.without_annotations()
     weight = d_expr_weight(expr)
     for k1 in range(0, weight - 1):
         k2 = k1 + 1

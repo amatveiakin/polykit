@@ -1,15 +1,7 @@
 import functools
-from dataclasses import dataclass
 
 from . import format
 from .util import args_to_iterable
-
-
-@dataclass(order=True, frozen=True)
-class Annotation:
-    name: str
-    def __str__(self):
-        return self.name
 
 
 # Represents a linear combination of any hashable objects
@@ -32,15 +24,17 @@ class Linear:
     def copy(self):
         return Linear(self.data.copy())
 
-    # TODO: Split into annotations and no annotations
     def items(self):
         return self.data.items()
 
     # Use items() to iterate over Linear
     __iter__ = None
 
-    def __len__(self):
+    def l0_norm(self):
         return len(self.data)
+    num_terms = l0_norm
+    def l1_norm(self):
+        return sum([abs(coeff) for _, coeff in self.items()])
 
     def __getitem__(self, key):
         return self.data.get(key, 0)
@@ -87,10 +81,6 @@ class Linear:
     def div_int(self, scalar):
         return self.mapped_coeff(lambda coeff: _div_int(coeff, scalar))
 
-    def l1_norm(self):
-        assert not self.has_annotations()
-        return sum([abs(coeff) for _, coeff in self.items()])
-
     def mapped_obj(self, func):
         # Don't use a list comprehension in case func is not injective
         ret = Linear()
@@ -103,21 +93,6 @@ class Linear:
 
     def filtered_obj(self, predicate):
         return Linear({obj: coeff for obj, coeff in self.items() if predicate(obj)})
-
-    def has_annotations(self):
-        return len(self.annotations()) > 0
-
-    def annotations(self):
-        return self.filtered_obj(lambda e: isinstance(e, Annotation))
-
-    def without_annotations(self):
-        return self.filtered_obj(lambda e: not isinstance(e, Annotation))
-
-    def annotated(self, s):
-        return self + Linear({Annotation(s): 1})
-
-    def annotated_with_function(self, name, args):
-        return self.annotated(name + "(" + ",".join([str(x) for x in args]) + ")")
 
     def to_str(self, element_to_str):
         return (
@@ -135,8 +110,6 @@ def _tensor_product_two(
         rhs,      # Linear[B]
         product,  # function: A, B -> C
     ):
-    lhs = lhs.without_annotations()
-    rhs = rhs.without_annotations()
     ret = Linear()
     for obj_l, coeff_l in lhs.items():
         for obj_r, coeff_r in rhs.items():

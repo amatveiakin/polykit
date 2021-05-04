@@ -37,11 +37,10 @@ def print_expression(
         expr: Linear,
         element_to_str: Callable = None
     ):
-    data = expr.without_annotations()
-    if data != Linear():
+    if expr != Linear():
         print(
-            f"{title} - {len(data)} terms, |coeff| = {data.l1_norm()}:\n" +
-            _print_expression_terms(data, element_to_str) + "\n"
+            f"{title} - {expr.num_terms()} terms, |coeff| = {expr.l1_norm()}:\n" +
+            _print_expression_terms(expr, element_to_str) + "\n"
         )
     else:
         print(

@@ -63,7 +63,6 @@ def to_lyndon_basis(
         words,  # Linear[word]
     ):
     assert isinstance(words, Linear)
-    words = words.without_annotations()
     finished = False
     while not finished:
         words_new = Linear()

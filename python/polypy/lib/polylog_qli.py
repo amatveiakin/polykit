@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from .linear import Linear
 from .tensor import D, X, d_expr_substitute, symbol_product
 from .util import args_to_iterable, rotate_list
@@ -41,10 +39,7 @@ def QLi(weight, points):
     else:
         asc_expr = _QLi_impl(weight, asc_indices)
         _qli_cache[cache_key] = asc_expr.copy()
-    return d_expr_substitute(
-        asc_expr,
-        index_map
-    ).annotated_with_function(f"QLi{weight}", point_indices)
+    return d_expr_substitute(asc_expr, index_map)
 
 
 def QLi2(*points): return QLi(2, args_to_iterable(points))
@@ -68,7 +63,7 @@ def QLiSymm_6_points(weight, points):
         - QLi(weight, [x1,x2,x3,x4])
         - QLi(weight, [x3,x4,x5,x6])
         - QLi(weight, [x5,x6,x1,x2])
-    ).without_annotations().annotated_with_function(f"QLi{weight}_sym", points)
+    )
 
 def QLi2_sym(*points): return QLiSymm_6_points(2, args_to_iterable(points))
 def QLi3_sym(*points): return QLiSymm_6_points(3, args_to_iterable(points))

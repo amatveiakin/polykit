@@ -39,7 +39,6 @@ def word_comultiply(
         expr: Linear,  # Linear[Tuple]
         form: tuple,   # (a, b)
     ):
-    expr = expr.without_annotations()
     if expr == Linear():
         return Linear()
     weight = word_expr_weight(expr)
