@@ -47,7 +47,7 @@ loops_matrix = pb.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
-def tensor_product(*parts): return pb.tensor_product_vec(args_to_iterable(parts))
+def tensor_product(*parts): return pb.delta_product_vec(args_to_iterable(parts))
 def coproduct(*parts): return pb.coproduct_vec(args_to_iterable(parts))
 
 def I(*points): return pb.IVec(args_to_iterable(points))

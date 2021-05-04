@@ -1,5 +1,5 @@
+from .delta import X, symbol_product
 from .linear import Linear
-from .tensor import X, symbol_product
 from .util import removed_indices
 
 

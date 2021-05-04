@@ -1,5 +1,5 @@
+from .delta import D, X, d_expr_substitute, symbol_product
 from .linear import Linear
-from .tensor import D, X, d_expr_substitute, symbol_product
 from .util import args_to_iterable, rotate_list
 
 
@@ -65,13 +65,13 @@ def QLiSymm_6_points(weight, points):
         - QLi(weight, [x5,x6,x1,x2])
     )
 
-def QLi2_sym(*points): return QLiSymm_6_points(2, args_to_iterable(points))
-def QLi3_sym(*points): return QLiSymm_6_points(3, args_to_iterable(points))
-def QLi4_sym(*points): return QLiSymm_6_points(4, args_to_iterable(points))
-def QLi5_sym(*points): return QLiSymm_6_points(5, args_to_iterable(points))
-def QLi6_sym(*points): return QLiSymm_6_points(6, args_to_iterable(points))
-def QLi7_sym(*points): return QLiSymm_6_points(7, args_to_iterable(points))
-def QLi8_sym(*points): return QLiSymm_6_points(8, args_to_iterable(points))
+def QLi2Symm(*points): return QLiSymm_6_points(2, args_to_iterable(points))
+def QLi3Symm(*points): return QLiSymm_6_points(3, args_to_iterable(points))
+def QLi4Symm(*points): return QLiSymm_6_points(4, args_to_iterable(points))
+def QLi5Symm(*points): return QLiSymm_6_points(5, args_to_iterable(points))
+def QLi6Symm(*points): return QLiSymm_6_points(6, args_to_iterable(points))
+def QLi7Symm(*points): return QLiSymm_6_points(7, args_to_iterable(points))
+def QLi8Symm(*points): return QLiSymm_6_points(8, args_to_iterable(points))
 
 
 def _QLi_4_point(points):

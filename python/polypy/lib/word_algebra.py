@@ -1,45 +1,9 @@
 import re
 
+from .delta import Inf, d_expr_dimension
 from .linear import Linear
 from .lyndon import to_lyndon_basis
-from .tensor import Inf, d_expr_dimension
 from .util import get_one_item
-
-
-def W(*args):
-    return Linear({args: 1})
-
-# Projects a linear combination of tensor products of (x_i - x_j) on x_index.
-# Keeps only the products that contain x_index in every bracket. Turns each
-# such product into a word containing the other indices.
-#
-# Example:
-#     + (x1 - x2)*(x1 - x3)
-#     + (x1 - x2)*(x2 - x3)
-#     - (x1 - x2)*(x1 - x4)
-#   projected on index == 1 gives:
-#     (2, 3) - (2, 4)
-#
-def project_on_xi(
-        expr,   # Linear[D]
-        index,  # int
-    ):
-    words = Linear()
-    for multipliers, coeff in expr.items():
-        w = []
-        for d in multipliers:
-            if d.a == index:
-                w.append(d.b)
-            elif d.b == index:
-                w.append(d.a)
-            else:
-                break
-        if len(w) == len(multipliers):
-            words += Linear({tuple(w): coeff})
-    return words
-
-def project_on_x1(expr):
-    return project_on_xi(expr, 1)
 
 
 def word_expr_weight(expr):
@@ -50,17 +14,6 @@ def word_expr_max_char(expr):
 
 def words_with_n_distinct_chars(expr, min_distinct):
     return expr.filtered_obj(lambda word: len(set(word)) >= min_distinct)
-
-
-# Equivalent to "Tensor(expr) -> lyndon_basis -> summands == Linear()", but faster
-def is_zero(expr):
-    if expr == Linear():
-        return True
-    num_points = d_expr_dimension(expr)
-    for i in range(1, num_points - 2):
-        if to_lyndon_basis(project_on_xi(expr, i)) != Linear():
-            return False
-    return True
 
 
 # Replaces each letter c with index_map[c]
