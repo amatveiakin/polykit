@@ -151,6 +151,7 @@ cc_test(
         ":polylog",
         ":test_util",
     ],
+    copts = ["-Icpp"],
 )
 
 cc_binary(

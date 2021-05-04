@@ -1,7 +1,7 @@
 import numpy as np
 
 from polykit import substitute_variables
-from util import to_hashable
+from py_lib.util import to_hashable
 
 
 class DeltaExprMatrixBuilder:

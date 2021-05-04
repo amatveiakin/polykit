@@ -12,6 +12,8 @@ Debug/
 bazel-bin
 bazel-cpp
 bazel-out
+bazel-polykit
+bazel-polylog
 bazel-testlogs
 
 # Binaries

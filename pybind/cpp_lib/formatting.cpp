@@ -1,7 +1,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/format.h"
+#include "cpp/lib/format.h"
 
 
 namespace py = pybind11;

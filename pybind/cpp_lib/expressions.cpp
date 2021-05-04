@@ -2,8 +2,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/delta.h"
-#include "lib/projection.h"
+#include "cpp/lib/delta.h"
+#include "cpp/lib/projection.h"
 #include "py_util.h"
 
 

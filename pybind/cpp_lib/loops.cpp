@@ -1,8 +1,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/loops.h"
-#include "lib/polylog_liquad.h"
+#include "cpp/lib/loops.h"
+#include "cpp/lib/polylog_liquad.h"
 
 
 namespace py = pybind11;

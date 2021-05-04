@@ -1,57 +1,57 @@
-from pybind.util import args_to_iterable
-from pybind import pylib
+from py_lib.util import args_to_iterable
+from pybind import py_bindings as pb
 
 
-Encoder = pylib.Encoder
-RichTextFormat = pylib.RichTextFormat
-AnnotationSorting = pylib.AnnotationSorting
-NoLineLimit = pylib.NoLineLimit
-set_formatting = pylib.set_formatting
-reset_formatting = pylib.reset_formatting
+Encoder = pb.Encoder
+RichTextFormat = pb.RichTextFormat
+AnnotationSorting = pb.AnnotationSorting
+NoLineLimit = pb.NoLineLimit
+set_formatting = pb.set_formatting
+reset_formatting = pb.reset_formatting
 
-to_lyndon_basis = pylib.to_lyndon_basis
+to_lyndon_basis = pb.to_lyndon_basis
 
-X = pylib.X
-Inf = pylib.Inf
+X = pb.X
+Inf = pb.Inf
 
-Delta = pylib.Delta
-DeltaExpr = pylib.DeltaExpr
-DeltaCoExpr = pylib.DeltaCoExpr
-ProjectionExpr = pylib.ProjectionExpr
+Delta = pb.Delta
+DeltaExpr = pb.DeltaExpr
+DeltaCoExpr = pb.DeltaCoExpr
+ProjectionExpr = pb.ProjectionExpr
 
-substitute_variables = pylib.substitute_variables
-comultiply = pylib.comultiply
-involute = pylib.involute
-project_on = pylib.project_on
-involute_projected = pylib.involute_projected
-terms_with_num_distinct_variables = pylib.terms_with_num_distinct_variables
-terms_with_min_distinct_variables = pylib.terms_with_min_distinct_variables
-terms_containing_only_variables = pylib.terms_containing_only_variables
-terms_without_variables = pylib.terms_without_variables
-sorted_by_num_distinct_variables = pylib.sorted_by_num_distinct_variables
+substitute_variables = pb.substitute_variables
+comultiply = pb.comultiply
+involute = pb.involute
+project_on = pb.project_on
+involute_projected = pb.involute_projected
+terms_with_num_distinct_variables = pb.terms_with_num_distinct_variables
+terms_with_min_distinct_variables = pb.terms_with_min_distinct_variables
+terms_containing_only_variables = pb.terms_containing_only_variables
+terms_without_variables = pb.terms_without_variables
+sorted_by_num_distinct_variables = pb.sorted_by_num_distinct_variables
 
-CrossRatio = pylib.CrossRatio
-CompoundRatio = pylib.CompoundRatio
+CrossRatio = pb.CrossRatio
+CompoundRatio = pb.CompoundRatio
 
-QLi = pylib.QLi
-QLiNeg = pylib.QLiNeg
-QLiSymm = pylib.QLiSymm
+QLi = pb.QLi
+QLiNeg = pb.QLiNeg
+QLiSymm = pb.QLiSymm
 # TODO: Make 'projector' optional argument instead, here and in QLiN
-QLiPr = pylib.QLiPr
-QLiNegPr = pylib.QLiNegPr
-QLiSymmPr = pylib.QLiSymmPr
+QLiPr = pb.QLiPr
+QLiNegPr = pb.QLiNegPr
+QLiSymmPr = pb.QLiSymmPr
 
-Lira = pylib.Lira
+Lira = pb.Lira
 
-loops_matrix = pylib.loops_matrix
+loops_matrix = pb.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
-def tensor_product(*parts): return pylib.tensor_product_vec(args_to_iterable(parts))
-def coproduct(*parts): return pylib.coproduct_vec(args_to_iterable(parts))
+def tensor_product(*parts): return pb.tensor_product_vec(args_to_iterable(parts))
+def coproduct(*parts): return pb.coproduct_vec(args_to_iterable(parts))
 
-def I(*points): return pylib.IVec(args_to_iterable(points))
-def Corr(*points): return pylib.CorrVec(args_to_iterable(points))
+def I(*points): return pb.IVec(args_to_iterable(points))
+def Corr(*points): return pb.CorrVec(args_to_iterable(points))
 
 def project_on_x1 (expr): return project_on(1,  expr)
 def project_on_x2 (expr): return project_on(2,  expr)

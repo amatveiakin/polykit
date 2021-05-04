@@ -10,7 +10,7 @@ void pybind_polylog(py::module_&);
 void pybind_ratio(py::module_&);
 void pybind_x(py::module_&);
 
-PYBIND11_MODULE(pylib, m) {
+PYBIND11_MODULE(py_bindings, m) {
   pybind_expressions(m);
   pybind_format(m);
   pybind_loops(m);

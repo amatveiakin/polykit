@@ -7,13 +7,13 @@
 #include "pybind11/pybind11.h"
 
 
-template<typename LinearT>
-class LinearIterableRange {
+template<typename T>
+class IterableRange {
 public:
-  LinearIterableRange(const LinearT& expr)
-    : current_(expr.begin()), end_(expr.end()) {}
+  IterableRange(const T& container)
+    : current_(container.begin()), end_(container.end()) {}
 
-  LinearIterableRange iter() const {
+  IterableRange iter() const {
     return *this;
   }
   auto next() {
@@ -26,7 +26,7 @@ public:
   }
 
 private:
-  using const_iterator = typename LinearT::const_iterator;
+  using const_iterator = typename T::const_iterator;
   const_iterator current_;
   const_iterator end_;
 };
@@ -36,7 +36,7 @@ template<typename LinearT>
 void py_register_linear(const pybind11::module_& module, const char* name) {
   namespace py = pybind11;
 
-  using Iterable = LinearIterableRange<LinearT>;
+  using Iterable = IterableRange<LinearT>;
   std::string iterator_class_name = absl::StrCat(name, "Iterator");
   py::class_<Iterable>(module, iterator_class_name.c_str())
     .def("__iter__", &Iterable::iter)

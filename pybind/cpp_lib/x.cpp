@@ -2,7 +2,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/x.h"
+#include "cpp/lib/x.h"
 
 
 namespace py = pybind11;

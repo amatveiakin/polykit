@@ -2,9 +2,9 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "lib/iterated_integral.h"
-#include "lib/polylog_lira.h"
-#include "lib/polylog_qli.h"
+#include "cpp/lib/iterated_integral.h"
+#include "cpp/lib/polylog_lira.h"
+#include "cpp/lib/polylog_qli.h"
 
 
 namespace py = pybind11;
