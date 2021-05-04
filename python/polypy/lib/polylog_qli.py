@@ -20,12 +20,12 @@ def neg_cross_ratio(a, b, c, d):
     return cross_ratio(a, c, b, d)
 
 
-_li_cache = {}
+_qli_cache = {}
 
 # Generates a polylog of a given weight on a given set of points.
 # Points can be a list of points or a number, in which case values
 # from 1 to points are used.
-def Li(weight, points):
+def QLi(weight, points):
     assert isinstance(points, (int, list, tuple))
     num_points = points if isinstance(points, int) else len(points)
     cache_key = (weight, num_points)
@@ -36,43 +36,27 @@ def Li(weight, points):
         for i in range(num_points)
     }
     asc_expr = None
-    # print(f"Generating Li{weight}({num_points})... ", end="")
-    if cache_key in _li_cache:
-        asc_expr = _li_cache[cache_key].copy()
-        # print("done (cached)")
+    if cache_key in _qli_cache:
+        asc_expr = _qli_cache[cache_key].copy()
     else:
-        asc_expr = _Li_impl(weight, asc_indices)
-        _li_cache[cache_key] = asc_expr.copy()
-        # print("done")
+        asc_expr = _QLi_impl(weight, asc_indices)
+        _qli_cache[cache_key] = asc_expr.copy()
     return d_expr_substitute(
         asc_expr,
         index_map
-    ).annotated_with_function(f"Li{weight}", point_indices)
+    ).annotated_with_function(f"QLi{weight}", point_indices)
 
 
-def Li2(*points):
-    return Li(2, args_to_iterable(points))
-
-def Li3(*points):
-    return Li(3, args_to_iterable(points))
-
-def Li4(*points):
-    return Li(4, args_to_iterable(points))
-
-def Li5(*points):
-    return Li(5, args_to_iterable(points))
-
-def Li6(*points):
-    return Li(6, args_to_iterable(points))
-
-def Li7(*points):
-    return Li(7, args_to_iterable(points))
-
-def Li8(*points):
-    return Li(8, args_to_iterable(points))
+def QLi2(*points): return QLi(2, args_to_iterable(points))
+def QLi3(*points): return QLi(3, args_to_iterable(points))
+def QLi4(*points): return QLi(4, args_to_iterable(points))
+def QLi5(*points): return QLi(5, args_to_iterable(points))
+def QLi6(*points): return QLi(6, args_to_iterable(points))
+def QLi7(*points): return QLi(7, args_to_iterable(points))
+def QLi8(*points): return QLi(8, args_to_iterable(points))
 
 
-def Li_sym_6_points(weight, points):
+def QLiSymm_6_points(weight, points):
     assert isinstance(points, (int, list, tuple))
     num_points = points if isinstance(points, int) else len(points)
     assert num_points == 6
@@ -80,35 +64,22 @@ def Li_sym_6_points(weight, points):
         points = list(range(1, num_points + 1))
     x1,x2,x3,x4,x5,x6 = points
     return (
-        + Li(weight, [x1,x2,x3,x4,x5,x6])
-        - Li(weight, [x1,x2,x3,x4])
-        - Li(weight, [x3,x4,x5,x6])
-        - Li(weight, [x5,x6,x1,x2])
-    ).without_annotations().annotated_with_function(f"Li{weight}_sym", points)
+        + QLi(weight, [x1,x2,x3,x4,x5,x6])
+        - QLi(weight, [x1,x2,x3,x4])
+        - QLi(weight, [x3,x4,x5,x6])
+        - QLi(weight, [x5,x6,x1,x2])
+    ).without_annotations().annotated_with_function(f"QLi{weight}_sym", points)
 
-def Li2_sym(*points):
-    return Li_sym_6_points(2, args_to_iterable(points))
-
-def Li3_sym(*points):
-    return Li_sym_6_points(3, args_to_iterable(points))
-
-def Li4_sym(*points):
-    return Li_sym_6_points(4, args_to_iterable(points))
-
-def Li5_sym(*points):
-    return Li_sym_6_points(5, args_to_iterable(points))
-
-def Li6_sym(*points):
-    return Li_sym_6_points(6, args_to_iterable(points))
-
-def Li7_sym(*points):
-    return Li_sym_6_points(7, args_to_iterable(points))
-
-def Li8_sym(*points):
-    return Li_sym_6_points(8, args_to_iterable(points))
+def QLi2_sym(*points): return QLiSymm_6_points(2, args_to_iterable(points))
+def QLi3_sym(*points): return QLiSymm_6_points(3, args_to_iterable(points))
+def QLi4_sym(*points): return QLiSymm_6_points(4, args_to_iterable(points))
+def QLi5_sym(*points): return QLiSymm_6_points(5, args_to_iterable(points))
+def QLi6_sym(*points): return QLiSymm_6_points(6, args_to_iterable(points))
+def QLi7_sym(*points): return QLiSymm_6_points(7, args_to_iterable(points))
+def QLi8_sym(*points): return QLiSymm_6_points(8, args_to_iterable(points))
 
 
-def _Li_4_point(points):
+def _QLi_4_point(points):
     assert len(points) == 4
     return (
         neg_cross_ratio(*points)
@@ -117,8 +88,8 @@ def _Li_4_point(points):
     )
 
 # _li_impl_cache = {}
-# def _Li_impl(weight, points):
-#     # The only place where particular point values are used is `_Li_4_point`,
+# def _QLi_impl(weight, points):
+#     # The only place where particular point values are used is `_QLi_4_point`,
 #     # and only sign matters there
 #     cache_key = tuple([weight] + [p % 2 for p in points])
 #     if cache_key in _li_impl_cache:
@@ -126,11 +97,11 @@ def _Li_4_point(points):
 #         ...  # TODO: index mapping
 #         return ret
 #     else:
-#         ret = _Li_impl_no_cache(weight, points)
+#         ret = _QLi_impl_no_cache(weight, points)
 #         _li_impl_cache[cache_key] = ret
 #         return ret
 
-def _Li_impl(weight, points):
+def _QLi_impl(weight, points):
     num_points = len(points)
     assert num_points >= 4 and num_points % 2 == 0, f"Bad number of points: {num_points}"
     min_weight = (num_points - 2) // 2
@@ -139,19 +110,19 @@ def _Li_impl(weight, points):
         ret = Linear()
         for i in range(num_points - 3):
             ret += symbol_product(
-                _Li_4_point(points[i:i+4]),
-                _Li_impl(weight - 1, points[:i+1] + points[i+3:]),
+                _QLi_4_point(points[i:i+4]),
+                _QLi_impl(weight - 1, points[:i+1] + points[i+3:]),
             )
         return ret
     if weight == min_weight:
         if num_points == 4:
-            return _Li_4_point(points)
+            return _QLi_4_point(points)
         else:
             return subsums()
     else:
         ret = symbol_product(
             cross_ratio(points),
-            _Li_impl(weight - 1, points),
+            _QLi_impl(weight - 1, points),
         )
         if num_points > 4:
             ret += subsums()
