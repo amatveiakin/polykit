@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
-from linear import Linear
-from util import rotate_list
+from .linear import Linear
+from .util import rotate_list
 
 
 # def cyclic_sum_range(

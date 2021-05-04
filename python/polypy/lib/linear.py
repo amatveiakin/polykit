@@ -2,9 +2,8 @@ import functools
 
 from dataclasses import dataclass
 
-import format
-
-from util import args_to_iterable
+from . import format
+from .util import args_to_iterable
 
 
 @dataclass(order=True, frozen=True)

@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from shuffle import shuffle_product
+from ..lib.shuffle import shuffle_product
 
 
 class TestShuffle(unittest.TestCase):

@@ -1,7 +1,7 @@
 import math
 
-from linear import Linear
-from shuffle import shuffle_product
+from .linear import Linear
+from .shuffle import shuffle_product
 
 
 # def _gen_lyndon_words(alphabet_size, max_length):

@@ -2,12 +2,11 @@ import math
 
 from dataclasses import dataclass
 
-import format
-
-from alphabet_mapping import d_to_alphabet, d_from_alphabet
-from linear import Linear, tensor_product
-from lyndon import to_lyndon_basis
-from util import flatten, get_one_item
+from . import format
+from .alphabet_mapping import d_to_alphabet, d_from_alphabet
+from .linear import Linear, tensor_product
+from .lyndon import to_lyndon_basis
+from .util import flatten, get_one_item
 
 
 class _InfinityType:

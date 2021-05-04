@@ -1,4 +1,4 @@
-from util import args_to_iterable, flatten
+from .util import args_to_iterable, flatten
 
 
 def _concat_to_each(words, suffix):

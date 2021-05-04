@@ -1,9 +1,9 @@
 import math
 import unittest
 
-from linear import Linear
-from lyndon import lyndon_factorize, to_lyndon_basis
-from util import generate_all_words
+from ..lib.linear import Linear
+from ..lib.lyndon import lyndon_factorize, to_lyndon_basis
+from ..lib.util import generate_all_words
 
 
 def _is_lyndon_word(word):

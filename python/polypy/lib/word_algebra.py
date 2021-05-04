@@ -1,9 +1,9 @@
 import re
 
-from linear import Annotation, Linear
-from lyndon import to_lyndon_basis
-from tensor import Inf, d_expr_dimension
-from util import get_one_item
+from .linear import Annotation, Linear
+from .lyndon import to_lyndon_basis
+from .tensor import Inf, d_expr_dimension
+from .util import get_one_item
 
 
 def W(*args):

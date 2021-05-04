@@ -1,6 +1,6 @@
 import unittest
 
-from util import generate_all_words
+from ..lib.util import generate_all_words
 
 
 class TestUtil(unittest.TestCase):

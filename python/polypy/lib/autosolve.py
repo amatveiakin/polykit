@@ -1,13 +1,13 @@
 import math
 import re
 
-from tensor import Inf
-from linear import Annotation, Linear
-from lyndon import to_lyndon_basis
-from polylog_gen import Li
-from enumerator import Enumerator
-from util import generate_all_words, get_one_item
-from word_algebra import word_index_map_to_annotation_index_map, word_expr_max_char, words_with_n_distinct_chars, word_expr_to_template, word_expr_substitute, annotation_expr_substitute
+from .tensor import Inf
+from .linear import Annotation, Linear
+from .lyndon import to_lyndon_basis
+from .polylog_gen import Li
+from .enumerator import Enumerator
+from .util import generate_all_words, get_one_item
+from .word_algebra import word_index_map_to_annotation_index_map, word_expr_max_char, words_with_n_distinct_chars, word_expr_to_template, word_expr_substitute, annotation_expr_substitute
 
 
 def is_representative_indices(indices):

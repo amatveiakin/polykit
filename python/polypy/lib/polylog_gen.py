@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from linear import Linear
-from tensor import D, X, d_expr_substitute, symbol_product
-from util import args_to_iterable, rotate_list
+from .linear import Linear
+from .tensor import D, X, d_expr_substitute, symbol_product
+from .util import args_to_iterable, rotate_list
 
 
 def cross_ratio(*indexed_points):

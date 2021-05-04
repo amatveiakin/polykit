@@ -1,6 +1,6 @@
-from linear import Linear
-from polylog_gen import X, cross_ratio, neg_cross_ratio, symbol_product
-from tensor import D
+from .linear import Linear
+from .polylog_gen import X, cross_ratio, neg_cross_ratio, symbol_product
+from .tensor import D
 
 
 # def cross_ratio(a, b, c, d):

@@ -1,9 +1,9 @@
 import math
 import unittest
 
-from tensor import *
-from polylog_gen import *
-from profiler import Profiler
+from ..lib.tensor import *
+from ..lib.polylog_gen import *
+from ..lib.profiler import Profiler
 
 
 class TestDExpr(unittest.TestCase):

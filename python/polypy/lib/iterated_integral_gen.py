@@ -1,6 +1,6 @@
-from linear import Linear
-from tensor import X, symbol_product
-from util import removed_indices
+from .linear import Linear
+from .tensor import X, symbol_product
+from .util import removed_indices
 
 
 def I(*points):

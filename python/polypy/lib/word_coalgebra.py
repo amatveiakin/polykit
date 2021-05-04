@@ -1,9 +1,8 @@
-import format
-
-from tensor import d_monom_to_str
-from linear import Linear, tensor_product
-from lyndon import to_lyndon_basis
-from word_algebra import W, word_expr_weight
+from . import format
+from .tensor import d_monom_to_str
+from .linear import Linear, tensor_product
+from .lyndon import to_lyndon_basis
+from .word_algebra import W, word_expr_weight
 
 
 def word_coproduct(expr1, expr2):

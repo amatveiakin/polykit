@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from alphabet_mapping import d_to_alphabet, d_from_alphabet
+from ..lib.alphabet_mapping import d_to_alphabet, d_from_alphabet
 
 
 class TestAlphabetMapping(unittest.TestCase):

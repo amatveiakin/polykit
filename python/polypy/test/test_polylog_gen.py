@@ -1,10 +1,10 @@
 import math
 import unittest
 
-from linear import Linear
-from lyndon import to_lyndon_basis
-from tensor import d_monom_to_str
-from polylog_gen import *
+from ..lib.linear import Linear
+from ..lib.lyndon import to_lyndon_basis
+from ..lib.tensor import d_monom_to_str
+from ..lib.polylog_gen import *
 
 
 class TestShuffle(unittest.TestCase):
