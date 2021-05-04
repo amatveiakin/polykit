@@ -742,6 +742,8 @@ private:
   }
 
   BasicLinearMain main_;
+  // Optimization potential: wrap this into a unique_ptr. Most expressions don't have annotations,
+  // so need need to carry this around.
   LinearAnnotation annotations_;
 };
 
