@@ -74,6 +74,12 @@ namespace internal {
 // Optimization potential: tune this value and benchmark against real use-cases.
 constexpr int kMaxPVectorSize = 64;
 
+#if DISABLE_PACKING
+template<typename T, int N>
+struct should_use_inlined_vector {
+  static constexpr bool value = false;
+};
+#else
 template<typename T, int N>
 struct should_use_inlined_vector {
   static constexpr bool value = sizeof(absl::InlinedVector<T, N>) < kMaxPVectorSize;
@@ -82,6 +88,7 @@ static_assert(
   internal::should_use_inlined_vector<char, 1>::value,
   "PVector wouldn't ever use an inlined representation"
 );
+#endif
 
 template<typename T, int N, typename Enable = void>
 struct inlined_vector_size {
@@ -257,7 +264,7 @@ public:
     }
   }
   ~PVector() {
-#ifdef PVECTOR_STATS
+#if PVECTOR_STATS
     // Idea: add PVector tags to distinguish between different expression types.
     auto& value = pvector_stats.data[{typeid(T), kInlineSize}];
     if constexpr (!kCanInline) {

@@ -51,8 +51,30 @@ int main(int argc, char *argv[]) {
     .set_annotation_sorting(AnnotationSorting::length)
   );
 
-  auto expr = QLi8(1,2,3,4);
-  auto coexpr = comultiply(expr, {2,2,2,2});
-  std::cout << "Checksum = " << expr.l1_norm() << "\n";
-  std::cout << pvector_stats << "\n";
+
+  // Profiler profiler;
+  // const int total_points = 8;
+  // const int weight = 5;
+  // DeltaExpr expr;
+  // for (int num_args = 4; num_args <= total_points; num_args += 2) {
+  //   for (const auto& seq : increasing_sequences(total_points, num_args)) {
+  //     const auto args = mapped(seq, [](int x) { return x + 1; });
+  //     const int sign = neg_one_pow(sum(args) + num_args / 2);
+  //     expr += sign * QLiSymmVec(weight, args);
+  //   }
+  // }
+  // profiler.finish("expr");
+  // expr = to_lyndon_basis(expr);
+  // profiler.finish("lyndon");
+  // CHECK(expr.is_zero());
+
+
+  Profiler profiler;
+  auto expr = QLi6(1,2,3,4,5,6);
+  profiler.finish("expr");
+  expr = to_lyndon_basis(expr);
+  profiler.finish("lyndon");
+  auto coexpr = comultiply(expr, {3,3});
+  profiler.finish("comultiply");
+  std::cout << "Checksum = " << expr.l1_norm() + coexpr.l1_norm() << "\n";
 }

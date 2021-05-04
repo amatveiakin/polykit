@@ -123,7 +123,7 @@ def d_expr_dimension(
     ])
 
 
-# Equivalent to `to_lyndon_basis(expr)`, but hopefully faster
+# Equivalent to `to_lyndon_basis(expr)`, but faster
 def d_expr_to_lyndon_basis(
         expr: Linear,  # Linear[Tuple[D]]
     ):

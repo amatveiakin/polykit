@@ -18,6 +18,16 @@ static int num_distinct_variables(const std::vector<Delta>& term) {
 }
 
 
+#if DISABLE_PACKING
+DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {
+  const auto& new_points = new_points_arg.as_x();
+  return expr.mapped([&](const DeltaExpr::ObjectT& term_old) {
+    return mapped(term_old, [&](const Delta& d) {
+      return Delta(new_points.at(d.a() - 1), new_points.at(d.b() - 1));
+    });
+  });
+}
+#else
 DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {
   constexpr int kMaxChar = std::numeric_limits<unsigned char>::max();
   constexpr int kNoReplacement = kMaxChar;
@@ -56,6 +66,7 @@ DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_ar
   });
   return ret;
 }
+#endif
 
 DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points) {
   return expr.mapped_expanding([&](const std::vector<Delta>& term) {

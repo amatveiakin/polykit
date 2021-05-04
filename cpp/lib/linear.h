@@ -82,13 +82,18 @@
 #include "util.h"
 
 
-// Params for a linear expression with StorageT == ObjectT.
+// TODO: Why is `std::move` needed (suggested by clang)?  (here and in IDENTITY_VECTOR_FORM below)
+#define IDENTITY_STORAGE_FORM                                                  \
+  using StorageT = ObjectT;                                                    \
+  static const ObjectT& key_to_object(const StorageT& key) { return key; }     \
+  static ObjectT key_to_object(StorageT&& key) { return std::move(key); }      \
+  static const StorageT& object_to_key(const ObjectT& obj) { return obj; }     \
+  static StorageT object_to_key(ObjectT&& obj) { return std::move(obj); }
+
 template<typename T>
 struct SimpleLinearParam {
   using ObjectT = T;
-  using StorageT = T;
-  static StorageT object_to_key(const ObjectT& obj) { return obj; }
-  static ObjectT key_to_object(const StorageT& key) { return key; }
+  IDENTITY_STORAGE_FORM
   // can be overwritten if necessary
   static std::string object_to_string(const ObjectT& obj) { return to_string(obj); }
 
@@ -119,20 +124,19 @@ struct SimpleLinearParam {
 // };
 // Also consider: https://brevzin.github.io/c++/2019/12/02/named-arguments/
 
-template<typename T>
-bool compare_length_first(const T& lhs, const T& rhs) {
-  const auto lhs_size = lhs.size();
-  const auto rhs_size = rhs.size();
-  return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
-}
-
-// TODO: Why is `std::move` needed (suggested by clang)?
 #define IDENTITY_VECTOR_FORM                                                   \
   using VectorT = StorageT;                                                    \
   static const VectorT& key_to_vector(const StorageT& key) { return key; }     \
   static VectorT key_to_vector(StorageT&& key) { return std::move(key); }      \
   static const StorageT& vector_to_key(const VectorT& vec) { return vec; }     \
   static StorageT vector_to_key(VectorT&& vec) { return std::move(vec); }
+
+template<typename T>
+bool compare_length_first(const T& lhs, const T& rhs) {
+  const auto lhs_size = lhs.size();
+  const auto rhs_size = rhs.size();
+  return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
+}
 
 #define LYNDON_COMPARE_DEFAULT                                                 \
   static bool lyndon_compare(                                                  \
@@ -173,7 +177,11 @@ class BasicLinear {
 public:
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
+#if DISABLE_PACKING
+  using ContainerT = std::unordered_map<StorageT, int, absl::Hash<StorageT>>;
+#else
   using ContainerT = absl::flat_hash_map<StorageT, int>;
+#endif
   using const_key_iterator = typename ContainerT::const_iterator;
 
   class const_iterator {

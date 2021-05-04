@@ -66,7 +66,6 @@ template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
   auto expr = to_vector_expression(expression.without_annotations());
   using VectorLinearT = decltype(expr);
-  using VectorT = typename VectorLinearT::StorageT;
   // Optimization potential:
   //   * Replace std::map with absl::btree_map.
   //   * Replace std::map with a heap.
@@ -78,7 +77,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     cmp::lexicographical(cmp::greater_from_less(&LinearT::Param::lyndon_compare))
   };
   // Not using a linear to avoid discarding terms with coeff == 0 in the process.
-  absl::flat_hash_map<VectorT, int> terms_converted;
+  typename VectorLinearT::BasicLinearMain::ContainerT terms_converted;
 
   while (!terms_to_convert.empty()) {
     const auto [word, coeff] = *terms_to_convert.begin();
