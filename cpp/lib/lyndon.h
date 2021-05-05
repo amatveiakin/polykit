@@ -76,8 +76,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     expr.main().data().end(),
     cmp::lexicographical(cmp::greater_from_less(&LinearT::Param::lyndon_compare))
   };
-  // Not using a linear to avoid discarding terms with coeff == 0 in the process.
-  typename VectorLinearT::BasicLinearMain::ContainerT terms_converted;
+  VectorLinearT terms_converted;
 
   while (!terms_to_convert.empty()) {
     const auto [word, coeff] = *terms_to_convert.begin();
@@ -87,13 +86,13 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     }
 
     if (word.size() == 1) {
-      terms_converted[word] += coeff;
+      terms_converted.add_to_key(word, coeff);
       continue;
     } else if (word.size() == 2) {
       if (LinearT::Param::lyndon_compare(word[0], word[1])) {
-        terms_converted[word] += coeff;
+        terms_converted.add_to_key(word, coeff);
       } else if (LinearT::Param::lyndon_compare(word[1], word[0])) {
-        terms_converted[{word[1], word[0]}] -= coeff;
+        terms_converted.add_to_key({word[1], word[0]}, -coeff);
       } else {
         // though away: zero
       }
@@ -103,7 +102,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     const auto& lyndon_words = lyndon_factorize(word, &LinearT::Param::lyndon_compare);
     CHECK(!lyndon_words.empty());
     if (lyndon_words.size() == 1) {
-      terms_converted[word] += coeff;
+      terms_converted.add_to_key(word, coeff);
       continue;
     }
 
@@ -117,20 +116,12 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     shuffle_expr.div_int(denominator);
     CHECK_EQ(shuffle_expr.coeff_for_key(word), 1);
     shuffle_expr.add_to_key(word, -1);
-
     for (const auto& [key, inner_coeff] : key_view(&shuffle_expr)) {
-      const auto it = terms_converted.find(key);
-      const int addition = -coeff * inner_coeff;
-      if (it != terms_converted.end()) {
-        it->second += addition;
-      } else {
-        terms_to_convert[key] += addition;
-      }
+      assert(terms_converted.coeff_for_key(key) == 0);
+      terms_to_convert[key] -= coeff * inner_coeff;
     }
   };
 
-  LinearT ret = from_vector_expression<LinearT>(VectorLinearT(
-    typename VectorLinearT::BasicLinearMain(std::move(terms_converted)), LinearAnnotation()
-  ));
+  LinearT ret = from_vector_expression<LinearT>(terms_converted);
   return ret.copy_annotations(expression);
 }

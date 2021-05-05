@@ -7,19 +7,21 @@
    I've tested with Clang 10.0.0 and MSVC 14.0 (C/C++ compiler version
    19.27.29112), but other modern compilers should work as well.
 
-All other dependencies are managed by Bazel. This means an internet connection
-is required for on first run.
+All other dependencies are managed by Bazel. An internet connection is required
+on first run.
 
 **For pure Python code**
 
-Install Python3. Note that PyPy has better performance than the default
-(CPython) interpreter.
+1. Install Python3. Note that PyPy has better performance than the default
+   (CPython) interpreter.
+2. Install “sortedcontainers” module: `pip install sortedcontainers` (note: you
+   may need to replace `pip` with `pip3`)
 
 Bazel is not required.
 
 **For Python code with C++ bindings**
 
-Follow the steps for C++ and for Python. In additional to that:
+Follow the steps for C++. In additional to that:
 
    * On Linux/MacOS. Install Python3 development tools. Ubuntu package name
      is `python3-dev`.
@@ -27,6 +29,11 @@ Follow the steps for C++ and for Python. In additional to that:
      please tell me if you do :) As a workaround I've been using Windows
      Subsystem for Linux (WSL). Note that in this case the entire stack
      (Bazel, C++ compiler, Python) needs to be installed in WSL.
+
+Note that Bazel runs Python in a hermetic way and maintains all dependencies
+itself. Python packages installed in the system will not be available to Bazel
+and vice versa. In order to add a new Python dependency for pybind code, add it
+to `pybind/requirements.txt`.
 
 
 # Execute
