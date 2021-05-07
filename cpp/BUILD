@@ -142,19 +142,6 @@ cc_library(
     ],
 )
 
-# TODO: Split test targets (and remove or lower shard_count)
-cc_test(
-    name = "all_tests",
-    srcs = glob(["test/*.cpp"]),
-    shard_count = 8,
-    deps = [
-        "@googletest//:gtest_main",
-        ":polylog",
-        ":test_util",
-    ],
-    copts = ["-Icpp"],
-)
-
 cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
