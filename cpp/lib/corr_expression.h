@@ -3,7 +3,7 @@
 #include "format.h"
 #include "lexicographical.h"
 #include "linear.h"
-#include "packed.h"
+#include "pvector.h"
 #include "util.h"
 
 

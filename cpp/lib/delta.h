@@ -21,7 +21,7 @@
 #include "coalgebra.h"
 #include "format.h"
 #include "linear.h"
-#include "packed.h"
+#include "pvector.h"
 #include "util.h"
 #include "x.h"
 

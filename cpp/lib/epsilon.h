@@ -13,8 +13,8 @@
 #include "bit.h"
 #include "check.h"
 #include "coalgebra.h"
-#include "packed.h"
 #include "polylog_li_param.h"
+#include "pvector.h"
 
 
 constexpr int kMaxComplementVariables = 15;
