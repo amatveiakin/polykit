@@ -107,3 +107,18 @@ CheckResult check_ge(CheckLocation loc, const X& x, const Y& y, const char* x_st
   internal::check_gt({__FILE__, __LINE__}, lhs, rhs, STRINGIFY(lhs), STRINGIFY(rhs)).ok ? std::cerr : std::cerr
 #define CHECK_GE(lhs, rhs)  \
   internal::check_ge({__FILE__, __LINE__}, lhs, rhs, STRINGIFY(lhs), STRINGIFY(rhs)).ok ? std::cerr : std::cerr
+
+
+#ifndef ENABLE_ASSERTIONS
+#  ifdef NDEBUG
+#    define ENABLE_ASSERTIONS 0
+#  else
+#    define ENABLE_ASSERTIONS 1
+#  endif
+#endif
+
+#if ENABLE_ASSERTIONS
+#  define ASSERT(condition)  CHECK(condition)
+#else
+#  define ASSERT(condition)  ((void)0)
+#endif

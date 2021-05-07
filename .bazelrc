@@ -18,5 +18,8 @@ build:clang-asan --copt -O1
 build:clang-asan --copt -g
 build:clang-asan --copt -fno-omit-frame-pointer
 build:clang-asan --linkopt -fsanitize=address
+build:clang-asan --platform_suffix=asan  # separate build cache
 
 test --test_output=errors
+test --cxxopt=-DENABLE_ASSERTIONS
+test --platform_suffix=test  # separate build cache

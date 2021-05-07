@@ -389,7 +389,7 @@ public:
     } else {
       for (auto& [key, coeff]: data_) {
         coeff *= scalar;
-        assert(coeff != 0);
+        ASSERT(coeff != 0);
       }
     }
     return *this;
@@ -398,7 +398,7 @@ public:
     CHECK(scalar != 0);
     for (auto& [key, coeff]: data_) {
       coeff = ::div_int(coeff, scalar);
-      assert(coeff != 0);
+      ASSERT(coeff != 0);
     }
   }
 

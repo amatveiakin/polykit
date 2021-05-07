@@ -117,7 +117,7 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     CHECK_EQ(shuffle_expr.coeff_for_key(word), 1);
     shuffle_expr.add_to_key(word, -1);
     for (const auto& [key, inner_coeff] : key_view(&shuffle_expr)) {
-      assert(terms_converted.coeff_for_key(key) == 0);
+      ASSERT(terms_converted.coeff_for_key(key) == 0);
       terms_to_convert[key] -= coeff * inner_coeff;
     }
   };

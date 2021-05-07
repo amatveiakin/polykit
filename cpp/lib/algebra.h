@@ -144,7 +144,7 @@ LinearProdT outer_product(
   lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
     rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
       const auto ret_key = monom_key_product(lhs_key, rhs_key);
-      assert(ret.coeff_for_key(ret_key) == 0);  // outer product must be unique
+      ASSERT(ret.coeff_for_key(ret_key) == 0);  // outer product must be unique
       ret.add_to_key(ret_key, lhs_coeff * rhs_coeff);
     });
   });

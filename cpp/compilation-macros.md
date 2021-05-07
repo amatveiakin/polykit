@@ -1,3 +1,7 @@
+`ENABLE_ASSERTIONS` (bool; default = only in debug builds and tests).
+Enables assertions. This affects only a small fractions of invariant-checking.
+Most code relies on CHECKs, which are enabled all the time.
+
 `UNROLL_SHUFFLE` (bool; default = only in release builds).
 Unrolls shuffle product of two words. Significantly speeds up shuffle product
 (and thus conversion to Lyndon basis) at the cost of increased compilation time.
