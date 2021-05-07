@@ -30,8 +30,7 @@ TEST(CoequationsTest, QLiSymm4_OldFormula) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(CoequationsTest, QLiSymm_Arg6) {
+TEST(CoequationsTest, LARGE_QLiSymm_Arg6) {
   for (int wr : range_incl(2, 3)) {
     EXPECT_EXPR_EQ(
       comultiply(QLiSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
@@ -47,7 +46,6 @@ TEST(CoequationsTest, QLiSymm_Arg6) {
     );
   }
 }
-#endif
 
 TEST(CoequationsTest, QLi_Arg6) {
   for (int w : range_incl(1, 2)) {
@@ -95,8 +93,7 @@ TEST(CoequationsTest, QLi3_Arg6) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(CoequationsTest, QLi4_Arg6_Form1_3) {
+TEST(CoequationsTest, LARGE_QLi4_Arg6_Form1_3) {
   EXPECT_EXPR_EQ(
     comultiply(QLi4(1,2,3,4,5,6), {1,3}),
     (
@@ -116,7 +113,7 @@ TEST(CoequationsTest, QLi4_Arg6_Form1_3) {
   );
 }
 
-TEST(CoequationsTest, QLiNeg4_Arg6_Form1_3) {
+TEST(CoequationsTest, LARGE_QLiNeg4_Arg6_Form1_3) {
   EXPECT_EXPR_EQ(
     comultiply(QLiNeg4(1,2,3,4,5,6), {1,3}),
     (
@@ -136,7 +133,7 @@ TEST(CoequationsTest, QLiNeg4_Arg6_Form1_3) {
   );
 }
 
-TEST(CoequationsTest, QLi4_Arg8) {
+TEST(CoequationsTest, LARGE_QLi4_Arg8) {
   EXPECT_EXPR_EQ(
     comultiply(QLi4(1,2,3,4,5,6,7,8), {2,2}),
     (
@@ -152,7 +149,7 @@ TEST(CoequationsTest, QLi4_Arg8) {
   );
 }
 
-TEST(CoequationsTest, QLi5_Arg6) {
+TEST(CoequationsTest, LARGE_QLi5_Arg6) {
   EXPECT_EXPR_EQ(
     comultiply(QLi5(1,2,3,4,5,6), {2,3}),
     (
@@ -166,7 +163,7 @@ TEST(CoequationsTest, QLi5_Arg6) {
   );
 }
 
-TEST(CoequationsTest, QLi5_Arg8) {
+TEST(CoequationsTest, LARGE_QLi5_Arg8) {
   EXPECT_EXPR_EQ(
     comultiply(QLi5(1,2,3,4,5,6,7,8), {2,3}),
     (
@@ -190,7 +187,7 @@ TEST(CoequationsTest, QLi5_Arg8) {
   );
 }
 
-TEST(CoequationsTest, QLiNeg5_Arg8) {
+TEST(CoequationsTest, LARGE_QLiNeg5_Arg8) {
   EXPECT_EXPR_EQ(
     comultiply(QLiNeg5(1,2,3,4,5,6,7,8), {2,3}),
     (
@@ -214,7 +211,7 @@ TEST(CoequationsTest, QLiNeg5_Arg8) {
   );
 }
 
-TEST(CoequationsTest, QLi6_Arg8) {
+TEST(CoequationsTest, LARGE_QLi6_Arg8) {
   EXPECT_EXPR_EQ(
     comultiply(QLi6(1,2,3,4,5,6,7,8), {3,3}),
     (
@@ -230,7 +227,7 @@ TEST(CoequationsTest, QLi6_Arg8) {
   );
 }
 
-TEST(CoequationsTest, QLiSymm5) {
+TEST(CoequationsTest, LARGE_QLiSymm5) {
   EXPECT_EXPR_EQ(
     comultiply(QLiSymm5(1,2,3,4,5,6), {2,3}),
     sum_looped(
@@ -241,7 +238,7 @@ TEST(CoequationsTest, QLiSymm5) {
     )
   );
 }
-TEST(CoequationsTest, QLiSymm6) {
+TEST(CoequationsTest, LARGE_QLiSymm6) {
   EXPECT_EXPR_EQ(
     comultiply(QLiSymm6(1,2,3,4,5,6), {3,3}),
     (
@@ -251,4 +248,3 @@ TEST(CoequationsTest, QLiSymm6) {
     )
   );
 }
-#endif

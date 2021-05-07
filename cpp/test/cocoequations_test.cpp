@@ -13,8 +13,7 @@
 #include "test_util/matchers.h"
 
 
-#if RUN_LARGE_TESTS
-TEST(CocoequationsTest, LiQuadSum_Comult_2_2_2) {
+TEST(CocoequationsTest, LARGE_LiQuadSum_Comult_2_2_2) {
   const int num_points = 9;
   auto theta_expr = sum_looped_vec(
     [&](const XArgs& args) {
@@ -27,18 +26,17 @@ TEST(CocoequationsTest, LiQuadSum_Comult_2_2_2) {
   EXPECT_EXPR_ZERO(lira_expr_comultiply(lira_expr));
 }
 
-TEST(CocoequationsTest, QLi6_Arg6_Comult_2_2_2) {
+TEST(CocoequationsTest, LARGE_QLi6_Arg6_Comult_2_2_2) {
   const auto expr = QLi6(1,2,3,4,5,6);
   EXPECT_EXPR_ZERO(comultiply(expr, {2,2,2}));
 }
 
-TEST(CocoequationsTest, QLi6_Arg8_Comult_2_2_2) {
+TEST(CocoequationsTest, LARGE_QLi6_Arg8_Comult_2_2_2) {
   const auto expr = QLi6(1,2,3,4,5,6,7,8);
   EXPECT_FALSE(comultiply(expr, {2,2,2}).is_zero());
 }
 
-#if RUN_HUGE_TESTS
-TEST(CocoequationsTest, QLi6_Arg8_Sum_Comult_2_2_2) {
+TEST(CocoequationsTest, HUGE_QLi6_Arg8_Sum_Comult_2_2_2) {
   const int num_points = 9;
   auto qli_expr = sum_looped_vec(
     [&](const XArgs& args) {
@@ -50,15 +48,13 @@ TEST(CocoequationsTest, QLi6_Arg8_Sum_Comult_2_2_2) {
   auto qli_comult = comultiply(qli_expr, {2,2,2});
   EXPECT_EXPR_ZERO(qli_comult);
 }
-#endif
 
-TEST(CocoequationsTest, Lira4_Comult_2_2_2) {
+TEST(CocoequationsTest, LARGE_Lira4_Comult_2_2_2) {
   const auto expr = theta_expr_to_delta_expr(Lira3(2,1)(CR(1,2,3,4), CR(1,4,5,2)));
   EXPECT_EXPR_ZERO(comultiply(expr, {2,2,2}));
 }
 
-TEST(CocoequationsTest, Corr_Comult_2_2_2) {
+TEST(CocoequationsTest, LARGE_Corr_Comult_2_2_2) {
   const auto expr = Corr(1,2,3,4,5,6,7);
   EXPECT_FALSE(comultiply(expr, {2,2,2}).is_zero());
 }
-#endif

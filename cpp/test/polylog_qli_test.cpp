@@ -50,14 +50,12 @@ TEST(QLiTest, QLiSymmEquation_Arg8) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(QLiTest, QLiSymmEquation_Arg10) {
+TEST(QLiTest, LARGE_QLiSymmEquation_Arg10) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(project_on_x1(
     + QLiSymm4(1,2,3,4,5,6,7,8,9,10)
     + QLiSymm4(2,3,4,5,6,7,8,9,10,1)
   ));
 }
-#endif
 
 TEST(QLiTest, QLiSymm_Arg8_AlternativeFormula) {
   EXPECT_EXPR_EQ_AFTER_LYNDON(
@@ -94,8 +92,7 @@ TEST(QLiTest, QLi_Arg6_ShiftedDiffFormula) {
   }
 }
 
-#if RUN_LARGE_TESTS
-TEST(QLiTest, QLi_Arg8_ShiftedDiffFormula) {
+TEST(QLiTest, LARGE_QLi_Arg8_ShiftedDiffFormula) {
   for (int w : range_incl(3, 4)) {
     const int s = neg_one_pow(w);
     EXPECT_EXPR_EQ_AFTER_LYNDON(
@@ -129,7 +126,6 @@ TEST(QLiTest, QLi_Arg8_ShiftedDiffFormula) {
     );
   }
 }
-#endif
 
 class SubsetSumFormulaTest : public ::testing::TestWithParam<std::pair<int, int>> {
 public:
@@ -149,20 +145,18 @@ TEST_P(SubsetSumFormulaTest, QLiSymm_SubsetSumFormula) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
 }
 
-INSTANTIATE_TEST_SUITE_P(FastCases, SubsetSumFormulaTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(Cases, SubsetSumFormulaTest, ::testing::Values(
   std::pair{2, 5},
   std::pair{2, 6},
   std::pair{3, 6}
 ));
-#if RUN_LARGE_TESTS
-INSTANTIATE_TEST_SUITE_P(SlowCases, SubsetSumFormulaTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(LARGE_Cases, SubsetSumFormulaTest, ::testing::Values(
   std::pair{3, 7},
   std::pair{4, 7},
   std::pair{3, 8},
   std::pair{4, 8},
   std::pair{5, 8}
 ));
-#endif
 
 TEST(QLiTest, QLiBuiltinProjection) {
   EXPECT_EXPR_EQ(

@@ -58,8 +58,7 @@ TEST(MysticProductTest, CoLiShuffle_Arg3_Weight6) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(MysticProductTest, CoLiShuffle_Arg4_Weight8) {
+TEST(MysticProductTest, LARGE_CoLiShuffle_Arg4_Weight8) {
   EXPECT_EXPR_EQ(
     + CoLi(2,2,2,2)({1},{2},{3},{4})
     + CoLi(2,2,2,2)({1},{2},{4},{3})
@@ -75,4 +74,3 @@ TEST(MysticProductTest, CoLiShuffle_Arg4_Weight8) {
     )
   );
 }
-#endif

@@ -18,3 +18,5 @@ build:clang-asan --copt -O1
 build:clang-asan --copt -g
 build:clang-asan --copt -fno-omit-frame-pointer
 build:clang-asan --linkopt -fsanitize=address
+
+test --test_output=errors

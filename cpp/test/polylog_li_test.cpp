@@ -57,8 +57,7 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight4) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight6) {
+TEST(LiTest, LARGE_LiShuffle_NoLyndon_Arg3_Weight6) {
   EXPECT_EXPR_EQ(
     + Li(2,2,2)({1},{2},{3})
     + Li(2,2,2)({1},{3},{2})
@@ -73,7 +72,7 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg3_Weight6) {
   );
 }
 
-TEST(LiTest, LiShuffle_NoLyndon_Arg4_Weight8) {
+TEST(LiTest, LARGE_LiShuffle_NoLyndon_Arg4_Weight8) {
   EXPECT_EXPR_EQ(
     + Li(2,2,2,2)({1},{2},{3},{4})
     + Li(2,2,2,2)({1},{2},{4},{3})
@@ -89,7 +88,6 @@ TEST(LiTest, LiShuffle_NoLyndon_Arg4_Weight8) {
     )
   );
 }
-#endif
 
 TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
   const LiParam li_a(0, {1,1},{{1},{2}});

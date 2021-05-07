@@ -186,8 +186,7 @@ TEST(CorrFSymbTest, FormalSymbolCoEquation_Arg6_Form_1_3) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(CorrFSymbTest, FormalSymbolCoEquation_Arg8_Form_2_3) {
+TEST(CorrFSymbTest, LARGE_FormalSymbolCoEquation_Arg8_Form_2_3) {
   EXPECT_EXPR_EQ(
     - corr_comultiply(CorrQLi   (5, {1,2,3,4,5,6,7,8}), {2,3}),
     (
@@ -226,7 +225,6 @@ TEST(CorrFSymbTest, FormalSymbolCoEquation_Arg8_Form_2_3) {
     )
   );
 }
-#endif
 
 
 

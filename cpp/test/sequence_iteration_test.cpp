@@ -180,8 +180,7 @@ TEST(SequenceIterationTest, NondecreasingSequencesGolden) {
   );
 }
 
-#if RUN_LARGE_TESTS
-TEST(SequenceIterationTest, IncreasingSequencesFixedLengthAgainstNaive) {
+TEST(SequenceIterationTest, LARGE_IncreasingSequencesFixedLengthAgainstNaive) {
   for (int alphabet_size : range(1, 5)) {
     for (int length : range(5)) {
       EXPECT_EQ(
@@ -192,7 +191,7 @@ TEST(SequenceIterationTest, IncreasingSequencesFixedLengthAgainstNaive) {
   }
 }
 
-TEST(SequenceIterationTest, NondecreasingSequencesAgainstNaive) {
+TEST(SequenceIterationTest, LARGE_NondecreasingSequencesAgainstNaive) {
   for (int alphabet_size : range(1, 5)) {
     for (int length : range(5)) {
       EXPECT_EQ(
@@ -202,4 +201,3 @@ TEST(SequenceIterationTest, NondecreasingSequencesAgainstNaive) {
     }
   }
 }
-#endif
