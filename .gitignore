@@ -9,8 +9,20 @@ Debug/
 .vs/
 
 # bazel
-bazel-*/
+bazel-bin
+bazel-cpp
+bazel-out
+bazel-polykit
+bazel-polylog
+bazel-testlogs
 
 # Binaries
 __pycache__/
 *.exe
+*.sage.py
+
+# Misc
+*.pdf
+in*.txt
+out*.txt
+/tex/

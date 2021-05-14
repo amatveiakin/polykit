@@ -1,5 +1,25 @@
 build:msvc --cxxopt="/std:c++17"
 build:msvc --copt /wd4267  # "conversion from 'size_t' to 'type', possible loss of data"
 
+# `clang-cl` config is based on `msvc` config
+build:clang-cl --cxxopt="/std:c++17"
+build:clang-cl --copt /wd4267  # "conversion from 'size_t' to 'type', possible loss of data"
+build:clang-cl --copt "-Wno-builtin-macro-redefined"  # for __DATE__, __TIME__, __TIMESTAMP__
+
 build:clang --repo_env=CC=clang
 build:clang --cxxopt="-std=c++17"
+
+build:clang-asan --repo_env=CC=clang
+build:clang-asan --cxxopt="-std=c++17"
+build:clang-asan --strip=never
+build:clang-asan --copt -fsanitize=address
+build:clang-asan --copt -DADDRESS_SANITIZER
+build:clang-asan --copt -O1
+build:clang-asan --copt -g
+build:clang-asan --copt -fno-omit-frame-pointer
+build:clang-asan --linkopt -fsanitize=address
+build:clang-asan --platform_suffix=asan  # separate build cache
+
+test --test_output=errors
+test --cxxopt=-DENABLE_ASSERTIONS
+test --platform_suffix=test  # separate build cache
