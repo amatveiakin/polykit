@@ -184,8 +184,7 @@ auto mapped_to_pvector(const std::vector<In>& src, F&& func) {
 
 
 namespace std {
-// TODO: Find a solution that doesn't require expanding std, or
-// at least move to an appropriate place.
+// TODO: Find a solution that doesn't require expanding std.
 template<size_t N>
 bool operator<(const std::bitset<N>& a, const std::bitset<N>& b) {
   if constexpr (N <= sizeof(unsigned long) * CHAR_BIT) {

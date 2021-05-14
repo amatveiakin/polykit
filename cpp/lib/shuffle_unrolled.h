@@ -2,9 +2,6 @@
 
 
 // By default shuffle is unrolled in release mode. To override, set UNROLL_SHUFFLE to 0 or 1.
-//
-// TODO: Use `--platform_suffix` to change output directory depending on whether shuffle is
-//   unrolled or not. Same for UNROLL_SHUFFLE_MULTI.
 #ifndef UNROLL_SHUFFLE
 #  ifdef NDEBUG
 #    define UNROLL_SHUFFLE 1

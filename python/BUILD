@@ -9,11 +9,16 @@ load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
     name = "polypy_lib",
-    srcs = [
-        "polypy/lib/profiler.py",
-        "polypy/lib/util.py",
-    ],
+    srcs = glob(["polypy/lib/*.py"]),
     deps = [
         requirement("psutil"),
+    ]
+)
+
+py_binary(
+    name = "workspace",
+    srcs = ["workspace.py"],
+    deps = [
+        ":polypy_lib",
     ]
 )

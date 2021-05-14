@@ -14,10 +14,13 @@ on first run.
 
 1. Install Python3. Note that PyPy has better performance than the default
    (CPython) interpreter.
-2. Install “sortedcontainers” module: `pip install sortedcontainers` (note: you
-   may need to replace `pip` with `pip3`)
-
-Bazel is not required.
+2. Do one of the two:
+   * Install Bazel: https://bazel.build/. If running Python code via Bazel, it
+     will take care of the dependencies.
+   * Install dependencies manually, namely “sortedcontainers” module.
+     For CPython via PyPI: `pip install sortedcontainers` (you may need to
+     replace `pip` with `pip3`).
+     For PyPy: `pypy3 -m pip install sortedcontainers`
 
 **For Python code with C++ bindings**
 

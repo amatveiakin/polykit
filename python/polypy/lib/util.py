@@ -33,18 +33,3 @@ def args_to_iterable(args):
 # Attempts to turn value into an immutable object that can be used as dict key.
 def to_hashable(v):
     return tuple(map(to_hashable, v)) if isinstance(v, (tuple, list)) else v
-
-# Generates all possible words of a given length in an alphabet
-# of a given size, in lexicographic order.
-# Example:  generate_all_words(2, 3)  ->
-#           [(0, 0, 0), (0, 0, 1), (0, 1, 0), ..., (1, 1, 1)]
-def generate_all_words(alphabet_size, length):
-    ret = [0] * length
-    while ret[0] < alphabet_size:
-        yield tuple(ret)
-        i = len(ret) - 1
-        ret[i] += 1
-        while i > 0 and ret[i] == alphabet_size:
-            ret[i] = 0
-            i -= 1
-            ret[i] += 1

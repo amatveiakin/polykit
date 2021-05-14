@@ -1,10 +1,12 @@
-import math
+import itertools
 import unittest
 
 from ..lib.linear import Linear
 from ..lib.lyndon import lyndon_factorize, to_lyndon_basis
-from ..lib.util import generate_all_words
 
+
+def _generate_all_words(alphabet_size, length):
+    return itertools.product(range(alphabet_size), repeat=length)
 
 def _is_lyndon_word(word):
     for i in range(1, len(word)):
@@ -33,17 +35,17 @@ class TestLyndon(unittest.TestCase):
 
     def test_lyndon_factorize_correctness(self):
         for length in range(1, 12):
-            for word in generate_all_words(2, length):
+            for word in _generate_all_words(2, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
         for length in range(1, 8):
-            for word in generate_all_words(3, length):
+            for word in _generate_all_words(3, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
         for length in range(1, 6):
-            for word in generate_all_words(4, length):
+            for word in _generate_all_words(4, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
-            for word in generate_all_words(5, length):
+            for word in _generate_all_words(5, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
-            for word in generate_all_words(6, length):
+            for word in _generate_all_words(6, length):
                 self.__assert_lyndon_factorization(lyndon_factorize(word))
 
     def test_to_lyndon_basis_empty(self):

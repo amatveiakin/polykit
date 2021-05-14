@@ -1,3 +1,6 @@
+import time
+
+
 diff_to_generator = {}
 generator_names = []
 max_variables = 16
@@ -10,10 +13,8 @@ for a in range(1, max_variables+1):
         diff_to_generator[(b,a)] = generator_index
 
 
-# F = LieAlgebra(ZZ, names=generator_names)
 F = FreeAlgebra(ZZ, names=generator_names)
 # F = FreeAlgebra(ZZ, names=generator_names, implementation='letterplace')
-# M = F.monoid()  # TODO: ?
 
 
 def cross_ratio(p):
@@ -65,3 +66,11 @@ def QLi(weight, points):
     for i in range(len(points)):
         tagged_points.append((points[i], (i+1) % 2 == 1))
     return qli_impl(weight, tagged_points)
+
+
+for weight in range(4, 8):
+  num_points = 8
+  start = time.time()
+  QLi(weight, list(range(1, num_points+1)))
+  duration = time.time() - start
+  print(f"({weight}, {duration:.3f})")

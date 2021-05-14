@@ -19,6 +19,7 @@ bazel-testlogs
 # Binaries
 __pycache__/
 *.exe
+*.sage.py
 
 # Misc
 *.pdf

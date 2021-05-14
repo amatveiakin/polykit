@@ -139,7 +139,7 @@ static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const P
   const int num_points = points.size();
   // Note: weight 1 can be defined as `QLi1(x1,x2,x3,x4) - QLi1(x1,x2) - QLi1(x3,x4)`.
   // This is symmetric, but doesn't fit comultiplication formulae.
-  CHECK_GT(weight, 1) << "LydoSymm is not defined for weight 1";
+  CHECK_GT(weight, 1) << "QLiSymm is not defined for weight 1";
   CHECK(num_points >= 4 && num_points % 2 == 0) << "Bad number of QLi points: " << num_points;
   const int num_pairs = num_points / 2;
   for (const auto& seq : all_sequences(2, num_pairs)) {
