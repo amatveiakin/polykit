@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import functools
 
 from . import format
@@ -133,3 +134,34 @@ def _div_int(x, y):
     result, reminder = divmod(x, y)
     assert reminder == 0
     return result
+
+
+def print_expression(
+        title: str,
+        expr: Linear,
+        element_to_str: Callable = None
+    ):
+    if expr != Linear():
+        print(
+            f"{title} - {expr.num_terms()} terms, |coeff| = {expr.l1_norm()}:\n" +
+            _print_expression_terms(expr, element_to_str) + "\n"
+        )
+    else:
+        print(
+            f"{title} - {len(expr)} terms:\n" +
+            _print_expression_terms(expr, element_to_str) + "\n"
+        )
+
+def _print_expression_terms(
+        expr: Linear,
+        element_to_str: Callable
+    ):
+    CUTOFF_THRESHOLD = 300
+    CUTOFF_DISPLAY = 200
+    assert CUTOFF_DISPLAY <= CUTOFF_THRESHOLD
+    ret = expr.to_str(element_to_str or str)
+    lines = ret.split("\n")
+    if len(lines) > CUTOFF_THRESHOLD:
+        lines = lines[:CUTOFF_DISPLAY]
+        lines.append("...")
+    return "\n".join(lines)
