@@ -69,12 +69,13 @@ constexpr std::string_view get_type_name() {
   constexpr std::string_view prefix = "with T = ";
   constexpr std::string_view suffix = "; ";
   constexpr std::string_view function = __PRETTY_FUNCTION__;
-#elif defined(__MSC_VER)
+#elif defined(_MSC_VER)
   constexpr std::string_view prefix = "get_type_name<";
   constexpr std::string_view suffix = ">(void)";
   constexpr std::string_view function = __FUNCSIG__;
 #else
   return typeid(T).name();
+  constexpr std::string_view prefix, suffix, function;
 #endif
   const auto start = function.find(prefix) + prefix.size();
   const auto end = function.find(suffix);
