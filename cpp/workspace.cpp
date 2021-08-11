@@ -52,29 +52,109 @@ int main(int argc, char *argv[]) {
   );
 
 
-  // Profiler profiler;
-  // const int total_points = 8;
-  // const int weight = 5;
-  // DeltaExpr expr;
-  // for (int num_args = 4; num_args <= total_points; num_args += 2) {
-  //   for (const auto& seq : increasing_sequences(total_points, num_args)) {
-  //     const auto args = mapped(seq, [](int x) { return x + 1; });
-  //     const int sign = neg_one_pow(sum(args) + num_args / 2);
-  //     expr += sign * QLiSymmVec(weight, args);
-  //   }
-  // }
-  // profiler.finish("expr");
-  // expr = to_lyndon_basis(expr);
-  // profiler.finish("lyndon");
-  // CHECK(expr.is_zero());
+  // auto expr =
+  //   + 2*QLi2(1,2,3,4)
+  //   - 2*QLi2(1,2,3,5)
+  //   + 2*QLi2(1,2,4,5)
+  //   - 2*QLi2(1,3,4,5)
+  //   + 2*QLi2(2,3,4,5)
+  // ;
+  // expr +=
+  //   + 2*shuffle_product_expr(QLi1(1,2,3,5), QLi1(1,3,4,5))
+  //   -   shuffle_product_expr(QLi1(1,2,4,5), QLi1(1,2,4,5))
+  // ;
+  // std::cout << expr;
 
 
-  Profiler profiler;
-  auto expr = QLi6(1,2,3,4,5,6);
-  profiler.finish("expr");
-  expr = to_lyndon_basis(expr);
-  profiler.finish("lyndon");
-  auto coexpr = comultiply(expr, {3,3});
-  profiler.finish("comultiply");
-  std::cout << "Checksum = " << expr.l1_norm() + coexpr.l1_norm() << "\n";
+  // auto a =
+  //   + 2*QLi2(1,2,3,4)
+  //   - 2*QLi2(1,2,3,5)
+  //   + 2*QLi2(1,2,4,5)
+  //   - 2*QLi2(1,3,4,5)
+  //   + 2*QLi2(2,3,4,5)
+  // ;
+  // auto b =
+  //   + shuffle_product_expr(QLi1(1,2,3,4), Log(1,2,3,4))
+  //   - shuffle_product_expr(QLi1(1,2,3,5), Log(1,2,3,5))
+  //   + shuffle_product_expr(QLi1(1,2,4,5), Log(1,2,4,5))
+  //   - shuffle_product_expr(QLi1(1,3,4,5), Log(1,3,4,5))
+  //   + shuffle_product_expr(QLi1(2,3,4,5), Log(2,3,4,5))
+  // ;
+  // std::cout << a;
+  // std::cout << b;
+  // std::cout << a - b;
+
+
+
+  // auto qli2symm = [](const XArgs& args) {
+  //   auto [x1, x2, x3, x4, x5, x6] = to_array<6>(args.as_int());
+  //   return
+  //     + QLi2(x1,x2,x3,x4,x5,x6)
+  //     - QLi2(x1,x2,x3,x4)
+  //     - QLi2(x1,x2,x5,x6)
+  //     - QLi2(x3,x4,x5,x6)
+  //   ;
+  // };
+  // auto a = qli2symm({1,2,3,4,5,6}) + qli2symm({2,3,4,5,6,1});
+  // auto b =
+  //   // + shuffle_product_expr(QLi1(1,2,3,4), QLi1(1,4,5,6))
+  //   // - shuffle_product_expr(QLi1(2,3,4,5), QLi1(2,5,6,1))
+  //   // + shuffle_product_expr(QLi1(3,4,5,6), QLi1(3,6,1,2))
+  //   // - shuffle_product_expr(QLi1(4,5,6,1), QLi1(4,1,2,3))
+  //   // + shuffle_product_expr(QLi1(5,6,1,2), QLi1(5,2,3,4))
+  //   // - shuffle_product_expr(QLi1(6,1,2,3), QLi1(6,3,4,5))
+  //   // - shuffle_product_expr(QLi1(1,3,4,6), Log(1,3,4,6))
+
+  //   + shuffle_product_expr(QLi1(1,2,3,4), Log(1,2,3,4))
+  //   + shuffle_product_expr(QLi1(1,2,5,6), Log(1,2,5,6))
+  //   + shuffle_product_expr(QLi1(3,4,5,6), Log(3,4,5,6))
+  //   + shuffle_product_expr(QLi1(2,3,4,5), Log(2,3,4,5))
+  //   + shuffle_product_expr(QLi1(2,3,6,1), Log(2,3,6,1))
+  //   + shuffle_product_expr(QLi1(4,5,6,1), Log(4,5,6,1))
+  // ;
+  // std::cout << a;
+  // std::cout << b;
+  // std::cout << a + b;
+
+
+  auto a = QLi2(1,2,3,4,5,6);
+  auto b =
+    - QLi2(1,2,3,5)
+    + QLi2(1,2,3,6)
+    + QLi2(1,2,4,5)
+    - QLi2(1,2,4,6)
+    - QLi2(1,3,4,5)
+    + QLi2(1,3,4,6)
+    - QLi2(1,3,5,6)
+    + QLi2(1,4,5,6)
+    + QLi2(2,3,4,5)
+    - QLi2(2,3,4,6)
+    + QLi2(2,3,5,6)
+    - QLi2(2,4,5,6)
+  ;
+  a *= 2;
+  b *= 2;
+  // std::cout << to_lyndon_basis(a + b);
+  auto c =
+    - shuffle_product_expr(QLi1(1,2,3,5), Log(1,2,3,5))
+    + shuffle_product_expr(QLi1(1,2,3,6), Log(1,2,3,6))
+    + shuffle_product_expr(QLi1(1,2,4,5), Log(1,2,4,5))
+    - shuffle_product_expr(QLi1(1,2,4,6), Log(1,2,4,6))
+    - shuffle_product_expr(QLi1(1,3,4,5), Log(1,3,4,5))
+    + shuffle_product_expr(QLi1(1,3,4,6), Log(1,3,4,6))
+    - shuffle_product_expr(QLi1(1,3,5,6), Log(1,3,5,6))
+    + shuffle_product_expr(QLi1(1,4,5,6), Log(1,4,5,6))
+    + shuffle_product_expr(QLi1(2,3,4,5), Log(2,3,4,5))
+    - shuffle_product_expr(QLi1(2,3,4,6), Log(2,3,4,6))
+    + shuffle_product_expr(QLi1(2,3,5,6), Log(2,3,5,6))
+    - shuffle_product_expr(QLi1(2,4,5,6), Log(2,4,5,6))
+  ;
+  c +=
+    + shuffle_product_expr(QLi1(1,2,3,4), QLi1(1,4,5,6))
+    - shuffle_product_expr(QLi1(1,2,5,6), QLi1(3,4,5,2))
+    + shuffle_product_expr(QLi1(3,4,5,6), QLi1(1,2,3,6))
+  ;
+  std::cout << a + b;
+  std::cout << c;
+  std::cout << a + b - c;
 }

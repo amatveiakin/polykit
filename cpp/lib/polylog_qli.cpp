@@ -7,6 +7,14 @@
 #include "sequence_iteration.h"
 
 
+DeltaExpr LogVec(const XArgs& args) {
+  return cross_ratio(args.as_x()).annotate(fmt::function_num_args(
+    fmt::opname("Log"),
+    args
+  ));
+}
+
+
 struct Point {
   X x = 0;
   bool odd = true;

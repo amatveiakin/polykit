@@ -106,13 +106,14 @@ static std::optional<std::string> product_annotation(
     return std::nullopt;
   }
   const std::vector<std::string> args = mapped(
-    expressions, &short_linear_description<LinearT>);
+    expressions, &short_linear_description<LinearT>
+  );
   return std::visit(overloaded{
     [](const ProductAnnotationNone&) -> std::string {
       FATAL("ProductAnnotationNone");
     },
     [&](const ProductAnnotationFunction& ann) {
-      return fmt::function(ann.name, args);
+      return fmt::function(ann.name, args, HSpacing::sparse);
     },
     [&](const ProductAnnotationOperator& ann) {
       return fmt::parens(str_join(args, ann.op));

@@ -23,6 +23,8 @@
 #include "projection.h"
 
 
+DeltaExpr LogVec(const XArgs& args);
+
 DeltaExpr QLiVec(int weight, const XArgs& points);
 ProjectionExpr QLiVecPr(int weight, const XArgs& points, DeltaProjector projector);
 
@@ -48,6 +50,8 @@ DeltaExpr QLiSymm_dispatch(int weight, Args... args) {
 }
 }  // namespace internal
 
+
+template<typename... Args> DeltaExpr Log(Args... args) { return LogVec(std::vector<X>{args...}); }
 
 template<typename... Args> DeltaExpr QLi1(Args... args) { return internal::QLi_dispatch(1, args...); }
 template<typename... Args> DeltaExpr QLi2(Args... args) { return internal::QLi_dispatch(2, args...); }
