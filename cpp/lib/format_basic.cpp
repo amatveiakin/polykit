@@ -428,7 +428,7 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
-      return s.length() == 1;
+      return strlen_utf8(s) == 1;
     }) ? "" : ",";
     return absl::StrCat(main, str_join(indices, separator, string_to_subscript));
   }
@@ -443,7 +443,7 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
-      return s.length() == 1;
+      return strlen_utf8(s) == 1;
     }) ? "" : "˒";
     return absl::StrCat(main, str_join(indices, separator, string_to_superscript));
   }
