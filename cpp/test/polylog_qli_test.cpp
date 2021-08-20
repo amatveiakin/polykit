@@ -127,6 +127,7 @@ TEST(QLiTest, LARGE_QLi_Arg8_ShiftedDiffFormula) {
   }
 }
 
+
 class SubsetSumFormulaTest : public ::testing::TestWithParam<std::pair<int, int>> {
 public:
   int weight() const { return GetParam().first; }
@@ -157,6 +158,156 @@ INSTANTIATE_TEST_SUITE_P(LARGE_Cases, SubsetSumFormulaTest, ::testing::Values(
   std::pair{4, 8},
   std::pair{5, 8}
 ));
+
+
+TEST(QLiTest, QLi2_Arg4_SuffleDecompose) {
+  const auto expr =
+    + 2*QLi2(1,2,3,4)
+    - 2*QLi2(1,2,3,5)
+    + 2*QLi2(1,2,4,5)
+    - 2*QLi2(1,3,4,5)
+    + 2*QLi2(2,3,4,5)
+  ;
+  EXPECT_FALSE(expr.is_zero());
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
+  EXPECT_EXPR_EQ(
+    expr
+    ,
+    - 2*shuffle_product_expr(QLi1(1,2,3,5), QLi1(1,3,4,5))
+    +   shuffle_product_expr(QLi1(1,2,4,5), QLi1(1,2,4,5))
+  );
+  EXPECT_EXPR_EQ(
+    expr
+    ,
+    + shuffle_product_expr(QLi1(1,2,3,4), Log(1,2,3,4))
+    - shuffle_product_expr(QLi1(1,2,3,5), Log(1,2,3,5))
+    + shuffle_product_expr(QLi1(1,2,4,5), Log(1,2,4,5))
+    - shuffle_product_expr(QLi1(1,3,4,5), Log(1,3,4,5))
+    + shuffle_product_expr(QLi1(2,3,4,5), Log(2,3,4,5))
+  );
+}
+
+TEST(QLiTest, QLi2_Arg6_SuffleDecompose) {
+  const auto expr = 2 * (
+    + QLi2(1,2,3,4,5,6)
+    - QLi2(1,2,3,5)
+    + QLi2(1,2,3,6)
+    + QLi2(1,2,4,5)
+    - QLi2(1,2,4,6)
+    - QLi2(1,3,4,5)
+    + QLi2(1,3,4,6)
+    - QLi2(1,3,5,6)
+    + QLi2(1,4,5,6)
+    + QLi2(2,3,4,5)
+    - QLi2(2,3,4,6)
+    + QLi2(2,3,5,6)
+    - QLi2(2,4,5,6)
+  );
+  EXPECT_FALSE(expr.is_zero());
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(expr);
+  EXPECT_EXPR_EQ(
+    expr
+    ,
+    - shuffle_product_expr(QLi1(1,2,3,5), Log(1,2,3,5))
+    + shuffle_product_expr(QLi1(1,2,3,6), Log(1,2,3,6))
+    + shuffle_product_expr(QLi1(1,2,4,5), Log(1,2,4,5))
+    - shuffle_product_expr(QLi1(1,2,4,6), Log(1,2,4,6))
+    - shuffle_product_expr(QLi1(1,3,4,5), Log(1,3,4,5))
+    + shuffle_product_expr(QLi1(1,3,4,6), Log(1,3,4,6))
+    - shuffle_product_expr(QLi1(1,3,5,6), Log(1,3,5,6))
+    + shuffle_product_expr(QLi1(1,4,5,6), Log(1,4,5,6))
+    + shuffle_product_expr(QLi1(2,3,4,5), Log(2,3,4,5))
+    - shuffle_product_expr(QLi1(2,3,4,6), Log(2,3,4,6))
+    + shuffle_product_expr(QLi1(2,3,5,6), Log(2,3,5,6))
+    - shuffle_product_expr(QLi1(2,4,5,6), Log(2,4,5,6))
+    + shuffle_product_expr(QLi1(1,2,3,4), QLi1(1,4,5,6))
+    - shuffle_product_expr(QLi1(1,2,5,6), QLi1(3,4,5,2))
+    + shuffle_product_expr(QLi1(3,4,5,6), QLi1(1,2,3,6))
+  );
+}
+
+
+TEST(QLiTest, KummersEquation) {
+  EXPECT_EXPR_EQ_AFTER_LYNDON(
+    + QLiSymm3( x1, x2, x3,-x1,-x2,-x3)
+    ,
+    + QLiSymm3( x1, x2,-x3, x3)
+    + QLiSymm3( x2, x3, x1,-x1)
+    + QLiSymm3( x3,-x1, x2,-x2)
+    + QLiSymm3(-x1,-x2, x3,-x3)
+    + QLiSymm3(-x2,-x3,-x1, x1)
+    + QLiSymm3(-x3, x1,-x2, x2)
+  );
+}
+
+TEST(QLiTest, QLiSymm3_Arg4_EquationDerivedFromKummers) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    -2*QLiSymm3( x1, x2,-x1, x3)
+    -2*QLiSymm3( x1, x2, x3,-x2)
+    -2*QLiSymm3( x3, x1,-x3, x2)
+    -2*QLiSymm3( x1, x2,-x1,-x3)
+    -2*QLiSymm3( x2, x3,-x2,-x1)
+    -2*QLiSymm3( x1, x3,-x2,-x3)
+    +  QLiSymm3( x1, x2,-x1,-x2)
+    +  QLiSymm3( x1, x3,-x1,-x3)
+    +  QLiSymm3( x2, x3,-x2,-x3)
+  );
+}
+
+TEST(QLiTest, QLi4_InvolutionEquation) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    +2*QLi4( x1,-x3, x1,-x2, x3, x2)
+    -2*QLi4(-x3,-x2, x1, x3,-x1,-x2)
+    -  QLi4( x1, x2,-x1,-x2)
+    -2*QLi4( x1, x3, x2,-x3)
+    +  QLi4( x1, x3,-x1,-x3)
+    -2*QLi4( x1,-x2,-x1,-x3)
+    +2*QLi4( x2, x3,-x2,-x1)
+    -  QLi4( x2, x3,-x2,-x3)
+    +2*QLi4( x2,-x1, x3,-x3)
+    +2*QLi4( x3,-x1,-x2,-x3)
+  );
+}
+
+TEST(QLiTest, QLi4_Arg4_InvolutionComultiplication) {
+  EXPECT_EXPR_EQ(
+    filter_coexpr(
+      comultiply(QLi4(x1,x3,-x1,-x3), {1,3}),
+      0, {Delta(x1,x3)}
+    ),
+    2 * coproduct(
+      DeltaExpr::single({Delta(x1,x3)}),
+      + QLi3(x1,x3,-x1,-x3)
+    )
+  );
+}
+
+TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_1_3) {
+  EXPECT_EXPR_EQ(
+    filter_coexpr(
+      comultiply(QLi4(x1,-x3,x1,-x2,x3,x2), {1,3}),
+      0, {Delta(x1,x3)}
+    ),
+    coproduct(
+      DeltaExpr::single({Delta(x1,x3)})
+      ,
+      + QLi3(-x3,x1,-x2,x3)
+      - QLi3(x1,-x3,x3,x2)
+    )
+  );
+}
+
+TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
+  EXPECT_EXPR_ZERO(
+    comultiply(
+      + QLi4(-x1,x3,x1,x2,-x1,Inf)
+      - QLi4(x1,x3,-x1,x2,x1,Inf)
+      ,
+      {2,2}
+    )
+  );
+}
+
 
 TEST(QLiTest, QLiBuiltinProjection) {
   EXPECT_EXPR_EQ(
