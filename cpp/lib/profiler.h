@@ -15,7 +15,7 @@ public:
   void finish(const std::string& operation) {
     const auto finish = std::chrono::steady_clock::now();
     const double time_sec = (finish - start_) / std::chrono::milliseconds(1) / 1000.;
-    std::cout << "Profiler: " << operation << " took " << time_sec << " seconds\n";
+    std::cerr << "Profiler: " << operation << " took " << time_sec << " seconds\n";
     start_ = finish;
   }
 
