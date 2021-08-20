@@ -1,5 +1,5 @@
 // DeltaExpr is a linear expression where each term is a tensor product of residuals of
-// two variables.
+// two variable forms. See `x.h` for the list of supported variable forms.
 //
 // Example:
 //   -2 (x1 - x2)*(x1 - x2)*(x1 - x2)
@@ -32,26 +32,14 @@
 class Delta {
 public:
   Delta() {}
-  Delta(X a, X b) {
-    if (a == Inf || b == Inf) {
-      a_ = 0;
-      b_ = 0;
-    } else {
-      a_ = a.var();
-      b_ = b.var();
-      CHECK_GE(a_, 1);
-      CHECK_GE(b_, 1);
-      sort_two(a_, b_);
-    }
+  Delta(X a, X b) : a_(a), b_(b) {
+    simplify();
   }
 
-  int a() const { return a_; }
-  int b() const { return b_; }
+  X a() const { return a_; }
+  X b() const { return b_; }
 
   bool is_nil() const { return a_ == b_; }
-
-  bool contains(int point) const { return point == a_ || point == b_; }
-  int other_point(int point) const;
 
   bool operator==(const Delta& other) const { return as_pair() == other.as_pair(); }
   bool operator!=(const Delta& other) const { return as_pair() != other.as_pair(); }
@@ -61,7 +49,7 @@ public:
   bool operator>=(const Delta& other) const { return as_pair() >= other.as_pair(); }
 
   // Put larger point first to synchronize ordering with DeltaAlphabetMapping.
-  std::pair<int, int> as_pair() const { return {b_, a_}; }
+  std::pair<X, X> as_pair() const { return {b_, a_}; }
 
   template <typename H>
   friend H AbslHashValue(H h, const Delta& delta) {
@@ -69,23 +57,69 @@ public:
   }
 
 private:
-  int a_ = 0;
-  int b_ = 0;
+  static X negate_x(X x);  // similar to `-x`, but supports all forms
+  void simplify();
+
+  X a_;
+  X b_;
 };
 
-inline std::string to_string(const Delta& d) {
-  // return fmt::parens(fmt::diff(fmt::var(d.a()), fmt::var(d.b())));
-  return fmt::brackets(absl::StrCat(d.a(), ",", d.b()));
+std::string dump_to_string_impl(const Delta& d);
+std::string to_string(const Delta& d);
+
+inline X Delta::negate_x(X x) {
+  switch (x.form()) {
+    case XForm::var:
+    case XForm::neg_var:
+      return -x;
+    case XForm::sq_var:
+      FATAL("Cannot negate sq_var");
+    case XForm::zero:
+    case XForm::infinity:
+    case XForm::undefined:
+      return x;
+  }
+  FATAL(absl::StrCat("Unknown form: ", to_string(x.form())));
 }
 
-inline int Delta::other_point(int point) const {
-  if (point == a_) {
-    return b_;
-  } else if (point == b_) {
-    return a_;
+inline void Delta::simplify() {
+  sort_two(a_, b_);
+  if (a_ == Inf || b_ == Inf) {
+    a_ = Inf;
+    b_ = Inf;
+  } else if (a_.is(XForm::sq_var) || b_.is(XForm::sq_var)) {
+    // Will be simplified later
+    CHECK_EQ(a_.form(), XForm::sq_var);
+    CHECK_EQ(b_.form(), XForm::sq_var);
   } else {
-    FATAL(absl::StrCat("Point ", point, " not found in ", to_string(*this)));
+    if (a_.is(XForm::neg_var)) {
+      a_ = negate_x(a_);
+      b_ = negate_x(b_);
+    }
+    if (b_.is(XForm::neg_var)) {
+      // TODO: Consider storing deltas as sums (not diffs) to avoid things like these.
+      CHECK_EQ(a_.form(), XForm::var);
+      if (b_.idx() < a_.idx()) {
+        const X new_a = X(XForm::var, b_.idx());
+        const X new_b = X(XForm::neg_var, a_.idx());
+        a_ = new_a;
+        b_ = new_b;
+      }
+    }
+    if (a_.is_constant()) {
+      CHECK_EQ(a_, Zero);
+      CHECK_EQ(b_, Zero);
+    }
+    if (a_ == b_) {
+      a_ = Inf;
+      b_ = Inf;
+    } else if (negate_x(a_) == b_) {
+      // "q - (-q)" = "2*q" => "2" + "q" => "q"
+      // throw away terms with constant "2" since they are uninteresting (?)
+      b_ = Zero;
+    }
   }
+  CHECK_LE(a_, b_);
 }
 
 namespace internal {
@@ -95,25 +129,14 @@ using DeltaDiffT = unsigned char;
 
 class DeltaAlphabetMapping {
 public:
-  static constexpr int kMaxDimension = X::kMaxVariableIndex;
+  static constexpr int kMaxDimension = 23;  // allowed characters are [0, kMaxDimension)
 
-  DeltaAlphabetMapping() {
-    static constexpr int kAlphabetSize = kMaxDimension * (kMaxDimension - 1) / 2;
-    static_assert(kAlphabetSize <= std::numeric_limits<internal::DeltaDiffT>::max() + 1);
-    deltas_.resize(kAlphabetSize);
-    for (int b : range_incl(1, kMaxDimension)) {
-      for (int a : range(1, b)) {
-        Delta d(a, b);
-        deltas_.at(to_alphabet(d)) = d;
-      }
-    }
-  }
+  DeltaAlphabetMapping();
 
   int to_alphabet(const Delta& d) const {
-    CHECK(!d.is_nil());
-    CHECK_LE(d.b(), kMaxDimension);
-    const int za = d.a() - 1;
-    const int zb = d.b() - 1;
+    const int za = x_to_alphabet(d.a());
+    const int zb = x_to_alphabet(d.b());
+    CHECK_LE(za, zb);
     return zb*(zb-1)/2 + za;
   }
 
@@ -122,6 +145,33 @@ public:
   }
 
 private:
+  static constexpr int kZeroCode = kMaxDimension - 1;
+  static constexpr int kNegVarCodeStart = (kZeroCode + 1) / 2;
+  static constexpr int kNegVarCodeEnd = kZeroCode;
+  static constexpr int kMaxNegVars = kNegVarCodeEnd - kNegVarCodeStart;
+  static constexpr int kVarCodeStart = 0;
+  static constexpr int kVarCodeEnd = kNegVarCodeStart;
+  static constexpr int kMaxVars = kVarCodeEnd - kVarCodeStart;
+
+  static X alphabet_to_x(int ch);
+  static int x_to_alphabet(X x) {
+    const int idx = x.idx() - 1;
+    switch (x.form()) {
+      case XForm::var:
+        CHECK_LE(0, idx);
+        CHECK_LT(idx, kMaxVars);
+        return kVarCodeStart + idx;
+      case XForm::neg_var:
+        CHECK_LE(0, idx);
+        CHECK_LT(idx, kMaxNegVars);
+        return kNegVarCodeStart + idx;
+      case XForm::zero:
+        return kZeroCode;
+      default:
+        FATAL(absl::StrCat("Unexpected form: ", to_string(x.form())));
+    }
+  }
+
   std::vector<Delta> deltas_;
 };
 
@@ -190,9 +240,24 @@ using DeltaExpr = Linear<internal::DeltaExprParam>;
 using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
 template<> struct CoExprForExpr<DeltaExpr> { using type = DeltaCoExpr; };
 
+inline DeltaExpr delta_to_expr(Delta d) {
+  if (d.is_nil()) {
+    return DeltaExpr();
+  } else if (d.a().is(XForm::sq_var)) {
+    CHECK_EQ(d.b().form(), XForm::sq_var);
+    const auto a_idx = d.a().idx();
+    const auto b_idx = d.b().idx();
+    return (
+      + DeltaExpr::single({Delta(X(XForm::var, a_idx), X(XForm::var, b_idx))})
+      + DeltaExpr::single({Delta(X(XForm::var, a_idx), X(XForm::neg_var, b_idx))})
+    );
+  } else {
+    return DeltaExpr::single({d});
+  }
+}
+
 inline DeltaExpr D(X a, X b) {
-  Delta d(a, b);
-  return d.is_nil() ? DeltaExpr() : DeltaExpr::single({d});
+  return delta_to_expr(Delta(a, b));
 }
 
 
@@ -215,7 +280,9 @@ DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 // For using together with `DeltaExpr::filter`
 inline int count_var(const DeltaExpr::ObjectT& term, int var) {
-  return absl::c_count_if(term, [&](const Delta& d) { return d.contains(var); });
+  return absl::c_count_if(term, [&](const Delta& d) {
+    return d.a().idx() == var || d.b().idx() == var;
+  });
 };
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);

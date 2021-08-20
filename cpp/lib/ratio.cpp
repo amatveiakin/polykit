@@ -5,6 +5,42 @@
 #include "set_util.h"
 
 
+class SimpleDelta {
+public:
+  SimpleDelta(int a, int b) : a_(a), b_(b) {
+    CHECK_LE(1, a_);
+    CHECK_LE(1, b_);
+    sort_two(a_, b_);
+  }
+
+  int a() const { return a_; }
+  int b() const { return b_; }
+
+  bool contains(int point) const { return point == a_ || point == b_; }
+  int other_point(int point) const;
+
+  bool operator==(const SimpleDelta& other) const { return as_pair() == other.as_pair(); }
+  bool operator< (const SimpleDelta& other) const { return as_pair() <  other.as_pair(); }
+
+  // Put larger point first to synchronize ordering with Delta.
+  std::pair<int, int> as_pair() const { return {b_, a_}; }
+
+private:
+  int a_ = 0;
+  int b_ = 0;
+};
+
+int SimpleDelta::other_point(int point) const {
+  if (point == a_) {
+    return b_;
+  } else if (point == b_) {
+    return a_;
+  } else {
+    FATAL(absl::StrCat("Point ", point, " not found in SimpleDelta"));
+  }
+}
+
+
 template<typename Container>
 static void normalize_loop(Container& loop) {
   CHECK(loop.size() % 2 == 0);
@@ -82,7 +118,7 @@ void CompoundRatio::check() const {
   }
 }
 
-static void cancel_fraction(std::multiset<Delta>& a, std::multiset<Delta>& b) {
+static void cancel_fraction(std::multiset<SimpleDelta>& a, std::multiset<SimpleDelta>& b) {
   for (auto a_it = a.begin(); a_it != a.end();) {
     const auto b_it = b.find(*a_it);
     if (b_it != b.end()) {
@@ -100,12 +136,12 @@ void CompoundRatio::normalize() {
   check();
 
   // Convert to fraction
-  std::multiset<Delta> numerator;
-  std::multiset<Delta> denominator;
+  std::multiset<SimpleDelta> numerator;
+  std::multiset<SimpleDelta> denominator;
   for (auto& loop : loops_) {
     const int n = loop.size();
     for (int i : range(n)) {
-      Delta d(loop[i], loop[(i+1)%n]);
+      SimpleDelta d(loop[i], loop[(i+1)%n]);
       (i%2 == 0 ? numerator : denominator).insert(d);
     }
   }
@@ -127,7 +163,7 @@ void CompoundRatio::normalize() {
     auto* container = &denominator;
     while (current_point != first_point) {
       loop.push_back(current_point);
-      const auto it = absl::c_find_if(*container, [&](Delta d) {
+      const auto it = absl::c_find_if(*container, [&](SimpleDelta d) {
         return d.contains(current_point);
       });
       CHECK(it != container->end());

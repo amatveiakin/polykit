@@ -25,19 +25,21 @@ TEST(ParseDeltaExpressionTest, FormMix) {
   EXPECT_EXPR_EQ(
     parse_delta_expression(R"(
       +2 (x1-x2)*(x1-x3)
-      +3*[1,2][1,4]
+      +3 (x_1-x_2)*(x_1-x_4)
+      +5*[1,2][1,5]
     )"),
     +2*DeltaExpr::single({{1,2}, {1,3}})
     +3*DeltaExpr::single({{1,2}, {1,4}})
+    +5*DeltaExpr::single({{1,2}, {1,5}})
   );
 }
 
 TEST(ParseDeltaExpressionTest, MultidigitNumbers) {
   EXPECT_EXPR_EQ(
     parse_delta_expression(R"(
-      -137 (x05-x12)
+      -137 (x05-x11)
     )"),
-    -137*DeltaExpr::single({{5,12}})
+    -137*DeltaExpr::single({{5,11}})
   );
 }
 

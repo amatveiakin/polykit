@@ -16,8 +16,8 @@
 TEST(CocoequationsTest, LARGE_LiQuadSum_Comult_2_2_2) {
   const int num_points = 9;
   auto theta_expr = sum_looped_vec(
-    [&](const XArgs& args) {
-      return LiQuad(num_points / 2 - 1, args.as_int());
+    [&](const auto& args) {
+      return LiQuad(num_points / 2 - 1, args);
     },
     num_points,
     seq_incl(1, num_points - 1)
@@ -39,7 +39,7 @@ TEST(CocoequationsTest, LARGE_QLi6_Arg8_Comult_2_2_2) {
 TEST(CocoequationsTest, HUGE_QLi6_Arg8_Sum_Comult_2_2_2) {
   const int num_points = 9;
   auto qli_expr = sum_looped_vec(
-    [&](const XArgs& args) {
+    [&](const auto& args) {
       return QLiVec(6, args);
     },
     num_points,

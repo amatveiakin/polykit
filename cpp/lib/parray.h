@@ -138,7 +138,7 @@ private:
       const int a = data[src];
       // Optimization potential: Replace with a compile-time check for N oddity
       const int b = (src+1 < data.size()) ? data[src+1] : 0;
-      bytes_[dst] = std::byte((a << kShift) + b);
+      bytes_[dst] = std::byte((a << kShift) | b);
       ++dst;
     }
   }

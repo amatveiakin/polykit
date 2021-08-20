@@ -8,7 +8,7 @@
 #include "test_util/matchers.h"
 
 
-inline ProjectionExpr Pr(std::initializer_list<int> data) {
+inline ProjectionExpr Pr(std::initializer_list<X> data) {
   return ProjectionExpr::single(data);
 }
 

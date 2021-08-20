@@ -31,7 +31,6 @@ void pybind_delta(py::module_& m) {
     .def_property_readonly("b", &Delta::b)
     .def("is_nil", &Delta::is_nil)
     .def("contains", &Delta::contains)
-    .def("other_point", &Delta::other_point)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def(py::self <  py::self)

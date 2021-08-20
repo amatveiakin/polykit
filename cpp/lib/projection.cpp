@@ -1,50 +1,32 @@
 #include "projection.h"
 
 
-ProjectionExpr project_on(int axis, const DeltaExpr& expr) {
-  return expr.mapped_expanding([&](const std::vector<Delta>& deltas) {
-    ProjectionExpr::StorageT proj;
-    for (const Delta& d : deltas) {
-      CHECK(!d.is_nil());
-      if (d.a() == axis) {
-        proj.push_back(d.b());
-      } else if (d.b() == axis) {
-        proj.push_back(d.a());
-      } else {
-        return ProjectionExpr{};
-      }
-    }
-    return ProjectionExpr::single_key(proj);
-  });
+static std::optional<X> projection_result(int axis, X x, X y) {
+  if (x.idx() != axis) {
+    return std::nullopt;
+  }
+  switch (x.form()) {
+    case XForm::var: return y;
+    case XForm::neg_var: return y.negated();
+    default: break;
+  }
+  FATAL(absl::StrCat("Unexpected form: ", to_string(x.form())));
 }
 
-ProjectionExpr involute_projected(const DeltaExpr& expr, const std::vector<int>& involution, int axis) {
-  CHECK(absl::c_count(involution, axis) == 1);
-  const int n = involution.size();
-  CHECK_EQ(n, 6);
-  absl::flat_hash_map<int, int> inv;
-  for (const int i : range(involution.size())) {
-    const int a = involution.at(i);
-    const int b = involution.at((i + n/2) % n);
-    CHECK(!inv.contains(a));
-    inv[a] = b;
-  }
-  const int axis_inv = inv.at(axis);
+ProjectionExpr project_on(int axis, const DeltaExpr& expr) {
   return expr.mapped_expanding([&](const std::vector<Delta>& deltas) {
-    ProjectionExpr::StorageT proj;
+    ProjectionExpr::ObjectT proj;
     for (const Delta& d : deltas) {
       CHECK(!d.is_nil());
-      if (d == Delta(axis, axis_inv)) {
-        proj.push_back(axis_inv);
-      } else if (d.contains(axis)) {
-        proj.push_back(d.other_point(axis));
-      } else if (d.contains(axis_inv)) {
-        proj.push_back(inv.at(d.other_point(axis_inv)));
+      if (auto ret = projection_result(axis, d.a(), d.b()); ret.has_value()) {
+        proj.push_back(ret.value());
+      } else if (auto ret = projection_result(axis, d.b(), d.a()); ret.has_value()) {
+        proj.push_back(ret.value());
       } else {
         return ProjectionExpr{};
       }
     }
-    return ProjectionExpr::single_key(proj);
+    return ProjectionExpr::single(proj);
   });
 }
 

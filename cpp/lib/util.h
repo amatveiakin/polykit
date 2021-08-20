@@ -70,7 +70,7 @@ inline std::array<int, To - From + 1> seq_incl_array() {
   return ret;
 }
 
-// Equivalent of std::identity from C++20
+// TODO(C++20): Replace with std::identity.
 struct identity_function_t {
   template<class T>
   constexpr T&& operator()(T&& t) const noexcept {

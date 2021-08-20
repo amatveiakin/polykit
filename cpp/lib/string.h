@@ -56,6 +56,11 @@ inline std::string pad_left(std::string str, int length, char padding = ' ') {
       std::move(str);
 }
 
+inline std::string pad_right(std::string str, int length, char padding = ' ') {
+  return std::move(str) +
+      std::string(std::max(0, length - strlen_utf8(str)), padding);
+}
+
 
 std::string to_string_with_thousand_sep(int64_t value);
 

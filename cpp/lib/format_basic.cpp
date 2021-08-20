@@ -271,6 +271,7 @@ class AsciiEncoder : public AbstractEncoder {
     }
   }
 
+  // TODO: Consider removing "_" from subindices for parseability.
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "_", str_join(indices, "_"));
@@ -559,11 +560,13 @@ class LatexEncoder : public AbstractEncoder {
 };
 
 
-static AbstractEncoder* ascii_encoder = new AsciiEncoder;
-static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
-static AbstractEncoder* latex_encoder = new LatexEncoder;
-
 AbstractEncoder* current_encoder() {
+  // Important: encoders need to be static local (rather than static global)
+  //   in order to allow debug print in static initializers of other modules.
+  static AbstractEncoder* ascii_encoder = new AsciiEncoder;
+  static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
+  static AbstractEncoder* latex_encoder = new LatexEncoder;
+
   switch (*current_formatting_config().encoder) {
     case Encoder::ascii:      return ascii_encoder;
     case Encoder::unicode:    return unicode_encoder;

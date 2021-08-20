@@ -91,6 +91,7 @@ cc_library(
         "lib/projection.cpp",
         "lib/ratio.cpp",
         "lib/theta.cpp",
+        "lib/x.cpp",
     ],
     deps = [
         "@absl//absl/strings:strings",

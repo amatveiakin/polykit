@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
   const int num_points = 7;
   const int num_args = num_points / 2 - 1;
   auto source = sum_looped_vec(
-    [&](const std::vector<X>& args) {
+    [&](const auto& args) {
       return LiQuad(
         num_points / 2 - 1,
         mapped(args, [](X x) { return x.var(); })

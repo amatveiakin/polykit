@@ -35,7 +35,7 @@ TEST(CoequationsTest, LARGE_QLiSymm_Arg6) {
     EXPECT_EXPR_EQ(
       comultiply(QLiSymmVec(wr+1, {1,2,3,4,5,6}), {1,wr}),
       (
-        + sum_looped_vec([&](const std::vector<X>& args) {
+        + sum_looped_vec([&](const auto& args) {
           return coproduct(
             QLiVec    (1,  choose_indices_one_based(args, {1,2,3,4})),
             QLiSymmVec(wr, choose_indices_one_based(args, {1,4,5,6}))

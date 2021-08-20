@@ -10,7 +10,7 @@ inline std::string function_num_args(
     const std::string& name,
     const XArgs& indices,
     HSpacing hspacing = HSpacing::dense) {
-  return function(name, indices.as_string(), hspacing);
+  return function(name, mapped_to_string(indices.as_x()), hspacing);
 }
 
 }  // namespace fmt
