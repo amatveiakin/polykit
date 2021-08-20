@@ -30,7 +30,6 @@ void pybind_delta(py::module_& m) {
     .def_property_readonly("a", &Delta::a)
     .def_property_readonly("b", &Delta::b)
     .def("is_nil", &Delta::is_nil)
-    .def("contains", &Delta::contains)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def(py::self <  py::self)
@@ -68,7 +67,6 @@ void pybind_projection(py::module_& m) {
   m.def("to_lyndon_basis", &to_lyndon_basis<ProjectionExpr>, kLyndonDescription);
 
   m.def("project_on", &project_on, "Projects a DeltaExpr onto an axis");
-  m.def("involute_projected", &involute_projected);
 
   m.def("terms_with_num_distinct_variables", py::overload_cast<const ProjectionExpr&, int>(&terms_with_num_distinct_variables));
   m.def("terms_with_min_distinct_variables", py::overload_cast<const ProjectionExpr&, int>(&terms_with_min_distinct_variables));

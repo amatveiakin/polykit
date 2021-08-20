@@ -8,26 +8,60 @@
 namespace py = pybind11;
 
 void pybind_x(py::module_& m) {
+  py::enum_<XForm>(m, "XForm")
+    .value("var", XForm::var)
+    .value("neg_var", XForm::neg_var)
+    .value("sq_var", XForm::sq_var)
+    .value("zero", XForm::zero)
+    .value("infinity", XForm::infinity)
+    .value("undefined", XForm::undefined)
+  ;
+
   py::class_<X>(m, "X")
+    .def(py::init<>())
+    .def(py::init<XForm, int>())
     .def(py::init<int>())
-    .def(py::init<X>())
-    .def_property_readonly("var", &X::var)
+    .def_property_readonly("form", &X::form)
+    .def_property_readonly("idx", &X::idx)
+    .def("is", &X::is)
+    .def("is_constant", &X::is_constant)
+    .def("negated", &X::negated)
+    .def(+py::self)
+    .def(-py::self)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def(py::self <  py::self)
     .def(py::self <= py::self)
     .def(py::self >  py::self)
     .def(py::self >= py::self)
-    .def("__str__", py::overload_cast<const X&>(&to_string))
-    .def("__repr__", py::overload_cast<const X&>(&to_string))
+    .def("__hash__", absl::Hash<X>())
+    .def("__str__", py::overload_cast<X>(&to_string))
+    .def("__repr__", py::overload_cast<X>(&to_string))
   ;
+
+  m.attr("Inf") = Inf;
+  m.attr("Zero") = Zero;
+  m.attr("x1") = x1;
+  m.attr("x2") = x2;
+  m.attr("x3") = x3;
+  m.attr("x4") = x4;
+  m.attr("x5") = x5;
+  m.attr("x6") = x6;
+  m.attr("x7") = x7;
+  m.attr("x8") = x8;
+  m.attr("x1s") = x1s;
+  m.attr("x2s") = x2s;
+  m.attr("x3s") = x3s;
+  m.attr("x4s") = x4s;
+  m.attr("x5s") = x5s;
+  m.attr("x6s") = x6s;
+  m.attr("x7s") = x7s;
+  m.attr("x8s") = x8s;
 
   py::class_<XArgs>(m, "XArgs")
     .def(py::init<std::vector<int>>())
     .def(py::init<std::vector<X>>())
   ;
-
-  m.attr("Inf") = Inf;
 
   py::implicitly_convertible<int, X>();
 

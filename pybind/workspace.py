@@ -11,8 +11,9 @@ from delta_matrix import DeltaExprMatrixBuilder
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
 from polykit import tensor_product, to_lyndon_basis
 from polykit import coproduct, comultiply
-from polykit import X, Inf, Delta, DeltaExpr, substitute_variables
-from polykit import ProjectionExpr, project_on, involute, involute_projected
+from polykit import X, Inf, Zero, x1, x2, x3, x4, x5, x6, x7, x8, x1s, x2s, x3s, x4s, x5s, x6s, x7s, x8s
+from polykit import Delta, DeltaExpr, substitute_variables, involute
+from polykit import ProjectionExpr, project_on
 from polykit import terms_with_num_distinct_variables, terms_with_min_distinct_variables, terms_containing_only_variables, terms_without_variables
 from polykit import sorted_by_num_distinct_variables
 from polykit import CrossRatio, CompoundRatio, CR
@@ -24,67 +25,6 @@ from polykit import QLiPr
 from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
 from polykit import loops_matrix
-
-
-
-def cross_ratio(p):
-    assert len(p) % 2 == 0
-    ret = DeltaExpr()
-    n = len(p)
-    for i in range(n):
-        ret += (-1)**i * DeltaExpr.single([Delta(p[i], p[(i+1)%n])])
-    return ret
-
-# Symbol for (1 - cross_ratio(p))
-def neg_cross_ratio(p):
-    assert len(p) == 4
-    return cross_ratio([p[0], p[2], p[1], p[3]])
-
-def qli_node_func(p):
-    assert len(p) == 4
-    return (
-        neg_cross_ratio([p[0][0], p[1][0], p[2][0], p[3][0]])
-        if p[0][1] else
-        -neg_cross_ratio([p[1][0], p[2][0], p[3][0], p[0][0]])
-    )
-
-def qli_impl(weight, points):
-    num_points = len(points)
-    assert num_points >= 4 and num_points % 2 == 0
-    min_weight = (num_points - 2) / 2
-    assert weight >= min_weight
-    def subsums():
-        nonlocal weight, points
-        ret = DeltaExpr()
-        for i in range(num_points - 3):
-            foundation = points[:i+1] + points[i+3:]
-            ret += tensor_product(qli_node_func(points[i:i+4]), qli_impl(weight - 1, foundation))
-        return ret
-    if weight == min_weight:
-        if num_points == 4:
-            return qli_node_func(points)
-        else:
-            return subsums()
-    else:
-        ret = tensor_product(cross_ratio([p[0] for p in points]), qli_impl(weight - 1, points))
-        if num_points > 4:
-            ret += subsums()
-        return ret
-
-def py_QLi(weight, points):
-    tagged_points = []
-    for i in range(len(points)):
-        tagged_points.append((points[i], (i+1) % 2 == 1))
-    return qli_impl(weight, tagged_points)
-
-
-profiler = Profiler()
-py_expr = py_QLi(8, [1,2,3,4,5,6])
-profiler.finish('Python')
-cpp_expr = QLi(8, [1,2,3,4,5,6])
-profiler.finish('C++')
-print(py_expr - cpp_expr)
-exit(0)
 
 
 # TODO: How to get project folder from `bazel run`?
@@ -128,22 +68,19 @@ set_formatting(encoder=Encoder.unicode)
 
 profiler = Profiler()
 
-# matrix_builder = DeltaExprMatrixBuilder()
+matrix_builder = DeltaExprMatrixBuilder()
 
-# def describe(matrix_builder):
-#     global profiler
-#     profiler.finish("expr")
-#     mat = matrix_builder.make_np_array()
-#     filename = get_matrix_filename()
-#     np.save(filename, mat)
-#     print(f'Saved to {filename}')
-#     rank = np.linalg.matrix_rank(mat)
-#     profiler.finish("rank")
-#     print(f"{mat.shape} => {rank}")
+def describe(matrix_builder):
+    global profiler
+    profiler.finish("expr")
+    mat = matrix_builder.make_np_array()
+    filename = get_matrix_filename()
+    np.save(filename, mat)
+    print(f'Saved to {filename}')
+    rank = np.linalg.matrix_rank(mat)
+    profiler.finish("rank")
+    print(f"{mat.shape} => {rank}")
 
-
-expr = QLi(6, [1,2,3,4,5,6,7,8])
-profiler.finish("expr")
 
 
 # mat = np.transpose(np.array(loops_matrix(), dtype=int))
