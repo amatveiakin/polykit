@@ -102,7 +102,7 @@ TEST(CoalgebraUtilTest, FilterCoExpr) {
       0,
       [](const EpsilonPack& pack) {
         return std::visit(overloaded{
-          [](const std::vector<Epsilon>& product) {
+          [](const std::vector<Epsilon>& /*product*/) {
             return false;
           },
           [](const LiParam& formal_symbol) {

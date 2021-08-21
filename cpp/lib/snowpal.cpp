@@ -282,7 +282,8 @@ ShortFormRatioStorage SplittingTree::generate_short_form_ratios() const {
           node->node_index,
           CrossRatioN(mapped_array(to_array<4>(points), [&](int nbr_idx) {
             return make_metavar(node->node_index, nbr_idx);
-          }))
+          })),
+          {},
         });
       }
     }

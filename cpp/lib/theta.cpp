@@ -153,7 +153,7 @@ static bool is_monster(const ThetaPack& term) {
         return !std::holds_alternative<Delta>(t);
       });
     },
-    [](const LiraParam& formal_symbol) {
+    [](const LiraParam& /*formal_symbol*/) {
       return false;
     },
   }, term);

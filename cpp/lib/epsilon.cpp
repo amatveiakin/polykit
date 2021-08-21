@@ -67,7 +67,7 @@ static bool is_monster(const EpsilonPack& term) {
         }
       );
     },
-    [](const LiParam& formal_symbol) {
+    [](const LiParam& /*formal_symbol*/) {
       return false;
     },
   }, term);

@@ -46,7 +46,7 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
       return TUnity();
     }
     return std::visit(overloaded{
-        [&](const std::vector<Theta>& term_product) {
+        [&](const std::vector<Theta>& /*term_product*/) {
           return ThetaExpr::single(term);
         },
         [&](const LiraParam& as_cross_ratios) {

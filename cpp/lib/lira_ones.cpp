@@ -121,7 +121,7 @@ LiraExpr fully_normalize_ratios(const LiraExpr& expr) {
 LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr) {
   return expr.mapped_expanding([&](const ThetaPack& term) {
     return std::visit(overloaded{
-      [&](const std::vector<Theta>& term_product) -> LiraExpr {
+      [&](const std::vector<Theta>& /*term_product*/) -> LiraExpr {
         FATAL("Unexpected std::vector<Theta> when converting to LiraExpr");
       },
       [&](const LiraParam& formal_symbol) {
