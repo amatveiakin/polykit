@@ -18,7 +18,7 @@ http_archive(
   name = "eigen",
   urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3/eigen-3.3.zip"],
   strip_prefix = "eigen-3.3",
-  sha256 = "06f41901d54e67052a8722a6a3cbb3cdca21839a2a391a1c842e90a9f1abb9c5",
+  sha256 = "473b85231829b6f0c286a8c79799913c4e1de235261ddc636ea21235772fc3a5",
   build_file = "eigen.BUILD",
 )
 

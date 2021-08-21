@@ -19,6 +19,7 @@ cc_library(
         "lib/circular_view.h",
         "lib/compare.h",
         "lib/compression.h",
+        "lib/enumerator.h",
         "lib/file_util.h",
         "lib/format_basic.h",
         "lib/lexicographical.h",

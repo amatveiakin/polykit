@@ -8,6 +8,3 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
 )
-
-# Sample usage:
-#   #include "Eigen/Dense"
