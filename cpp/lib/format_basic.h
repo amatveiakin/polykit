@@ -50,6 +50,7 @@ struct FormattingConfig {
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
+  std::optional<bool> compact_x;
   std::optional<bool> new_line_after_expression;
 
   FormattingConfig& set_encoder(Encoder v) { encoder = v; return *this; }
@@ -59,6 +60,7 @@ struct FormattingConfig {
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
   FormattingConfig& set_compact_expression(bool v) { compact_expression = v; return *this; }
+  FormattingConfig& set_compact_x(bool v) { compact_x = v; return *this; }
   FormattingConfig& set_new_line_after_expression(bool v) { new_line_after_expression = v; return *this; }
 
   void apply_overrides(const FormattingConfig& src);
@@ -158,6 +160,7 @@ public:
   virtual std::string chevrons(const std::string& expr) = 0;
   virtual std::string frac_parens(const std::string& expr) = 0;  // adds parens iff `fraq` is one-liner
 
+  virtual std::string num(int v) = 0;
   virtual std::string coeff(int v) = 0;
 
   virtual std::string sub(
@@ -239,6 +242,9 @@ inline std::string frac_parens(const std::string& expr) {
   return current_encoder()->frac_parens(expr);
 }
 
+inline std::string num(int v) {
+  return current_encoder()->num(v);
+}
 inline std::string coeff(int v) {
   return current_encoder()->coeff(v);
 }

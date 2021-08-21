@@ -14,6 +14,7 @@ static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
   .set_compact_expression(false)
+  .set_compact_x(false)
   .set_new_line_after_expression(true)
 ;
 
@@ -121,6 +122,7 @@ void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
   apply_field_override(compact_expression, src.compact_expression);
+  apply_field_override(compact_x, src.compact_x);
   apply_field_override(new_line_after_expression, src.new_line_after_expression);
 }
 
@@ -245,6 +247,9 @@ class AsciiEncoder : public AbstractEncoder {
     return parens(expr);
   }
 
+  std::string num(int v) override {
+    return absl::StrCat(v);
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().parsable_expression) {
       // Allows to copy annotations from the output and use them in code.
@@ -360,6 +365,9 @@ class UnicodeEncoder : public AbstractEncoder {
   //   return fix_minus(absl::StrCat(v));
   // }
 
+  std::string num(int v) override {
+    return fix_minus(absl::StrCat(v));
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }
@@ -500,6 +508,9 @@ class LatexEncoder : public AbstractEncoder {
     return expr;
   }
 
+  std::string num(int v) override {
+    return absl::StrCat(v);
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }

@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     .set_annotation_sorting(AnnotationSorting::length)
+    // .set_compact_x(true)
   );
 
 

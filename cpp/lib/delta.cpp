@@ -10,17 +10,18 @@ std::string dump_to_string_impl(const Delta& d) {
 }
 
 std::string to_string(const Delta& d) {
+  HSpacing hspacing = *current_formatting_config().compact_x ? HSpacing::dense : HSpacing::sparse;
   switch (d.b().form()) {
     case XForm::var:
     case XForm::sq_var:
     case XForm::infinity:
-      return fmt::parens(fmt::diff(to_string(d.a()), to_string(d.b())));
+      return fmt::parens(fmt::diff(to_string(d.a()), to_string(d.b()), hspacing));
     case XForm::neg_var:
-      return fmt::parens(fmt::sum(to_string(d.a()), to_string(-d.b())));
+      return fmt::parens(fmt::sum(to_string(d.a()), to_string(-d.b()), hspacing));
     case XForm::zero: {
       // Add padding to preserve columns in a typical case
       const std::string a_str = to_string(d.a());
-      const int reference_width = strlen_utf8(fmt::parens(fmt::diff(a_str, a_str)));
+      const int reference_width = strlen_utf8(fmt::parens(fmt::diff(a_str, a_str, hspacing)));
       return pad_right(fmt::parens(a_str), reference_width);
     }
     case XForm::undefined:

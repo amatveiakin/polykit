@@ -13,7 +13,8 @@ static void py_formatting(
   std::optional<int> expression_line_limit,
   std::optional<bool> expression_include_annotations,
   std::optional<bool> parsable_expression,
-  std::optional<bool> compact_expression
+  std::optional<bool> compact_expression,
+  std::optional<bool> compact_x
 ) {
   // Note: not exporting `new_line_after_expression`. Use `print()` / `print(end='')` for this.
   set_default_formatting({
@@ -24,6 +25,7 @@ static void py_formatting(
     .expression_include_annotations = expression_include_annotations,
     .parsable_expression = parsable_expression,
     .compact_expression = compact_expression,
+    .compact_x = compact_x,
   });
 }
 
@@ -57,7 +59,8 @@ void pybind_format(py::module_& m) {
     py::arg("expression_line_limit") = py::none(),
     py::arg("expression_include_annotations") = py::none(),
     py::arg("parsable_expression") = py::none(),
-    py::arg("compact_expression") = py::none()
+    py::arg("compact_expression") = py::none(),
+    py::arg("compact_x") = py::none()
   );
 
   m.def("reset_formatting", &reset_default_formatting);

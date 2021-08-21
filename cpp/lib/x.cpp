@@ -12,3 +12,38 @@ std::string to_string(XForm form) {
   }
   FATAL(absl::StrCat("Unknown form: ", form));
 }
+
+std::string to_string(X x) {
+  if (!*current_formatting_config().compact_x) {
+    switch (x.form()) {
+      case XForm::var:
+        return fmt::sub_num("x", {x.idx()});
+      case XForm::neg_var:
+        return fmt::minus() + fmt::sub_num("x", {x.idx()});
+      case XForm::sq_var:
+        return fmt::super_num(fmt::sub_num("x", {x.idx()}), {2});
+      case XForm::zero:
+        return "0";
+      case XForm::infinity:
+        return fmt::inf();
+      case XForm::undefined:
+        return "<?>";
+    }
+  } else {
+    switch (x.form()) {
+      case XForm::var:
+        return fmt::num(x.idx());
+      case XForm::neg_var:
+        return fmt::num(-x.idx());
+      case XForm::sq_var:
+        return fmt::super_num(fmt::num(x.idx()), {2});
+      case XForm::zero:
+        return "<0>";
+      case XForm::infinity:
+        return fmt::inf();
+      case XForm::undefined:
+        return "<?>";
+    }
+  }
+  FATAL(absl::StrCat("Unknown form: ", to_string(x.form())));
+}
