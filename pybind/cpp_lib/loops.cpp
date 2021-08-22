@@ -2,6 +2,7 @@
 #include "pybind11/stl.h"
 
 #include "cpp/lib/loops.h"
+#include "cpp/lib/permutations.h"
 #include "cpp/lib/polylog_liquad.h"
 
 
@@ -50,8 +51,7 @@ std::vector<std::vector<int>> loops_matrix() {
   }
 
   std::vector<std::vector<int>> mat;
-  std::vector args{1,2,3,4,5};
-  do {
+  for (const auto& args : permutations({1,2,3,4,5})) {
     const std::vector points = substitute({1,2,1,3,1,4,5,4}, args);
     // const std::vector points = substitute({1,2,1,3,1,2,4,5}, args);
     CHECK_EQ(num_points, points.size());
@@ -73,7 +73,7 @@ std::vector<std::vector<int>> loops_matrix() {
       column.at(to_basis.at(term_indexed)) = coeff;
     }
     mat.push_back(column);
-  } while (absl::c_next_permutation(args));
+  }
   return mat;
 }
 

@@ -27,6 +27,7 @@ cc_library(
         "lib/metaprogramming.h",
         "lib/parray.h",
         "lib/parse.h",
+        "lib/permutations.h",
         "lib/profiler.h",
         "lib/pvector.h",
         "lib/range.h",
