@@ -31,8 +31,19 @@ from polykit import loops_matrix
 RESULTS_FOLDER = '/mnt/c/Danya/results/'
 
 
+def is_sorted(l):
+    return sorted(l) == list(l)
+
+def include_permutation(permutation, max_point):
+    return is_sorted(permutation[max_point:])
+
 def substitute(points, new_indices):
     return [new_indices[p - 1] for p in points]
+
+def add_expr(matrix_builder, prepare, func, permutation, indices):
+    if include_permutation(permutation, max(indices)):
+        expr = func(substitute(indices, permutation))
+        matrix_builder.add_expr(prepare(expr))
 
 def with_progress(values):
     bar = Bar('Computing...', max=len(values), suffix='%(index)d/%(max)d   ETA %(eta_td)s')
@@ -42,11 +53,11 @@ def with_progress(values):
     bar.finish()
 
 # TODO: Parallelize via `multiprocessing`
-def iterate_permutations(n, *, filter=None):
+def iterate_permutations(points, *, filter=None):
     values = [
         p
         for p
-        in itertools.permutations(list(range(1, n+1)))
+        in itertools.permutations(points)
         if filter is None or filter(p)
     ]
     return with_progress(values)
@@ -74,12 +85,13 @@ def describe(matrix_builder):
     global profiler
     profiler.finish("expr")
     mat = matrix_builder.make_np_array()
-    filename = get_matrix_filename()
-    np.save(filename, mat)
-    print(f'Saved to {filename}')
+    # filename = get_matrix_filename()
+    # np.save(filename, mat)
+    # print(f'Saved to {filename}')
     rank = np.linalg.matrix_rank(mat)
     profiler.finish("rank")
-    print(f"{mat.shape} => {rank}")
+    nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
+    print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
 
 
 
@@ -396,3 +408,329 @@ def describe(matrix_builder):
 # profiler.finish("compute rank")
 # print("rank = {}".format(rank))
 # # print("corank = {}".format(min(mat.shape) - rank))
+
+
+
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     expr = QLi2(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 6
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3,Zero,Inf]):
+#     expr = QLi2(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 13
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,-x1,-x2,Zero,Inf]):
+#     expr = QLi3(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 8
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     expr = QLi3(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 30
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     expr = QLi3(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 17
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3,Zero,Inf]):
+#     expr = QLi3(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 48
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6,x7,x8]):
+#     expr = QLi3(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 140
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,-x1,-x2,Zero,Inf]):
+#     expr = QLi4(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+#     expr = QLi4(substitute([1,2,1,3,4,5], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 18
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 81
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     expr = QLi4(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+#     expr = QLi4(substitute([1,2,1,3,4,5], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 42
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3,Zero,Inf]):
+#     expr = QLi4(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+#     expr = QLi4(substitute([1,2,1,3,4,5], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 168
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     expr = QLi4(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 27
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3,Zero,Inf]):
+#     expr = QLi4(args[:4])
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 84
+
+# def prepare(expr):
+#     return comultiply(expr, (2,2))
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     expr = QLi4(substitute([1,2,1,3,4,5], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  # 15
+
+# def prepare(expr):
+#     return comultiply(expr, (2,2))
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3,Zero,Inf]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # check: 75
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     expr = QLi4(substitute([1,2,3,4], args))
+#     matrix_builder.add_expr(prepare(expr))
+#     expr = QLi4(substitute([1,2,1,3,4,5], args))
+#     matrix_builder.add_expr(prepare(expr))
+# describe(matrix_builder)  #
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 261
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,3,4])
+# describe(matrix_builder)  # 114
+
+# def prepare(expr):
+#     return comultiply(expr, (2,2))
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 143
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6,x7,x8]):
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi4, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 546
+
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+# describe(matrix_builder)  # 45
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+# describe(matrix_builder)  # 90
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+# describe(matrix_builder)  # 104
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 258
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,x5,x6]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 234
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+# describe(matrix_builder)  # 27
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+# describe(matrix_builder)  # 63
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 123
+
+# def prepare(expr):
+#     return comultiply(expr, (2,3))
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 87
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,-x1,-x2,Zero,Inf]):
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, QLi5, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 48
+
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     add_expr(matrix_builder, prepare, QLi6, args, [1,2,3,4])
+# describe(matrix_builder)  # 114
+
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     func = lambda points : QLiPr(4, points, project_on_x1)
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 39
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,-x1,-x2,-x3]):
+#     func = lambda points : QLiPr(5, points, project_on_x1)
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 117
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     func = lambda points : QLiPr(4, points, project_on_x1)
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,1,3,4,5])
+# describe(matrix_builder)  # 219
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([x1,x2,x3,x4,-x1,-x2,-x3,-x4]):
+#     func = lambda points : QLiPr(5, points, project_on_x1)
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4,5,6])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,1,3,4,5])
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,1,4,5])
+# describe(matrix_builder)  # 963
+
+# print(to_lyndon_basis(
+#     + QLiSymm4(1,2,3,4,5,6,7,8)
+#     + QLiSymm4(1,8,7,6,5,4,3,2)
+# ))  # ZERO
+
+# print(to_lyndon_basis(
+#     + QLiSymm5(1,2,3,4,5,6,7,8)
+#     - QLiSymm5(1,8,7,6,5,4,3,2)
+# ))  # ZERO
+
+# print(to_lyndon_basis(
+#     + QLiSymm6(1,2,3,4,5,6,7,8)
+#     + QLiSymm6(1,8,7,6,5,4,3,2)
+# ))  # ZERO
+
+# print(to_lyndon_basis(
+#     + QLiSymm4(x1,x2,x3,x4,x5,x6,x7,x8)
+#     - QLiSymm4(x2,x1,x8,x7,x6,x5,x4,x3)
+# ))  # ZERO
+
+# print(to_lyndon_basis(
+#     + QLiSymm5(x1,x2,x3,x4,x5,x6,x7,x8)
+#     - QLiSymm5(x2,x1,x8,x7,x6,x5,x4,x3)
+# ))  # ZERO
+
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for args in iterate_permutations([1,2,3,4,5,6,7,8]):
+#     func = lambda points: (
+#         + substitute_variables(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [-x1, x2, x3, x1,-x2,-x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [-x1, x2,-x3, x1,-x2, x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [-x1,-x2, x3, x1, x2,-x3,Zero,Inf])
+#         + substitute_variables(QLi3(points), [-x1,-x2,-x3, x1, x2, x3,Zero,Inf])
+#     )
+#     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+# describe(matrix_builder)  # 18
+
+def prepare(expr):
+    return to_lyndon_basis(expr)
+for args in iterate_permutations([1,2,3,4,5,6]):
+    func = lambda points: (
+        + substitute_variables(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3])
+        + substitute_variables(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3])
+        + substitute_variables(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3])
+        + substitute_variables(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3])
+        + substitute_variables(QLi3(points), [-x1, x2, x3, x1,-x2,-x3])
+        + substitute_variables(QLi3(points), [-x1, x2,-x3, x1,-x2, x3])
+        + substitute_variables(QLi3(points), [-x1,-x2, x3, x1, x2,-x3])
+        + substitute_variables(QLi3(points), [-x1,-x2,-x3, x1, x2, x3])
+    )
+    add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
+describe(matrix_builder)  # 5
