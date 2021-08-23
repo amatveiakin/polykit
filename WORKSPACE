@@ -14,6 +14,7 @@ http_archive(
   sha256 = "9929f3662141bbb9c6c28accf68dcab34218c5ee2d83e6365d9cb2594b3f3171"
 )
 
+# TODO: Use or delete
 http_archive(
   name = "eigen",
   urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3/eigen-3.3.zip"],

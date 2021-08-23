@@ -10,6 +10,7 @@
 #include "absl/strings/substitute.h"
 
 #include "Eigen/Dense"
+#include "Eigen/SparseQR"
 
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
@@ -63,16 +64,16 @@ public:
     });
   }
 
-  // TODO: Try sparse matrices instead.
-  Eigen::MatrixXd make_matrix() const {
+  Eigen::SparseMatrix<double> make_matrix() const {
     const int num_rows = monoms_.size();
     const int num_cols = sparse_columns.size();
-    Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(num_rows, num_cols);
+    Eigen::SparseMatrix<double> mat(num_rows, num_cols);
     for (const int col : range(sparse_columns.size())) {
       for (const auto& [row, coeff] : sparse_columns[col]) {
-        mat(row, col) = coeff;
+        mat.insert(row, col) = coeff;
       }
     }
+    mat.makeCompressed();
     return mat;
   }
 
@@ -84,41 +85,16 @@ private:
 
 template<typename ExprT>
 void describe(Profiler& matrix_profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
-  matrix_profiler.finish("Matrix");
+  matrix_profiler.finish("matrix");
   const auto& matrix = matrix_builder.make_matrix();
 
-  // Profiler profiler;
-  // Eigen::FullPivLU<Eigen::MatrixXd> decomp(matrix);
-  // const int rank = decomp.rank();
-  // profiler.finish("rank");
-  // std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
-
   Profiler profiler;
-  const int lu_rank = Eigen::FullPivLU<Eigen::MatrixXd>(matrix).rank();
-  profiler.finish("LU");
-  const int qr_rank = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>(matrix).rank();
-  profiler.finish("QR");
-  const int cod_rank = Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd>(matrix).rank();
-  profiler.finish("COD");
-  const int bdcsvd_rank = Eigen::BDCSVD<Eigen::MatrixXd>(matrix).rank();
-  profiler.finish("BDCSVD");
-  if (lu_rank == qr_rank && qr_rank == cod_rank && cod_rank == bdcsvd_rank) {
-    std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << lu_rank << "\n";
-  } else {
-    std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => ";
-    std::cout << "[LU=" << lu_rank << ", QR=" << qr_rank;
-    std::cout << ", COD=" << cod_rank << ", BDCSVD=" << bdcsvd_rank << "]\n";
-  }
+  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> decomp(matrix);
+  const int rank = decomp.rank();
+  profiler.finish("rank");
+  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
 }
 
-
-// def include_permutation(permutation, max_point):
-//     return is_sorted(permutation[max_point:])
-
-// def add_expr(matrix_builder, prepare, func, permutation, indices):
-//     if include_permutation(permutation, max(indices)):
-//         expr = func(substitute(indices, permutation))
-//         matrix_builder.add_expr(prepare(expr))
 
 template<typename T>
 bool include_permutation(const std::vector<T>& permutation, int max_point) {
@@ -164,18 +140,18 @@ int main(int /*argc*/, char *argv[]) {
   Profiler profiler;
 
 
-  // ExprMatrixBuilder<DeltaExpr> matrix_builder;
-  // const auto prepare = [](const auto& expr) {
-  //   return to_lyndon_basis(expr);
-  // };
-  // for (const auto& args : permutations({1,2,3,4})) {
-  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,2,3,4});
-  // }
-  // describe(matrix_builder);
-  // for (const auto& args : permutations({1,2,3,4})) {
-  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,1,3,4});
-  // }
-  // describe(matrix_builder);
+  ExprMatrixBuilder<DeltaExpr> matrix_builder;
+  const auto prepare = [](const auto& expr) {
+    return to_lyndon_basis(expr);
+  };
+  for (const auto& args : permutations({1,2,3,4})) {
+    add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,2,3,4});
+  }
+  describe(profiler, matrix_builder);
+  for (const auto& args : permutations({1,2,3,4})) {
+    add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,1,3,4});
+  }
+  describe(profiler, matrix_builder);
 
 
   // ExprMatrixBuilder<DeltaExpr> matrix_builder;
@@ -196,12 +172,12 @@ int main(int /*argc*/, char *argv[]) {
   // Profiler: rank took 15.680 s (user: 91.210 s, system: 21.000 s)
   // (2868, 6720) [4.14% nonzero] => 143
 
-  ExprMatrixBuilder<DeltaCoExpr> matrix_builder;
-  const auto prepare = [](const auto& expr) {
-    return comultiply(expr, {2,2});
-  };
-  for (const auto& args : permutations({x1,x2,x3,x4,-x1,-x2,-x3,-x4})) {
-    add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
-  }
-  describe(profiler, matrix_builder);
+  // ExprMatrixBuilder<DeltaCoExpr> matrix_builder;
+  // const auto prepare = [](const auto& expr) {
+  //   return comultiply(expr, {2,2});
+  // };
+  // for (const auto& args : permutations({x1,x2,x3,x4,-x1,-x2,-x3,-x4})) {
+  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
+  // }
+  // describe(profiler, matrix_builder);
 }
