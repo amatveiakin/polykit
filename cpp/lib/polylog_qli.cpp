@@ -178,3 +178,48 @@ DeltaExpr QLiSymmVec(int weight, const XArgs& points) {
 ProjectionExpr QLiSymmVecPr(int weight, const XArgs& points, DeltaProjector projector) {
   return QLiSymm_wrapper<ProjectionExpr>(weight, points.as_x(), projector);
 }
+
+
+// A2 symbol definition taken from https://arxiv.org/pdf/1401.6446.pdf, eq. (3.4)
+// except for the coefficient (see below).
+DeltaExpr A2Vec(const XArgs& args) {
+  CHECK_EQ(args.size(), 5);
+  const auto quad = [&](int i) {
+    CHECK_LE(1, i);
+    return slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4);
+  };
+  const auto cr_quad = [&](bool inv, int i) {
+    CHECK_LE(1, i);
+    if (inv) {
+      i = 6 - i % 5;
+    }
+    return cross_ratio(quad(i));
+  };
+  DeltaExpr ret;
+  for (const int i : range(5)) {
+    for (const bool inv : {false, true}) {
+      const int sign = inv ? -1 : 1;
+      ret += sign * (
+        + tensor_product(absl::MakeConstSpan({
+          cr_quad(inv, i+1),
+          cr_quad(inv, i+2),
+          cr_quad(inv, i+1),
+          cr_quad(inv, i+2) - cr_quad(inv, i+5)
+        }))
+        + tensor_product(absl::MakeConstSpan({
+          cr_quad(inv, i+1),
+          cr_quad(inv, i+2),
+          cr_quad(inv, i+2),
+          cr_quad(inv, i+1) - cr_quad(inv, i+3)
+        }))
+      );
+    }
+  }
+  // Note: the definition in the article includes a (5/4) multiplier, but we cannot
+  //   do this, because resulting coefficients are not integers.
+  // ret.div_int(4);
+  // ret *= 5;
+  return ret.without_annotations().annotate(
+    fmt::function_num_args(fmt::sub_num("A", {2}), args)
+  );
+}

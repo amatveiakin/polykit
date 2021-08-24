@@ -34,6 +34,8 @@ ProjectionExpr QLiNegVecPr(int weight, const XArgs& points, DeltaProjector proje
 DeltaExpr QLiSymmVec(int weight, const XArgs& points);
 ProjectionExpr QLiSymmVecPr(int weight, const XArgs& points, DeltaProjector projector);
 
+DeltaExpr A2Vec(const XArgs& args);
+
 
 namespace internal {
 template<typename... Args>
@@ -79,3 +81,5 @@ template<typename... Args> DeltaExpr QLiSymm5(Args... args) { return internal::Q
 template<typename... Args> DeltaExpr QLiSymm6(Args... args) { return internal::QLiSymm_dispatch(6, args...); }
 template<typename... Args> DeltaExpr QLiSymm7(Args... args) { return internal::QLiSymm_dispatch(7, args...); }
 template<typename... Args> DeltaExpr QLiSymm8(Args... args) { return internal::QLiSymm_dispatch(8, args...); }
+
+template<typename... Args> DeltaExpr A2(Args... args) { return A2Vec(std::vector<X>{args...}); }

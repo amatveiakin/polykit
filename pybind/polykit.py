@@ -85,6 +85,8 @@ def project_on_x13(expr): return project_on(13, expr)
 def project_on_x14(expr): return project_on(14, expr)
 def project_on_x15(expr): return project_on(15, expr)
 
+def Log(*points): return pb.Log(args_to_iterable(points))
+
 def QLi1(*points): return QLi(1, args_to_iterable(points))
 def QLi2(*points): return QLi(2, args_to_iterable(points))
 def QLi3(*points): return QLi(3, args_to_iterable(points))
@@ -111,6 +113,8 @@ def QLiSymm5(*points): return QLiSymm(5, args_to_iterable(points))
 def QLiSymm6(*points): return QLiSymm(6, args_to_iterable(points))
 def QLiSymm7(*points): return QLiSymm(7, args_to_iterable(points))
 def QLiSymm8(*points): return QLiSymm(8, args_to_iterable(points))
+
+def A2(*points): return pb.A2(args_to_iterable(points))
 
 def Lira0(*weights): return lambda *ratios: Lira(0, args_to_iterable(weights), args_to_iterable(ratios))
 def Lira1(*weights): return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))

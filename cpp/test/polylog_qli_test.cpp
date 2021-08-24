@@ -13,6 +13,38 @@ inline ProjectionExpr Pr(std::initializer_list<X> data) {
 }
 
 
+// Reference A2 comultiplication from https://arxiv.org/pdf/1401.6446.pdf, eq. (3.3)
+DeltaCoExpr A2_comult_2_2(const XArgs& args) {
+  const auto args_i = [&](int i) {
+    return slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4);
+  };
+  DeltaCoExpr ret;
+  for (int i : range_incl(1, 5)) {
+    for (int j : range_incl(1, 5)) {
+      ret += j * coproduct(
+        QLi2(args_i(i)),
+        QLi2(args_i(i+j))
+      );
+    }
+  }
+  return ret;
+}
+DeltaCoExpr A2_comult_1_3(const XArgs& args) {
+  const auto args_i = [&](int i) {
+    return slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4);
+  };
+  DeltaCoExpr ret;
+  for (int i : range_incl(1, 5)) {
+    ret +=
+      + coproduct(cross_ratio(args_i(i)), QLi3(args_i(i+1)))
+      - coproduct(cross_ratio(args_i(i+1)), QLi3(args_i(i)))
+    ;
+  }
+  ret *= 5;
+  return ret;
+}
+
+
 TEST(QLiTest, QLi4_Arg6) {
   auto expr = QLi4(1,2,3,4,5,6);
   EXPECT_EQ(expr.num_terms(), 2560);
@@ -305,6 +337,32 @@ TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
       ,
       {2,2}
     )
+  );
+}
+
+
+TEST(QLiTest, A2_DihedralSymmetry) {
+  EXPECT_EXPR_EQ(
+    + A2(1,2,3,4,5),
+    + A2(2,3,4,5,1)
+  );
+  EXPECT_EXPR_EQ(
+    + A2(1,2,3,4,5),
+    - A2(5,4,3,2,1)
+  );
+}
+
+TEST(QLiTest, A2_Comultiplication_2_2) {
+  EXPECT_EXPR_EQ(
+    comultiply(A2(1,2,3,4,5), {2,2}),
+    A2_comult_2_2({1,2,3,4,5}).dived_int(5) * 4
+  );
+}
+
+TEST(QLiTest, A2_Comultiplication_1_3) {
+  EXPECT_EXPR_EQ(
+    comultiply(A2(1,2,3,4,5), {1,3}),
+    A2_comult_1_3({1,2,3,4,5}).dived_int(5) * 4
   );
 }
 

@@ -13,6 +13,8 @@ void pybind_polylog(py::module_& m) {
   m.def("IVec", &IVec);
   m.def("CorrVec", &CorrVec);
 
+  m.def("Log", &LogVec);
+
   m.def("QLi", &QLiVec);
   m.def("QLiNeg", &QLiNegVec);
   m.def("QLiSymm", &QLiSymmVec);
@@ -20,6 +22,8 @@ void pybind_polylog(py::module_& m) {
   m.def("QLiPr", &QLiVecPr);
   m.def("QLiNegPr", &QLiNegVecPr);
   m.def("QLiSymmPr", &QLiSymmVecPr);
+
+  m.def("A2", &A2Vec);
 
   // limitation: monsters are not supported
   m.def("Lira", [](int foreweight, const std::vector<int>& weights, const std::vector<CompoundRatio>& ratios) {
