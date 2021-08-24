@@ -23,6 +23,7 @@
 #include "lib/loops.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
+#include "lib/permutations.h"
 #include "lib/polylog_li.h"
 #include "lib/polylog_liquad.h"
 #include "lib/polylog_lira.h"
@@ -41,9 +42,20 @@
 #include "lib/zip.h"
 
 
-class DeltaExprMatrixBuilder {
+template<typename First, typename Second, typename... Tail>
+bool constexpr all_equal(const First& first, const Second& second, const Tail&... tail) {
+  return first == second && all_equal(second, tail...);
+}
+template<typename First, typename Second>
+bool constexpr all_equal(const First& first, const Second& second) {
+  return first == second;
+}
+
+
+template<typename ExprT>
+class ExprMatrixBuilder {
 public:
-  void add_expr(const DeltaExpr& expr) {
+  void add_expr(const ExprT& expr) {
     sparse_columns.push_back({});
     auto& col = sparse_columns.back();
     expr.foreach([&](const auto& term, int coeff) {
@@ -65,57 +77,72 @@ public:
   }
 
 private:
-  Enumerator<DeltaExpr::ObjectT> monoms_;
+  Enumerator<typename ExprT::ObjectT> monoms_;
   std::vector<std::vector<std::pair<int, int>>> sparse_columns;  // col -> (row, value)
 };
 
-void describe(const DeltaExprMatrixBuilder& matrix_builder) {
+
+template<typename ExprT>
+void describe(Profiler& matrix_profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
+  matrix_profiler.finish("Matrix");
   const auto& matrix = matrix_builder.make_matrix();
-  Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(matrix);
-  auto rank = lu_decomp.rank();
-  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
+
+  // Profiler profiler;
+  // Eigen::FullPivLU<Eigen::MatrixXd> decomp(matrix);
+  // const int rank = decomp.rank();
+  // profiler.finish("rank");
+  // std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
+
+  Profiler profiler;
+  const int lu_rank = Eigen::FullPivLU<Eigen::MatrixXd>(matrix).rank();
+  profiler.finish("LU");
+  const int qr_rank = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>(matrix).rank();
+  profiler.finish("QR");
+  const int cod_rank = Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd>(matrix).rank();
+  profiler.finish("COD");
+  const int bdcsvd_rank = Eigen::BDCSVD<Eigen::MatrixXd>(matrix).rank();
+  profiler.finish("BDCSVD");
+  if (lu_rank == qr_rank && qr_rank == cod_rank && cod_rank == bdcsvd_rank) {
+    std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << lu_rank << "\n";
+  } else {
+    std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => ";
+    std::cout << "[LU=" << lu_rank << ", QR=" << qr_rank;
+    std::cout << ", COD=" << cod_rank << ", BDCSVD=" << bdcsvd_rank << "]\n";
+  }
 }
 
 
-#if 0
+// def include_permutation(permutation, max_point):
+//     return is_sorted(permutation[max_point:])
+
+// def add_expr(matrix_builder, prepare, func, permutation, indices):
+//     if include_permutation(permutation, max(indices)):
+//         expr = func(substitute(indices, permutation))
+//         matrix_builder.add_expr(prepare(expr))
+
 template<typename T>
-class Permutations {
-public:
-  class Iterator {
-  public:
-    Iterator(std::vector<T> current_permutation, bool wrapped)
-        : current_permutation_(std::move(current_permutation)), wrapped_(wrapped) {}
-    Iterator(const Iterator&) = delete;  // avoid accidental (expensive) copying
+bool include_permutation(const std::vector<T>& permutation, int max_point) {
+  return std::is_sorted(permutation.begin() + max_point, permutation.end());
+}
 
-    const std::vector<T>& operator*() const {
-      return current_permutation_;
-    }
-    void operator++() {
-      const wrapped_now = !absl::c_next_permutation(current_permutation_);
-      wrapped_ = wrapped_ || wrapped_now;
-    }
-    bool operator==(const Iterator& other) {
-      return current_permutation_ == other.current_permutation_ && wrapped_ = other.wrapped_;
-    }
-
-  private:
-    std::vector<T> current_permutation_;
-    bool wrapped_ = false;
-  };
-
-  Permutations(std::vector<T> elements)
-      : current_permutation_(std::move(elements)) {}
-
-  Iterator begin() const { return Iterator(current_permutation_, false); }
-  Iterator end() const { return Iterator(current_permutation_, true); }
-
-private:
-  std::vector<T> current_permutation_;
-};
-#endif
+template<typename ExprT, typename PrepareF, typename FuncF, typename T>
+void add_expr(
+    ExprMatrixBuilder<ExprT>& matrix_builder,
+    const PrepareF& prepare,
+    const FuncF& func,
+    const std::vector<T>& permutation,
+    const std::initializer_list<int>& indices
+) {
+  if (include_permutation(permutation, std::max(indices))) {
+    const auto expr = func(choose_indices_one_based(permutation, indices));
+    matrix_builder.add_expr(prepare(expr));
+  }
+}
 
 
-int main(int argc, char *argv[]) {
+
+
+int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
@@ -131,28 +158,50 @@ int main(int argc, char *argv[]) {
 
 
 
-// # def prepare(expr):
-// #     return to_lyndon_basis(expr)
-// # for args in itertools.permutations([1,2,3,4]):
-// #     expr = Corr(substitute([1,1,2,3,4], args))
-// #     matrix_builder.add_expr(prepare(expr))
-// # describe(matrix_builder)  # 9
-// # for args in itertools.permutations([1,2,3,4]):
-// #     expr = Corr(substitute([1,1,1,3,4], args))
-// #     matrix_builder.add_expr(prepare(expr))
-// # describe(matrix_builder)  # 21
+  Eigen::initParallel();
+  Eigen::setNbThreads(4);
 
-  DeltaExprMatrixBuilder matrix_builder;
+  Profiler profiler;
 
-  std::vector args{1,2,3,4};
-  do {
-    const auto expr = Corr(choose_indices_one_based(args, {1,1,2,3,4}));
-    matrix_builder.add_expr(to_lyndon_basis(expr));
-  } while (absl::c_next_permutation(args));
-  describe(matrix_builder);
-  do {
-    const auto expr = Corr(choose_indices_one_based(args, {1,1,1,3,4}));
-    matrix_builder.add_expr(to_lyndon_basis(expr));
-  } while (absl::c_next_permutation(args));
-  describe(matrix_builder);
+
+  // ExprMatrixBuilder<DeltaExpr> matrix_builder;
+  // const auto prepare = [](const auto& expr) {
+  //   return to_lyndon_basis(expr);
+  // };
+  // for (const auto& args : permutations({1,2,3,4})) {
+  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,2,3,4});
+  // }
+  // describe(matrix_builder);
+  // for (const auto& args : permutations({1,2,3,4})) {
+  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,1,3,4});
+  // }
+  // describe(matrix_builder);
+
+
+  // ExprMatrixBuilder<DeltaExpr> matrix_builder;
+  // const auto prepare = [](const auto& expr) {
+  //   return to_lyndon_basis(expr);
+  // };
+  // for (const auto& args : permutations({x1,x2,x3,x4,x5,x6,x7,x8})) {
+  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,3,4});
+  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
+  // }
+  // describe(profiler, matrix_builder);
+
+
+
+  // === Python ===
+  // Computing... |################################| 40320/40320   ETA 0:00:00
+  // Profiler: expr took 41.940 s (user: 41.460 s, system: 2.580 s)
+  // Profiler: rank took 15.680 s (user: 91.210 s, system: 21.000 s)
+  // (2868, 6720) [4.14% nonzero] => 143
+
+  ExprMatrixBuilder<DeltaCoExpr> matrix_builder;
+  const auto prepare = [](const auto& expr) {
+    return comultiply(expr, {2,2});
+  };
+  for (const auto& args : permutations({x1,x2,x3,x4,-x1,-x2,-x3,-x4})) {
+    add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
+  }
+  describe(profiler, matrix_builder);
 }

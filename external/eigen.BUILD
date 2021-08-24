@@ -1,10 +1,8 @@
 cc_library(
     name = "eigen",
     hdrs = glob([
-        "**/*.h",
+        # TODO: Anything to filter out?
+        "**/*",
     ]),
-    includes = [
-        "eigen",
-    ],
     visibility = ["//visibility:public"],
 )
