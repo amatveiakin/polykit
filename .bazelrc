@@ -10,10 +10,7 @@ build:clang-cl --copt /wd4267  # "conversion from 'size_t' to 'type', possible l
 build:clang-cl --copt "-Wno-builtin-macro-redefined"  # for __DATE__, __TIME__, __TIMESTAMP__
 
 build:clang --repo_env=CC=clang
-build:clang --cxxopt -march=native
 build:clang --cxxopt -std=c++17
-build:clang --cxxopt -fopenmp
-build:clang --linkopt -fopenmp
 build:clang --cxxopt -Wextra
 build:clang --cxxopt -Wno-sign-compare
 build:clang --cxxopt -Wimplicit-fallthrough

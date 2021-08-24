@@ -9,9 +9,6 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
 
-#include "Eigen/Dense"
-#include "Eigen/SparseQR"
-
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
 #include "lib/delta_parse.h"
@@ -43,81 +40,6 @@
 #include "lib/zip.h"
 
 
-template<typename First, typename Second, typename... Tail>
-bool constexpr all_equal(const First& first, const Second& second, const Tail&... tail) {
-  return first == second && all_equal(second, tail...);
-}
-template<typename First, typename Second>
-bool constexpr all_equal(const First& first, const Second& second) {
-  return first == second;
-}
-
-
-template<typename ExprT>
-class ExprMatrixBuilder {
-public:
-  void add_expr(const ExprT& expr) {
-    sparse_columns.push_back({});
-    auto& col = sparse_columns.back();
-    expr.foreach([&](const auto& term, int coeff) {
-      col.push_back({monoms_.index(term), coeff});
-    });
-  }
-
-  Eigen::SparseMatrix<double> make_matrix() const {
-    const int num_rows = monoms_.size();
-    const int num_cols = sparse_columns.size();
-    Eigen::SparseMatrix<double> mat(num_rows, num_cols);
-    for (const int col : range(sparse_columns.size())) {
-      for (const auto& [row, coeff] : sparse_columns[col]) {
-        mat.insert(row, col) = coeff;
-      }
-    }
-    mat.makeCompressed();
-    return mat;
-  }
-
-private:
-  Enumerator<typename ExprT::ObjectT> monoms_;
-  std::vector<std::vector<std::pair<int, int>>> sparse_columns;  // col -> (row, value)
-};
-
-
-template<typename ExprT>
-void describe(Profiler& matrix_profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
-  matrix_profiler.finish("matrix");
-  const auto& matrix = matrix_builder.make_matrix();
-
-  Profiler profiler;
-  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> decomp(matrix);
-  const int rank = decomp.rank();
-  profiler.finish("rank");
-  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
-}
-
-
-template<typename T>
-bool include_permutation(const std::vector<T>& permutation, int max_point) {
-  return std::is_sorted(permutation.begin() + max_point, permutation.end());
-}
-
-template<typename ExprT, typename PrepareF, typename FuncF, typename T>
-void add_expr(
-    ExprMatrixBuilder<ExprT>& matrix_builder,
-    const PrepareF& prepare,
-    const FuncF& func,
-    const std::vector<T>& permutation,
-    const std::initializer_list<int>& indices
-) {
-  if (include_permutation(permutation, std::max(indices))) {
-    const auto expr = func(choose_indices_one_based(permutation, indices));
-    matrix_builder.add_expr(prepare(expr));
-  }
-}
-
-
-
-
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -131,53 +53,4 @@ int main(int /*argc*/, char *argv[]) {
     .set_annotation_sorting(AnnotationSorting::length)
     // .set_compact_x(true)
   );
-
-
-
-  Eigen::initParallel();
-  Eigen::setNbThreads(4);
-
-  Profiler profiler;
-
-
-  ExprMatrixBuilder<DeltaExpr> matrix_builder;
-  const auto prepare = [](const auto& expr) {
-    return to_lyndon_basis(expr);
-  };
-  for (const auto& args : permutations({1,2,3,4})) {
-    add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,2,3,4});
-  }
-  describe(profiler, matrix_builder);
-  for (const auto& args : permutations({1,2,3,4})) {
-    add_expr(matrix_builder, prepare, DISAMBIGUATE(Corr), args, {1,1,1,3,4});
-  }
-  describe(profiler, matrix_builder);
-
-
-  // ExprMatrixBuilder<DeltaExpr> matrix_builder;
-  // const auto prepare = [](const auto& expr) {
-  //   return to_lyndon_basis(expr);
-  // };
-  // for (const auto& args : permutations({x1,x2,x3,x4,x5,x6,x7,x8})) {
-  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,3,4});
-  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
-  // }
-  // describe(profiler, matrix_builder);
-
-
-
-  // === Python ===
-  // Computing... |################################| 40320/40320   ETA 0:00:00
-  // Profiler: expr took 41.940 s (user: 41.460 s, system: 2.580 s)
-  // Profiler: rank took 15.680 s (user: 91.210 s, system: 21.000 s)
-  // (2868, 6720) [4.14% nonzero] => 143
-
-  // ExprMatrixBuilder<DeltaCoExpr> matrix_builder;
-  // const auto prepare = [](const auto& expr) {
-  //   return comultiply(expr, {2,2});
-  // };
-  // for (const auto& args : permutations({x1,x2,x3,x4,-x1,-x2,-x3,-x4})) {
-  //   add_expr(matrix_builder, prepare, DISAMBIGUATE(QLi4), args, {1,2,1,3,4,5});
-  // }
-  // describe(profiler, matrix_builder);
 }

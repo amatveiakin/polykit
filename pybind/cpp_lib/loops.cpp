@@ -38,7 +38,7 @@ std::vector<int> substitute(const std::vector<int>& points, const std::vector<in
 // TODO: Replace with:
 //   - proper Python functional interface, or
 //   - binary matrix interface, or
-//   - C++ linear algebra (via Eigen?)
+//   - C++ linear algebra
 std::vector<std::vector<int>> loops_matrix() {
   static constexpr int num_points = 8;
   static constexpr int weight = num_points / 2 - 1;
