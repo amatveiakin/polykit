@@ -41,6 +41,7 @@ void pybind_x(py::module_& m) {
 
   m.attr("Inf") = Inf;
   m.attr("Zero") = Zero;
+
   m.attr("x1") = x1;
   m.attr("x2") = x2;
   m.attr("x3") = x3;
@@ -49,6 +50,15 @@ void pybind_x(py::module_& m) {
   m.attr("x6") = x6;
   m.attr("x7") = x7;
   m.attr("x8") = x8;
+  m.attr("x9") = x9;
+  m.attr("x10") = x10;
+  m.attr("x11") = x11;
+  m.attr("x12") = x12;
+  m.attr("x13") = x13;
+  m.attr("x14") = x14;
+  m.attr("x15") = x15;
+  m.attr("x16") = x16;
+
   m.attr("x1s") = x1s;
   m.attr("x2s") = x2s;
   m.attr("x3s") = x3s;
@@ -57,6 +67,14 @@ void pybind_x(py::module_& m) {
   m.attr("x6s") = x6s;
   m.attr("x7s") = x7s;
   m.attr("x8s") = x8s;
+  m.attr("x9s") = x9s;
+  m.attr("x10s") = x10s;
+  m.attr("x11s") = x11s;
+  m.attr("x12s") = x12s;
+  m.attr("x13s") = x13s;
+  m.attr("x14s") = x14s;
+  m.attr("x15s") = x15s;
+  m.attr("x16s") = x16s;
 
   py::class_<XArgs>(m, "XArgs")
     .def(py::init<std::vector<int>>())

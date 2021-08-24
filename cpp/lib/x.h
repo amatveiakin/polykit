@@ -135,6 +135,14 @@ inline static const X x5 = X(5);
 inline static const X x6 = X(6);
 inline static const X x7 = X(7);
 inline static const X x8 = X(8);
+inline static const X x9 = X(9);
+inline static const X x10 = X(10);
+inline static const X x11 = X(11);
+inline static const X x12 = X(12);
+inline static const X x13 = X(13);
+inline static const X x14 = X(14);
+inline static const X x15 = X(15);
+inline static const X x16 = X(16);
 
 inline static const X x1s = X(XForm::sq_var, 1);
 inline static const X x2s = X(XForm::sq_var, 2);
@@ -144,6 +152,14 @@ inline static const X x5s = X(XForm::sq_var, 5);
 inline static const X x6s = X(XForm::sq_var, 6);
 inline static const X x7s = X(XForm::sq_var, 7);
 inline static const X x8s = X(XForm::sq_var, 8);
+inline static const X x9s = X(XForm::sq_var, 9);
+inline static const X x10s = X(XForm::sq_var, 10);
+inline static const X x11s = X(XForm::sq_var, 11);
+inline static const X x12s = X(XForm::sq_var, 12);
+inline static const X x13s = X(XForm::sq_var, 13);
+inline static const X x14s = X(XForm::sq_var, 14);
+inline static const X x15s = X(XForm::sq_var, 15);
+inline static const X x16s = X(XForm::sq_var, 16);
 
 
 class XArgs {
