@@ -38,6 +38,7 @@ ProjectionExpr = pb.ProjectionExpr
 
 substitute_variables = pb.substitute_variables
 comultiply = pb.comultiply
+ncomultiply = pb.ncomultiply
 involute = pb.involute
 project_on = pb.project_on
 terms_with_num_distinct_variables = pb.terms_with_num_distinct_variables
@@ -65,6 +66,7 @@ def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
 def tensor_product(*parts): return pb.tensor_product_vec(args_to_iterable(parts))
 def coproduct(*parts): return pb.coproduct_vec(args_to_iterable(parts))
+def ncoproduct(*parts): return pb.ncoproduct_vec(args_to_iterable(parts))
 
 def I(*points): return pb.IVec(args_to_iterable(points))
 def Corr(*points): return pb.CorrVec(args_to_iterable(points))

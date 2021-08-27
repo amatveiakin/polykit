@@ -213,8 +213,9 @@ class AsciiEncoder : public AbstractEncoder {
   std::string inf() override { return "Inf"; }
   std::string dot() override { return "."; }
   std::string tensor_prod() override { return " * "; }
-  std::string coprod_lie() override { return "  ^  "; }
-  std::string coprod_hopf() override { return "  @  "; }
+  std::string coprod_normal() override { return "  ^  "; }
+  std::string coprod_iterated() override { return "  @  "; }
+  std::string coprod_hopf() override { return "  %  "; }
   std::string comult() override { return is_html() ? "&amp;" : "&"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
@@ -319,8 +320,9 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string inf() override { return "∞"; }
   std::string dot() override { return ""; }
   std::string minus() override { return kMinusSign; }
-  std::string tensor_prod() override { return "⊗"; }
-  std::string coprod_lie() override { return hspace("∧"); }
+  std::string tensor_prod() override { return "⨂"; }
+  std::string coprod_normal() override { return hspace("∧"); }
+  std::string coprod_iterated() override { return hspace("⦻"); }
   std::string coprod_hopf() override { return hspace("☒"); }
   std::string comult() override { return "△"; }
 
@@ -473,7 +475,8 @@ class LatexEncoder : public AbstractEncoder {
   std::string inf() override { return "\\infty"; }
   std::string dot() override { return ""; }
   std::string tensor_prod() override { return " \\otimes "; }
-  std::string coprod_lie() override { return hspace("\\wedge"); }
+  std::string coprod_normal() override { return hspace("\\wedge"); }
+  std::string coprod_iterated() override { return hspace("\\bigotimes"); }
   std::string coprod_hopf() override { return hspace("\\boxtimes"); }
   std::string comult() override { return " \\triangle "; }
 

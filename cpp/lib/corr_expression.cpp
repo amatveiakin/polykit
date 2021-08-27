@@ -39,7 +39,7 @@ CorrCoExpr corr_coproduct(const CorrExpr& lhs, const CorrExpr& rhs) {
       [](const CorrExpr::StorageT& u, const CorrExpr::StorageT& v) {
         return CorrCoExpr::StorageT{u, v};
       },
-      AnnOperator(fmt::coprod_lie())
+      AnnOperator(fmt::coprod_iterated())
     )
   );
 }

@@ -136,7 +136,8 @@ public:
   virtual std::string minus();
   virtual std::string dot() = 0;
   virtual std::string tensor_prod() = 0;
-  virtual std::string coprod_lie() = 0;
+  virtual std::string coprod_normal() = 0;
+  virtual std::string coprod_iterated() = 0;
   virtual std::string coprod_hopf() = 0;
   virtual std::string comult() = 0;
 
@@ -204,7 +205,8 @@ inline std::string unity() { return current_encoder()->unity(); }
 inline std::string minus() { return current_encoder()->minus(); }
 inline std::string dot() { return current_encoder()->dot(); }
 inline std::string tensor_prod() { return current_encoder()->tensor_prod(); }
-inline std::string coprod_lie() { return current_encoder()->coprod_lie(); }
+inline std::string coprod_normal() { return current_encoder()->coprod_normal(); }
+inline std::string coprod_iterated() { return current_encoder()->coprod_iterated(); }
 inline std::string coprod_hopf() { return current_encoder()->coprod_hopf(); }
 inline std::string comult() { return current_encoder()->comult(); }
 

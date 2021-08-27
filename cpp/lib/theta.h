@@ -168,6 +168,7 @@ struct ThetaCoExprParam {
     return str_join(obj, fmt::coprod_hopf());
   }
   static constexpr bool coproduct_is_lie_algebra = false;
+  static constexpr bool coproduct_is_iterated = true;
 };
 }  // namespace internal
 

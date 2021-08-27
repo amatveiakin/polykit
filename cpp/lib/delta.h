@@ -210,6 +210,7 @@ struct DeltaExprParam {
 };
 
 struct DeltaCoExprParam {
+  using PartExprParam = DeltaExprParam;
   using ObjectT = std::vector<std::vector<Delta>>;
 #if DISABLE_PACKING
   IDENTITY_STORAGE_FORM
@@ -226,19 +227,29 @@ struct DeltaCoExprParam {
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
   static std::string object_to_string(const ObjectT& obj) {
-    return str_join(obj, fmt::coprod_lie(), DeltaExprParam::object_to_string);
+    return str_join(obj, fmt::coprod_iterated(), DeltaExprParam::object_to_string);
   }
   static int object_to_weight(const ObjectT& obj) {
     return sum(mapped(obj, [](const auto& part) { return part.size(); }));
   }
   static constexpr bool coproduct_is_lie_algebra = true;
+  static constexpr bool coproduct_is_iterated = true;
+};
+
+struct DeltaNCoExprParam : DeltaCoExprParam {
+  static std::string object_to_string(const ObjectT& obj) {
+    return str_join(obj, fmt::coprod_normal(), DeltaExprParam::object_to_string);
+  }
+  static constexpr bool coproduct_is_iterated = false;
 };
 }  // namespace internal
 
 
 using DeltaExpr = Linear<internal::DeltaExprParam>;
 using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
+using DeltaNCoExpr = Linear<internal::DeltaNCoExprParam>;
 template<> struct CoExprForExpr<DeltaExpr> { using type = DeltaCoExpr; };
+template<> struct NCoExprForExpr<DeltaExpr> { using type = DeltaNCoExpr; };
 
 inline DeltaExpr delta_to_expr(Delta d) {
   if (d.is_nil()) {

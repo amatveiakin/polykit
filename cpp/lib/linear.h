@@ -110,7 +110,9 @@ struct SimpleLinearParam {
   //     It should be a compile-time error to have key_to_vector when VectorT == StorageT. This will
   //     allow to reliably omit conversion when it's not needed.
 
+  // TODO: Consider uniting these into one enum CoproductType (normal, iterative, hopf)
   // static constexpr bool coproduct_is_lie_algebra = ...;
+  // static constexpr bool coproduct_is_iterated = ...;
 };
 
 // TODO: Implement mixins without macros. Idea: make a template that's used like this:

@@ -1,4 +1,7 @@
-// TODO: Test coproduct_is_lie_algebra == false.
+// TODO: More tests for normal comultiplication:
+//   - goldens;
+//   - coincides with the iterative one if applied once.
+// TODO: Tests for Hopf coproduct (coproduct_is_lie_algebra == false).
 
 #include "lib/coalgebra.h"
 
@@ -70,7 +73,7 @@ TEST(ComultiplyTest, Form_2_2) {
   );
 }
 
-TEST(ComultiplyTest, Zero) {
+TEST(ComultiplyTest, ZeroResult) {
   EXPECT_EXPR_EQ(
     comultiply(
       + SV({1,1,2,3})
@@ -93,6 +96,16 @@ TEST(CoproductTest, IteratedComultiplication_2_2_2) {
       + CoSV({{1,2}, {5,6}, {3,4}})
     )
   );
+}
+
+TEST(NComultiplyTest, IterationGivesZero) {
+  EXPECT_EXPR_ZERO(ncomultiply(ncomultiply(
+    + SV({1,2,3,4,5,6})
+    + SV({2,3,4,5,6,7})
+    + SV({8,7,6,5,4,3})
+    + SV({1,3,5,7,2,4})
+    + SV({4,7,2,8,3,1})
+  )));
 }
 
 TEST(CoalgebraUtilTest, FilterCoExpr) {
