@@ -1,8 +1,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include "cpp/lib/itertools.h"
 #include "cpp/lib/loops.h"
-#include "cpp/lib/permutations.h"
 #include "cpp/lib/polylog_liquad.h"
 
 
