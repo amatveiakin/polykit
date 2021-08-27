@@ -131,8 +131,20 @@ cc_library(
     ],
     deps = [
         "@absl//absl/strings:strings",
+        "@eigen//:eigen",
         ":base",
         ":math",
+    ],
+)
+
+cc_library(
+    name = "polylog_linalg",
+    hdrs = [
+        "lib/expr_matrix_builder.h",
+    ],
+    deps = [
+        "@eigen//:eigen",
+        ":polylog",
     ],
 )
 
@@ -149,11 +161,12 @@ cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [
-        ":base",
-        ":math",
-        ":polylog",
         "@absl//absl/debugging:failure_signal_handler",
         "@absl//absl/debugging:symbolize",
         "@eigen//:eigen",
+        ":base",
+        ":math",
+        ":polylog",
+        ":polylog_linalg",
     ]
 )
