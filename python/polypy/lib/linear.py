@@ -1,11 +1,12 @@
-from collections.abc import Callable
 import functools
 
 from . import format
-from .util import args_to_iterable
+from .util import args_to_iterable, get_one_item, to_hashable
 
 
-# Represents a linear combination of any hashable objects
+# Represents a linear combination of any hashable objects.
+# Interface mirros C++ implementation (see pybind/cpp_lib/py_util.h).
+# Does not support annotations.
 class Linear:
     def __init__(self, data=None):
         if data is None:
@@ -13,47 +14,42 @@ class Linear:
         assert isinstance(data, dict)
         self.data = data
 
-    # Counts the number of each element in the list
-    # Example:  ["a", "b", "a"]  ->  {"a": 2, "b": 1}
     @staticmethod
-    def count(l):
-        cnt = {}
-        for item in l:
-            cnt[item] = cnt.get(item, 0) + 1
-        return Linear(cnt)
+    def single(obj):
+        return Linear({obj: 1})
 
-    def copy(self):
-        return Linear(self.data.copy())
+    @staticmethod
+    def from_cpp(expr):
+        ret = Linear()
+        for term, coeff in expr:
+            ret.add_to(to_hashable(term), coeff)
+        return ret
 
-    def items(self):
-        return self.data.items()
+    def copy(self):  return Linear(self.data.copy())
 
-    # Use items() to iterate over Linear
-    __iter__ = None
+    def is_zero(self):  return not self.data
+    def is_blank(self):  return self.is_zero()
 
-    def l0_norm(self):
-        return len(self.data)
-    num_terms = l0_norm
-    def l1_norm(self):
-        return sum([abs(coeff) for _, coeff in self.items()])
+    def l0_norm(self):  return len(self.data)
+    def num_terms(self):  return self.l0_norm()
+    def l1_norm(self):  return sum([abs(coeff) for _, coeff in self])
 
-    def __getitem__(self, key):
-        return self.data.get(key, 0)
+    def __iter__(self):  return iter(self.data.items())
+    def __getitem__(self, obj):  return self.data.get(obj, 0)
 
-    def __setitem__(self, key, value):
+    def add_to(self, obj, additive):
+        value = self[obj] + additive
         if value != 0:
-            self.data[key] = value
-        elif key in self.data:
-            del self.data[key]
+            self.data[obj] = value
+        elif obj in self.data:
+            del self.data[obj]
 
-    def __eq__(self, other):
-        return self.data == other.data
+    def element(self):  return get_one_item(self.data)
 
-    def __pos__(self):
-        return self
+    def __eq__(self, other): return self.data == other.data
 
-    def __neg__(self):
-        return Linear() - self
+    def __pos__(self):  return self
+    def __neg__(self):  return Linear() - self
 
     def __add__(self, other):
         ret = self.copy()
@@ -66,44 +62,64 @@ class Linear:
         return ret
 
     def __iadd__(self, other):
-        for obj, coeff in other.items():
-            self[obj] += coeff
+        assert isinstance(other, Linear)
+        for obj, coeff in other:
+            self.add_to(obj, coeff)
         return self
 
     def __isub__(self, other):
-        for obj, coeff in other.items():
-            self[obj] -= coeff
+        assert isinstance(other, Linear)
+        for obj, coeff in other:
+            self.add_to(obj, -coeff)
         return self
 
     def __mul__(self, scalar):
-        return self.mapped_coeff(lambda coeff: coeff * scalar)
+        return self._mapped_coeff(lambda coeff: coeff * scalar)
     __rmul__ = __mul__
 
     def div_int(self, scalar):
-        return self.mapped_coeff(lambda coeff: _div_int(coeff, scalar))
+        return self._mapped_coeff(lambda coeff: _div_int(coeff, scalar))
 
-    def mapped_obj(self, func):
-        # Don't use a list comprehension in case func is not injective
-        ret = Linear()
-        for obj, coeff in self.items():
-            ret += Linear({func(obj): coeff})
+    def dived_int(self, scalar):
+        ret = self.copy()
+        ret.dived_int(scalar)
         return ret
 
-    def mapped_coeff(self, func):
-        return Linear({obj: func(coeff) for obj, coeff in self.items()})
+    def mapped(self, func):
+        # Don't use a list comprehension in case func is not injective
+        ret = Linear()
+        for obj, coeff in self:
+            ret.add_to(func(obj), coeff)
+        return ret
 
-    def filtered_obj(self, predicate):
-        return Linear({obj: coeff for obj, coeff in self.items() if predicate(obj)})
+    def mapped_expanding(self, func):
+        ret = Linear()
+        for obj, coeff in self:
+            ret += coeff * func(obj)
+        return ret
+
+    def filtered(self, predicate):
+        return Linear({obj: coeff for obj, coeff in self if predicate(obj)})
 
     def to_str(self, element_to_str):
-        return (
-            "\n".join([format.coeff(coeff) + element_to_str(obj) for obj, coeff in sorted(self.items())])
-            if self.data
-            else format.coeff(0)
-        )
+        LINE_LIMIT = 300
+        if self.is_zero():
+            return "\n" + format.coeff(0) + "\n"
+        header = f"# {self.num_terms()} terms, |coeff| = {self.l1_norm()}:\n"
+        lines = []
+        for obj, coeff in sorted(self):
+            if len(lines) < LINE_LIMIT:
+                lines.append(format.coeff(coeff) + element_to_str(obj))
+            else:
+                lines.append("...")
+                break
+        return header + "\n".join(lines) + "\n"
 
     def __str__(self):
         return self.to_str(str)
+
+    def _mapped_coeff(self, func):
+        return Linear({obj: func(coeff) for obj, coeff in self})
 
 
 def _tensor_product_two(
@@ -112,8 +128,8 @@ def _tensor_product_two(
         product,  # function: A, B -> C
     ):
     ret = Linear()
-    for obj_l, coeff_l in lhs.items():
-        for obj_r, coeff_r in rhs.items():
+    for obj_l, coeff_l in lhs:
+        for obj_r, coeff_r in rhs:
             obj = product(obj_l, obj_r)
             assert ret[obj] == 0, f"Tensor product is not unique: {obj} = ({obj_l}) * ({obj_r})"
             ret[obj] = coeff_l * coeff_r
@@ -134,34 +150,3 @@ def _div_int(x, y):
     result, reminder = divmod(x, y)
     assert reminder == 0
     return result
-
-
-def print_expression(
-        title: str,
-        expr: Linear,
-        element_to_str: Callable = None
-    ):
-    if expr != Linear():
-        print(
-            f"{title} - {expr.num_terms()} terms, |coeff| = {expr.l1_norm()}:\n" +
-            _print_expression_terms(expr, element_to_str) + "\n"
-        )
-    else:
-        print(
-            f"{title} - {len(expr)} terms:\n" +
-            _print_expression_terms(expr, element_to_str) + "\n"
-        )
-
-def _print_expression_terms(
-        expr: Linear,
-        element_to_str: Callable
-    ):
-    CUTOFF_THRESHOLD = 300
-    CUTOFF_DISPLAY = 200
-    assert CUTOFF_DISPLAY <= CUTOFF_THRESHOLD
-    ret = expr.to_str(element_to_str or str)
-    lines = ret.split("\n")
-    if len(lines) > CUTOFF_THRESHOLD:
-        lines = lines[:CUTOFF_DISPLAY]
-        lines.append("...")
-    return "\n".join(lines)
