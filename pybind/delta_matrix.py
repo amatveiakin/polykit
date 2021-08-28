@@ -1,6 +1,6 @@
 import numpy as np
 
-from polykit import substitute_variables
+from pybind.polykit import substitute_variables
 from python.polypy.lib.util import to_hashable
 
 
