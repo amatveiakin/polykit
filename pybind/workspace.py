@@ -4,6 +4,7 @@ import math
 from pathlib import Path
 import numpy as np
 from progress.bar import Bar
+import scipy.sparse
 
 from python.polypy.lib.linear import Linear
 from python.polypy.lib.profiler import Profiler
@@ -133,10 +134,9 @@ def iterate_permutations(points, *, filter=None):
     ]
     return with_progress(values)
 
-def get_matrix_filename():
+def get_matrix_filename(extension='.npy'):
     folder = RESULTS_FOLDER
     file_prefix = 'matrix-'
-    extension = '.npy'
     existing_files = glob.glob(f'{folder}{file_prefix}*{extension}')
     max_existing_index = 0
     for f in existing_files:
@@ -159,14 +159,22 @@ matrix_builder = DeltaExprMatrixBuilder()
 def describe(matrix_builder):
     global profiler
     profiler.finish("expr")
-    mat = matrix_builder.make_np_array()
+
+    # mat = matrix_builder.make_np_array()
     # filename = get_matrix_filename()
     # np.save(filename, mat)
     # print(f'Saved to {filename}')
-    rank = np.linalg.matrix_rank(mat)
-    profiler.finish("rank")
-    nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
-    print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
+
+    mat_sparse = matrix_builder.make_sp_sparse()
+    filename = get_matrix_filename('.npz')
+    scipy.sparse.save_npz(filename, mat_sparse)
+    print(f'Saved to {filename}')
+    # mat = mat_sparse.toarray()
+
+    # rank = np.linalg.matrix_rank(mat)
+    # profiler.finish("rank")
+    # nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
+    # print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
 
 
 
@@ -1010,20 +1018,24 @@ def describe(matrix_builder):
 #     matrix_builder.add_expr(prepare(s))
 # describe(matrix_builder)
 
-# points = [x1,x2,x3,x4,x5,x6,x7]
-# def prepare(expr):
-#     # return expr
-#     return ncomultiply(expr, (4,1,1))
-# for s1 in Bar('L5xB1').iter(CL5(points)):
-#     for s2 in CB1(points):
-#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-# for s1 in Bar('B4xB2').iter(CB4(points)):
-#     for s2 in CB2(points):
-#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-# # for s1 in Bar('B3xB3').iter(CB3(points)):
-# #     for s2 in CB3(points):
-# #         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-# describe(matrix_builder)
+points = [x1,x2,x3,x4,x5,x6,x7]
+def prepare(expr):
+    return expr
+    # return ncomultiply(expr, (4,1,1))
+    # return ncomultiply(expr)
+for s1 in Bar('L5xB1').iter(CL5(points)):
+    for s2 in CB1(points):
+        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+for s1 in Bar('L4xB2').iter(CL4(points)):
+    for s2 in CB2(points):
+        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+for s1 in Bar('B3xB3').iter(CB3(points)):
+    for s2 in CB3(points):
+        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+describe(matrix_builder)
+# RESULTS for (raw expr) - (full ncomultiply):
+#   * 6 points: 459 - 443 = 16
+#   * 7 points:
 
 
 # print(to_lyndon_basis(dihedralize(A2, [1,2,3,4,5], 5)))  # Non-zero
@@ -1115,15 +1127,15 @@ def describe(matrix_builder):
 # print(dexpr)
 # print(expr)
 
-points = [x1,x2,x3,x4,x5,x6,x7]
-for s1 in Bar('L4xB2').iter(CL4_formal(points)):
-    for s2 in CB2(points):
-        matrix_builder.add_expr(glue_formal_symbol(s1, to_lyndon_basis(s2)))
-for p in Bar('B4xLogxB1').iter(list(itertools.combinations(points, 4))):
-    for s in CB1(points):
-        expr = tensor_product(Log(p), s)
-        matrix_builder.add_expr(glue_formal_symbol(f'QLi4({p})', to_lyndon_basis(expr)))
-describe(matrix_builder)
+# points = [x1,x2,x3,x4,x5,x6,x7]
+# for s1 in Bar('L4xB2').iter(CL4_formal(points)):
+#     for s2 in CB2(points):
+#         matrix_builder.add_expr(glue_formal_symbol(s1, to_lyndon_basis(s2)))
+# for p in Bar('B4xLogxB1').iter(list(itertools.combinations(points, 4))):
+#     for s in CB1(points):
+#         expr = tensor_product(Log(p), s)
+#         matrix_builder.add_expr(glue_formal_symbol(f'QLi4({p})', to_lyndon_basis(expr)))
+# describe(matrix_builder)
 
 
 
@@ -1189,8 +1201,8 @@ describe(matrix_builder)
 
 # points = [x1,x2,x3,x4,x5,x6]
 # def prepare(expr):
-#     return expr
-#     # return ncomultiply(expr)
+#     # return expr
+#     return ncomultiply(expr)
 # for s1 in Bar('SL4xB1').iter(CSL4(points)):
 #     for s2 in CB1(points):
 #         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))

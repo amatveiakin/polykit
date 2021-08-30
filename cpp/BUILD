@@ -158,6 +158,17 @@ cc_library(
 )
 
 cc_binary(
+    name = "rank",
+    srcs = ["rank.cpp"],
+    deps = [
+        "@absl//absl/debugging:failure_signal_handler",
+        "@absl//absl/debugging:symbolize",
+        "@eigen//:eigen",
+        ":base",
+    ]
+)
+
+cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [

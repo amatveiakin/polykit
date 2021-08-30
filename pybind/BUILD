@@ -35,6 +35,7 @@ py_library(
     srcs = ["delta_matrix.py"],
     deps = [
         requirement("numpy"),
+        requirement("scipy"),
         ":polykit",
     ],
 )
@@ -52,6 +53,7 @@ py_binary(
     srcs = ["workspace.py"],
     deps = [
         requirement("numpy"),
+        requirement("scipy"),
         requirement("progress"),
         ":delta_matrix",
         ":polykit",
