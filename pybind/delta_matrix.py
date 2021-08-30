@@ -30,15 +30,29 @@ class DeltaExprMatrixBuilder:
     #         # TODO: Optimize case num_points >= num_args+1 (skip tail permutations)
     #         self.add_expr(substitute_variables(expr, points[num_args:]))
 
+    def sparse_to_array(self, mat_sparse):
+        unique_rows = set()
+        mat_lil = mat_sparse.transpose().tolil()
+        for row, value in zip(mat_lil.rows, mat_lil.data):
+            unique_rows.add(tuple(zip(row, value)))
+        mat = np.zeros((len(unique_rows), mat_lil.shape[1]))
+        for row in unique_rows:
+            for col, value in row:
+                mat[row, col] = value
+        return mat
+
     def make_np_array(self):
-        num_columns = self.next_column_id
-        rows = []
-        for sparse_row in self.sparse_rows:
-            row = [0] * num_columns
-            for column_id, coeff in sparse_row:
-                row[column_id] = coeff
-            rows.append(row)
-        return np.array(rows, dtype=int)
+        return self.sparse_to_array(self.make_sp_sparse())
+
+    # def make_np_array(self):
+    #     num_columns = self.next_column_id
+    #     rows = []
+    #     for sparse_row in self.sparse_rows:
+    #         row = [0] * num_columns
+    #         for column_id, coeff in sparse_row:
+    #             row[column_id] = coeff
+    #         rows.append(row)
+    #     return np.array(rows, dtype=int)
 
     def make_sp_sparse(self):
         data = []
