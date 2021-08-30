@@ -172,6 +172,7 @@ def describe(matrix_builder):
     # # mat = mat_sparse.toarray()
 
     mat = matrix_builder.make_np_array()
+    profiler.finish("matrix")
     rank = np.linalg.matrix_rank(mat)
     profiler.finish("rank")
     nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
