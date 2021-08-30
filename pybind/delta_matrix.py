@@ -7,7 +7,7 @@ from python.polypy.lib.util import to_hashable
 
 class DeltaExprMatrixBuilder:
     def __init__(self):
-        self.sparse_rows = []
+        self.sparse_rows = set()
         self.monoms_to_columns = {}
         self.next_column_id = 0
 
@@ -22,7 +22,7 @@ class DeltaExprMatrixBuilder:
         row = []
         for monom, coeff in expr:
             row.append((self._monom_to_column(monom), coeff))
-        self.sparse_rows.append(row)
+        self.sparse_rows.add(tuple(row))
 
     # def add_expr_permutations(self, expr, num_points, num_args):
     #     assert num_points >= num_args

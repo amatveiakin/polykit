@@ -165,16 +165,17 @@ def describe(matrix_builder):
     # np.save(filename, mat)
     # print(f'Saved to {filename}')
 
-    mat_sparse = matrix_builder.make_sp_sparse()
-    filename = get_matrix_filename('.npz')
-    scipy.sparse.save_npz(filename, mat_sparse)
-    print(f'Saved to {filename}')
-    # mat = mat_sparse.toarray()
+    # mat_sparse = matrix_builder.make_sp_sparse()
+    # filename = get_matrix_filename('.npz')
+    # scipy.sparse.save_npz(filename, mat_sparse)
+    # print(f'Saved to {filename}')
+    # # mat = mat_sparse.toarray()
 
-    # rank = np.linalg.matrix_rank(mat)
-    # profiler.finish("rank")
-    # nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
-    # print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
+    mat = matrix_builder.make_np_array()
+    rank = np.linalg.matrix_rank(mat)
+    profiler.finish("rank")
+    nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
+    print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
 
 
 
