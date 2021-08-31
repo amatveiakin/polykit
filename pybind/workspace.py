@@ -28,6 +28,7 @@ from polykit import Log, A2
 from polykit import QLiPr
 from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
+from polykit import cluster_polylog_matrix
 from polykit import loops_matrix
 
 
@@ -172,6 +173,15 @@ def describe(matrix_builder):
 
     mat = matrix_builder.make_np_array()
     profiler.finish("matrix")
+    rank = np.linalg.matrix_rank(mat)
+    profiler.finish("rank")
+    nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
+    print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
+
+
+def describe_cpp(mat):
+    global profiler
+    profiler.finish("expr")
     rank = np.linalg.matrix_rank(mat)
     profiler.finish("rank")
     nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
@@ -1223,16 +1233,21 @@ def describe(matrix_builder):
 
 
 
-points = [x1,x2,x3,x4,x5,x6,x7]
-def prepare(expr):
-    return expr
-    # return ncomultiply(expr)
-for s1 in Bar().iter(CL4(points)):
-    for s2 in CB1(points):
-        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-for s1 in Bar().iter(CB3(points)):
-    for s2 in CB2(points):
-        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-describe(matrix_builder)
+# points = [x1,x2,x3,x4,x5,x6,x7]
+# def prepare(expr):
+#     return expr
+#     # return ncomultiply(expr)
+# for s1 in Bar().iter(CL4(points)):
+#     for s2 in CB1(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# for s1 in Bar().iter(CB3(points)):
+#     for s2 in CB2(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# describe(matrix_builder)
 # 7 points: 1484 - 1407 = 77
 # 8 points: 4970 - 4802 = 168
+
+weight = 5
+points = [x1,x2,x3,x4,x5,x6,x7]
+describe_cpp(cluster_polylog_matrix(weight, points, False))
+describe_cpp(cluster_polylog_matrix(weight, points, True))

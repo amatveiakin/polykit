@@ -60,6 +60,8 @@ QLiSymmPr = pb.QLiSymmPr
 
 Lira = pb.Lira
 
+cluster_polylog_matrix = pb.cluster_polylog_matrix
+
 loops_matrix = pb.loops_matrix
 
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))

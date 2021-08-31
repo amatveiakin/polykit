@@ -4,5 +4,6 @@ cc_library(
         # TODO: Anything to filter out?
         "**/*",
     ]),
+    includes = ["."],
     visibility = ["//visibility:public"],
 )

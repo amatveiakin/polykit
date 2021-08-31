@@ -19,12 +19,14 @@ pybind_extension(
         "cpp_lib/formatting.cpp",
         "cpp_lib/loops.cpp",
         "cpp_lib/polylog.cpp",
+        "cpp_lib/polylog_cluster.cpp",
         "cpp_lib/py_bindings.cpp",
         "cpp_lib/ratio.cpp",
         "cpp_lib/x.cpp",
-    ],    
+    ],
     deps = [
         "//cpp:polylog",
+        "//cpp:polylog_linalg",
         ":cpp_py_util",
     ],
 )

@@ -1,6 +1,9 @@
+#include "absl/container/flat_hash_set.h"
+
 #include "Eigen/Core"
 
 #include "enumerator.h"
+#include "util.h"
 
 
 template<typename ExprT>
