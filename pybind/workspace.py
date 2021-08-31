@@ -55,12 +55,8 @@ def CB2(args):
     return [QLi2(args[:1] + list(p)) for p in itertools.combinations(args[1:], 3)]
 def CB3(args):
     return [QLi3(p) for p in itertools.combinations(args, 4)]
-# def CB4(args):
-#     return [QLi4(p) for p in itertools.combinations(args, 4)]
-def CB4_formal(args):
-    return [f'QLi4({p})' for p in itertools.combinations(args, 4)]
 def CB4(args):
-    return [eval(f) for f in CB4_formal(args)]
+    return [QLi4(p) for p in itertools.combinations(args, 4)]
 def CB5(args):
     return [QLi5(p) for p in itertools.combinations(args, 4)]
 def CB6(args):
@@ -73,17 +69,20 @@ def CSB3(args):
 def CSB4(args):
     return [QLi4(p) for p in itertools.permutations(args, 4)]
 
-# def CL4(args):
-#     return CB4(args) + [A2(p) for p in itertools.combinations(args, 5)]
-def CL4_formal(args):
-    return CB4_formal(args) + [f'A2({p})' for p in itertools.combinations(args, 5)]
 def CL4(args):
-    return [eval(f) for f in CL4_formal(args)]
+    return CB4(args) + [A2(p) for p in itertools.combinations(args, 5)]
 def CL5(args):
     return CB5(args) + [QLi5(p) for p in itertools.combinations(args, 6)]
 
 def CSL4(args):
     return CSB4(args) + [A2(p) for p in itertools.permutations(args, 5)]
+
+# def CB4_formal(args):
+#     return [f'QLi4({p})' for p in itertools.combinations(args, 4)]
+# def CL4_formal(args):
+#     return CB4_formal(args) + [f'A2({p})' for p in itertools.combinations(args, 5)]
+# def CL4(args): return [eval(f) for f in CL4_formal(args)]
+# def CB4(args): return [eval(f) for f in CB4_formal(args)]
 
 
 def substitute(points, new_indices):
@@ -829,6 +828,12 @@ def describe(matrix_builder):
 #     add_expr(matrix_builder, prepare, QLi3, args, [1,2,3,4])
 # describe(matrix_builder)
 
+# def prepare(expr):
+#     return to_lyndon_basis(expr)
+# for s in Bar().iter(CL5([x1,x2,x3,x4,x5,x6,x7])):
+#     matrix_builder.add_expr(prepare(s))
+# describe(matrix_builder)
+
 
 # expr = (
 #     +8*QLiSymm4(1,2,3,4,5,6)
@@ -1020,24 +1025,27 @@ def describe(matrix_builder):
 #     matrix_builder.add_expr(prepare(s))
 # describe(matrix_builder)
 
-points = [x1,x2,x3,x4,x5,x6,x7]
-def prepare(expr):
-    return expr
-    # return ncomultiply(expr, (4,1,1))
-    # return ncomultiply(expr)
-for s1 in Bar('L5xB1').iter(CL5(points)):
-    for s2 in CB1(points):
-        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-for s1 in Bar('L4xB2').iter(CL4(points)):
-    for s2 in CB2(points):
-        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-for s1 in Bar('B3xB3').iter(CB3(points)):
-    for s2 in CB3(points):
-        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
-describe(matrix_builder)
-# RESULTS for (raw expr) - (full ncomultiply):
-#   * 6 points: 459 - 443 = 16
-#   * 7 points:
+# points = [x1,x2,x3,x4,x5,x6,x7]
+# def prepare(expr):
+#     return expr
+#     # return ncomultiply(expr, (4,1,1))
+#     # return ncomultiply(expr)
+# for s1 in Bar('L5xB1').iter(CL5(points)):
+#     for s2 in CB1(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# for s1 in Bar('L4xB2').iter(CL4(points)):
+#     for s2 in CB2(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# for s1 in Bar('B3xB3').iter(CB3(points)):
+#     for s2 in CB3(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# describe(matrix_builder)
+# # RESULTS for (raw expr) - (full ncomultiply):
+# #   * 6 points: 459 - 443 = 16
+# #   * 7 points: 2303 - 2261 = 42
+#
+# # 1785 - 1750 = 35
+# # 2205 - 2170 = 35
 
 
 # print(to_lyndon_basis(dihedralize(A2, [1,2,3,4,5], 5)))  # Non-zero
@@ -1212,3 +1220,19 @@ describe(matrix_builder)
 #     for s2 in CB2(points):
 #         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
 # describe(matrix_builder)
+
+
+
+points = [x1,x2,x3,x4,x5,x6,x7]
+def prepare(expr):
+    return expr
+    # return ncomultiply(expr)
+for s1 in Bar().iter(CL4(points)):
+    for s2 in CB1(points):
+        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+for s1 in Bar().iter(CB3(points)):
+    for s2 in CB2(points):
+        matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+describe(matrix_builder)
+# 7 points: 1484 - 1407 = 77
+# 8 points: 4970 - 4802 = 168
