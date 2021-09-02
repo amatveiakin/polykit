@@ -1,7 +1,11 @@
-// TODO: Test !!!
+// TODO: Test !!! (some reference values in https://arxiv.org/pdf/1401.6446.pdf)
+// TODO: Are shared pointers a good idea? This causes sharing between threads !!!
 
 #include "polylog_cluster.h"
 
+#include <future>
+
+#include "expr_matrix_builder.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 
@@ -67,7 +71,8 @@ ClusterSpace CL5Alt(const XArgs& args) {
 }
 
 
-ClusterCoSpace cluster_weight2(const XArgs& args) {
+// TODO: Fix weight 2 !!!
+ClusterCoSpace cluster_space_2(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CB1(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -77,7 +82,7 @@ ClusterCoSpace cluster_weight2(const XArgs& args) {
   return ret;
 }
 
-ClusterCoSpace cluster_weight3(const XArgs& args) {
+ClusterCoSpace cluster_space_3(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CB2(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -87,7 +92,7 @@ ClusterCoSpace cluster_weight3(const XArgs& args) {
   return ret;
 }
 
-ClusterCoSpace cluster_weight4(const XArgs& args) {
+ClusterCoSpace cluster_space_4(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CB3(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -102,7 +107,7 @@ ClusterCoSpace cluster_weight4(const XArgs& args) {
   return ret;
 }
 
-ClusterCoSpace cluster_weight5(const XArgs& args) {
+ClusterCoSpace cluster_space_5(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CL4(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -117,7 +122,7 @@ ClusterCoSpace cluster_weight5(const XArgs& args) {
   return ret;
 }
 
-ClusterCoSpace cluster_weight6(const XArgs& args) {
+ClusterCoSpace cluster_space_6(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CL5(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -137,7 +142,7 @@ ClusterCoSpace cluster_weight6(const XArgs& args) {
   return ret;
 }
 
-ClusterCoSpace cluster_weight6_alt(const XArgs& args) {
+ClusterCoSpace cluster_space_6_alt(const XArgs& args) {
   ClusterCoSpace ret;
   for (const auto& s1 : CL5Alt(args)) {
     for (const auto& s2 : CB1(args)) {
@@ -155,4 +160,21 @@ ClusterCoSpace cluster_weight6_alt(const XArgs& args) {
     }
   }
   return ret;
+}
+
+
+Eigen::MatrixXd cluster_space_matrix(int weight, const XArgs& points, bool apply_comult) {
+  ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
+  std::vector<std::future<DeltaNCoExpr>> results;
+  for (const auto& s : cluster_space(weight)(points)) {
+    results.push_back(std::async([s, apply_comult]() {
+      const auto& [s1, s2] = s;
+      const auto prod = ncoproduct(*s1, *s2);
+      return apply_comult ? ncomultiply(prod) : prod;
+    }));
+  }
+  for (auto& result : results) {
+    matrix_builder.add_expr(result.get());
+  }
+  return matrix_builder.make_matrix<double>();
 }

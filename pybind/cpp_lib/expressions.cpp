@@ -1,3 +1,5 @@
+// TODO: Split into a file per expression type in order to speed up parallel compilation
+
 #include "pybind11/operators.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"

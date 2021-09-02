@@ -111,7 +111,6 @@ cc_library(
         "lib/lira_ones.h",
         "lib/loops.h",
         "lib/mystic_algebra.h",
-        "lib/polylog_cluster.h",
         "lib/polylog_li.h",
         "lib/polylog_liquad.h",
         "lib/polylog_lira.h",
@@ -124,7 +123,6 @@ cc_library(
         "lib/lira_ones.cpp",
         "lib/loops.cpp",
         "lib/mystic_algebra.cpp",
-        "lib/polylog_cluster.cpp",
         "lib/polylog_li.cpp",
         "lib/polylog_liquad.cpp",
         "lib/polylog_lira.cpp",
@@ -144,6 +142,10 @@ cc_library(
     name = "polylog_linalg",
     hdrs = [
         "lib/expr_matrix_builder.h",
+        "lib/polylog_cluster.h",
+    ],
+    srcs = [
+        "lib/polylog_cluster.cpp",
     ],
     deps = [
         "@eigen//:eigen",

@@ -316,11 +316,13 @@ class UnicodeEncoder : public AbstractEncoder {
   static constexpr char kThinNbsp[] = " ";
   static constexpr char kMinusSign[] = "−";
 
+  // TODO: Test unicode in different terminals, browsers and operating systems; add "compatibility level" setting.
   std::string newline() override { return maybe_html_newline(); }
   std::string inf() override { return "∞"; }
   std::string dot() override { return ""; }
   std::string minus() override { return kMinusSign; }
-  std::string tensor_prod() override { return "⨂"; }
+  // std::string tensor_prod() override { return "⨂"; }  // smaller sign: looks better, but not supported by Windows console fonts
+  std::string tensor_prod() override { return "⊗"; }  // circled times
   std::string coprod_normal() override { return hspace("∧"); }
   std::string coprod_iterated() override { return hspace("⦻"); }
   std::string coprod_hopf() override { return hspace("☒"); }

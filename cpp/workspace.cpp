@@ -47,6 +47,11 @@
 #include "lib/zip.h"
 
 
+template<typename MatrixT>
+int matrix_rank(const MatrixT& mat) {
+  return mat.colPivHouseholderQr().rank();
+}
+
 template<typename ExprT>
 void describe(Profiler& profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
   profiler.finish("expr");
@@ -120,27 +125,27 @@ int main(int /*argc*/, char *argv[]) {
   // describe(profiler, matrix_builder);
 
 
-  static const auto prepare = [](const auto& expr) {
-    return expr;
-    // return ncomultiply(expr);
-  };
-  std::vector<std::future<DeltaNCoExpr>> results;
+  // static const auto prepare = [](const auto& expr) {
+  //   return expr;
+  //   // return ncomultiply(expr);
+  // };
+  // std::vector<std::future<DeltaNCoExpr>> results;
   // // Note: lambdas cannot capture structured bindings  o_O
   // //   https://stackoverflow.com/questions/46114214/lambda-implicit-capture-fails-with-variable-declared-from-structured-binding
   // // TODO: Uncomment this when C++ is fixed.
   // // for (const auto& [s1, s2] : weight5(points)) {
   // //   results.push_back(std::async([s1, s2]() { return prepare(ncoproduct(*s1, *s2)); }));
   // // }
-  for (const auto& s : cluster_weight6({x1,x2,x3,x4,x5,x6,x7})) {
-    results.push_back(std::async([s]() {
-      const auto& [s1, s2] = s;
-      return prepare(ncoproduct(*s1, *s2));
-    }));
-  }
-  for (auto& result : results) {
-    matrix_builder.add_expr(result.get());
-  }
-  describe(profiler, matrix_builder);
+  // for (const auto& s : cluster_weight6({x1,x2,x3,x4,x5,x6,x7})) {
+  //   results.push_back(std::async([s]() {
+  //     const auto& [s1, s2] = s;
+  //     return prepare(ncoproduct(*s1, *s2));
+  //   }));
+  // }
+  // for (auto& result : results) {
+  //   matrix_builder.add_expr(result.get());
+  // }
+  // describe(profiler, matrix_builder);
 
 
   // auto expr = theta_expr_to_delta_expr(Lira3(1,1)(CR(1,2,3,4), CR(1,4,3,2)));
@@ -154,4 +159,21 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << lhs;
   // std::cout << rhs;
   // std::cout << lhs + rhs;  // ZERO
+
+
+  const int weight = 6;
+  const int num_points = 8;
+  std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  points.back() = Inf;
+  const auto space_mat = cluster_space_matrix(weight, points, false);
+  profiler.finish("space_mat");
+  const auto cospace_mat = cluster_space_matrix(weight, points, true);
+  profiler.finish("cospace_mat");
+  const int space_rank = matrix_rank(space_mat);
+  profiler.finish("space_rank");
+  const int cospace_rank = matrix_rank(cospace_mat);
+  profiler.finish("cospace_rank");
+  const int diff = space_rank - cospace_rank;
+  std::cout << "w=" << weight << ", p=" << num_points << ": ";
+  std::cout << space_rank << " - " << cospace_rank << " = " << diff << std::endl;
 }

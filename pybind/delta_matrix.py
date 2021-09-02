@@ -15,6 +15,7 @@ def _to_unique_sparse_columns(sparse_rows, num_columns):
     return set([tuple(col) for col in sparse_columns])
 
 
+# TODO: Rename to ExprMatrixBuilder; rename the file.
 class DeltaExprMatrixBuilder:
     def __init__(self):
         self.sparse_rows = set()
