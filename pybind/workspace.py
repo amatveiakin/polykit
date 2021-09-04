@@ -29,12 +29,16 @@ from polykit import Log, A2
 from polykit import QLiPr
 from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
-from polykit import cluster_space_matrix
+from polykit import cluster_space_matrix, cluster_space_matrix_6_via_l
 from polykit import loops_matrix
 
 
 # TODO: How to get project folder from `bazel run`?
 RESULTS_FOLDER = '/mnt/c/Danya/results/'
+
+
+def substitute(points, new_indices):
+    return [new_indices[p - 1] for p in points]
 
 
 def CB1(args):
@@ -86,9 +90,20 @@ def CSL4(args):
 # def CL4(args): return [eval(f) for f in CL4_formal(args)]
 # def CB4(args): return [eval(f) for f in CB4_formal(args)]
 
+def L3(args):
+    return (
+        [QLi3(p) for p in itertools.combinations(args, 4)] +
+        [QLi3(substitute([1,3,2,4], p)) for p in itertools.combinations(args, 4)]
+    )
+def L4(args):
+    return (
+        [QLi4(substitute([1,2,3,4], p)) for p in itertools.combinations(args, 4)] +
+        [QLi4(substitute([1,3,4,2], p)) for p in itertools.combinations(args, 4)] +
+        [QLi4(substitute([1,4,2,3], p)) for p in itertools.combinations(args, 4)] +
+        # [QLi4(substitute([1,2,1,3,4,5], p)) for p in itertools.permutations(args, 5)]
+        [QLi4(substitute([1,2,1,3,4,5], p)) for p in itertools.permutations(args, 5) if p[2] < p[4]]
+    )
 
-def substitute(points, new_indices):
-    return [new_indices[p - 1] for p in points]
 
 # TODO: Rename to `dihedral_sum`
 def dihedralize(func, args, num_points):
@@ -896,12 +911,17 @@ def describe_cpp(mat):
 # print(b)
 
 
-# TODO: Tests for all Bi and all number of arguments
+# TODO: Tests for all CBi, CLi, etc. and all number of arguments
 # def prepare(expr):
 #     return to_lyndon_basis(expr)
-# for s in CB1([x1,x2,x3,x4,x5,x6]):
-#     matrix_builder.add_expr(prepare(s))
-# describe(matrix_builder)
+# # for s in CB1([x1,x2,x3,x4,x5,x6]):
+# #     matrix_builder.add_expr(prepare(s))
+# for num_points in range(4, 8+1):
+#     print(f'=== {num_points} points')
+#     matrix_builder = DeltaExprMatrixBuilder()
+#     for s in L4(list(range(1, num_points+1))):
+#         matrix_builder.add_expr(prepare(s))
+#     describe(matrix_builder)
 
 
 # def prepare(expr):
@@ -1269,21 +1289,57 @@ def describe_cpp(mat):
 # print(expr)
 # print(ncomultiply(expr))
 
-for weight in range(2, 11):
-    for num_points in range(4, 13):
-        points = [X(i) for i in range(1, num_points+1)]
-        points[-1] = Inf
-        start_time = time.time()
-        space_mat = cluster_space_matrix(weight, points, False)
-        cospace_mat = cluster_space_matrix(weight, points, True)
-        space_dim = rank_relaxed(space_mat)
-        cospace_dim = rank_relaxed(cospace_mat)
-        diff = space_dim - cospace_dim
-        print(
-            f'w={weight}, p={num_points}: '
-            f'{space_dim} - {cospace_dim} = {diff}'
-            # f'  ({space_mat.shape} - {cospace_mat.shape})'
-        )
-        duration = time.time() - start_time
-        if duration > 5 * 60:
-            break
+# for weight in range(2, 11):
+#     for num_points in range(4, 13):
+#         points = [X(i) for i in range(1, num_points+1)]
+#         points[-1] = Inf
+#         start_time = time.time()
+#         space_mat = cluster_space_matrix(weight, points, False)
+#         cospace_mat = cluster_space_matrix(weight, points, True)
+#         space_dim = rank_relaxed(space_mat)
+#         cospace_dim = rank_relaxed(cospace_mat)
+#         diff = space_dim - cospace_dim
+#         print(
+#             f'w={weight}, p={num_points}: '
+#             f'{space_dim} - {cospace_dim} = {diff}'
+#             # f'  ({space_mat.shape} - {cospace_mat.shape})'
+#         )
+#         duration = time.time() - start_time
+#         if duration > 5 * 60:
+#             break
+
+
+
+# points = [x1,x2,x3,x4,x5,x6]
+# def prepare(expr):
+#     return expr
+#     # return ncomultiply(expr)
+# for s1 in Bar().iter(CL5(points)):
+#     for s2 in CB1(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# for s1 in Bar().iter(L4(points)):
+#     for s2 in CB2(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# for s1 in Bar().iter(L3(points)):
+#     for s2 in L3(points):
+#         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
+# describe(matrix_builder)
+
+num_points = 7
+points = [X(i) for i in range(1, num_points+1)]
+points[-1] = Inf
+space_mat = cluster_space_matrix_6_via_l(points, False)
+profiler.finish('space_mat')
+cospace_mat = cluster_space_matrix_6_via_l(points, True)
+profiler.finish('cospace_mat')
+space_dim = rank_relaxed(space_mat)
+profiler.finish('space_dim')
+cospace_dim = rank_relaxed(cospace_mat)
+profiler.finish('cospace_dim')
+diff = space_dim - cospace_dim
+print(
+    f'w=6_via_l, p={num_points}: '
+    f'{space_dim} - {cospace_dim} = {diff}'
+    f'  ({space_mat.shape} - {cospace_mat.shape})'
+)
+# 6 points: 1389 - 1373 = 16

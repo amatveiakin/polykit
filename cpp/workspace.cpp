@@ -48,8 +48,16 @@
 
 
 template<typename MatrixT>
-int matrix_rank(const MatrixT& mat) {
-  return mat.colPivHouseholderQr().rank();
+int matrix_rank(const MatrixT& matrix) {
+  return matrix.colPivHouseholderQr().rank();
+}
+
+template<typename MatrixT>
+void describe_matrix(const std::string& name, Profiler& profiler, const MatrixT& matrix) {
+  profiler.finish("expr");
+  const int rank = matrix.colPivHouseholderQr().rank();
+  profiler.finish("rank");
+  std::cout << name << ": (" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << std::endl;
 }
 
 template<typename ExprT>
@@ -63,7 +71,7 @@ void describe(Profiler& profiler, const ExprMatrixBuilder<ExprT>& matrix_builder
   // decomp.compute(matrix, Eigen::ComputeThinV);
   const int rank = decomp.rank();
   profiler.finish("rank");
-  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << "\n";
+  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << std::endl;
 }
 
 
@@ -161,19 +169,27 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << lhs + rhs;  // ZERO
 
 
-  const int weight = 6;
-  const int num_points = 8;
+  // const int weight = 6;
+  // const int num_points = 8;
+  // std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  // points.back() = Inf;
+  // const auto space_mat = cluster_space_matrix(weight, points, false);
+  // profiler.finish("space_mat");
+  // const auto cospace_mat = cluster_space_matrix(weight, points, true);
+  // profiler.finish("cospace_mat");
+  // const int space_rank = matrix_rank(space_mat);
+  // profiler.finish("space_rank");
+  // const int cospace_rank = matrix_rank(cospace_mat);
+  // profiler.finish("cospace_rank");
+  // const int diff = space_rank - cospace_rank;
+  // std::cout << "w=" << weight << ", p=" << num_points << ": ";
+  // std::cout << space_rank << " - " << cospace_rank << " = " << diff << std::endl;
+
+
+  const int num_points = 7;
   std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
   points.back() = Inf;
-  const auto space_mat = cluster_space_matrix(weight, points, false);
-  profiler.finish("space_mat");
-  const auto cospace_mat = cluster_space_matrix(weight, points, true);
-  profiler.finish("cospace_mat");
-  const int space_rank = matrix_rank(space_mat);
-  profiler.finish("space_rank");
-  const int cospace_rank = matrix_rank(cospace_mat);
-  profiler.finish("cospace_rank");
-  const int diff = space_rank - cospace_rank;
-  std::cout << "w=" << weight << ", p=" << num_points << ": ";
-  std::cout << space_rank << " - " << cospace_rank << " = " << diff << std::endl;
+  std::cout << "w=6_via_l, p=" << num_points << std::endl;
+  describe_matrix("space", profiler, cluster_space_matrix_6_via_l(points, false));
+  describe_matrix("cospace", profiler, cluster_space_matrix_6_via_l(points, true));
 }

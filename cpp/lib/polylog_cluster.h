@@ -28,10 +28,10 @@ ClusterCoSpace cluster_space_4(const XArgs& args);
 ClusterCoSpace cluster_space_5(const XArgs& args);
 ClusterCoSpace cluster_space_6(const XArgs& args);
 ClusterCoSpace cluster_space_6_alt(const XArgs& args);
+ClusterCoSpace cluster_space_6_via_l(const XArgs& args);
 
 inline auto cluster_space(int weight) {
   switch (weight) {
-    case 2: return &cluster_space_2;
     case 3: return &cluster_space_3;
     case 4: return &cluster_space_4;
     case 5: return &cluster_space_5;
@@ -41,3 +41,4 @@ inline auto cluster_space(int weight) {
 }
 
 Eigen::MatrixXd cluster_space_matrix(int weight, const XArgs& points, bool apply_comult);
+Eigen::MatrixXd cluster_space_matrix_6_via_l(const XArgs& points, bool apply_comult);

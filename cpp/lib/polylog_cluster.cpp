@@ -70,16 +70,31 @@ ClusterSpace CL5Alt(const XArgs& args) {
   );
 }
 
-
-// TODO: Fix weight 2 !!!
-ClusterCoSpace cluster_space_2(const XArgs& args) {
-  ClusterCoSpace ret;
-  for (const auto& s1 : CB1(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+ClusterSpace L3(const XArgs& args) {
+  return concat(
+    mapped(combinations(args.as_x(), 4), [](const auto& p) {
+      return wrap_shared(QLi3(choose_indices_one_based(p, {1,2,3,4})));
+    }),
+    mapped(combinations(args.as_x(), 4), [](const auto& p) {
+      return wrap_shared(QLi3(choose_indices_one_based(p, {1,3,2,4})));
+    })
+  );
+}
+ClusterSpace L4(const XArgs& args) {
+  return concat(
+    mapped(combinations(args.as_x(), 4), [](const auto& p) {
+      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,3,4})));
+    }),
+    mapped(combinations(args.as_x(), 4), [](const auto& p) {
+      return wrap_shared(QLi4(choose_indices_one_based(p, {1,3,4,2})));
+    }),
+    mapped(combinations(args.as_x(), 4), [](const auto& p) {
+      return wrap_shared(QLi4(choose_indices_one_based(p, {1,4,2,3})));
+    }),
+    mapped(permutations(args.as_x(), 5), [](const auto& p) {
+      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,1,3,4,5})));
+    })
+  );
 }
 
 ClusterCoSpace cluster_space_3(const XArgs& args) {
@@ -162,11 +177,47 @@ ClusterCoSpace cluster_space_6_alt(const XArgs& args) {
   return ret;
 }
 
+ClusterCoSpace cluster_space_6_via_l(const XArgs& args) {
+  ClusterCoSpace ret;
+  for (const auto& s1 : CL5(args)) {
+    for (const auto& s2 : CB1(args)) {
+      ret.push_back({s1, s2});
+    }
+  }
+  for (const auto& s1 : L4(args)) {
+    for (const auto& s2 : CB2(args)) {
+      ret.push_back({s1, s2});
+    }
+  }
+  for (const auto& s1 : L3(args)) {
+    for (const auto& s2 : L3(args)) {
+      ret.push_back({s1, s2});
+    }
+  }
+  return ret;
+}
+
 
 Eigen::MatrixXd cluster_space_matrix(int weight, const XArgs& points, bool apply_comult) {
   ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
   std::vector<std::future<DeltaNCoExpr>> results;
   for (const auto& s : cluster_space(weight)(points)) {
+    results.push_back(std::async([s, apply_comult]() {
+      const auto& [s1, s2] = s;
+      const auto prod = ncoproduct(*s1, *s2);
+      return apply_comult ? ncomultiply(prod) : prod;
+    }));
+  }
+  for (auto& result : results) {
+    matrix_builder.add_expr(result.get());
+  }
+  return matrix_builder.make_matrix<double>();
+}
+
+Eigen::MatrixXd cluster_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
+  ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
+  std::vector<std::future<DeltaNCoExpr>> results;
+  for (const auto& s : cluster_space_6_via_l(points)) {
     results.push_back(std::async([s, apply_comult]() {
       const auto& [s1, s2] = s;
       const auto prod = ncoproduct(*s1, *s2);
