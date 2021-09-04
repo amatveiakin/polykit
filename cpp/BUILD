@@ -89,6 +89,7 @@ cc_library(
         "lib/delta.cpp",
         "lib/delta_parse.cpp",
         "lib/epsilon.cpp",
+        "lib/lyndon.cpp",
         "lib/polylog_li_param.cpp",
         "lib/polylog_lira_param.cpp",
         "lib/projection.cpp",

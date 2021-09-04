@@ -6,14 +6,27 @@
 #include "util.h"
 
 
+// THREAD-UNSAFE!
+const std::vector<std::vector<int>>& get_lyndon_words(int alphabet_size, int length);
+
+// THREAD-UNSAFE!
+template<typename T>
+std::vector<std::vector<T>> get_lyndon_words(const std::vector<T>& alphabet, int length) {
+  return mapped(get_lyndon_words(alphabet.size(), length), [&](const auto& word) {
+    return choose_indices(alphabet, word);
+  });
+}
+
+
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 // Such split always exists and is unique (Chen–Fox–Lyndon theorem).
 //
 // TODO: Consider returning a vector of `Span`s instead: (a) this could be faster;
 //   (b) this way Linear::StorageT == std::array would be supported. Open question:
 //   how to implement shuffle afterwards?
+// Optimization potential: reuse result vector to reduce memory allocations.
 template<typename Container, typename Compare>
-inline std::vector<Container> lyndon_factorize(const Container& word, const Compare& comp) {
+std::vector<Container> lyndon_factorize(const Container& word, const Compare& comp) {
   const int n = word.size();
   int start = 0;
   int k = start;
@@ -40,6 +53,10 @@ inline std::vector<Container> lyndon_factorize(const Container& word, const Comp
   return ret;
 }
 
+template<typename Container>
+auto lyndon_factorize(const Container& word) {
+  return lyndon_factorize(word, std::less<void>{});
+}
 
 // Converts a linear combination of words to Lyndon basis.
 //
