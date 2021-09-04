@@ -22,6 +22,11 @@ ClusterSpace CL4(const XArgs& xargs);
 ClusterSpace CL5(const XArgs& xargs);
 ClusterSpace CL5Alt(const XArgs& xargs);
 
+// TODO: Should this be called cluster space?
+ClusterSpace L(int weight, const XArgs& xargs);
+ClusterSpace L3(const XArgs& xargs);
+ClusterSpace L4(const XArgs& xargs);
+
 ClusterCoSpace cluster_space_2(const XArgs& args);
 ClusterCoSpace cluster_space_3(const XArgs& args);
 ClusterCoSpace cluster_space_4(const XArgs& args);

@@ -6,6 +6,7 @@
 #include <future>
 
 #include "expr_matrix_builder.h"
+#include "iterated_integral.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 
@@ -70,6 +71,11 @@ ClusterSpace CL5Alt(const XArgs& args) {
   );
 }
 
+// TODO: Test that these definitions are equivalent !!!
+#if 0
+ClusterSpace L(int /*weight*/, const XArgs& /*xargs*/) {
+  FATAL("Unimplemented: `L`");
+}
 ClusterSpace L3(const XArgs& args) {
   return concat(
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
@@ -96,6 +102,21 @@ ClusterSpace L4(const XArgs& args) {
     })
   );
 }
+#else
+ClusterSpace L(int weight, const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
+  ClusterSpace ret;
+  for (const int alphabet_size : range(2, args.size() - 1)) {
+    for (const auto& word : get_lyndon_words(slice(args, 0, alphabet_size), weight)) {
+      ret.push_back(wrap_shared(Corr(concat(word, {args[alphabet_size]}))));
+    }
+  }
+  return ret;
+}
+ClusterSpace L3(const XArgs& xargs) { return L(3, xargs); }
+ClusterSpace L4(const XArgs& xargs) { return L(4, xargs); }
+#endif
 
 ClusterCoSpace cluster_space_3(const XArgs& args) {
   ClusterCoSpace ret;
