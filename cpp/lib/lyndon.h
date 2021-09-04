@@ -6,10 +6,8 @@
 #include "util.h"
 
 
-// THREAD-UNSAFE!
-const std::vector<std::vector<int>>& get_lyndon_words(int alphabet_size, int length);
+std::vector<std::vector<int>> get_lyndon_words(int alphabet_size, int length);
 
-// THREAD-UNSAFE!
 template<typename T>
 std::vector<std::vector<T>> get_lyndon_words(const std::vector<T>& alphabet, int length) {
   return mapped(get_lyndon_words(alphabet.size(), length), [&](const auto& word) {
