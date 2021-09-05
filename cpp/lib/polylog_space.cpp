@@ -1,12 +1,10 @@
-// TODO: Test !!! (some reference values in https://arxiv.org/pdf/1401.6446.pdf)
 // TODO: Are shared pointers a good idea? This causes sharing between threads !!!
 
 #include "polylog_space.h"
 
-#include <future>
-
 #include "expr_matrix_builder.h"
 #include "iterated_integral.h"
+#include "itertools.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 
@@ -71,40 +69,10 @@ PolylogSpace CL5Alt(const XArgs& args) {
   );
 }
 
-// TODO: Test that these definitions are equivalent !!!
-#if 0
-PolylogSpace L(int /*weight*/, const XArgs& /*xargs*/) {
-  FATAL("Unimplemented: `L`");
-}
-PolylogSpace L3(const XArgs& args) {
-  return concat(
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi3(choose_indices_one_based(p, {1,2,3,4})));
-    }),
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi3(choose_indices_one_based(p, {1,3,2,4})));
-    })
-  );
-}
-PolylogSpace L4(const XArgs& args) {
-  return concat(
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,3,4})));
-    }),
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,3,4,2})));
-    }),
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,4,2,3})));
-    }),
-    mapped(permutations(args.as_x(), 5), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,1,3,4,5})));
-    })
-  );
-}
-#else
 PolylogSpace L(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
+  // TODO: Support arbitrary arguments.
+  // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
@@ -116,7 +84,6 @@ PolylogSpace L(int weight, const XArgs& xargs) {
 }
 PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
 PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
-#endif
 
 PolylogCoSpace polylog_space_3(const XArgs& args) {
   PolylogCoSpace ret;
@@ -219,34 +186,24 @@ PolylogCoSpace polylog_space_6_via_l(const XArgs& args) {
 }
 
 
-Eigen::MatrixXd polylog_space_matrix(int weight, const XArgs& points, bool apply_comult) {
-  ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
-  std::vector<std::future<DeltaNCoExpr>> results;
-  for (const auto& s : polylog_space(weight)(points)) {
-    results.push_back(std::async([s, apply_comult]() {
+Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult) {
+  return compute_polylog_space_matrix(
+    polylog_space(weight)(points),
+    [&](const auto& s) {
       const auto& [s1, s2] = s;
       const auto prod = ncoproduct(*s1, *s2);
       return apply_comult ? ncomultiply(prod) : prod;
-    }));
-  }
-  for (auto& result : results) {
-    matrix_builder.add_expr(result.get());
-  }
-  return matrix_builder.make_matrix<double>();
+    }
+  );
 }
 
-Eigen::MatrixXd polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
-  ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
-  std::vector<std::future<DeltaNCoExpr>> results;
-  for (const auto& s : polylog_space_6_via_l(points)) {
-    results.push_back(std::async([s, apply_comult]() {
+Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
+  return compute_polylog_space_matrix(
+    polylog_space_6_via_l(points),
+    [&](const auto& s) {
       const auto& [s1, s2] = s;
       const auto prod = ncoproduct(*s1, *s2);
       return apply_comult ? ncomultiply(prod) : prod;
-    }));
-  }
-  for (auto& result : results) {
-    matrix_builder.add_expr(result.get());
-  }
-  return matrix_builder.make_matrix<double>();
+    }
+  );
 }

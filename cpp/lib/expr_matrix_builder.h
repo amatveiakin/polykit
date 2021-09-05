@@ -1,8 +1,9 @@
+#pragma once
+
 #include "absl/container/flat_hash_set.h"
 
-#include "Eigen/Core"
-
 #include "enumerator.h"
+#include "linalg.h"
 #include "util.h"
 
 
@@ -17,13 +18,11 @@ public:
     sparse_rows_.insert(row);
   }
 
-  template<typename T>
-  auto make_matrix() const {
-    using MatrixT = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+  Matrix make_matrix() const {
     const auto sparse_columns = unique_sparse_columns();
     const int num_rows = sparse_rows_.size();
     const int num_cols = sparse_columns.size();
-    MatrixT mat = MatrixT::Zero(num_rows, num_cols);
+    Matrix mat = Matrix::Zero(num_rows, num_cols);
     int i_col = 0;
     for (const auto& column : sparse_columns) {
       for (const auto& [i_row, coeff] : column) {

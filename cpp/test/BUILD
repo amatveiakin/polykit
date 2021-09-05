@@ -4,6 +4,7 @@
     deps = [
         "@googletest//:gtest_main",
         "//cpp:polylog",
+        "//cpp:polylog_linalg",
         "//cpp:test_util",
     ],
     copts = ["-Icpp"],

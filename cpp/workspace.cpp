@@ -10,10 +10,6 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
 
-// TODO: Choose decomposition and clean up
-#include "Eigen/QR"
-// #include "Eigen/SVD"
-
 #include "lib/algebra.h"
 #include "lib/coalgebra.h"
 #include "lib/delta_parse.h"
@@ -24,6 +20,7 @@
 #include "lib/iterated_integral.h"
 #include "lib/itertools.h"
 #include "lib/lexicographical.h"
+#include "lib/linalg.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
 #include "lib/lyndon.h"
@@ -47,15 +44,9 @@
 #include "lib/zip.h"
 
 
-template<typename MatrixT>
-int matrix_rank(const MatrixT& matrix) {
-  return matrix.colPivHouseholderQr().rank();
-}
-
-template<typename MatrixT>
-void describe_matrix(const std::string& name, Profiler& profiler, const MatrixT& matrix) {
+void describe_matrix(const std::string& name, Profiler& profiler, const Matrix& matrix) {
   profiler.finish("expr");
-  const int rank = matrix.colPivHouseholderQr().rank();
+  const int rank = matrix_rank(matrix);
   profiler.finish("rank");
   std::cout << name << ": (" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << std::endl;
 }
@@ -63,7 +54,7 @@ void describe_matrix(const std::string& name, Profiler& profiler, const MatrixT&
 template<typename ExprT>
 void describe(Profiler& profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
   profiler.finish("expr");
-  const auto& matrix = matrix_builder.template make_matrix<double>();
+  const auto& matrix = matrix_builder.make_matrix();
   profiler.finish("matrix");
   // Choose decomposition
   const auto& decomp = matrix.colPivHouseholderQr();

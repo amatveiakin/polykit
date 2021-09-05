@@ -143,9 +143,11 @@ cc_library(
     name = "polylog_linalg",
     hdrs = [
         "lib/expr_matrix_builder.h",
+        "lib/linalg.h",
         "lib/polylog_space.h",
     ],
     srcs = [
+        "lib/linalg.cpp",
         "lib/polylog_space.cpp",
     ],
     deps = [
