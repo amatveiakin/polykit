@@ -60,8 +60,8 @@ QLiSymmPr = pb.QLiSymmPr
 
 Lira = pb.Lira
 
-cluster_space_matrix = pb.cluster_space_matrix
-cluster_space_matrix_6_via_l = pb.cluster_space_matrix_6_via_l
+polylog_space_matrix = pb.polylog_space_matrix
+polylog_space_matrix_6_via_l = pb.polylog_space_matrix_6_via_l
 
 loops_matrix = pb.loops_matrix
 

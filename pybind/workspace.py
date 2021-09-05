@@ -29,7 +29,7 @@ from polykit import Log, A2
 from polykit import QLiPr
 from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
-from polykit import cluster_space_matrix, cluster_space_matrix_6_via_l
+from polykit import polylog_space_matrix, polylog_space_matrix_6_via_l
 from polykit import loops_matrix
 
 
@@ -1273,15 +1273,15 @@ def describe_cpp(mat):
 
 # weight = 5
 # points = [x1,x2,x3,x4,x5,x6,x7]
-# describe_cpp(cluster_space_matrix(weight, points, False))
-# describe_cpp(cluster_space_matrix(weight, points, True))
+# describe_cpp(polylog_space_matrix(weight, points, False))
+# describe_cpp(polylog_space_matrix(weight, points, True))
 
 
 # for weight in range(2, 7):
 #     for num_points in range(4, 9):
 #         points = list(range(1, num_points+1))
-#         space_dim = rank_relaxed(cluster_space_matrix(weight, points, False))
-#         cospace_dim = rank_relaxed(cluster_space_matrix(weight, points, True))
+#         space_dim = rank_relaxed(polylog_space_matrix(weight, points, False))
+#         cospace_dim = rank_relaxed(polylog_space_matrix(weight, points, True))
 #         diff = space_dim - cospace_dim
 #         print(f'w={weight}, p={num_points}: {space_dim} - {cospace_dim} = {diff}')
 
@@ -1294,8 +1294,8 @@ def describe_cpp(mat):
 #         points = [X(i) for i in range(1, num_points+1)]
 #         points[-1] = Inf
 #         start_time = time.time()
-#         space_mat = cluster_space_matrix(weight, points, False)
-#         cospace_mat = cluster_space_matrix(weight, points, True)
+#         space_mat = polylog_space_matrix(weight, points, False)
+#         cospace_mat = polylog_space_matrix(weight, points, True)
 #         space_dim = rank_relaxed(space_mat)
 #         cospace_dim = rank_relaxed(cospace_mat)
 #         diff = space_dim - cospace_dim
@@ -1328,9 +1328,9 @@ def describe_cpp(mat):
 num_points = 7
 points = [X(i) for i in range(1, num_points+1)]
 points[-1] = Inf
-space_mat = cluster_space_matrix_6_via_l(points, False)
+space_mat = polylog_space_matrix_6_via_l(points, False)
 profiler.finish('space_mat')
-cospace_mat = cluster_space_matrix_6_via_l(points, True)
+cospace_mat = polylog_space_matrix_6_via_l(points, True)
 profiler.finish('cospace_mat')
 space_dim = rank_relaxed(space_mat)
 profiler.finish('space_dim')

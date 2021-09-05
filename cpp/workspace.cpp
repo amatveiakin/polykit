@@ -28,7 +28,7 @@
 #include "lib/loops.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
-#include "lib/polylog_cluster.h"
+#include "lib/polylog_space.h"
 #include "lib/polylog_li.h"
 #include "lib/polylog_liquad.h"
 #include "lib/polylog_lira.h"
@@ -144,7 +144,7 @@ int main(int /*argc*/, char *argv[]) {
   // // for (const auto& [s1, s2] : weight5(points)) {
   // //   results.push_back(std::async([s1, s2]() { return prepare(ncoproduct(*s1, *s2)); }));
   // // }
-  // for (const auto& s : cluster_weight6({x1,x2,x3,x4,x5,x6,x7})) {
+  // for (const auto& s : polylog_space_6({x1,x2,x3,x4,x5,x6,x7})) {
   //   results.push_back(std::async([s]() {
   //     const auto& [s1, s2] = s;
   //     return prepare(ncoproduct(*s1, *s2));
@@ -173,9 +173,9 @@ int main(int /*argc*/, char *argv[]) {
   // const int num_points = 8;
   // std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
   // points.back() = Inf;
-  // const auto space_mat = cluster_space_matrix(weight, points, false);
+  // const auto space_mat = polylog_space_matrix(weight, points, false);
   // profiler.finish("space_mat");
-  // const auto cospace_mat = cluster_space_matrix(weight, points, true);
+  // const auto cospace_mat = polylog_space_matrix(weight, points, true);
   // profiler.finish("cospace_mat");
   // const int space_rank = matrix_rank(space_mat);
   // profiler.finish("space_rank");
@@ -190,6 +190,6 @@ int main(int /*argc*/, char *argv[]) {
   std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
   points.back() = Inf;
   std::cout << "w=6_via_l, p=" << num_points << std::endl;
-  describe_matrix("space", profiler, cluster_space_matrix_6_via_l(points, false));
-  describe_matrix("cospace", profiler, cluster_space_matrix_6_via_l(points, true));
+  describe_matrix("space", profiler, polylog_space_matrix_6_via_l(points, false));
+  describe_matrix("cospace", profiler, polylog_space_matrix_6_via_l(points, true));
 }
