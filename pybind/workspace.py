@@ -1342,4 +1342,5 @@ print(
     f'{space_dim} - {cospace_dim} = {diff}'
     f'  ({space_mat.shape} - {cospace_mat.shape})'
 )
-# 6 points: 1389 - 1373 = 16
+# w=6_via_l, p=6: 1389 - 1373 = 16  ((1825, 7760) - (1825, 17864))
+# w=6_via_l, p=7: 7623 - 7581 = 42  ((10039, 44920) - (10039, 111372))

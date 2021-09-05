@@ -10,7 +10,7 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
 
-// TODO: Clean up !!!
+// TODO: Choose decomposition and clean up
 #include "Eigen/QR"
 // #include "Eigen/SVD"
 
@@ -65,7 +65,7 @@ void describe(Profiler& profiler, const ExprMatrixBuilder<ExprT>& matrix_builder
   profiler.finish("expr");
   const auto& matrix = matrix_builder.template make_matrix<double>();
   profiler.finish("matrix");
-  // Choose decomposition !!!
+  // Choose decomposition
   const auto& decomp = matrix.colPivHouseholderQr();
   // Eigen::JacobiSVD<std::decay_t<decltype(matrix)>> decomp;
   // decomp.compute(matrix, Eigen::ComputeThinV);
