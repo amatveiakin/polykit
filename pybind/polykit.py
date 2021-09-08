@@ -62,6 +62,7 @@ Lira = pb.Lira
 
 polylog_space_matrix = pb.polylog_space_matrix
 polylog_space_matrix_6_via_l = pb.polylog_space_matrix_6_via_l
+polylog_space_matrix_l_vs_m = pb.polylog_space_matrix_l_vs_m
 
 loops_matrix = pb.loops_matrix
 

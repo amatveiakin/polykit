@@ -82,6 +82,7 @@ cc_library(
         "lib/shuffle_unrolled_multi.h",
         "lib/summation.h",
         "lib/theta.h",
+        "lib/triangulation.h",
         "lib/x.h",
     ],
     srcs = [
@@ -95,6 +96,7 @@ cc_library(
         "lib/projection.cpp",
         "lib/ratio.cpp",
         "lib/theta.cpp",
+        "lib/triangulation.cpp",
         "lib/x.cpp",
     ],
     deps = [

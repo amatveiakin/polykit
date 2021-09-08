@@ -79,6 +79,17 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
+template<typename Container, typename Key>
+auto value_or(const Container& container, const Key& key, const typename Container::mapped_type& default_value) {
+  const auto it = container.find(key);
+  return (it == container.end()) ? default_value : it->second;
+}
+
+template<typename Container, typename Key>
+auto value_or(const Container& container, const Key& key) {
+  return value_or(container, key, {});
+}
+
 template<typename T>
 std::vector<T> appended(std::vector<T> c, T element) {
   c.push_back(std::move(element));

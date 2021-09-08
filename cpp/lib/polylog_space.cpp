@@ -7,6 +7,7 @@
 #include "itertools.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
+#include "triangulation.h"
 
 
 PolylogSpace CB1(const XArgs& xargs) {
@@ -84,6 +85,20 @@ PolylogSpace L(int weight, const XArgs& xargs) {
 }
 PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
 PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
+
+PolylogSpace M(int weight, const XArgs& args) {
+  const auto cluster_coordinates_set = get_triangulation_quadrangles(args.as_x());
+  PolylogSpace ret;
+  for (const auto& cluster_coordinates : cluster_coordinates_set) {
+    for (const auto& word : get_lyndon_words(cluster_coordinates, weight)) {
+      ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
+        mapped(word, DISAMBIGUATE(cross_ratio))
+      )))));
+    }
+  }
+  return ret;
+}
+
 
 PolylogCoSpace polylog_space_3(const XArgs& args) {
   PolylogCoSpace ret;

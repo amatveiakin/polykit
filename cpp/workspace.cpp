@@ -41,6 +41,7 @@
 #include "lib/snowpal.h"
 #include "lib/summation.h"
 #include "lib/theta.h"
+#include "lib/triangulation.h"
 #include "lib/zip.h"
 
 
@@ -84,6 +85,30 @@ void add_expr(
     matrix_builder.add_expr(prepare(expr));
   }
 }
+
+
+template<typename T>
+T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
+  return to_lyndon_basis(*ptr);
+}
+
+// PolylogSpace M(int weight, const XArgs& args) {
+//   CHECK_EQ(args.size(), 5);
+//   const auto cr_quad = [&](int i) {
+//     CHECK_LE(1, i);
+//     return cross_ratio(slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4));
+//   };
+//   PolylogSpace ret;
+//   for (const int i : range_incl(1, 5)) {
+//     const int ip = i % 5 + 1;
+//     for (const auto& word : get_lyndon_words(std::vector{i, ip}, weight)) {
+//       ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
+//         mapped(word, cr_quad)
+//       )))));
+//     }
+//   }
+//   return ret;
+// }
 
 
 int main(int /*argc*/, char *argv[]) {
@@ -177,10 +202,22 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << space_rank << " - " << cospace_rank << " = " << diff << std::endl;
 
 
-  const int num_points = 7;
-  std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
-  points.back() = Inf;
-  std::cout << "w=6_via_l, p=" << num_points << std::endl;
-  describe_matrix("space", profiler, polylog_space_matrix_6_via_l(points, false));
-  describe_matrix("cospace", profiler, polylog_space_matrix_6_via_l(points, true));
+  // const int num_points = 7;
+  // std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  // points.back() = Inf;
+  // std::cout << "w=6_via_l, p=" << num_points << std::endl;
+  // describe_matrix("space", profiler, polylog_space_matrix_6_via_l(points, false));
+  // describe_matrix("cospace", profiler, polylog_space_matrix_6_via_l(points, true));
+
+
+  // const std::vector points = {x1,x2,x3,x4,Inf};
+  // std::cout << points.size() << " points:\n";
+  // for (const int weight : range_incl(2, 8)) {
+  //   const auto a = L(weight, points);
+  //   const auto b = M(weight, points);
+  //   std::cout << "w=" << weight << ": " << polylog_spaces_describe(a, b, DISAMBIGUATE(ptr_to_lyndon_basis)) << "\n";
+  // }
+
+  // std::cout << str_join(get_triangulations({1,2,3,4,5}), "\n", DISAMBIGUATE(dump_to_string)) << "\n";
+  // std::cout << str_join(get_triangulation_quadrangles(std::vector{x1,x2,x3,x4,x5,Inf}), "\n", DISAMBIGUATE(dump_to_string)) << "\n";
 }

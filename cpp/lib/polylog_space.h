@@ -27,6 +27,8 @@ PolylogSpace L(int weight, const XArgs& xargs);
 PolylogSpace L3(const XArgs& xargs);
 PolylogSpace L4(const XArgs& xargs);
 
+PolylogSpace M(int weight, const XArgs& args);
+
 PolylogCoSpace polylog_space_2(const XArgs& args);
 PolylogCoSpace polylog_space_3(const XArgs& args);
 PolylogCoSpace polylog_space_4(const XArgs& args);
@@ -72,6 +74,11 @@ Matrix compute_polylog_space_matrix(const SpaceT& space, const PrepareF& prepare
   return matrix_builder.make_matrix();
 }
 
+template<typename SpaceT, typename PrepareF>
+int compute_polylog_space_dim(const SpaceT& space, const PrepareF& prepare) {
+  return matrix_rank(compute_polylog_space_matrix(space, prepare));
+}
+
 // TODO: Version when `needle` is a single function
 template<typename SpaceT, typename PrepareF>
 bool polylog_space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF& prepare) {
@@ -85,8 +92,15 @@ bool polylog_space_contains(const SpaceT& haystack, const SpaceT& needle, const 
   return united_rank == haystack_rank;
 }
 
+
+struct PolylogSpaceDimensions {
+  int a;
+  int b;
+  int united;
+};
+
 template<typename SpaceT, typename PrepareF>
-bool polylog_space_equals(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
@@ -101,5 +115,44 @@ bool polylog_space_equals(const SpaceT& a, const SpaceT& b, const PrepareF& prep
 
   CHECK_LE(a_rank, united_rank);
   CHECK_LE(b_rank, united_rank);
-  return all_equal(absl::MakeConstSpan({a_rank, b_rank, united_rank}));
+  return PolylogSpaceDimensions{a_rank, b_rank, united_rank};
+}
+
+template<typename SpaceT, typename PrepareF>
+bool polylog_space_equals(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
+  return all_equal(absl::MakeConstSpan({dim.a, dim.b, dim.united}));
+}
+
+template<typename SpaceT, typename PrepareF>
+int polylog_space_intersection_dimension(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
+  return dim.a + dim.b - dim.united;
+}
+
+template<typename SpaceT, typename PrepareF>
+std::string polylog_spaces_describe(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
+  const int intersection = dim.a + dim.b - dim.united;
+  // TODO: Use `fmt` for special characters.
+  return absl::StrCat("(", dim.a, ", ", dim.b, "), ∪ = ", dim.united, ", ∩ = ", intersection);
+}
+
+
+// For pybind11. Returns matrices: (a, b, united)
+template<typename SpaceT, typename PrepareF>
+std::tuple<Matrix, Matrix, Matrix> compute_polylog_space_matrices(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+
+  ExprMatrixBuilder<ExprT> matrix_builder_a;
+  add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
+  Matrix mat_a = matrix_builder_a.make_matrix();
+  add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
+  Matrix mat_united = matrix_builder_a.make_matrix();
+
+  ExprMatrixBuilder<ExprT> matrix_builder_b;
+  add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
+  Matrix mat_b = matrix_builder_b.make_matrix();
+
+  return {std::move(mat_a), std::move(mat_b), std::move(mat_united)};
 }
