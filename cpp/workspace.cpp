@@ -45,179 +45,65 @@
 #include "lib/zip.h"
 
 
-void describe_matrix(const std::string& name, Profiler& profiler, const Matrix& matrix) {
-  profiler.finish("expr");
-  const int rank = matrix_rank(matrix);
-  profiler.finish("rank");
-  std::cout << name << ": (" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << std::endl;
-}
-
-template<typename ExprT>
-void describe(Profiler& profiler, const ExprMatrixBuilder<ExprT>& matrix_builder) {
-  profiler.finish("expr");
-  const auto& matrix = matrix_builder.make_matrix();
-  profiler.finish("matrix");
-  // Choose decomposition
-  const auto& decomp = matrix.colPivHouseholderQr();
-  // Eigen::JacobiSVD<std::decay_t<decltype(matrix)>> decomp;
-  // decomp.compute(matrix, Eigen::ComputeThinV);
-  const int rank = decomp.rank();
-  profiler.finish("rank");
-  std::cout << "(" << matrix.rows() << ", " << matrix.cols() << ") => " << rank << std::endl;
-}
-
-
-template<typename T>
-bool include_permutation(const std::vector<T>& permutation, int max_point) {
-  return std::is_sorted(permutation.begin() + max_point, permutation.end());
-}
-
-template<typename ExprT, typename PrepareF, typename FuncF, typename T>
-void add_expr(
-    ExprMatrixBuilder<ExprT>& matrix_builder,
-    const PrepareF& prepare,
-    const FuncF& func,
-    const std::vector<T>& permutation,
-    const std::initializer_list<int>& indices
-) {
-  if (include_permutation(permutation, std::max(indices))) {
-    const auto expr = func(choose_indices_one_based(permutation, indices));
-    matrix_builder.add_expr(prepare(expr));
-  }
-}
-
-
-template<typename T>
-T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
-  return to_lyndon_basis(*ptr);
-}
-
-// PolylogSpace M(int weight, const XArgs& args) {
-//   CHECK_EQ(args.size(), 5);
-//   const auto cr_quad = [&](int i) {
-//     CHECK_LE(1, i);
-//     return cross_ratio(slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4));
-//   };
-//   PolylogSpace ret;
-//   for (const int i : range_incl(1, 5)) {
-//     const int ip = i % 5 + 1;
-//     for (const auto& word : get_lyndon_words(std::vector{i, ip}, weight)) {
-//       ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
-//         mapped(word, cr_quad)
-//       )))));
-//     }
-//   }
-//   return ret;
-// }
-
-
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
   ScopedFormatting sf(FormattingConfig()
-    .set_encoder(Encoder::ascii)
-    // .set_encoder(Encoder::unicode)
+    // .set_encoder(Encoder::ascii)
+    .set_encoder(Encoder::unicode)
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    .set_expression_line_limit(100)
     .set_annotation_sorting(AnnotationSorting::length)
     .set_compact_x(true)
   );
 
 
-  // ExprMatrixBuilder<DeltaExpr> matrix_builder;
-  ExprMatrixBuilder<DeltaNCoExpr> matrix_builder;
+  static auto prepare = [](const auto& expr) {
+    return to_lyndon_basis(project_on_x1(expr));
+    // return terms_with_num_distinct_variables(to_lyndon_basis(project_on_x1(expr)), 5);
+  };
+  static const auto qli6 = [](const XArgs& args) {
+    return QLiSymmVec(6, args);
+  };
+  static const auto qli6sum_a = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped_vec(qli6, 8, {1,2,3,4,5,6}, SumSign::alternating),
+      args
+    ).annotate(fmt::function_num_args("QLi6SumA", args));
+  };
+  static const auto qli6sum_b = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped_vec(qli6, 8, {1,2,3,4,5,7}, SumSign::alternating),
+      args
+    ).annotate(fmt::function_num_args("QLi6SumB", args));
+  };
+  static const auto qli6sum_c = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped_vec(qli6, 8, {1,2,3,4,6,7}, SumSign::alternating),
+      args
+    ).annotate(fmt::function_num_args("QLi6SumC", args));
+  };
+  // static const auto qli6sum_d = [](const XArgs& args) {
+  //   return substitute_variables(
+  //     sum_looped_vec(qli6, 8, {1,2,3,5,6,7}, SumSign::alternating),
+  //     args
+  //   ).annotate(fmt::function_num_args("QLi6SumD", args));
+  // };  // ZERO
+
   Profiler profiler;
+  const auto z = prepare(sum_looped_vec(qli6, 9, {1,2,3,4,5,6,7,8}));
+  profiler.finish("z");
+  const auto a = prepare(sum_looped_vec(qli6sum_a, 9, {1,2,3,4,5,6,7,8}));
+  profiler.finish("a");
+  const auto b = prepare(sum_looped_vec(qli6sum_b, 9, {1,2,3,4,5,6,7,8}));
+  profiler.finish("b");
+  const auto c = prepare(sum_looped_vec(qli6sum_c, 9, {1,2,3,4,5,6,7,8}));
+  profiler.finish("c");
+  const auto expr = 3*z + 3*a - 2*b + c;
+  print_sorted_by_num_distinct_variables(std::cout, expr);
 
-
-  // const std::vector points = {x1,x2,x3,x4,x5,x6,x7};
-  // const auto prepare = [](const auto& expr) {
-  //   return expr;
-  //   // return ncomultiply(expr);
-  // };
-  // for (const auto& s1 : CL4(points)) {
-  //   for (const auto& s2 : CB1(points)) {
-  //     matrix_builder.add_expr(prepare(ncoproduct(s1, s2)));
-  //   }
-  // }
-  // for (const auto& s1 : CB3(points)) {
-  //   for (const auto& s2 : CB2(points)) {
-  //     matrix_builder.add_expr(prepare(ncoproduct(s1, s2)));
-  //   }
-  // }
-  // describe(profiler, matrix_builder);
-
-
-  // static const auto prepare = [](const auto& expr) {
-  //   return expr;
-  //   // return ncomultiply(expr);
-  // };
-  // std::vector<std::future<DeltaNCoExpr>> results;
-  // // Note: lambdas cannot capture structured bindings  o_O
-  // //   https://stackoverflow.com/questions/46114214/lambda-implicit-capture-fails-with-variable-declared-from-structured-binding
-  // // TODO: Uncomment this when C++ is fixed.
-  // // for (const auto& [s1, s2] : weight5(points)) {
-  // //   results.push_back(std::async([s1, s2]() { return prepare(ncoproduct(*s1, *s2)); }));
-  // // }
-  // for (const auto& s : polylog_space_6({x1,x2,x3,x4,x5,x6,x7})) {
-  //   results.push_back(std::async([s]() {
-  //     const auto& [s1, s2] = s;
-  //     return prepare(ncoproduct(*s1, *s2));
-  //   }));
-  // }
-  // for (auto& result : results) {
-  //   matrix_builder.add_expr(result.get());
-  // }
-  // describe(profiler, matrix_builder);
-
-
-  // auto expr = theta_expr_to_delta_expr(Lira3(1,1)(CR(1,2,3,4), CR(1,4,3,2)));
-  // // std::cout << to_lyndon_basis(expr);
-  // // std::cout << comultiply(expr, {4,1});
-  // auto lhs = comultiply(expr, {4,1});
-  // auto rhs =
-  //   + coproduct(QLi4(1,2,3,4), QLi1(1,4,3,2))
-  //   + coproduct(QLi4(1,2,3,4), QLi1(1,2,3,4))
-  // ;
-  // std::cout << lhs;
-  // std::cout << rhs;
-  // std::cout << lhs + rhs;  // ZERO
-
-
-  // const int weight = 6;
-  // const int num_points = 8;
-  // std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
-  // points.back() = Inf;
-  // const auto space_mat = polylog_space_matrix(weight, points, false);
-  // profiler.finish("space_mat");
-  // const auto cospace_mat = polylog_space_matrix(weight, points, true);
-  // profiler.finish("cospace_mat");
-  // const int space_rank = matrix_rank(space_mat);
-  // profiler.finish("space_rank");
-  // const int cospace_rank = matrix_rank(cospace_mat);
-  // profiler.finish("cospace_rank");
-  // const int diff = space_rank - cospace_rank;
-  // std::cout << "w=" << weight << ", p=" << num_points << ": ";
-  // std::cout << space_rank << " - " << cospace_rank << " = " << diff << std::endl;
-
-
-  // const int num_points = 7;
-  // std::vector points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
-  // points.back() = Inf;
-  // std::cout << "w=6_via_l, p=" << num_points << std::endl;
-  // describe_matrix("space", profiler, polylog_space_matrix_6_via_l(points, false));
-  // describe_matrix("cospace", profiler, polylog_space_matrix_6_via_l(points, true));
-
-
-  // const std::vector points = {x1,x2,x3,x4,Inf};
-  // std::cout << points.size() << " points:\n";
-  // for (const int weight : range_incl(2, 8)) {
-  //   const auto a = L(weight, points);
-  //   const auto b = M(weight, points);
-  //   std::cout << "w=" << weight << ": " << polylog_spaces_describe(a, b, DISAMBIGUATE(ptr_to_lyndon_basis)) << "\n";
-  // }
-
-  // std::cout << str_join(get_triangulations({1,2,3,4,5}), "\n", DISAMBIGUATE(dump_to_string)) << "\n";
-  // std::cout << str_join(get_triangulation_quadrangles(std::vector{x1,x2,x3,x4,x5,Inf}), "\n", DISAMBIGUATE(dump_to_string)) << "\n";
+  // TODO: Check formula for QLi8(1, ..., 10)
 }
