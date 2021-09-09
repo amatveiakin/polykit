@@ -864,38 +864,6 @@ def describe_cpp(mat):
 # describe(matrix_builder)
 
 
-# expr = (
-#     +8*QLiSymm4(1,2,3,4,5,6)
-#     - A2(1,2,3,4,5)
-#     + A2(1,2,3,4,6)
-#     - A2(1,2,3,5,6)
-#     + A2(1,2,4,5,6)
-#     - A2(1,3,4,5,6)
-#     + A2(2,3,4,5,6)
-# )
-# a = (
-#     + QLi4(1,2,3,4)
-#     - QLi4(2,3,4,5)
-#     + QLi4(3,4,5,6)
-#     - QLi4(4,5,6,1)
-#     + QLi4(5,6,1,2)
-#     - QLi4(6,1,2,3)
-# )
-# b = (
-#     + QLi4(1,2,3,5)
-#     - QLi4(2,3,4,6)
-#     + QLi4(3,4,5,1)
-#     - QLi4(4,5,6,2)
-#     + QLi4(5,6,1,3)
-#     - QLi4(6,1,2,4)
-# )
-# # print(comultiply(expr, (2,2)))
-# print(to_lyndon_basis(project_on_x1(expr)))
-# print(to_lyndon_basis(project_on_x1(a)))
-# print(to_lyndon_basis(project_on_x1(b)))
-# print(to_lyndon_basis(project_on_x1(expr + 8*a - 4*b)))
-
-
 # expr = tensor_product([
 #     DeltaExpr.single([Delta(x1,x7)]),
 #     DeltaExpr.single([Delta(x1,x6)]),

@@ -4,6 +4,7 @@
 
 #include "lib/projection.h"
 #include "lib/sequence_iteration.h"
+#include "lib/summation.h"
 #include "test_util/helpers.h"
 #include "test_util/matchers.h"
 
@@ -384,3 +385,50 @@ TEST(QLiTest, QLiSymmBuiltinProjection) {
     QLiSymmVecPr(3, {1,2,3,4,5,6}, project_on_x4)
   );
 }
+
+
+TEST(QLiTest, LARGE_QLiSymm4_Arg6_AsCyclicSums) {
+  const auto z = QLiSymm4(1,2,3,4,5,6);
+  const auto a = sum_looped(DISAMBIGUATE(A2), 6, std::array{1,2,3,4,5}, SumSign::alternating);
+  const auto b = sum_looped(DISAMBIGUATE(QLi4), 6, std::array{1,2,3,4}, SumSign::alternating);
+  const auto c = sum_looped(DISAMBIGUATE(QLi4), 6, std::array{1,2,3,5}, SumSign::alternating);
+  const auto expr = 8*z - a + 8*b - 4*c;
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(project_on_x1(expr));
+}
+
+TEST(QLiTest, HUGE_QLiSymm6_Arg8_AsCyclicSums) {
+  static const auto qli6sum_a = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,5,6}, SumSign::alternating),
+      args
+    );
+  };
+  static const auto qli6sum_b = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,5,7}, SumSign::alternating),
+      args
+    );
+  };
+  static const auto qli6sum_c = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,6,7}, SumSign::alternating),
+      args
+    );
+  };
+  static const auto qli6sum_d = [](const XArgs& args) {
+    return substitute_variables(
+      sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,5,6,7}, SumSign::alternating),
+      args
+    );
+  };
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(project_on_x1(qli6sum_d({1,2,3,4,5,6,7,8})));
+
+  const auto z = sum_looped(DISAMBIGUATE(QLiSymm6), 9, std::array{1,2,3,4,5,6,7,8});
+  const auto a = sum_looped_vec(qli6sum_a, 9, {1,2,3,4,5,6,7,8});
+  const auto b = sum_looped_vec(qli6sum_b, 9, {1,2,3,4,5,6,7,8});
+  const auto c = sum_looped_vec(qli6sum_c, 9, {1,2,3,4,5,6,7,8});
+  const auto expr = 3*z + 3*a - 2*b + c;
+  EXPECT_EXPR_ZERO(terms_with_min_distinct_variables(to_lyndon_basis(project_on_x1(expr)), 4));
+}
+
+// TODO:  `TEST(QLiTest, LARGE_QLiSymm8_Arg10_AsCyclicSums)`
