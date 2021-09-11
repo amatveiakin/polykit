@@ -28,6 +28,7 @@ PolylogSpace L3(const XArgs& xargs);
 PolylogSpace L4(const XArgs& xargs);
 
 PolylogSpace M(int weight, const XArgs& args);
+PolylogSpace N(int weight, const XArgs& args);
 
 PolylogCoSpace polylog_space_2(const XArgs& args);
 PolylogCoSpace polylog_space_3(const XArgs& args);
@@ -99,19 +100,20 @@ struct PolylogSpaceDimensions {
   int united;
 };
 
+// TODO: make_matrix vs make_triplets everywhere in this file !!!
 template<typename SpaceT, typename PrepareF>
 PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
-  const int a_rank = matrix_rank(matrix_builder_a.make_matrix());
+  const int a_rank = matrix_rank(matrix_builder_a.make_triplets());
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
-  const int united_rank = matrix_rank(matrix_builder_a.make_matrix());
+  const int united_rank = matrix_rank(matrix_builder_a.make_triplets());
 
   ExprMatrixBuilder<ExprT> matrix_builder_b;
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
-  const int b_rank = matrix_rank(matrix_builder_b.make_matrix());
+  const int b_rank = matrix_rank(matrix_builder_b.make_triplets());
 
   CHECK_LE(a_rank, united_rank);
   CHECK_LE(b_rank, united_rank);
@@ -135,7 +137,7 @@ std::string polylog_spaces_describe(const SpaceT& a, const SpaceT& b, const Prep
   const auto dim = compute_polylog_space_dimensions(a, b, prepare);
   const int intersection = dim.a + dim.b - dim.united;
   // TODO: Use `fmt` for special characters.
-  return absl::StrCat("(", dim.a, ", ", dim.b, "), ∪ = ", dim.united, ", ∩ = ", intersection);
+  return absl::StrCat("(", dim.a, ", ", dim.b, "), ∩ = ", intersection);
 }
 
 

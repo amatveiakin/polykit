@@ -153,6 +153,7 @@ cc_library(
         "lib/polylog_space.cpp",
     ],
     deps = [
+        "@boost//:process",
         "@eigen//:eigen",
         ":polylog",
     ],

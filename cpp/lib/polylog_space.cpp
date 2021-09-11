@@ -99,6 +99,25 @@ PolylogSpace M(int weight, const XArgs& args) {
   return ret;
 }
 
+PolylogSpace N(int weight, const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  const auto triangulations = get_triangulations(args);
+  PolylogSpace ret;
+  for (auto triangulation : triangulations) {
+    // Add outer edges.
+    for (const int i : range(args.size())) {
+      triangulation.push_back({args[i], args[(i+1) % args.size()]});
+    }
+    // Optimization potential: construct the vector directly without tensor_product.
+    for (const auto& word : get_lyndon_words(triangulation, weight)) {
+      ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
+        mapped(word, [](const auto& d) { return D(d.first, d.second); })
+      )))));
+    }
+  }
+  return ret;
+}
+
 
 PolylogCoSpace polylog_space_3(const XArgs& args) {
   PolylogCoSpace ret;
