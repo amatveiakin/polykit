@@ -15,15 +15,6 @@ http_archive(
   sha256 = "9929f3662141bbb9c6c28accf68dcab34218c5ee2d83e6365d9cb2594b3f3171"
 )
 
-# TODO: Use or delete
-http_archive(
-  name = "eigen",
-  urls = ["https://gitlab.com/libeigen/eigen/-/archive/3.3/eigen-3.3.zip"],
-  strip_prefix = "eigen-3.3",
-  sha256 = "473b85231829b6f0c286a8c79799913c4e1de235261ddc636ea21235772fc3a5",
-  build_file = "eigen.BUILD",
-)
-
 http_archive(
   name = "googletest",
   urls = ["https://github.com/google/googletest/archive/703bd9caab50b139428cea1aaff9974ebee5742e.zip"],
@@ -43,15 +34,6 @@ load("@rules_python//python:pip.bzl", "pip_install")
 pip_install(
    requirements = "//pybind:requirements.txt",
 )
-
-git_repository(
-    name = "com_github_nelhage_rules_boost",
-    commit = "1e3a69bf2d5cd10c34b74f066054cd335d033d71",
-    remote = "https://github.com/nelhage/rules_boost",
-    shallow_since = "1591047380 -0700",
-)
-load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
-boost_deps()
 
 # Rules for pybind11, based on https://github.com/pybind/pybind11_bazel
 http_archive(

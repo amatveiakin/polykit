@@ -136,7 +136,6 @@ cc_library(
     ],
     deps = [
         "@absl//absl/strings:strings",
-        "@eigen//:eigen",
         ":base",
         ":math",
     ],
@@ -154,8 +153,6 @@ cc_library(
         "lib/polylog_space.cpp",
     ],
     deps = [
-        "@boost//:process",
-        "@eigen//:eigen",
         ":polylog",
     ],
 )
@@ -170,23 +167,11 @@ cc_library(
 )
 
 cc_binary(
-    name = "rank",
-    srcs = ["rank.cpp"],
-    deps = [
-        "@absl//absl/debugging:failure_signal_handler",
-        "@absl//absl/debugging:symbolize",
-        "@eigen//:eigen",
-        ":base",
-    ]
-)
-
-cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [
         "@absl//absl/debugging:failure_signal_handler",
         "@absl//absl/debugging:symbolize",
-        "@eigen//:eigen",
         ":base",
         ":math",
         ":polylog",

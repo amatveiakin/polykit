@@ -29,7 +29,6 @@ from polykit import Log, A2
 from polykit import QLiPr
 from polykit import Lira, Lira0, Lira1, Lira2, Lira3, Lira4, Lira5, Lira6, Lira7, Lira8
 from polykit import project_on, project_on_x1, project_on_x2, project_on_x3, project_on_x4, project_on_x5, project_on_x6, project_on_x7, project_on_x8, project_on_x9, project_on_x10, project_on_x11, project_on_x12, project_on_x13, project_on_x14, project_on_x15
-from polykit import polylog_space_matrix, polylog_space_matrix_6_via_l, polylog_space_matrix_l_vs_m
 from polykit import loops_matrix
 
 
@@ -1313,19 +1312,19 @@ def describe_cpp(mat):
 # # w=6_via_l, p=6: 1389 - 1373 = 16  ((1825, 7760) - (1825, 17864))
 # # w=6_via_l, p=7: 7623 - 7581 = 42  ((10039, 44920) - (10039, 111372))
 
-weight = 2
-num_points = 5
-while True:
-    points = [X(i) for i in range(1, num_points+1)]
-    points[-1] = Inf
-    a, b, united = polylog_space_matrix_l_vs_m(weight, points)
-    # profiler.finish('matrices')
-    a_dim = rank_relaxed(a)
-    # profiler.finish('dim A')
-    b_dim = rank_relaxed(b)
-    # profiler.finish('dim B')
-    united_dim = rank_relaxed(united)
-    # profiler.finish('dim united')
-    intersection = a_dim + b_dim - united_dim
-    print(f'w={weight}, p={num_points}: ({a_dim}, {b_dim}), ∪ = {united_dim}, ∩ = {intersection}')
-    num_points += 1
+# weight = 2
+# num_points = 5
+# while True:
+#     points = [X(i) for i in range(1, num_points+1)]
+#     points[-1] = Inf
+#     a, b, united = polylog_space_matrix_l_vs_m(weight, points)
+#     # profiler.finish('matrices')
+#     a_dim = rank_relaxed(a)
+#     # profiler.finish('dim A')
+#     b_dim = rank_relaxed(b)
+#     # profiler.finish('dim B')
+#     united_dim = rank_relaxed(united)
+#     # profiler.finish('dim united')
+#     intersection = a_dim + b_dim - united_dim
+#     print(f'w={weight}, p={num_points}: ({a_dim}, {b_dim}), ∪ = {united_dim}, ∩ = {intersection}')
+#     num_points += 1

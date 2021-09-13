@@ -11,11 +11,9 @@ build:clang-cl --copt "-Wno-builtin-macro-redefined"  # for __DATE__, __TIME__, 
 
 build:clang --repo_env=CC=clang
 build:clang --cxxopt -std=c++17
-build:clang --cxxopt "-DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE"
 build:clang --cxxopt -Wextra
 build:clang --cxxopt -Wno-sign-compare
 build:clang --cxxopt -Wimplicit-fallthrough
-# build:clang --linkopt "-lopenblas -llapack -llapacke"  # for Eigen;  could use "blas" instead of "openblas"
 build:clang --linkopt "-lgmp -lgivaro"  # for LinBox
 
 build:clang-asan --repo_env=CC=clang

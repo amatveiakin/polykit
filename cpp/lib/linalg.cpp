@@ -1,7 +1,7 @@
-// TODO: Stop this madness! Link linbox directly and remove dependency on Sage, Eigen and boost.
-
 #include "linalg.h"
 
+// TODO: Install LinBox through bazel
+// TODO: Fix tests !!!
 #include <linbox/linbox-config.h>
 #include <givaro/givrational.h>
 #include <linbox/ring/modular.h>
