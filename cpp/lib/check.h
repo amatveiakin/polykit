@@ -117,6 +117,7 @@ CheckResult check_ge(CheckLocation loc, const X& x, const Y& y, const char* x_st
 #  endif
 #endif
 
+#undef ASSERT
 #if ENABLE_ASSERTIONS
 #  define ASSERT(condition)  CHECK(condition)
 #else

@@ -15,10 +15,8 @@ build:clang --cxxopt "-DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE"
 build:clang --cxxopt -Wextra
 build:clang --cxxopt -Wno-sign-compare
 build:clang --cxxopt -Wimplicit-fallthrough
-# build:clang --linkopt "-lblas -llapack -llapacke"
-build:clang --linkopt "-lopenblas -llapack -llapacke"
-# build:clang --cxxopt -fopenmp
-# build:clang --linkopt -fopenmp
+# build:clang --linkopt "-lopenblas -llapack -llapacke"  # for Eigen;  could use "blas" instead of "openblas"
+build:clang --linkopt "-lgmp -lgivaro"  # for LinBox
 
 build:clang-asan --repo_env=CC=clang
 build:clang-asan --cxxopt -std=c++17
