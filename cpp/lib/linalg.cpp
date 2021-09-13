@@ -29,7 +29,10 @@ int matrix_rank(const Matrix& matrix) {
   }
 
   size_t rank;
-  LinBox::rank(rank, linbox_matrix);
+  // TODO: Try adding IntegerTag
+  // TODO: Try other methods
+  // TODO: Try LinBox::Method::SparseElimination options
+  LinBox::rank(rank, linbox_matrix, LinBox::Method::SparseElimination());
   return rank;
 }
 
