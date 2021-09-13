@@ -75,6 +75,33 @@ PolylogSpace CL5Alt(const XArgs& args) {
   );
 }
 
+// PolylogSpace H(int weight, const XArgs& xargs) {
+//   auto args = xargs.as_x();
+//   const X special_point = args.back();
+//   args.pop_back();
+//   PolylogSpace ret;
+//   for (const auto& seq : cartesian_product(args, weight + 2)) {
+//     auto expr = IAlt(concat({special_point}, seq));
+//     CHECK(expr.is_zero() || expr.weight() == weight);
+//     ret.push_back(wrap_shared(std::move(expr)));
+//   }
+//   return ret;
+// }
+
+PolylogSpace H(int weight, const XArgs& xargs) {
+  PolylogSpace ret = LAlt(weight, xargs);
+  for (int w : range_incl(1, weight / 2)) {
+    PolylogSpace space_a = H(w, xargs);
+    PolylogSpace space_b = H(weight - w, xargs);
+    for (const auto& a : space_a) {
+      for (const auto& b : space_b) {
+        ret.push_back(wrap_shared(shuffle_product_expr(*a, *b)));
+      }
+    }
+  }
+  return ret;
+}
+
 PolylogSpace L(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
@@ -148,6 +175,25 @@ PolylogSpace ACoords(int weight, const XArgs& xargs) {
       ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
         mapped(word, [](const auto& d) { return D(d.first, d.second); })
       )))));
+    }
+  }
+  return ret;
+}
+
+PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  const auto triangulations = get_triangulations(args);
+  PolylogSpace ret;
+  for (auto triangulation : triangulations) {
+    // Add outer edges.
+    for (const int i : range(args.size())) {
+      triangulation.push_back({args[i], args[(i+1) % args.size()]});
+    }
+    // Optimization potential: construct the vector directly without tensor_product.
+    for (const auto& word : cartesian_product(triangulation, weight)) {
+      ret.push_back(wrap_shared(tensor_product(absl::MakeConstSpan(
+        mapped(word, [](const auto& d) { return D(d.first, d.second); })
+      ))));
     }
   }
   return ret;

@@ -57,6 +57,11 @@ PolylogSpace CorrNondecreasing(int weight, const XArgs& xargs) {
 
 
 template<typename T>
+T ptr_deref(const std::shared_ptr<T>& ptr) {
+  return *ptr;
+}
+
+template<typename T>
 T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
   return to_lyndon_basis(*ptr);
 }
@@ -158,15 +163,15 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
-  const int num_points = 4;
-  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-  for (const int weight : range_incl(1, 6)) {
-    std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
-      LAlt(weight, points),
-      ACoords(weight, points),
-      DISAMBIGUATE(ptr_to_lyndon_basis)
-    ) << "\n";
-  }
+  // const int num_points = 4;
+  // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  // for (const int weight : range_incl(1, 6)) {
+  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
+  //     LAlt(weight, points),
+  //     ACoords(weight, points),
+  //     DISAMBIGUATE(ptr_to_lyndon_basis)
+  //   ) << "\n";
+  // }
 
   // for (int weight : range_incl(2, 5)) {
   //   for (int num_points : range_incl(4, 7)) {
@@ -180,4 +185,37 @@ int main(int /*argc*/, char *argv[]) {
   //     std::cout << "w=" << weight << ", p=" << num_points << ": " << d1 << " vs " << d2 << "\n";
   //   }
   // }
+
+  // for (int weight : range_incl(1, 6)) {
+  //   for (int num_points : range_incl(4, 7)) {
+  //     auto args = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  //     args.back() = Inf;
+  //     const int rank = matrix_rank(compute_polylog_space_matrix(
+  //       L(weight, args),
+  //       DISAMBIGUATE(ptr_to_lyndon_basis)
+  //     ));
+  //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
+  //   }
+  // }
+
+  // for (int weight : range_incl(1, 6)) {
+  //   for (int num_points : range_incl(4, 7)) {
+  //     const int rank = matrix_rank(compute_polylog_space_matrix(
+  //       H(weight, seq_incl(1, num_points)),
+  //       DISAMBIGUATE(ptr_deref)
+  //     ));
+  //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
+  //   }
+  // }
+
+  const int num_points = 5;
+  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  for (const int weight : range_incl(1, 6)) {
+    const auto description = polylog_spaces_describe(
+      H(weight, points),
+      ACoordsHopf(weight, points),
+      DISAMBIGUATE(ptr_deref)
+    );
+    std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+  }
 }
