@@ -75,7 +75,7 @@ int simple_space_rank(const SpaceF& space, int weight, int num_points) {
 auto polylog_space_matrix_l_vs_m(int weight, const XArgs& points) {
   return compute_polylog_space_matrices(
     L(weight, points),
-    M(weight, points),
+    XCoords(weight, points),
     DISAMBIGUATE(ptr_to_lyndon_basis)
   );
 }
@@ -126,12 +126,12 @@ int main(int /*argc*/, char *argv[]) {
   // const std::string prefix = absl::StrCat("/mnt/c/Danya/results/l_vs_m/w", weight, "_p", num_points, "_");
   // // std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
   // //   CorrNondecreasing(weight, points),
-  // //   N(weight, points),
+  // //   ACoords(weight, points),
   // //   DISAMBIGUATE(ptr_to_lyndon_basis)
   // // ) << "\n";
   // save_set(prefix, compute_polylog_space_triplets(
   //   CorrNondecreasing(weight, points),
-  //   N(weight, points),
+  //   ACoords(weight, points),
   //   DISAMBIGUATE(ptr_to_lyndon_basis)
   // ));
 
@@ -142,7 +142,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int weight : range_incl(2, 6)) {
   //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
   //     L(weight, points),
-  //     M(weight, points),
+  //     XCoords(weight, points),
   //     DISAMBIGUATE(ptr_to_lyndon_basis)
   //   ) << "\n";
   // }
@@ -163,7 +163,7 @@ int main(int /*argc*/, char *argv[]) {
   for (const int weight : range_incl(1, 6)) {
     std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
       LAlt(weight, points),
-      N(weight, points),
+      ACoords(weight, points),
       DISAMBIGUATE(ptr_to_lyndon_basis)
     ) << "\n";
   }
@@ -171,7 +171,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (int weight : range_incl(2, 5)) {
   //   for (int num_points : range_incl(4, 7)) {
   //     const auto args = seq_incl(1, num_points);
-  //     auto space = N(weight, args);
+  //     auto space = ACoords(weight, args);
   //     const int d1 = compute_polylog_space_dim(space, DISAMBIGUATE(ptr_to_lyndon_basis));
   //     const auto corr = CorrAlt(args);
   //     CHECK_EQ(corr.weight(), weight);

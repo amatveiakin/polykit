@@ -115,7 +115,7 @@ PolylogSpace LAlt(int weight, const XArgs& xargs) {
   return ret;
 }
 
-PolylogSpace M(int weight, const XArgs& args) {
+PolylogSpace XCoords(int weight, const XArgs& args) {
   const auto cluster_coordinates_set = get_triangulation_quadrangles(args.as_x());
   PolylogSpace ret;
   for (const auto& cluster_coordinates : cluster_coordinates_set) {
@@ -134,7 +134,7 @@ PolylogSpace M(int weight, const XArgs& args) {
   return ret;
 }
 
-PolylogSpace N(int weight, const XArgs& xargs) {
+PolylogSpace ACoords(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
   const auto triangulations = get_triangulations(args);
   PolylogSpace ret;

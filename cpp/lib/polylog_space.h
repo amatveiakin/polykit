@@ -29,8 +29,8 @@ PolylogSpace L4(const XArgs& xargs);
 
 PolylogSpace LAlt(int weight, const XArgs& xargs);
 
-PolylogSpace M(int weight, const XArgs& args);
-PolylogSpace N(int weight, const XArgs& args);
+PolylogSpace XCoords(int weight, const XArgs& args);
+PolylogSpace ACoords(int weight, const XArgs& args);
 
 PolylogCoSpace polylog_space_2(const XArgs& args);
 PolylogCoSpace polylog_space_3(const XArgs& args);

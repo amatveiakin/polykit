@@ -15,7 +15,7 @@ T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
 auto polylog_space_matrix_l_vs_m(int weight, const XArgs& points) {
   return compute_polylog_space_matrices(
     L(weight, points),
-    M(weight, points),
+    XCoords(weight, points),
     DISAMBIGUATE(ptr_to_lyndon_basis)
   );
 }
