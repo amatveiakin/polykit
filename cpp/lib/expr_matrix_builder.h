@@ -20,30 +20,15 @@ public:
 
   Matrix make_matrix() const {
     const auto sparse_columns = unique_sparse_columns();
-    const int num_rows = sparse_rows_.size();
-    const int num_cols = sparse_columns.size();
-    Matrix mat = Matrix::Zero(num_rows, num_cols);
+    Matrix matrix;
     int i_col = 0;
     for (const auto& column : sparse_columns) {
       for (const auto& [i_row, value] : column) {
-        mat(i_row, i_col) = value;
+        matrix.insert(i_row, i_col) = value;
       }
       ++i_col;
     }
-    return mat;
-  }
-
-  std::vector<Triplet> make_triplets() const {
-    const auto sparse_columns = unique_sparse_columns();
-    std::vector<Triplet> triplets;
-    int i_col = 0;
-    for (const auto& column : sparse_columns) {
-      for (const auto& [i_row, value] : column) {
-        triplets.push_back({i_row, i_col, value});
-      }
-      ++i_col;
-    }
-    return triplets;
+    return matrix;
   }
 
 private:

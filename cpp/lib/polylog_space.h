@@ -100,20 +100,19 @@ struct PolylogSpaceDimensions {
   int united;
 };
 
-// TODO: make_matrix vs make_triplets everywhere in this file !!!
 template<typename SpaceT, typename PrepareF>
 PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
-  const int a_rank = matrix_rank(matrix_builder_a.make_triplets());
+  const int a_rank = matrix_rank(matrix_builder_a.make_matrix());
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
-  const int united_rank = matrix_rank(matrix_builder_a.make_triplets());
+  const int united_rank = matrix_rank(matrix_builder_a.make_matrix());
 
   ExprMatrixBuilder<ExprT> matrix_builder_b;
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
-  const int b_rank = matrix_rank(matrix_builder_b.make_triplets());
+  const int b_rank = matrix_rank(matrix_builder_b.make_matrix());
 
   CHECK_LE(a_rank, united_rank);
   CHECK_LE(b_rank, united_rank);
