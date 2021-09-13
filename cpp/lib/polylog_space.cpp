@@ -1,10 +1,14 @@
 // TODO: Are shared pointers a good idea? This causes sharing between threads !!!
+// TODO: Be consistent about converting space to Lyndon basis on construction.
+//   Pro: less error-prone, can have defaulted version of "space dim" function.
+//   Con: would be slower if, in fact, only comultiplication is required.
 
 #include "polylog_space.h"
 
 #include "expr_matrix_builder.h"
 #include "iterated_integral.h"
 #include "itertools.h"
+#include "parallel_util.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 #include "triangulation.h"
@@ -77,9 +81,15 @@ PolylogSpace L(int weight, const XArgs& xargs) {
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
-    for (const auto& word : get_lyndon_words(slice(args, 0, alphabet_size), weight)) {
-      ret.push_back(wrap_shared(Corr(concat(word, {args[alphabet_size]}))));
-    }
+    append_vector(
+      ret,
+      mapped_parallel(
+        get_lyndon_words(slice(args, 0, alphabet_size), weight),
+        [&](const auto& word) {
+          return wrap_shared(Corr(concat(word, {args[alphabet_size]})));
+        }
+      )
+    );
   }
   return ret;
 }
@@ -90,11 +100,17 @@ PolylogSpace M(int weight, const XArgs& args) {
   const auto cluster_coordinates_set = get_triangulation_quadrangles(args.as_x());
   PolylogSpace ret;
   for (const auto& cluster_coordinates : cluster_coordinates_set) {
-    for (const auto& word : get_lyndon_words(cluster_coordinates, weight)) {
-      ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
-        mapped(word, DISAMBIGUATE(cross_ratio))
-      )))));
-    }
+    append_vector(
+      ret,
+      mapped_parallel(
+        get_lyndon_words(cluster_coordinates, weight),
+        [&](const auto& word) {
+          return wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
+            mapped(word, DISAMBIGUATE(cross_ratio))
+          ))));
+        }
+      )
+    );
   }
   return ret;
 }
