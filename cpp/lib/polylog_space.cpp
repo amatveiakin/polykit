@@ -2,6 +2,7 @@
 // TODO: Be consistent about converting space to Lyndon basis on construction.
 //   Pro: less error-prone, can have defaulted version of "space dim" function.
 //   Con: would be slower if, in fact, only comultiplication is required.
+// TODO: Be consistent about parallelisation.
 
 #include "polylog_space.h"
 
@@ -76,8 +77,8 @@ PolylogSpace CL5Alt(const XArgs& args) {
 
 PolylogSpace L(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
-  // TODO: Support arbitrary arguments.
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
+  // Note: See LAlt for alternative definitions that support arbitrary arguments.
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
@@ -95,6 +96,24 @@ PolylogSpace L(int weight, const XArgs& xargs) {
 }
 PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
 PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
+
+// TODO: Rename to `L`; use the old definition for testing and maybe as an optimization.
+PolylogSpace LAlt(int weight, const XArgs& xargs) {
+  auto args = xargs.as_x();
+  const X special_point = args.back();
+  args.pop_back();
+  PolylogSpace ret;
+  for (const int alphabet_size : range(2, args.size())) {
+    for (auto word : get_lyndon_words(slice(args, 0, alphabet_size), weight)) {
+      ret.push_back(wrap_shared(CorrAlt(concat(
+        std::vector{special_point},
+        word,
+        std::vector{args[alphabet_size]}
+      ))));
+    }
+  }
+  return ret;
+}
 
 PolylogSpace M(int weight, const XArgs& args) {
   const auto cluster_coordinates_set = get_triangulation_quadrangles(args.as_x());
