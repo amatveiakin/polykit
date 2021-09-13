@@ -8,18 +8,24 @@
 // TODO: Add user time and system time.
 class Profiler {
 public:
-  Profiler() {
-    start_ = std::chrono::steady_clock::now();
+  Profiler(bool enable = true) {
+    enable_ = enable;
+    if (enable_) {
+      start_ = std::chrono::steady_clock::now();
+    }
   }
 
   void finish(const std::string& operation) {
-    const auto finish = std::chrono::steady_clock::now();
-    const double time_sec = (finish - start_) / std::chrono::milliseconds(1) / 1000.;
-    std::cerr << "Profiler: " << operation << " took " << time_sec << " seconds\n";
-    start_ = finish;
+    if (enable_) {
+      const auto finish = std::chrono::steady_clock::now();
+      const double time_sec = (finish - start_) / std::chrono::milliseconds(1) / 1000.;
+      std::cerr << "Profiler: " << operation << " took " << time_sec << " seconds\n";
+      start_ = finish;
+    }
   }
 
 private:
+  bool enable_ = false;
   std::chrono::time_point<std::chrono::steady_clock> start_;
 };
 

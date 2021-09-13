@@ -6,6 +6,7 @@
 #include "expr_matrix_builder.h"
 #include "linalg.h"
 #include "ptr_util.h"
+#include "profiler.h"
 #include "x.h"
 
 
@@ -105,16 +106,23 @@ struct PolylogSpaceDimensions {
 template<typename SpaceT, typename PrepareF>
 PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+  Profiler profiler(false);
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
+  profiler.finish("A space");
   const int a_rank = matrix_rank(matrix_builder_a.make_matrix());
+  profiler.finish("A dim");
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
+  profiler.finish("united space");
   const int united_rank = matrix_rank(matrix_builder_a.make_matrix());
+  profiler.finish("united dim");
 
   ExprMatrixBuilder<ExprT> matrix_builder_b;
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
+  profiler.finish("B space");
   const int b_rank = matrix_rank(matrix_builder_b.make_matrix());
+  profiler.finish("B dim");
 
   CHECK_LE(a_rank, united_rank);
   CHECK_LE(b_rank, united_rank);
