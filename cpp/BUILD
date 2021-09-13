@@ -26,6 +26,7 @@ cc_library(
         "lib/lexicographical.h",
         "lib/macros.h",
         "lib/metaprogramming.h",
+        "lib/parallel_util.h",
         "lib/parray.h",
         "lib/parse.h",
         "lib/profiler.h",

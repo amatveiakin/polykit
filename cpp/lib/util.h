@@ -224,10 +224,21 @@ std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& in
   return choose_indices(v, indices);
 }
 
+// TODO: Make `mapped` and `mapped_mutable` support non-default-constructible return types:
+//   use empty constructor + reserve + std::back_inserter.
 template<typename Src, typename F>
 auto mapped(const Src& src, F&& func) {
   std::vector<std::invoke_result_t<F, typename Src::value_type>> dst(src.size());
   absl::c_transform(src, dst.begin(), std::forward<F>(func));
+  return dst;
+}
+
+// A version of `mapped` that allows `func` to change source values.
+// This is NOT in-place map; the result is returned as usual.
+template<typename Src, typename F>
+auto mapped_mutable(Src& src, F&& func) {
+  std::vector<std::invoke_result_t<F, typename Src::reference>> dst(src.size());
+  std::transform(src.begin(), src.end(), dst.begin(), std::forward<F>(func));
   return dst;
 }
 
