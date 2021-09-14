@@ -14,6 +14,9 @@ build:clang --cxxopt -std=c++17
 build:clang --cxxopt -Wextra
 build:clang --cxxopt -Wno-sign-compare
 build:clang --cxxopt -Wimplicit-fallthrough
+build:clang --cxxopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
+build:clang --linkopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
+build:clang --linkopt -ltbb  # for <execution>
 build:clang --linkopt "-lgmp -lgivaro"  # for LinBox
 
 build:clang-asan --repo_env=CC=clang
