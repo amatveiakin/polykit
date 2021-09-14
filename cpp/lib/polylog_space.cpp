@@ -9,7 +9,6 @@
 #include "expr_matrix_builder.h"
 #include "iterated_integral.h"
 #include "itertools.h"
-#include "parallel_util.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 #include "triangulation.h"

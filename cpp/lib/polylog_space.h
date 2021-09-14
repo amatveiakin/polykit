@@ -1,10 +1,9 @@
 #pragma once
 
-#include <future>
-
 #include "delta.h"
 #include "expr_matrix_builder.h"
 #include "linalg.h"
+#include "parallel_util.h"
 #include "ptr_util.h"
 #include "profiler.h"
 #include "x.h"
@@ -62,14 +61,11 @@ template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
 void add_polylog_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   static_assert(std::is_same_v<MatrixBuilderT, ExprMatrixBuilder<ExprT>>);
-  std::vector<std::future<ExprT>> results;
-  for (const auto& s : space) {
-    results.push_back(std::async([prepare, s]() {
-      return prepare(s);
-    }));
-  }
-  for (auto& result : results) {
-    matrix_builder.add_expr(result.get());
+  const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
+    return prepare(s);
+  });
+  for (const auto& expr : space_prepared) {
+    matrix_builder.add_expr(expr);
   }
 }
 
