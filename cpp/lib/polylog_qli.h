@@ -36,6 +36,11 @@ ProjectionExpr QLiSymmVecPr(int weight, const XArgs& points, DeltaProjector proj
 
 DeltaExpr A2Vec(const XArgs& args);
 
+// Reduce QLi expr, weight and points must be the same as in QLi.
+// Incompatible with substituting infinity.
+// Can be used as a projector.
+DeltaExpr normalized_delta(const DeltaExpr& expr, int weight, const XArgs& points);
+
 
 namespace internal {
 template<typename... Args>

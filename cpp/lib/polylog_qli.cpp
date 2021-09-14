@@ -223,3 +223,22 @@ DeltaExpr A2Vec(const XArgs& args) {
     fmt::function_num_args(fmt::sub_num("A", {2}), args)
   );
 }
+
+DeltaExpr normalized_delta(const DeltaExpr& expr, int weight, const XArgs& xargs) {
+  const auto& points = xargs.as_x();
+  absl::flat_hash_set<Delta> discard;
+  for (int i : range(points.size() - 1)) {
+    discard.insert(Delta(points[i], points[i+1]));
+  }
+  if (weight % 2 == 1) {
+    discard.insert(Delta(points.back(), points.front()));
+  }
+  return expr.filtered([&](const auto& term) {
+    for (const auto& d : term) {
+      if (discard.contains(d)) {
+        return false;
+      }
+    }
+    return true;
+  });
+}

@@ -163,15 +163,25 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
-  // const int num_points = 4;
-  // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-  // for (const int weight : range_incl(1, 6)) {
-  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
-  //     LAlt(weight, points),
-  //     ACoords(weight, points),
-  //     DISAMBIGUATE(ptr_to_lyndon_basis)
-  //   ) << "\n";
-  // }
+  const int num_points = 6;
+  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  for (const int weight : range_incl(1, 6)) {
+    const auto description = polylog_spaces_describe(
+      LAlt(weight, points),
+      ACoords(weight, points),
+      // DISAMBIGUATE(ptr_to_lyndon_basis)
+      [&](const auto& expr) {
+        return to_lyndon_basis(normalized_delta(*expr, weight, points));
+      }
+    );
+    std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+  }
+
+  // const int weight = 2;
+  // const std::vector points = {1,2,3,4};
+  // const auto expr = to_lyndon_basis(QLiVec(weight, points));
+  // std::cout << expr;
+  // std::cout << normalized_delta(expr, weight, points);
 
   // for (int weight : range_incl(2, 5)) {
   //   for (int num_points : range_incl(4, 7)) {
@@ -208,14 +218,14 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
-  const int num_points = 5;
-  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-  for (const int weight : range_incl(1, 6)) {
-    const auto description = polylog_spaces_describe(
-      H(weight, points),
-      ACoordsHopf(weight, points),
-      DISAMBIGUATE(ptr_deref)
-    );
-    std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
-  }
+  // const int num_points = 5;
+  // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  // for (const int weight : range_incl(1, 6)) {
+  //   const auto description = polylog_spaces_describe(
+  //     H(weight, points),
+  //     ACoordsHopf(weight, points),
+  //     DISAMBIGUATE(ptr_deref)
+  //   );
+  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+  // }
 }
