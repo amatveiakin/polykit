@@ -1,0 +1,48 @@
+Computing intersection of LAlt and ACoords on my laptop:
+
+```
+  const int num_points = 6;
+  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  const int weight = 5;
+  const auto description = polylog_spaces_intersection_describe(
+    LAlt(weight, points),
+    ACoords(weight, points),
+    DISAMBIGUATE(ptr_to_lyndon_basis)
+  );
+  std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+```
+
+=== Pure linbox (default settings, which is apparently Method::SparseElimination)
+Profiler: A space took 6.228 seconds
+Profiler: A dim took 0.377 seconds
+Profiler: united space took 3.017 seconds
+Profiler: united dim took 75.268 seconds
+Profiler: B space took 2.811 seconds
+Profiler: B dim took 59.624 seconds
+w=5, p=6: (258, 56406), ∩ = 16
+---
+Profiler: A space took 6.413 seconds
+Profiler: A dim took 0.44 seconds
+Profiler: united space took 3.175 seconds
+Profiler: united dim took 85.533 seconds
+Profiler: B space took 2.913 seconds
+Profiler: B dim took 58.854 seconds
+w=5, p=6: (258, 56406), ∩ = 16
+
+=== Sage + linbox
+Profiler: A space took 5.049 seconds
+Profiler: A dim took 28.811 seconds
+Profiler: united space took 13.559 seconds
+Profiler: united dim took 271.085 seconds
+Profiler: B space took 16.871 seconds
+Profiler: B dim took 49.911 seconds
+w=5, p=6: (258, 56406), ∩ = 16
+
+=== Eigen via MatrixXd
+Profiler: A space took 5.817 seconds
+Profiler: A dim took 1.28 seconds
+Profiler: united space took 15.171 seconds
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+*** SIGABRT received at time=1631555501 ***
+PC: @     ...
