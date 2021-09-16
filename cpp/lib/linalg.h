@@ -35,6 +35,18 @@ inline int& Matrix::insert(int row, int col) {
   return triplets_.back().value;
 }
 
+std::string dump_to_string_impl(const Matrix& matrix);
+
+// Splits matrix into blocks if it's block diagonal.
+std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix);
+
+// Removes empty rows and columns.
+Matrix compress_matrix(const Matrix& matrix);
+
+// Computes matrix rank without trying to split it into diagonal blocks first.
+int matrix_rank_no_blocking(const Matrix& matrix);
+
+// Computes matrix rank.
 int matrix_rank(const Matrix& matrix);
 
 void save_triplets(const std::string& filename, const Matrix& matrix);
