@@ -1,7 +1,7 @@
 // Analogs of combinatoric iterators from Python `itertools` package:
 // https://docs.python.org/3/library/itertools.html
 //
-// * cartesian_product(p, repeat)
+// * cartesian_power(p, repeat)
 //   cartesian product, equivalent to `repeat` nested for-loop-s
 //   TODO: Support multi-arg form.
 //
@@ -27,6 +27,7 @@
 
 #include "check.h"
 #include "range.h"
+#include "util.h"
 
 
 template<typename T>
@@ -145,7 +146,42 @@ void fill_combinations_with_replacement(
 
 
 template<typename T>
-std::vector<std::vector<T>> cartesian_product(const std::vector<T>& elements, int repeat) {
+std::vector<std::tuple<T>> cartesian_product(const std::vector<T>& elements) {
+  return mapped(elements, [](const T& x) { return std::tuple{x}; });
+}
+
+template<typename T, typename... Tail>
+auto cartesian_product(const std::vector<T>& head, const Tail&... tail) {
+  const auto tail_product = cartesian_product(tail...);
+  std::vector<decltype(std::tuple_cat(std::declval<std::tuple<T>>(), tail_product.front()))> ret;
+  for (const T& h : head) {
+    for (const auto& t : tail_product) {
+      ret.push_back(std::tuple_cat(std::tuple(h), t));
+    }
+  }
+  return ret;
+}
+
+// template<typename Head, typename... Tail>
+// auto cartesian_product(const Head& head, const Tail&... tail) {
+//   const auto tail_product = cartesian_product(tail...);
+//   std::vector<decltype(std::tuple_cat(std::declval<std::tuple<tupename Head::value_type>>(), decltype(tail_product)::value_type))> ret;
+//   for (const T& h : head) {
+//     for (const auto& t : tail_product) {
+//       ret.push_back(std::tuple_cat(std::tuple(h), t));
+//     }
+//   }
+//   return ret;
+// }
+
+// template<typename T>
+// std::vector<T> cartesian_product(const std::vector<T>& elements) {
+//   return elements;
+// }
+
+
+template<typename T>
+std::vector<std::vector<T>> cartesian_power(const std::vector<T>& elements, int repeat) {
   std::vector<std::vector<T>> ret;
   std::vector<T> buffer;
   internal::fill_cartesian_product(elements, buffer, repeat, ret);
@@ -154,8 +190,8 @@ std::vector<std::vector<T>> cartesian_product(const std::vector<T>& elements, in
 }
 
 template<typename T>
-std::vector<std::vector<T>> cartesian_product(std::initializer_list<T> elements, int repeat) {
-  return cartesian_product(std::vector(elements), repeat);
+std::vector<std::vector<T>> cartesian_power(std::initializer_list<T> elements, int repeat) {
+  return cartesian_power(std::vector(elements), repeat);
 }
 
 

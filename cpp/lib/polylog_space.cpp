@@ -36,7 +36,7 @@ PolylogSpace QL(int weight, const XArgs& xargs) {
   PolylogSpace space;
   const int max_args = std::min<int>(args.size(), (weight / 2 + 1) * 2);
   for (int num_args = 4; num_args <= max_args; num_args += 2) {
-    append_vector(space, mapped(combinations(args, num_args), [&](const auto& p) {
+    append_vector(space, mapped_parallel(combinations(args, num_args), [&](const auto& p) {
       return wrap_shared(QLiVec(weight, p));
     }));
   }
@@ -108,7 +108,7 @@ PolylogSpace CL5Alt(const XArgs& args) {
 //   const X special_point = args.back();
 //   args.pop_back();
 //   PolylogSpace ret;
-//   for (const auto& seq : cartesian_product(args, weight + 2)) {
+//   for (const auto& seq : cartesian_power(args, weight + 2)) {
 //     auto expr = IAlt(concat({special_point}, seq));
 //     CHECK(expr.is_zero() || expr.weight() == weight);
 //     ret.push_back(wrap_shared(std::move(expr)));
@@ -233,7 +233,7 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
       triangulation.push_back({args[i], args[(i+1) % args.size()]});
     }
     // Optimization potential: construct the vector directly without tensor_product.
-    for (const auto& word : cartesian_product(triangulation, weight)) {
+    for (const auto& word : cartesian_power(triangulation, weight)) {
       ret.push_back(wrap_shared(tensor_product(absl::MakeConstSpan(
         mapped(word, [](const auto& d) { return D(d.first, d.second); })
       ))));
@@ -345,14 +345,20 @@ PolylogSpacePair polylog_space_6_via_l(const XArgs& args) {
 
 PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs) {
   PolylogNCoSpace ret;
-  for (int w : range(1, weight)) {
+  for (int w : range_incl(1, weight / 2)) {
     const auto space_a = QL(w, xargs.as_x());
     const auto space_b = QL(weight - w, xargs.as_x());
-    for (const auto& a : space_a) {
-      for (const auto& b : space_b) {
-        ret.push_back(wrap_shared(ncoproduct(*a, *b)));
-      }
-    }
+
+    // for (const auto& a : space_a) {
+    //   for (const auto& b : space_b) {
+    //     ret.push_back(wrap_shared(ncoproduct(*a, *b)));
+    //   }
+    // }
+    // TODO: Why is there virtually no difference between `mapped` and `mapped_parallel`?
+    append_vector(ret, mapped_parallel(cartesian_product(space_a, space_b), [](const auto& p) {
+      const auto& [a, b] = p;
+      return wrap_shared(ncoproduct(*a, *b));
+    }));
   }
   return ret;
 }
@@ -381,7 +387,7 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
 }
 
 std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space) {
-  Profiler profiler(false);
+  Profiler profiler(true);
   const auto whole_space = compute_polylog_space_matrix(space, [](const auto& s) { return *s; });
   profiler.finish("whole space");
   const int whole_dim = matrix_rank(whole_space);

@@ -10,7 +10,7 @@ using namespace std::literals::string_literals;
 
 TEST(ItertoolsTest, Product_Elements4_Repeat2) {
   std::vector<std::string> result;
-  for (const auto& p : cartesian_product({"A", "B", "C", "D"}, 2)) {
+  for (const auto& p : cartesian_power({"A", "B", "C", "D"}, 2)) {
     result.push_back(str_join(p, ""));
   }
   absl::c_sort(result);
