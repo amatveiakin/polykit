@@ -108,12 +108,13 @@ PolylogSpace L(int weight, const XArgs& xargs) {
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
+    const X last_arg = args[alphabet_size];
     append_vector(
       ret,
       mapped_parallel(
         get_lyndon_words(slice(args, 0, alphabet_size), weight),
-        [&](const auto& word) {
-          return wrap_shared(Corr(concat(word, {args[alphabet_size]})));
+        [last_arg](const auto& word) {
+          return wrap_shared(Corr(concat(word, {last_arg})));
         }
       )
     );
@@ -130,13 +131,20 @@ PolylogSpace LAlt(int weight, const XArgs& xargs) {
   args.pop_back();
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size())) {
-    for (auto word : get_lyndon_words(slice(args, 0, alphabet_size), weight)) {
-      ret.push_back(wrap_shared(CorrAlt(concat(
-        std::vector{special_point},
-        word,
-        std::vector{args[alphabet_size]}
-      ))));
-    }
+    const X last_arg = args[alphabet_size];
+    append_vector(
+      ret,
+      mapped_parallel(
+        get_lyndon_words(slice(args, 0, alphabet_size), weight),
+        [special_point, last_arg](const auto& word) {
+          return wrap_shared(CorrAlt(concat(
+            std::vector{special_point},
+            word,
+            std::vector{last_arg}
+          )));
+        }
+      )
+    );
   }
   return ret;
 }
@@ -149,10 +157,10 @@ PolylogSpace XCoords(int weight, const XArgs& args) {
       ret,
       mapped_parallel(
         get_lyndon_words(cluster_coordinates, weight),
-        [&](const auto& word) {
-          return wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
+        [](const auto& word) {
+          return wrap_shared(tensor_product(absl::MakeConstSpan(
             mapped(word, DISAMBIGUATE(cross_ratio))
-          ))));
+          )));
         }
       )
     );
@@ -170,11 +178,17 @@ PolylogSpace ACoords(int weight, const XArgs& xargs) {
       triangulation.push_back({args[i], args[(i+1) % args.size()]});
     }
     // Optimization potential: construct the vector directly without tensor_product.
-    for (const auto& word : get_lyndon_words(triangulation, weight)) {
-      ret.push_back(wrap_shared(to_lyndon_basis(tensor_product(absl::MakeConstSpan(
-        mapped(word, [](const auto& d) { return D(d.first, d.second); })
-      )))));
-    }
+    append_vector(
+      ret,
+      mapped_parallel(
+        get_lyndon_words(triangulation, weight),
+        [](const auto& word) {
+          return wrap_shared(tensor_product(absl::MakeConstSpan(
+            mapped(word, [](const auto& d) { return D(d.first, d.second); })
+          )));
+        }
+      )
+    );
   }
   return ret;
 }
