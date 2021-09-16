@@ -382,10 +382,14 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
 
 std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space) {
   Profiler profiler(false);
-  const int dim_whole = compute_polylog_space_dim(space, [](const auto& s) { return *s; });
+  const auto whole_space = compute_polylog_space_matrix(space, [](const auto& s) { return *s; });
+  profiler.finish("whole space");
+  const int whole_dim = matrix_rank(whole_space);
   profiler.finish("whole dim");
-  const int dim_image = compute_polylog_space_dim(space, [](const auto& s) { return ncomultiply(*s); });
+  const auto image_space = compute_polylog_space_matrix(space, [](const auto& s) { return ncomultiply(*s); });
+  profiler.finish("image space");
+  const int image_dim = matrix_rank(image_space);
   profiler.finish("image dim");
-  const int dim_kernel = dim_whole - dim_image;
-  return absl::StrCat(dim_whole, " - ", dim_image, " = ", dim_kernel);
+  const int kernel_dim = whole_dim - image_dim;
+  return absl::StrCat(whole_dim, " - ", image_dim, " = ", kernel_dim);
 }
