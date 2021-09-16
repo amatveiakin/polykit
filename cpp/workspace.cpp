@@ -128,7 +128,7 @@ int main(int /*argc*/, char *argv[]) {
   // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   // points.back() = Inf;
   // const std::string prefix = absl::StrCat("/mnt/c/Danya/results/l_vs_m/w", weight, "_p", num_points, "_");
-  // // std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
+  // // std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_intersection_describe(
   // //   CorrNondecreasing(weight, points),
   // //   ACoords(weight, points),
   // //   DISAMBIGUATE(ptr_to_lyndon_basis)
@@ -144,7 +144,7 @@ int main(int /*argc*/, char *argv[]) {
   // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   // points.back() = Inf;
   // for (const int weight : range_incl(2, 6)) {
-  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_describe(
+  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_intersection_describe(
   //     L(weight, points),
   //     XCoords(weight, points),
   //     DISAMBIGUATE(ptr_to_lyndon_basis)
@@ -162,19 +162,19 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
-  const int num_points = 6;
-  auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-  for (const int weight : range_incl(1, 6)) {
-    const auto description = polylog_spaces_describe(
-      LAlt(weight, points),
-      ACoords(weight, points),
-      // DISAMBIGUATE(ptr_to_lyndon_basis)
-      [&](const auto& expr) {
-        return to_lyndon_basis(normalized_delta(*expr, weight, points));
-      }
-    );
-    std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
-  }
+  // const int num_points = 7;
+  // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+  // for (const int weight : range_incl(3, 6)) {
+  //   const auto description = polylog_spaces_intersection_describe(
+  //     LAlt(weight, points),
+  //     ACoords(weight, points),
+  //     // DISAMBIGUATE(ptr_to_lyndon_basis)
+  //     [&](const auto& expr) {
+  //       return to_lyndon_basis(normalized_delta(*expr, weight, points));
+  //     }
+  //   );
+  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+  // }
 
   // const int weight = 2;
   // const std::vector points = {1,2,3,4};
@@ -220,11 +220,20 @@ int main(int /*argc*/, char *argv[]) {
   // const int num_points = 5;
   // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   // for (const int weight : range_incl(1, 6)) {
-  //   const auto description = polylog_spaces_describe(
+  //   const auto description = polylog_spaces_intersection_describe(
   //     H(weight, points),
   //     ACoordsHopf(weight, points),
   //     DISAMBIGUATE(ptr_deref)
   //   );
   //   std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
   // }
+
+  for (int weight : range_incl(6, 6)) {
+    for (int num_points : range_incl(8, 8)) {
+      auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+      points.back() = Inf;
+      const auto rank = polylog_spaces_kernel_describe(polylog_space_ql_wedge_ql(weight, points));
+      std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
+    }
+  }
 }

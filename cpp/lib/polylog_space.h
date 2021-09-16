@@ -10,7 +10,13 @@
 
 
 using PolylogSpace = std::vector<std::shared_ptr<const DeltaExpr>>;
-using PolylogCoSpace = std::vector<std::pair<std::shared_ptr<const DeltaExpr>, std::shared_ptr<const DeltaExpr>>>;
+using PolylogNCoSpace = std::vector<std::shared_ptr<const DeltaNCoExpr>>;
+using PolylogSpacePair = std::vector<std::pair<std::shared_ptr<const DeltaExpr>, std::shared_ptr<const DeltaExpr>>>;
+
+std::string dump_to_string_impl(const PolylogSpace& space);
+std::string dump_to_string_impl(const PolylogNCoSpace& space);
+
+PolylogSpace QL(int weight, const XArgs& xargs);
 
 PolylogSpace CB1(const XArgs& xargs);
 PolylogSpace CB2(const XArgs& xargs);
@@ -25,23 +31,21 @@ PolylogSpace CL5Alt(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
+// TODO: Rename
 PolylogSpace L(int weight, const XArgs& xargs);
-PolylogSpace L3(const XArgs& xargs);
-PolylogSpace L4(const XArgs& xargs);
-
 PolylogSpace LAlt(int weight, const XArgs& xargs);
 
 PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
-PolylogCoSpace polylog_space_2(const XArgs& args);
-PolylogCoSpace polylog_space_3(const XArgs& args);
-PolylogCoSpace polylog_space_4(const XArgs& args);
-PolylogCoSpace polylog_space_5(const XArgs& args);
-PolylogCoSpace polylog_space_6(const XArgs& args);
-PolylogCoSpace polylog_space_6_alt(const XArgs& args);
-PolylogCoSpace polylog_space_6_via_l(const XArgs& args);
+PolylogSpacePair polylog_space_2(const XArgs& args);
+PolylogSpacePair polylog_space_3(const XArgs& args);
+PolylogSpacePair polylog_space_4(const XArgs& args);
+PolylogSpacePair polylog_space_5(const XArgs& args);
+PolylogSpacePair polylog_space_6(const XArgs& args);
+PolylogSpacePair polylog_space_6_alt(const XArgs& args);
+PolylogSpacePair polylog_space_6_via_l(const XArgs& args);
 
 inline auto polylog_space(int weight) {
   switch (weight) {
@@ -55,6 +59,8 @@ inline auto polylog_space(int weight) {
 
 Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult);
 Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult);
+
+PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs);
 
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
@@ -105,7 +111,7 @@ struct PolylogSpaceDimensions {
 template<typename SpaceT, typename PrepareF>
 PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  Profiler profiler(false);
+  Profiler profiler(true);
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
@@ -141,12 +147,14 @@ int polylog_space_intersection_dimension(const SpaceT& a, const SpaceT& b, const
 }
 
 template<typename SpaceT, typename PrepareF>
-std::string polylog_spaces_describe(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+std::string polylog_spaces_intersection_describe(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   const auto dim = compute_polylog_space_dimensions(a, b, prepare);
   const int intersection = dim.a + dim.b - dim.united;
   // TODO: Use `fmt` for special characters.
   return absl::StrCat("(", dim.a, ", ", dim.b, "), ∩ = ", intersection);
 }
+
+std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space);
 
 
 // For pybind11. Returns matrices: (a, b, united)

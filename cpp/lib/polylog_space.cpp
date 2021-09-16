@@ -14,6 +14,35 @@
 #include "triangulation.h"
 
 
+template<typename SpaceT>
+std::string space_to_string(const SpaceT& space) {
+  return absl::StrCat("<", str_join(space, ", ", [](const auto& s) {
+    const auto& annotations = s->annotations();
+    CHECK(annotations.errors.empty());
+    CHECK_EQ(annotations.expression.num_terms(), 1);
+    return annotations.expression.element().first;
+  }), ">");
+}
+
+std::string dump_to_string_impl(const PolylogSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const PolylogNCoSpace& space) { return space_to_string(space); }
+
+
+PolylogSpace QL(int weight, const XArgs& xargs) {
+  if (weight == 1) {
+    return CB1(xargs);
+  }
+  const auto& args = xargs.as_x();
+  PolylogSpace space;
+  const int max_args = std::min<int>(args.size(), (weight / 2 + 1) * 2);
+  for (int num_args = 4; num_args <= max_args; num_args += 2) {
+    append_vector(space, mapped(combinations(args, num_args), [&](const auto& p) {
+      return wrap_shared(QLiVec(weight, p));
+    }));
+  }
+  return space;
+}
+
 PolylogSpace CB1(const XArgs& xargs) {
   const auto& args = xargs.as_x();
   const int n = args.size();
@@ -121,11 +150,12 @@ PolylogSpace L(int weight, const XArgs& xargs) {
   }
   return ret;
 }
-PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
-PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
 
 // TODO: Rename to `L`; use the old definition for testing and maybe as an optimization.
 PolylogSpace LAlt(int weight, const XArgs& xargs) {
+  if (weight == 1) {
+    return CB1(xargs);
+  }
   auto args = xargs.as_x();
   const X special_point = args.back();
   args.pop_back();
@@ -213,8 +243,8 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
 }
 
 
-PolylogCoSpace polylog_space_3(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_3(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CB2(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
@@ -223,8 +253,8 @@ PolylogCoSpace polylog_space_3(const XArgs& args) {
   return ret;
 }
 
-PolylogCoSpace polylog_space_4(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_4(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CB3(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
@@ -238,8 +268,8 @@ PolylogCoSpace polylog_space_4(const XArgs& args) {
   return ret;
 }
 
-PolylogCoSpace polylog_space_5(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_5(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CL4(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
@@ -253,8 +283,8 @@ PolylogCoSpace polylog_space_5(const XArgs& args) {
   return ret;
 }
 
-PolylogCoSpace polylog_space_6(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_6(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CL5(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
@@ -273,8 +303,8 @@ PolylogCoSpace polylog_space_6(const XArgs& args) {
   return ret;
 }
 
-PolylogCoSpace polylog_space_6_alt(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_6_alt(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CL5Alt(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
@@ -293,21 +323,35 @@ PolylogCoSpace polylog_space_6_alt(const XArgs& args) {
   return ret;
 }
 
-PolylogCoSpace polylog_space_6_via_l(const XArgs& args) {
-  PolylogCoSpace ret;
+PolylogSpacePair polylog_space_6_via_l(const XArgs& args) {
+  PolylogSpacePair ret;
   for (const auto& s1 : CL5(args)) {
     for (const auto& s2 : CB1(args)) {
       ret.push_back({s1, s2});
     }
   }
-  for (const auto& s1 : L4(args)) {
+  for (const auto& s1 : L(4, args)) {
     for (const auto& s2 : CB2(args)) {
       ret.push_back({s1, s2});
     }
   }
-  for (const auto& s1 : L3(args)) {
-    for (const auto& s2 : L3(args)) {
+  for (const auto& s1 : L(3, args)) {
+    for (const auto& s2 : L(3, args)) {
       ret.push_back({s1, s2});
+    }
+  }
+  return ret;
+}
+
+PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs) {
+  PolylogNCoSpace ret;
+  for (int w : range(1, weight)) {
+    const auto space_a = QL(w, xargs.as_x());
+    const auto space_b = QL(weight - w, xargs.as_x());
+    for (const auto& a : space_a) {
+      for (const auto& b : space_b) {
+        ret.push_back(wrap_shared(ncoproduct(*a, *b)));
+      }
     }
   }
   return ret;
@@ -334,4 +378,14 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
       return apply_comult ? ncomultiply(prod) : prod;
     }
   );
+}
+
+std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space) {
+  Profiler profiler(false);
+  const int dim_whole = compute_polylog_space_dim(space, [](const auto& s) { return *s; });
+  profiler.finish("whole dim");
+  const int dim_image = compute_polylog_space_dim(space, [](const auto& s) { return ncomultiply(*s); });
+  profiler.finish("image dim");
+  const int dim_kernel = dim_whole - dim_image;
+  return absl::StrCat(dim_whole, " - ", dim_image, " = ", dim_kernel);
 }
