@@ -31,8 +31,8 @@ PolylogSpace CL5Alt(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
-// TODO: Rename
-PolylogSpace L(int weight, const XArgs& xargs);
+// TODO: Test that these are equivalent where both are defined.
+PolylogSpace LInf(int weight, const XArgs& xargs);
 PolylogSpace LAlt(int weight, const XArgs& xargs);
 
 PolylogSpace XCoords(int weight, const XArgs& args);

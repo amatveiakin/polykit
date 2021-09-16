@@ -78,7 +78,7 @@ int simple_space_rank(const SpaceF& space, int weight, int num_points) {
 
 auto polylog_space_matrix_l_vs_m(int weight, const XArgs& points) {
   return compute_polylog_space_matrices(
-    L(weight, points),
+    LInf(weight, points),
     XCoords(weight, points),
     DISAMBIGUATE(ptr_to_lyndon_basis)
   );
@@ -145,7 +145,7 @@ int main(int /*argc*/, char *argv[]) {
   // points.back() = Inf;
   // for (const int weight : range_incl(2, 6)) {
   //   std::cout << "w=" << weight << ", p=" << num_points << ": " << polylog_spaces_intersection_describe(
-  //     L(weight, points),
+  //     LInf(weight, points),
   //     XCoords(weight, points),
   //     DISAMBIGUATE(ptr_to_lyndon_basis)
   //   ) << "\n";
@@ -154,7 +154,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (int weight : range_incl(2, 5)) {
   //   for (int num_points : range_incl(4, 7)) {
   //   // for (int num_points : range_incl(5, 8)) {
-  //     // const int rank = simple_space_rank(L, weight, num_points);
+  //     // const int rank = simple_space_rank(LInf, weight, num_points);
   //     const int rank = simple_space_rank(LAlt, weight, num_points);
   //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
   //     // TODO: Test equal !!!
@@ -200,7 +200,7 @@ int main(int /*argc*/, char *argv[]) {
   //     auto args = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
   //     args.back() = Inf;
   //     const int rank = matrix_rank(compute_polylog_space_matrix(
-  //       L(weight, args),
+  //       LInf(weight, args),
   //       DISAMBIGUATE(ptr_to_lyndon_basis)
   //     ));
   //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";

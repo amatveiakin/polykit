@@ -130,7 +130,7 @@ PolylogSpace H(int weight, const XArgs& xargs) {
   return ret;
 }
 
-PolylogSpace L(int weight, const XArgs& xargs) {
+PolylogSpace LInf(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
   // Note: See LAlt for alternative definitions that support arbitrary arguments.
@@ -151,7 +151,7 @@ PolylogSpace L(int weight, const XArgs& xargs) {
   return ret;
 }
 
-// TODO: Rename to `L`; use the old definition for testing and maybe as an optimization.
+// TODO: Rename to `LInf`; use the old definition for testing and maybe as an optimization.
 PolylogSpace LAlt(int weight, const XArgs& xargs) {
   if (weight == 1) {
     return CB1(xargs);
@@ -330,13 +330,13 @@ PolylogSpacePair polylog_space_6_via_l(const XArgs& args) {
       ret.push_back({s1, s2});
     }
   }
-  for (const auto& s1 : L(4, args)) {
+  for (const auto& s1 : LInf(4, args)) {
     for (const auto& s2 : CB2(args)) {
       ret.push_back({s1, s2});
     }
   }
-  for (const auto& s1 : L(3, args)) {
-    for (const auto& s2 : L(3, args)) {
+  for (const auto& s1 : LInf(3, args)) {
+    for (const auto& s2 : LInf(3, args)) {
       ret.push_back({s1, s2});
     }
   }
