@@ -1,11 +1,11 @@
-Computing intersection of LAlt and ACoords on my laptop:
+Computing intersection of L and ACoords on my laptop:
 
 ```
   const int num_points = 6;
   auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   const int weight = 5;
   const auto description = polylog_spaces_intersection_describe(
-    LAlt(weight, points),
+    L(weight, points),
     ACoords(weight, points),
     DISAMBIGUATE(ptr_to_lyndon_basis)
   );

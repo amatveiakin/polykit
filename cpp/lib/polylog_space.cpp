@@ -117,7 +117,7 @@ PolylogSpace CL5Alt(const XArgs& args) {
 // }
 
 PolylogSpace H(int weight, const XArgs& xargs) {
-  PolylogSpace ret = LAlt(weight, xargs);
+  PolylogSpace ret = L(weight, xargs);
   for (int w : range_incl(1, weight / 2)) {
     PolylogSpace space_a = H(w, xargs);
     PolylogSpace space_b = H(weight - w, xargs);
@@ -133,7 +133,7 @@ PolylogSpace H(int weight, const XArgs& xargs) {
 PolylogSpace LInf(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
-  // Note: See LAlt for alternative definitions that support arbitrary arguments.
+  // Note: See L for alternative definitions that support arbitrary arguments.
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
@@ -152,7 +152,7 @@ PolylogSpace LInf(int weight, const XArgs& xargs) {
 }
 
 // TODO: Rename to `LInf`; use the old definition for testing and maybe as an optimization.
-PolylogSpace LAlt(int weight, const XArgs& xargs) {
+PolylogSpace L(int weight, const XArgs& xargs) {
   if (weight == 1) {
     return CB1(xargs);
   }

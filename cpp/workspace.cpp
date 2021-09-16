@@ -155,7 +155,7 @@ int main(int /*argc*/, char *argv[]) {
   //   for (int num_points : range_incl(4, 7)) {
   //   // for (int num_points : range_incl(5, 8)) {
   //     // const int rank = simple_space_rank(LInf, weight, num_points);
-  //     const int rank = simple_space_rank(LAlt, weight, num_points);
+  //     const int rank = simple_space_rank(L, weight, num_points);
   //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
   //     // TODO: Test equal !!!
   //     // TODO: Spreadsheet !!!
@@ -166,7 +166,7 @@ int main(int /*argc*/, char *argv[]) {
   // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   // for (const int weight : range_incl(3, 6)) {
   //   const auto description = polylog_spaces_intersection_describe(
-  //     LAlt(weight, points),
+  //     L(weight, points),
   //     ACoords(weight, points),
   //     // DISAMBIGUATE(ptr_to_lyndon_basis)
   //     [&](const auto& expr) {
