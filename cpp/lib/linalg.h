@@ -35,6 +35,10 @@ inline int& Matrix::insert(int row, int col) {
   return triplets_.back().value;
 }
 
+// Prints matrix elements (with omissions if the matrix is large).
+std::string to_string(const Matrix& matrix);
+
+// Prints matrix metadata.
 std::string dump_to_string_impl(const Matrix& matrix);
 
 // Splits matrix into blocks if it's block diagonal.

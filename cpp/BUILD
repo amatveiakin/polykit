@@ -37,6 +37,7 @@ cc_library(
         "lib/set_util.h",
         "lib/string.h",
         "lib/string_basic.h",
+        "lib/table_printer.h",
         "lib/util.h",
         "lib/zip.h",
     ],
@@ -48,6 +49,7 @@ cc_library(
         "lib/pvector.cpp",
         "lib/sequence_iteration.cpp",
         "lib/string.cpp",
+        "lib/table_printer.cpp",
     ],
     deps = [
         "@absl//absl/algorithm:container",

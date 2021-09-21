@@ -13,7 +13,9 @@
 #include "check.h"
 #include "enumerator.h"
 #include "file_util.h"
+#include "format.h"
 #include "string.h"
+#include "table_printer.h"
 #include "util.h"
 
 
@@ -91,6 +93,76 @@ int matrix_rank_no_blocking(const Matrix& matrix) {
   // TODO: Try LinBox::Method::SparseElimination options
   LinBox::rank(rank, linbox_matrix, LinBox::Method::SparseElimination());
   return rank;
+}
+
+// TODO: Test
+std::string to_string(const Matrix& matrix) {
+  const int kMaxColumns = 16;
+  const int kMaxRows = 16;
+  const int kEllipsisSize = 3;
+
+  const int kFirstRowsToPrint = (kMaxRows - kEllipsisSize + 1) / 2;
+  const int kLastRowsToPrint = (kMaxRows - kEllipsisSize) / 2;
+  const int kFirstColumnsToPrint = (kMaxColumns - kEllipsisSize + 1) / 2;
+  const int kLastColumnsToPrint = (kMaxColumns - kEllipsisSize) / 2;
+
+  const bool full_rows = matrix.rows() <= kMaxRows;
+  const bool full_cols = matrix.cols() <= kMaxColumns;
+  const int table_rows = full_rows ? matrix.rows() : kMaxRows;
+  const int table_cols = full_cols ? matrix.cols() : kMaxColumns;
+
+  const auto is_ellipsis_row = [&](int table_row) {
+    return !full_rows && table_row >= kFirstRowsToPrint && table_row < kMaxRows - kLastRowsToPrint;
+  };
+  const auto is_ellipsis_col = [&](int table_col) {
+    return !full_cols && table_col >= kFirstColumnsToPrint && table_col < kMaxColumns - kLastColumnsToPrint;
+  };
+  const auto get_table_row = [&](int matrix_row) -> std::optional<int> {
+    if (full_rows || matrix_row < kFirstRowsToPrint) {
+      return matrix_row;
+    }
+    if (matrix_row >= matrix.rows() - kLastRowsToPrint) {
+      return matrix_row + kMaxRows - matrix.rows();
+    }
+    return std::nullopt;
+  };
+  const auto get_table_col = [&](int matrix_col) -> std::optional<int> {
+    if (full_cols || matrix_col < kFirstColumnsToPrint) {
+      return matrix_col;
+    }
+    if (matrix_col >= matrix.cols() - kLastColumnsToPrint) {
+      return matrix_col + kMaxColumns - matrix.cols();
+    }
+    return std::nullopt;
+  };
+
+  TablePrinter table;
+  table.set_default_alignment(TextAlignment::right);
+  table.set_min_column_width(2);
+  for (const auto& triplet : matrix.as_triplets()) {
+    const auto row = get_table_row(triplet.row);
+    const auto col = get_table_col(triplet.col);
+    if (row.has_value() && col.has_value()) {
+      table.set_content({*row, *col}, fmt::num(triplet.value));
+    }
+  }
+  for (const int row : range(table_rows)) {
+    for (const int col : range(table_cols)) {
+      const bool ellipsis_row = is_ellipsis_row(row);
+      const bool ellipsis_col = is_ellipsis_col(col);
+      if (ellipsis_row || ellipsis_col) {
+        CHECK(table.content({row, col}).empty());
+        if (ellipsis_row != ellipsis_col) {
+          table.set_content({row, col}, ".");
+        }
+      } else {
+        if (table.content({row, col}).empty()) {
+          table.set_content({row, col}, fmt::num(0));
+        }
+      }
+    }
+  }
+  return table.to_string();
 }
 
 std::string dump_to_string_impl(const Matrix& matrix) {
