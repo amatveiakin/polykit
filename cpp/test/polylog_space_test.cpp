@@ -57,7 +57,7 @@ TEST(PolylogSpaceTest, L3SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto args = mapped(range_incl(1, num_points), [](int i) { return X(i); });
     args.back() = Inf;
-    EXPECT_TRUE(polylog_space_equals(L3(args), L3_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
+    EXPECT_TRUE(polylog_space_equals(L(3, args), L3_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
   }
 }
 
@@ -65,7 +65,7 @@ TEST(PolylogSpaceTest, LARGE_L4SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto args = mapped(range_incl(1, num_points), [](int i) { return X(i); });
     args.back() = Inf;
-    EXPECT_TRUE(polylog_space_equals(L4(args), L4_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
+    EXPECT_TRUE(polylog_space_equals(L(4, args), L4_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
   }
 }
 

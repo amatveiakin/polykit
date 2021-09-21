@@ -1,5 +1,4 @@
 // TODO: Install LinBox through bazel
-// TODO: Fix tests !!!
 // TODO: Add tests, in particular: matrix_rank == matrix_rank_no_blocking
 
 #include "linalg.h"
