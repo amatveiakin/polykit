@@ -10,6 +10,15 @@
 #include "lib/polylog_qli.h"
 
 
+template<typename SpaceT, typename PrepareF>
+void EXPECT_POLYLOG_SPACE_EQUALS(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
+  // TODO: Use `fmt` for the union sign.
+  EXPECT_TRUE(all_equal(absl::MakeConstSpan({dim.a, dim.b, dim.united})))
+      << "Expected spaces to be equal, found: " << dim.a << " ∪ " << dim.b << " = " << dim.united;
+}
+
+
 template<typename T>
 T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
   return to_lyndon_basis(*ptr);
@@ -53,23 +62,52 @@ PolylogSpace L4_alternative(const XArgs& args) {
 }
 
 
+class PolylogSpaceTest_Weight_NumPoints : public ::testing::TestWithParam<std::pair<int, int>> {
+public:
+  int weight() const { return GetParam().first; }
+  int num_points() const { return GetParam().second; }
+};
+
+INSTANTIATE_TEST_SUITE_P(Cases, PolylogSpaceTest_Weight_NumPoints, ::testing::Values(
+  std::pair{1, 4},
+  std::pair{1, 6},
+  std::pair{1, 8},
+  std::pair{2, 4},
+  std::pair{2, 6},
+  std::pair{3, 4}
+));
+INSTANTIATE_TEST_SUITE_P(LARGE_Cases, PolylogSpaceTest_Weight_NumPoints, ::testing::Values(
+  std::pair{2, 8},
+  std::pair{3, 6},
+  std::pair{3, 8},
+  std::pair{4, 4},
+  std::pair{4, 6}
+));
+
+
 TEST(PolylogSpaceTest, L3SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
-    auto args = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-    args.back() = Inf;
-    EXPECT_TRUE(polylog_space_equals(L(3, args), L3_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
+    auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+    points.back() = Inf;
+    EXPECT_POLYLOG_SPACE_EQUALS(L(3, points), L3_alternative(points), DISAMBIGUATE(ptr_to_lyndon_basis));
   }
 }
 
 TEST(PolylogSpaceTest, LARGE_L4SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
-    auto args = mapped(range_incl(1, num_points), [](int i) { return X(i); });
-    args.back() = Inf;
-    EXPECT_TRUE(polylog_space_equals(L(4, args), L4_alternative(args), DISAMBIGUATE(ptr_to_lyndon_basis)));
+    auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+    points.back() = Inf;
+    EXPECT_POLYLOG_SPACE_EQUALS(L(4, points), L4_alternative(points), DISAMBIGUATE(ptr_to_lyndon_basis));
   }
 }
 
-TEST(PolylogSpaceTest, DimB1) {
+TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
+  auto points = mapped(range_incl(1, num_points()), [](int i) { return X(i); });
+  points.back() = Inf;
+  EXPECT_POLYLOG_SPACE_EQUALS(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(ptr_to_lyndon_basis));
+}
+
+TEST(PolylogSpaceTest, DimCB1) {
   // (dim B1, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB1, 6), 9);
   EXPECT_EQ(simple_space_rank(CB1, 7), 14);
@@ -77,7 +115,7 @@ TEST(PolylogSpaceTest, DimB1) {
   EXPECT_EQ(simple_space_rank(CB1, 9), 27);
 }
 
-TEST(PolylogSpaceTest, DimB2) {
+TEST(PolylogSpaceTest, DimCB2) {
   // (dim B2, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB2, 6), 10);
   EXPECT_EQ(simple_space_rank(CB2, 7), 20);
@@ -85,7 +123,7 @@ TEST(PolylogSpaceTest, DimB2) {
   EXPECT_EQ(simple_space_rank(CB2, 9), 56);
 }
 
-TEST(PolylogSpaceTest, LARGE_DimB3) {
+TEST(PolylogSpaceTest, LARGE_DimCB3) {
   // (dim B3, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB3, 6), 15);
   EXPECT_EQ(simple_space_rank(CB3, 7), 35);

@@ -31,7 +31,6 @@ PolylogSpace CL5Alt(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
-// TODO: Test that these are equivalent where both are defined.
 PolylogSpace LInf(int weight, const XArgs& xargs);
 PolylogSpace L(int weight, const XArgs& xargs);
 
@@ -111,7 +110,7 @@ struct PolylogSpaceDimensions {
 template<typename SpaceT, typename PrepareF>
 PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  Profiler profiler(true);
+  Profiler profiler(false);
 
   ExprMatrixBuilder<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);

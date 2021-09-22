@@ -135,6 +135,10 @@ PolylogSpace LInf(int weight, const XArgs& xargs) {
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
   // Note: See L for alternative definitions that support arbitrary arguments.
   CHECK(!args.empty() && args.back() == Inf) << dump_to_string(args);
+  // TODO: Is this how it should be defined for weight 1?
+  if (weight == 1) {
+    return CB1(xargs);
+  }
   PolylogSpace ret;
   for (const int alphabet_size : range(2, args.size() - 1)) {
     const X last_arg = args[alphabet_size];
@@ -151,7 +155,6 @@ PolylogSpace LInf(int weight, const XArgs& xargs) {
   return ret;
 }
 
-// TODO: Rename to `LInf`; use the old definition for testing and maybe as an optimization.
 PolylogSpace L(int weight, const XArgs& xargs) {
   if (weight == 1) {
     return CB1(xargs);
@@ -387,7 +390,7 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
 }
 
 std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space) {
-  Profiler profiler(true);
+  Profiler profiler(false);
   const auto whole_space = compute_polylog_space_matrix(space, [](const auto& s) { return *s; });
   profiler.finish("whole space");
   const int whole_dim = matrix_rank(whole_space);
