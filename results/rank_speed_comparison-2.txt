@@ -1,0 +1,90 @@
+Profiler: prepare (block) took 0.001 seconds
+Profiler: prepare (diag) took 0.001 seconds
+Profiler: prepare (block + diag) took 0.001 seconds
+Profiler: rank (orig) took 0.005 seconds
+Profiler: rank (block) took 0.006 seconds
+Profiler: rank (diag) took 0.005 seconds
+Profiler: rank (block + diag) took 0.005 seconds
+Profiler: prepare (block) took 0.003 seconds
+Profiler: prepare (diag) took 0.002 seconds
+Profiler: prepare (block + diag) took 0.002 seconds
+Profiler: rank (orig) took 0.015 seconds
+Profiler: rank (block) took 0.026 seconds
+Profiler: rank (diag) took 0.017 seconds
+Profiler: rank (block + diag) took 0.017 seconds
+w=5, p=6: 294 - 263 = 31
+Profiler: prepare (block) took 0.013 seconds
+Profiler: prepare (diag) took 0.006 seconds
+Profiler: prepare (block + diag) took 0.006 seconds
+Profiler: rank (orig) took 0.069 seconds
+Profiler: rank (block) took 0.06 seconds
+Profiler: rank (diag) took 0.069 seconds
+Profiler: rank (block + diag) took 0.049 seconds
+Profiler: prepare (block) took 0.045 seconds
+Profiler: prepare (diag) took 0.02 seconds
+Profiler: prepare (block + diag) took 0.019 seconds
+Profiler: rank (orig) took 0.2 seconds
+Profiler: rank (block) took 0.476 seconds
+Profiler: rank (diag) took 0.211 seconds
+Profiler: rank (block + diag) took 0.197 seconds
+w=5, p=7: 1274 - 1197 = 77
+Profiler: prepare (block) took 0.122 seconds
+Profiler: prepare (diag) took 0.031 seconds
+Profiler: prepare (block + diag) took 0.03 seconds
+Profiler: rank (orig) took 0.758 seconds
+Profiler: rank (block) took 0.632 seconds
+Profiler: rank (diag) took 0.758 seconds
+Profiler: rank (block + diag) took 0.462 seconds
+Profiler: prepare (block) took 0.345 seconds
+Profiler: prepare (diag) took 0.106 seconds
+Profiler: prepare (block + diag) took 0.105 seconds
+Profiler: rank (orig) took 2.194 seconds
+Profiler: rank (block) took 7.62 seconds
+Profiler: rank (diag) took 2.641 seconds
+Profiler: rank (block + diag) took 2.991 seconds
+w=5, p=8: 4270 - 4102 = 168
+Profiler: prepare (block) took 0.002 seconds
+Profiler: prepare (diag) took 0.001 seconds
+Profiler: prepare (block + diag) took 0.001 seconds
+Profiler: rank (orig) took 0.011 seconds
+Profiler: rank (block) took 0.011 seconds
+Profiler: rank (diag) took 0.011 seconds
+Profiler: rank (block + diag) took 0.01 seconds
+Profiler: prepare (block) took 0.008 seconds
+Profiler: prepare (diag) took 0.005 seconds
+Profiler: prepare (block + diag) took 0.005 seconds
+Profiler: rank (orig) took 0.036 seconds
+Profiler: rank (block) took 0.07 seconds
+Profiler: rank (diag) took 0.038 seconds
+Profiler: rank (block + diag) took 0.036 seconds
+w=6, p=6: 409 - 393 = 16
+Profiler: prepare (block) took 0.028 seconds
+Profiler: prepare (diag) took 0.015 seconds
+Profiler: prepare (block + diag) took 0.013 seconds
+Profiler: rank (orig) took 0.206 seconds
+Profiler: rank (block) took 0.156 seconds
+Profiler: rank (diag) took 0.198 seconds
+Profiler: rank (block + diag) took 0.115 seconds
+Profiler: prepare (block) took 0.408 seconds
+Profiler: prepare (diag) took 0.057 seconds
+Profiler: prepare (block + diag) took 0.057 seconds
+Profiler: rank (orig) took 0.73 seconds
+Profiler: rank (block) took 3.671 seconds
+Profiler: rank (diag) took 0.803 seconds
+Profiler: rank (block + diag) took 0.757 seconds
+w=6, p=7: 2003 - 1961 = 42
+Profiler: prepare (block) took 1.118 seconds
+Profiler: prepare (diag) took 0.107 seconds
+Profiler: prepare (block + diag) took 0.086 seconds
+Profiler: rank (orig) took 3.833 seconds
+Profiler: rank (block) took 2.889 seconds
+Profiler: rank (diag) took 4.323 seconds
+Profiler: rank (block + diag) took 1.586 seconds
+Profiler: prepare (block) took 2.99 seconds
+Profiler: prepare (diag) took 0.604 seconds
+Profiler: prepare (block + diag) took 0.624 seconds
+Profiler: rank (orig) took 18.639 seconds
+Profiler: rank (block) took 72.424 seconds
+Profiler: rank (diag) took 16.462 seconds
+Profiler: rank (block + diag) took 17.789 seconds
+w=6, p=8: 7560 - 7461 = 99

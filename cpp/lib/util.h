@@ -261,6 +261,19 @@ auto mapped_mutable(Src& src, F&& func) {
   return dst;
 }
 
+// Similar to
+//   view::zip(view::iota(0), src) | views::transform(func) | <convert-to-vector>
+// (note: `zip` is from https://github.com/ericniebler/range-v3, it's missing in C++20).
+template<typename Src, typename F>
+auto mapped_with_index(const Src& src, const F& func) {
+  std::vector<std::invoke_result_t<F, int, typename Src::value_type>> dst;
+  dst.reserve(src.size());
+  for (const int idx : range(src.size())) {
+    dst.push_back(func(idx, src[idx]));
+  }
+  return dst;
+}
+
 template<typename In, size_t N, typename F>
 auto mapped_array(const std::array<In, N>& src, F&& func) {
   std::array<std::invoke_result_t<F, In>, N> dst;
@@ -321,6 +334,12 @@ void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
 template<typename Container>
 Container sorted(Container c) {
   absl::c_sort(c);
+  return c;
+}
+
+template <typename Container, typename Compare>
+Container sorted(Container c, Compare&& cmp) {
+  absl::c_sort(c, std::forward<Compare>(cmp));
   return c;
 }
 
@@ -398,23 +417,4 @@ bool all_equal(const Container& c) {
 template<typename Container>
 auto sum(const Container& c) {
   return absl::c_accumulate(c, typename Container::value_type());
-}
-
-// Optimization potential: O(N*log(N)) sort for large N.
-template<typename Container, typename Compare>
-[[nodiscard]] int sort_with_sign(Container& v, const Compare& comp) {
-  int sign = 1;
-  for (EACH : range(v.size())) {
-    for (int i : range(v.size() - 1)) {
-      if (comp(v[i+1], v[i])) {
-        std::swap(v[i], v[i+1]);
-        sign *= -1;
-      }
-    }
-  }
-  return sign;
-}
-template<typename Container>
-[[nodiscard]] int sort_with_sign(Container& v) {
-  return sort_with_sign(v, std::less<>());
 }

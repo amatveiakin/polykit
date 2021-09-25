@@ -1,0 +1,30 @@
+Profiler: rank (orig) took 0.008 seconds
+Profiler: rank (fancy) took 0.009 seconds
+Profiler: rank (orig) took 0.022 seconds
+Profiler: rank (fancy) took 0.03 seconds
+w=5, p=6: 294 - 263 = 31
+Profiler: rank (orig) took 0.1 seconds
+Profiler: rank (fancy) took 0.082 seconds
+Profiler: rank (orig) took 0.241 seconds
+Profiler: rank (fancy) took 0.32 seconds
+w=5, p=7: 1274 - 1197 = 77
+Profiler: rank (orig) took 0.842 seconds
+Profiler: rank (fancy) took 0.57 seconds
+Profiler: rank (orig) took 2.091 seconds
+Profiler: rank (fancy) took 2.07 seconds
+w=5, p=8: 4270 - 4102 = 168
+Profiler: rank (orig) took 0.011 seconds
+Profiler: rank (fancy) took 0.014 seconds
+Profiler: rank (orig) took 0.035 seconds
+Profiler: rank (fancy) took 0.048 seconds
+w=6, p=6: 409 - 393 = 16
+Profiler: rank (orig) took 0.2 seconds
+Profiler: rank (fancy) took 0.157 seconds
+Profiler: rank (orig) took 1.173 seconds
+Profiler: rank (fancy) took 0.978 seconds
+w=6, p=7: 2003 - 1961 = 42
+Profiler: rank (orig) took 4.473 seconds
+Profiler: rank (fancy) took 1.695 seconds
+Profiler: rank (orig) took 16.341 seconds
+Profiler: rank (fancy) took 12.572 seconds
+w=6, p=8: 7560 - 7461 = 99

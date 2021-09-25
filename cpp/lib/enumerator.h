@@ -15,6 +15,9 @@ public:
     index_map_[key] = new_index;
     return new_index;
   }
+  int c_index(const T& key) const {
+    return index_map_.at(key);
+  }
 
   int size() const { return index_map_.size(); }
 

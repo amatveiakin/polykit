@@ -39,6 +39,7 @@
 
 #include "algebra.h"
 #include "lyndon.h"
+#include "sorting.h"
 
 
 template<typename ExprT>

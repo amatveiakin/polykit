@@ -35,6 +35,7 @@ cc_library(
         "lib/range.h",
         "lib/sequence_iteration.h",
         "lib/set_util.h",
+        "lib/sorting.h",
         "lib/string.h",
         "lib/string_basic.h",
         "lib/table_printer.h",

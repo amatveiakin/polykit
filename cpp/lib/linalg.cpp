@@ -1,5 +1,6 @@
 // TODO: Install LinBox through bazel
-// TODO: Add tests, in particular: matrix_rank == matrix_rank_no_blocking
+// TODO: Add tests, in particular: matrix_rank == matrix_rank_raw_linbox
+// TODO: Add benchmarks, in particular: matrix_rank vs matrix_rank_raw_linbox
 
 #include "linalg.h"
 
@@ -10,33 +11,50 @@
 #include <linbox/solutions/rank.h>
 
 #include "check.h"
+#include "compare.h"
 #include "enumerator.h"
 #include "file_util.h"
 #include "format.h"
+#include "sorting.h"
 #include "string.h"
 #include "table_printer.h"
 #include "util.h"
 
 
+MatrixView::MatrixView(const Matrix* matrix, ViewType view_type)
+    : matrix_(matrix), view_type_(view_type) {
+  CHECK(matrix_ != nullptr);
+}
+
+std::vector<MatrixView::Triplet> MatrixView::as_triplets() const {
+  return mapped(
+    matrix_->as_triplets(), [&](const auto& t) {
+      return view_type_ == RowMajor
+          ? MatrixView::Triplet{t.row, t.col, t.value}
+          : MatrixView::Triplet{t.col, t.row, t.value};
+    }
+  );
+}
+
+
 void extract_block(
   int i_row,
   int i_col,
-  int value,
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& rows,
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& cols,
   absl::flat_hash_map<std::pair<int, int>, int>& block
 ) {
-  const auto inserted = block.insert({{i_row, i_col}, value}).second;
-  if (!inserted) {
-    return;
-  }
   const auto row = extract_value_or(rows, i_row);
   const auto col = extract_value_or(cols, i_col);
   for (const auto& [c, v] : row) {
-    extract_block(i_row, c, v, rows, cols, block);
+    if (block.insert({{i_row, c}, v}).second) {
+      extract_block(i_row, c, rows, cols, block);
+    }
   }
   for (const auto& [r, v] : col) {
-    extract_block(r, i_col, v, rows, cols, block);
+    if (block.insert({{r, i_col}, v}).second) {
+      extract_block(r, i_col, rows, cols, block);
+    }
   }
 }
 
@@ -52,7 +70,8 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
     absl::flat_hash_map<std::pair<int, int>, int> block;
     const auto it = rows.begin();
     const auto it_it = it->second.begin();
-    extract_block(it->first, it_it->first, it_it->second, rows, cols, block);
+    // extract_block(it->first, it_it->first, it_it->second, rows, cols, block);
+    extract_block(it->first, it_it->first, rows, cols, block);
     Matrix block_matrix;
     for (const auto& [rowcol, value] : block) {
       const auto [row, col] = rowcol;
@@ -64,7 +83,7 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
   return blocks;
 }
 
-int matrix_rank_no_blocking(const Matrix& matrix) {
+int matrix_rank_raw_linbox(const Matrix& matrix) {
   const auto& triplets = matrix.as_triplets();
   if (triplets.empty()) {
     // Extend rank definition to empty matrices.
@@ -82,13 +101,19 @@ int matrix_rank_no_blocking(const Matrix& matrix) {
   LinBox::SparseMatrix<Givaro::QField<Givaro::Rational>, LinBox::SparseMatrixFormat::SparseSeq> linbox_matrix(
     QQ, matrix.rows(), matrix.cols()
   );
-  for (const auto& t : triplets) {
+  // Sort triplets first. The order of calls to `setEntry` plays a huge role: `LinBox::rank`
+  // can be five times slower in case of random order compared to sorted.
+  const auto sorted_triplets = sorted(
+    triplets,
+    cmp::projected([](const auto& t) { return std::pair{t.row, t.col}; })
+  );
+  for (const auto& t : sorted_triplets) {
     linbox_matrix.setEntry(t.row, t.col, t.value);
   }
 
   size_t rank;
   // TODO: Try adding IntegerTag
-  // TODO: Try other methods
+  // TODO: Try other methods, esp. LinBox::Method::Wiedemann
   // TODO: Try LinBox::Method::SparseElimination options
   LinBox::rank(rank, linbox_matrix, LinBox::Method::SparseElimination());
   return rank;
@@ -181,30 +206,81 @@ Matrix compress_matrix(const Matrix& uncompressed) {
   return compressed;
 }
 
-// Right now this usually makes rank much slower, even with one block.
-//   This probably has something to do with row/col ordering.
-// TODO: Fix this and use this implementation.
-// int matrix_rank(const Matrix& matrix) {
-//   return sum(mapped(
-//     get_matrix_diagonal_blocks(matrix),
-//     [](const auto& b) { return matrix_rank_no_blocking(b); }
-//   ));
-// }
-// int matrix_rank(const Matrix& matrix) {
-//   Profiler profiler;
-//   const int rank_whole = matrix_rank_no_blocking(matrix);
-//   profiler.finish("# whole rank");
-//   const auto blocks = get_matrix_diagonal_blocks(matrix);
-//   profiler.finish(absl::StrCat("# make blocks (", blocks.size(), ")"));
-//   const int rank = sum(mapped(blocks, [](const auto& b) { return matrix_rank_no_blocking(b); }));
-//   profiler.finish("# block rank");
-//   CHECK_EQ(rank_whole, rank);
-//   return rank;
-// }
-int matrix_rank(const Matrix& matrix) {
-  return matrix_rank_no_blocking(matrix);
+Matrix compress_matrix_keep_rowcol_order(const Matrix& uncompressed) {
+  std::vector<int> row_index_vector;
+  std::vector<int> col_index_vector;
+  for (const auto& t : uncompressed.as_triplets()) {
+    row_index_vector.push_back(t.row);
+    col_index_vector.push_back(t.col);
+  }
+  absl::c_sort(row_index_vector);
+  absl::c_sort(col_index_vector);
+
+  Enumerator<int> row_indices;
+  Enumerator<int> col_indices;
+  for (const auto& idx : row_index_vector) {
+    row_indices.index(idx);
+  }
+  for (const auto& idx : col_index_vector) {
+    col_indices.index(idx);
+  }
+
+  Matrix compressed;
+  for (const auto& t : uncompressed.as_triplets()) {
+    compressed.insert(row_indices.c_index(t.row), col_indices.c_index(t.col)) = t.value;
+  }
+  return compressed;
 }
 
+Matrix diagonalize_matrix(const Matrix& src) {
+  using CoordValue = std::pair<int, int>;
+  std::optional<Matrix> mat;
+  for (const auto view_type : {MatrixView::RowMajor, MatrixView::ColumnMajor}) {
+    const MatrixView view{mat ? &*mat : &src, view_type};
+    std::vector<std::vector<CoordValue>> lines(view.a_size());
+    for (const auto& t : view.as_triplets()) {
+      lines.at(t.a).push_back({t.b, t.value});
+    }
+    const auto sorted_lines = sorted_by_projection(lines, [](const auto& line) {
+      // Note. Also tried sorting by average coord, but performance was worse.
+      //   Worse than the original even in manby cases.
+      const auto [min, max] = absl::c_minmax_element(line);
+      return (max - min);
+    });
+    Matrix new_mat;
+    for (const int a : range(sorted_lines.size())) {
+      for (const auto& [b, value] : sorted_lines[a]) {
+        new_mat.insert(view_type == MatrixView::RowMajor ? std::pair{a, b} : std::pair{b, a}) = value;
+      }
+    }
+    mat = new_mat;
+  }
+  CHECK(mat.has_value());
+  return *mat;
+}
+
+static int matrix_rank_fancy(const Matrix& matrix) {
+  return sum(mapped(
+    get_matrix_diagonal_blocks(matrix),
+    [](const auto& b) { return matrix_rank_raw_linbox(diagonalize_matrix(b)); }
+  ));
+}
+
+#if 1
+int matrix_rank(const Matrix& matrix) {
+  return matrix_rank_fancy(matrix);
+}
+#else
+int matrix_rank(const Matrix& matrix) {
+  Profiler profiler;
+  const int rank_orig = matrix_rank_raw_linbox(matrix);
+  profiler.finish("rank (raw)");
+  const int rank_fancy = matrix_rank_fancy(matrix);
+  profiler.finish("rank (fancy)");
+  CHECK_EQ(rank_orig, rank_fancy);
+  return rank_orig;
+}
+#endif
 
 void save_triplets(const std::string& filename, const Matrix& matrix) {
   std::ofstream fs(filename);
