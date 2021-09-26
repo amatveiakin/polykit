@@ -119,7 +119,6 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   return rank;
 }
 
-// TODO: Test
 std::string to_string(const Matrix& matrix) {
   const int kMaxColumns = 16;
   const int kMaxRows = 16;
