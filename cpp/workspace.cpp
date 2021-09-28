@@ -228,25 +228,25 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  TablePrinter table;
-  table.set_enable_alignment(false);
-  table.set_column_separator("\t");
-  int row = 0;
-  int col = 0;
-  for (int weight : range_incl(1, 7)) {
-    for (int num_points : range_incl(4, 5)) {
-      auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
-      points.back() = Inf;
-      Profiler profiler;
-      const int dim = compute_polylog_space_dim(L(weight, points), DISAMBIGUATE(ptr_to_lyndon_basis));
-      profiler.finish(absl::StrCat("w=", weight, ", p=", num_points));
-      table.set_content({row, col}, to_string(dim));
-      ++row;
-    }
-    row = 0;
-    ++col;
-  }
-  std::cout << table.to_string();
+  // TablePrinter table;
+  // table.set_enable_alignment(false);
+  // table.set_column_separator("\t");
+  // int row = 0;
+  // int col = 0;
+  // for (int weight : range_incl(1, 7)) {
+  //   for (int num_points : range_incl(4, 5)) {
+  //     auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  //     points.back() = Inf;
+  //     Profiler profiler;
+  //     const int dim = compute_polylog_space_dim(L(weight, points), DISAMBIGUATE(ptr_to_lyndon_basis));
+  //     profiler.finish(absl::StrCat("w=", weight, ", p=", num_points));
+  //     table.set_content({row, col}, to_string(dim));
+  //     ++row;
+  //   }
+  //   row = 0;
+  //   ++col;
+  // }
+  // std::cout << table.to_string();
 
   // for (const auto& [weight, num_points] : std::vector<std::pair<int, int>>{
   //     {8, 4}, {7, 6}, {6, 7}, {5, 9}, {5, 10}, {8, 5}, {6, 8}}
@@ -258,4 +258,26 @@ int main(int /*argc*/, char *argv[]) {
   //   profiler.finish("compute");
   //   std::cout << "w=" << weight << ", p=" << num_points << ": " << dim << "\n";
   // }
+
+
+  for (int weight : range_incl(1, 6)) {
+    for (int num_points : range_incl(4, 8)) {
+      const int special_point = num_points + 1;
+      const PolylogSpace space = mapped(
+        combinations_with_replacement(seq_incl(1, num_points), weight + 1),
+        [&](const auto& p) {
+          auto expr = CorrAlt(concat({special_point}, p));
+          CHECK_EQ(expr.weight(), weight);
+          return wrap_shared(std::move(expr));
+        }
+      );
+      const auto description = polylog_space_kernel_describe(
+        space,
+        [](const auto& expr) { return to_lyndon_basis(*expr); },
+        [&](const auto& expr) { return to_lyndon_basis(project_on(special_point, *expr)); }
+      );
+      std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
+      // Equals "A CL" dim in weight >= 2
+    }
+  }
 }

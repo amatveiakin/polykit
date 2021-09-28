@@ -153,7 +153,28 @@ std::string polylog_spaces_intersection_describe(const SpaceT& a, const SpaceT& 
   return absl::StrCat("(", dim.a, ", ", dim.b, "), ∩ = ", intersection);
 }
 
-std::string polylog_spaces_kernel_describe(const PolylogNCoSpace& space);
+template<typename SpaceT, typename PrepareF, typename MapF>
+std::string polylog_space_kernel_describe(const SpaceT& space, const PrepareF& prepare, const MapF& map) {
+  Profiler profiler(false);
+  const auto whole_space = compute_polylog_space_matrix(space, prepare);
+  profiler.finish("whole space");
+  const int whole_dim = matrix_rank(whole_space);
+  profiler.finish("whole dim");
+  const auto image_space = compute_polylog_space_matrix(space, map);
+  profiler.finish("image space");
+  const int image_dim = matrix_rank(image_space);
+  profiler.finish("image dim");
+  const int kernel_dim = whole_dim - image_dim;
+  return absl::StrCat(whole_dim, " - ", image_dim, " = ", kernel_dim);
+}
+
+inline std::string polylog_space_ncomultiply_kernel_describe(const PolylogNCoSpace& space) {
+  return polylog_space_kernel_describe(
+    space,
+    [](const auto& s) { return *s; },
+    [](const auto& s) { return ncomultiply(*s); }
+  );
+}
 
 
 // For pybind11. Returns matrices: (a, b, united)
