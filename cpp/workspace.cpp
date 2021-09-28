@@ -39,6 +39,7 @@
 #include "lib/shuffle.h"
 #include "lib/snowpal.h"
 #include "lib/summation.h"
+#include "lib/table_printer.h"
 #include "lib/theta.h"
 #include "lib/triangulation.h"
 #include "lib/zip.h"
@@ -151,17 +152,6 @@ int main(int /*argc*/, char *argv[]) {
   //   ) << "\n";
   // }
 
-  // for (int weight : range_incl(2, 5)) {
-  //   for (int num_points : range_incl(4, 7)) {
-  //   // for (int num_points : range_incl(5, 8)) {
-  //     // const int rank = simple_space_rank(LInf, weight, num_points);
-  //     const int rank = simple_space_rank(L, weight, num_points);
-  //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
-  //     // TODO: Test equal !!!
-  //     // TODO: Spreadsheet !!!
-  //   }
-  // }
-
   // const int num_points = 7;
   // auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
   // for (const int weight : range_incl(3, 6)) {
@@ -228,12 +218,44 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << "w=" << weight << ", p=" << num_points << ": " << description << "\n";
   // }
 
-  for (int weight : range_incl(6, 6)) {
-    for (int num_points : range_incl(8, 8)) {
+  // for (int weight : range_incl(2, 6)) {
+  //   for (int num_points : range_incl(4, 8)) {
+  //     auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  //     points.back() = Inf;
+  //     const auto rank = polylog_spaces_kernel_describe(polylog_space_ql_wedge_ql(weight, points));
+  //     std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
+  //   }
+  // }
+
+
+  TablePrinter table;
+  table.set_enable_alignment(false);
+  table.set_column_separator("\t");
+  int row = 0;
+  int col = 0;
+  for (int weight : range_incl(1, 7)) {
+    for (int num_points : range_incl(4, 5)) {
       auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
       points.back() = Inf;
-      const auto rank = polylog_spaces_kernel_describe(polylog_space_ql_wedge_ql(weight, points));
-      std::cout << "w=" << weight << ", p=" << num_points << ": " << rank << "\n";
+      Profiler profiler;
+      const int dim = compute_polylog_space_dim(L(weight, points), DISAMBIGUATE(ptr_to_lyndon_basis));
+      profiler.finish(absl::StrCat("w=", weight, ", p=", num_points));
+      table.set_content({row, col}, to_string(dim));
+      ++row;
     }
+    row = 0;
+    ++col;
   }
+  std::cout << table.to_string();
+
+  // for (const auto& [weight, num_points] : std::vector<std::pair<int, int>>{
+  //     {8, 4}, {7, 6}, {6, 7}, {5, 9}, {5, 10}, {8, 5}, {6, 8}}
+  // ) {
+  //   auto points = mapped(seq_incl(1, num_points), [](int i) { return X(i); });
+  //   points.back() = Inf;
+  //   Profiler profiler;
+  //   const int dim = compute_polylog_space_dim(L(weight, points), DISAMBIGUATE(ptr_to_lyndon_basis));
+  //   profiler.finish("compute");
+  //   std::cout << "w=" << weight << ", p=" << num_points << ": " << dim << "\n";
+  // }
 }
