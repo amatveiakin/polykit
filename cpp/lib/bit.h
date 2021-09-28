@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bitset>
-#include <cassert>
 
 #include "check.h"
 

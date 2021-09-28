@@ -70,8 +70,7 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
-#include <iostream>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -482,24 +481,8 @@ struct LinearAnnotation {
   bool has_errors() const { return !errors.empty(); }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) {
-  switch (*current_formatting_config().annotation_sorting) {
-    case AnnotationSorting::lexicographic:
-      to_ostream(os, annotations.expression, std::less<>{}, LinearNoContext{});
-      break;
-    case AnnotationSorting::length:
-      to_ostream(os, annotations.expression, [](const std::string& a, const std::string& b) {
-        const int a_length = -static_cast<int>(a.size());
-        const int b_length = -static_cast<int>(b.size());
-        return std::tie(a_length, a) < std::tie(b_length, b);
-      }, LinearNoContext{});
-      break;
-  }
-  for (const auto& err : annotations.errors) {
-    os << fmt::coeff(1) << "<?> " << err << fmt::newline();
-  }
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations);
+std::string annotations_one_liner(const LinearAnnotation& annotations);
 
 
 template<typename ParamT>

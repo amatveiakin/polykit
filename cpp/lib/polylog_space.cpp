@@ -25,10 +25,7 @@
 template<typename SpaceT>
 std::string space_to_string(const SpaceT& space) {
   return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
-    const auto& annotations = expr.annotations();
-    CHECK(annotations.errors.empty());
-    CHECK_EQ(annotations.expression.num_terms(), 1);
-    return annotations.expression.element().first;
+    return annotations_one_liner(expr.annotations());
   }), ">");
 }
 
