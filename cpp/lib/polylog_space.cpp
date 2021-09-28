@@ -389,6 +389,29 @@ GrPolylogSpace GrLBasic(int weight, const XArgs& xargs) {
   return ret;
 }
 
+GrPolylogSpace GrL1(const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  CHECK_LE(5, args.size());
+  GrPolylogSpace ret;
+  for (const int i : range(args.size())) {
+    // append_vector(  // Does not affect anything
+    //   ret,
+    //   mapped(combinations(removed_index(args, i), 4), [&](auto p) {
+    //     return GrQLiVec(1, {args[i]}, p);
+    //   })
+    // );
+    append_vector(
+      ret,
+      mapped(combinations(removed_index(args, i), 4), [&](auto p) {
+        CHECK_EQ(4, p.size());
+        std::swap(p[1], p[2]);  // 1 - cross_ratio
+        return GrQLiVec(1, {args[i]}, p);
+      })
+    );
+  }
+  return ret;
+}
+
 
 Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult) {
   return compute_polylog_space_matrix(

@@ -66,8 +66,7 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult);
 PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs);
 
 GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);
-
-inline GrPolylogSpace GrL1(const XArgs& xargs) { return GrLBasic(1, xargs); }
+GrPolylogSpace GrL1(const XArgs& xargs);
 inline GrPolylogSpace GrL2(const XArgs& xargs) { return GrLBasic(2, xargs); }
 
 
