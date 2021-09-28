@@ -17,6 +17,7 @@
 #include "expr_matrix_builder.h"
 #include "iterated_integral.h"
 #include "itertools.h"
+#include "polylog_grqli.h"
 #include "polylog_lira.h"
 #include "polylog_qli.h"
 #include "triangulation.h"
@@ -31,6 +32,8 @@ std::string space_to_string(const SpaceT& space) {
 
 std::string dump_to_string_impl(const PolylogSpace& space) { return space_to_string(space); }
 std::string dump_to_string_impl(const PolylogNCoSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const GrPolylogSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const GrPolylogNCoSpace& space) { return space_to_string(space); }
 
 
 PolylogSpace QL(int weight, const XArgs& xargs) {
@@ -367,6 +370,21 @@ PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs) {
       const auto& [a, b] = p;
       return ncoproduct(a, b);
     }));
+  }
+  return ret;
+}
+
+GrPolylogSpace GrLBasic(int weight, const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  CHECK_LE(5, args.size());
+  GrPolylogSpace ret;
+  for (const int i : range(args.size())) {
+    append_vector(
+      ret,
+      mapped(combinations(removed_index(args, i), 4), [&](const auto& p) {
+        return GrQLiVec(weight, {args[i]}, p);
+      })
+    );
   }
   return ret;
 }

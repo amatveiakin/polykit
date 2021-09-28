@@ -2,6 +2,7 @@
 
 #include "delta.h"
 #include "expr_matrix_builder.h"
+#include "gamma.h"
 #include "linalg.h"
 #include "parallel_util.h"
 #include "profiler.h"
@@ -11,9 +12,13 @@
 using PolylogSpace = std::vector<DeltaExpr>;
 using PolylogNCoSpace = std::vector<DeltaNCoExpr>;
 using PolylogSpacePair = std::vector<std::pair<DeltaExpr, DeltaExpr>>;
+using GrPolylogSpace = std::vector<GammaExpr>;
+using GrPolylogNCoSpace = std::vector<GammaNCoExpr>;
 
 std::string dump_to_string_impl(const PolylogSpace& space);
 std::string dump_to_string_impl(const PolylogNCoSpace& space);
+std::string dump_to_string_impl(const GrPolylogSpace& space);
+std::string dump_to_string_impl(const GrPolylogNCoSpace& space);
 
 PolylogSpace QL(int weight, const XArgs& xargs);
 
@@ -59,6 +64,11 @@ Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult);
 Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult);
 
 PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs);
+
+GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);
+
+inline GrPolylogSpace GrL1(const XArgs& xargs) { return GrLBasic(1, xargs); }
+inline GrPolylogSpace GrL2(const XArgs& xargs) { return GrLBasic(2, xargs); }
 
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
