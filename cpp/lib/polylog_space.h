@@ -4,14 +4,13 @@
 #include "expr_matrix_builder.h"
 #include "linalg.h"
 #include "parallel_util.h"
-#include "ptr_util.h"
 #include "profiler.h"
 #include "x.h"
 
 
-using PolylogSpace = std::vector<std::shared_ptr<const DeltaExpr>>;
-using PolylogNCoSpace = std::vector<std::shared_ptr<const DeltaNCoExpr>>;
-using PolylogSpacePair = std::vector<std::pair<std::shared_ptr<const DeltaExpr>, std::shared_ptr<const DeltaExpr>>>;
+using PolylogSpace = std::vector<DeltaExpr>;
+using PolylogNCoSpace = std::vector<DeltaNCoExpr>;
+using PolylogSpacePair = std::vector<std::pair<DeltaExpr, DeltaExpr>>;
 
 std::string dump_to_string_impl(const PolylogSpace& space);
 std::string dump_to_string_impl(const PolylogNCoSpace& space);
@@ -169,11 +168,7 @@ std::string polylog_space_kernel_describe(const SpaceT& space, const PrepareF& p
 }
 
 inline std::string polylog_space_ncomultiply_kernel_describe(const PolylogNCoSpace& space) {
-  return polylog_space_kernel_describe(
-    space,
-    [](const auto& s) { return *s; },
-    [](const auto& s) { return ncomultiply(*s); }
-  );
+  return polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));
 }
 
 

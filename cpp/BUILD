@@ -30,7 +30,6 @@ cc_library(
         "lib/parray.h",
         "lib/parse.h",
         "lib/profiler.h",
-        "lib/ptr_util.h",
         "lib/pvector.h",
         "lib/range.h",
         "lib/sequence_iteration.h",

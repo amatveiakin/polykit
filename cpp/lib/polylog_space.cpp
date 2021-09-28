@@ -1,8 +1,16 @@
-// TODO: Are shared pointers a good idea? This causes sharing between threads !!!
 // TODO: Be consistent about converting space to Lyndon basis on construction.
 //   Pro: less error-prone, can have defaulted version of "space dim" function.
 //   Con: would be slower if, in fact, only comultiplication is required.
 // TODO: Be consistent about parallelisation.
+
+// Note. It might be reasonable to store polylog spaces as a collection of
+// `std::shared_ptr<const Expr>` instead of raw `Expr`.
+// Pros:
+//   - Less copying, especially in expressions like `cartesian_product(space_a, space_b)`.
+// Cons:
+//   - More verbose interface due to having to pack/update shared_ptr.
+//   - Might slow down parallel code if all threads are reading from the same place
+//     (although it's all read-only access - how bad is that?)
 
 #include "polylog_space.h"
 
@@ -16,8 +24,8 @@
 
 template<typename SpaceT>
 std::string space_to_string(const SpaceT& space) {
-  return absl::StrCat("<", str_join(space, ", ", [](const auto& s) {
-    const auto& annotations = s->annotations();
+  return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
+    const auto& annotations = expr.annotations();
     CHECK(annotations.errors.empty());
     CHECK_EQ(annotations.expression.num_terms(), 1);
     return annotations.expression.element().first;
@@ -37,7 +45,7 @@ PolylogSpace QL(int weight, const XArgs& xargs) {
   const int max_args = std::min<int>(args.size(), (weight / 2 + 1) * 2);
   for (int num_args = 4; num_args <= max_args; num_args += 2) {
     append_vector(space, mapped_parallel(combinations(args, num_args), [&](const auto& p) {
-      return wrap_shared(QLiVec(weight, p));
+      return QLiVec(weight, p);
     }));
   }
   return space;
@@ -53,7 +61,7 @@ PolylogSpace CB1(const XArgs& xargs) {
       CHECK_LT(ip, n);
       const int jp = (j + 1) % n;
       if (jp != i) {
-        ret.push_back(wrap_shared(Log(args[i], args[j], args[ip], args[jp])));
+        ret.push_back(Log(args[i], args[j], args[ip], args[jp]));
       }
     }
   }
@@ -62,28 +70,28 @@ PolylogSpace CB1(const XArgs& xargs) {
 PolylogSpace CB2(const XArgs& args) {
   const auto head = slice(args.as_x(), 0, 1);
   const auto tail = slice(args.as_x(), 1);
-  return mapped(combinations(tail, 3), [&](const auto& p) { return wrap_shared(QLi2(concat(head, p))); });
+  return mapped(combinations(tail, 3), [&](const auto& p) { return QLi2(concat(head, p)); });
 }
 PolylogSpace CB3(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return wrap_shared(QLi3(p)); });
+  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi3(p); });
 }
 PolylogSpace CB4(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return wrap_shared(QLi4(p)); });
+  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi4(p); });
 }
 PolylogSpace CB5(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return wrap_shared(QLi5(p)); });
+  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi5(p); });
 }
 
 PolylogSpace CL4(const XArgs& args) {
   return concat(
     CB4(args),
-    mapped(combinations(args.as_x(), 5), [](const auto& p) { return wrap_shared(A2(p)); })
+    mapped(combinations(args.as_x(), 5), [](const auto& p) { return A2(p); })
   );
 }
 PolylogSpace CL5(const XArgs& args) {
   return concat(
     CB5(args),
-    mapped(combinations(args.as_x(), 6), [](const auto& p) { return wrap_shared(QLi5(p)); })
+    mapped(combinations(args.as_x(), 6), [](const auto& p) { return QLi5(p); })
   );
 }
 PolylogSpace CL5Alt(const XArgs& args) {
@@ -91,14 +99,14 @@ PolylogSpace CL5Alt(const XArgs& args) {
     CL5(args),
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
       auto a = mapped(p, [](X x) { return x.idx(); });
-      return wrap_shared(theta_expr_to_delta_expr(
+      return theta_expr_to_delta_expr(
         Lira3(1,1)(
           // CR(choose_indices_one_based(p, std::vector{1,2,3,4})),
           // CR(choose_indices_one_based(p, std::vector{1,4,3,2}))
           CR(a[0], a[1], a[2], a[3]),
           CR(a[0], a[3], a[2], a[1])
         )
-      ));
+      );
     })
   );
 }
@@ -111,7 +119,7 @@ PolylogSpace CL5Alt(const XArgs& args) {
 //   for (const auto& seq : cartesian_power(args, weight + 2)) {
 //     auto expr = IAlt(concat({special_point}, seq));
 //     CHECK(expr.is_zero() || expr.weight() == weight);
-//     ret.push_back(wrap_shared(std::move(expr)));
+//     ret.push_back(std::move(expr));
 //   }
 //   return ret;
 // }
@@ -123,7 +131,7 @@ PolylogSpace H(int weight, const XArgs& xargs) {
     PolylogSpace space_b = H(weight - w, xargs);
     for (const auto& a : space_a) {
       for (const auto& b : space_b) {
-        ret.push_back(wrap_shared(shuffle_product_expr(*a, *b)));
+        ret.push_back(shuffle_product_expr(a, b));
       }
     }
   }
@@ -147,7 +155,7 @@ PolylogSpace LInf(int weight, const XArgs& xargs) {
       mapped_parallel(
         get_lyndon_words(slice(args, 0, alphabet_size), weight),
         [last_arg](const auto& word) {
-          return wrap_shared(Corr(concat(word, {last_arg})));
+          return Corr(concat(word, {last_arg}));
         }
       )
     );
@@ -170,11 +178,11 @@ PolylogSpace L(int weight, const XArgs& xargs) {
       mapped_parallel(
         get_lyndon_words(slice(args, 0, alphabet_size), weight),
         [special_point, last_arg](const auto& word) {
-          return wrap_shared(CorrAlt(concat(
+          return CorrAlt(concat(
             std::vector{special_point},
             word,
             std::vector{last_arg}
-          )));
+          ));
         }
       )
     );
@@ -191,9 +199,9 @@ PolylogSpace XCoords(int weight, const XArgs& args) {
       mapped_parallel(
         get_lyndon_words(cluster_coordinates, weight),
         [](const auto& word) {
-          return wrap_shared(tensor_product(absl::MakeConstSpan(
+          return tensor_product(absl::MakeConstSpan(
             mapped(word, DISAMBIGUATE(cross_ratio))
-          )));
+          ));
         }
       )
     );
@@ -216,9 +224,9 @@ PolylogSpace ACoords(int weight, const XArgs& xargs) {
       mapped_parallel(
         get_lyndon_words(triangulation, weight),
         [](const auto& word) {
-          return wrap_shared(tensor_product(absl::MakeConstSpan(
+          return tensor_product(absl::MakeConstSpan(
             mapped(word, [](const auto& d) { return D(d.first, d.second); })
-          )));
+          ));
         }
       )
     );
@@ -237,9 +245,9 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
     }
     // Optimization potential: construct the vector directly without tensor_product.
     for (const auto& word : cartesian_power(triangulation, weight)) {
-      ret.push_back(wrap_shared(tensor_product(absl::MakeConstSpan(
+      ret.push_back(tensor_product(absl::MakeConstSpan(
         mapped(word, [](const auto& d) { return D(d.first, d.second); })
-      ))));
+      )));
     }
   }
   return ret;
@@ -354,13 +362,13 @@ PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs) {
 
     // for (const auto& a : space_a) {
     //   for (const auto& b : space_b) {
-    //     ret.push_back(wrap_shared(ncoproduct(*a, *b)));
+    //     ret.push_back(ncoproduct(a, b));
     //   }
     // }
     // TODO: Why is there virtually no difference between `mapped` and `mapped_parallel`?
     append_vector(ret, mapped_parallel(cartesian_product(space_a, space_b), [](const auto& p) {
       const auto& [a, b] = p;
-      return wrap_shared(ncoproduct(*a, *b));
+      return ncoproduct(a, b);
     }));
   }
   return ret;
@@ -372,7 +380,7 @@ Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult) 
     polylog_space(weight)(points),
     [&](const auto& s) {
       const auto& [s1, s2] = s;
-      const auto prod = ncoproduct(*s1, *s2);
+      const auto prod = ncoproduct(s1, s2);
       return apply_comult ? ncomultiply(prod) : prod;
     }
   );
@@ -383,7 +391,7 @@ Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
     polylog_space_6_via_l(points),
     [&](const auto& s) {
       const auto& [s1, s2] = s;
-      const auto prod = ncoproduct(*s1, *s2);
+      const auto prod = ncoproduct(s1, s2);
       return apply_comult ? ncomultiply(prod) : prod;
     }
   );

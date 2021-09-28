@@ -18,17 +18,11 @@ void EXPECT_POLYLOG_SPACE_EQUALS(const SpaceT& a, const SpaceT& b, const Prepare
       << "Expected spaces to be equal, found: " << dim.a << " ∪ " << dim.b << " = " << dim.united;
 }
 
-
-template<typename T>
-T ptr_to_lyndon_basis(const std::shared_ptr<T>& ptr) {
-  return to_lyndon_basis(*ptr);
-}
-
 template<typename SpaceF>
 int simple_space_rank(const SpaceF& space, int num_points) {
   return matrix_rank(compute_polylog_space_matrix(
     space(seq_incl(1, num_points)),
-    DISAMBIGUATE(ptr_to_lyndon_basis)
+    DISAMBIGUATE(to_lyndon_basis)
   ));
 }
 
@@ -36,10 +30,10 @@ int simple_space_rank(const SpaceF& space, int num_points) {
 PolylogSpace L3_alternative(const XArgs& args) {
   return concat(
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi3(choose_indices_one_based(p, {1,2,3,4})));
+      return QLi3(choose_indices_one_based(p, {1,2,3,4}));
     }),
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi3(choose_indices_one_based(p, {1,3,2,4})));
+      return QLi3(choose_indices_one_based(p, {1,3,2,4}));
     })
   );
 }
@@ -47,16 +41,16 @@ PolylogSpace L3_alternative(const XArgs& args) {
 PolylogSpace L4_alternative(const XArgs& args) {
   return concat(
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,3,4})));
+      return QLi4(choose_indices_one_based(p, {1,2,3,4}));
     }),
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,3,4,2})));
+      return QLi4(choose_indices_one_based(p, {1,3,4,2}));
     }),
     mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,4,2,3})));
+      return QLi4(choose_indices_one_based(p, {1,4,2,3}));
     }),
     mapped(permutations(args.as_x(), 5), [](const auto& p) {
-      return wrap_shared(QLi4(choose_indices_one_based(p, {1,2,1,3,4,5})));
+      return QLi4(choose_indices_one_based(p, {1,2,1,3,4,5}));
     })
   );
 }
@@ -89,7 +83,7 @@ TEST(PolylogSpaceTest, L3SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
     points.back() = Inf;
-    EXPECT_POLYLOG_SPACE_EQUALS(L(3, points), L3_alternative(points), DISAMBIGUATE(ptr_to_lyndon_basis));
+    EXPECT_POLYLOG_SPACE_EQUALS(L(3, points), L3_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }
 }
 
@@ -97,14 +91,14 @@ TEST(PolylogSpaceTest, LARGE_L4SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
     points.back() = Inf;
-    EXPECT_POLYLOG_SPACE_EQUALS(L(4, points), L4_alternative(points), DISAMBIGUATE(ptr_to_lyndon_basis));
+    EXPECT_POLYLOG_SPACE_EQUALS(L(4, points), L4_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }
 }
 
 TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
   auto points = mapped(range_incl(1, num_points()), [](int i) { return X(i); });
   points.back() = Inf;
-  EXPECT_POLYLOG_SPACE_EQUALS(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(ptr_to_lyndon_basis));
+  EXPECT_POLYLOG_SPACE_EQUALS(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(to_lyndon_basis));
 }
 
 TEST(PolylogSpaceTest, DimCB1) {
