@@ -267,7 +267,9 @@ static int matrix_rank_fancy(const Matrix& matrix) {
 
 #if 1
 int matrix_rank(const Matrix& matrix) {
-  return matrix_rank_fancy(matrix);
+  // TODO: Fix stack overflows in `extract_block` and re-enable.
+  // return matrix_rank_fancy(matrix);
+  return matrix_rank_raw_linbox(matrix);
 }
 #else
 int matrix_rank(const Matrix& matrix) {
