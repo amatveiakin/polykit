@@ -56,6 +56,7 @@ void sort_two(T& a, T& b) {
   }
 }
 
+// TODO: Replace with `to_vector(range_incl(from, to))`
 inline std::vector<int> seq_incl(int from, int to) {
   CHECK_LE(from, to);
   std::vector<int> ret(to - from + 1);

@@ -2,8 +2,10 @@
 // https://docs.python.org/3/library/itertools.html
 //
 // * cartesian_power(p, repeat)
-//   cartesian product, equivalent to `repeat` nested for-loop-s
-//   TODO: Support multi-arg form.
+//   Equivalent of `itertools.product(p, repeat=repeat)`
+//
+// * cartesian_product(p...)
+//   Equivalent of `itertools.product(p...)` without `repeat`.
 //
 // * permutations(p, [r])
 //   r-length tuples, all possible orderings, no repeated elements
@@ -197,6 +199,7 @@ std::vector<std::vector<T>> cartesian_power(std::initializer_list<T> elements, i
 
 template<typename T>
 std::vector<std::vector<T>> combinations(std::vector<T> elements, int size) {
+  CHECK_LE(0, size);
   absl::c_sort(elements);
   std::vector<std::vector<T>> ret;
   std::vector<T> buffer;
@@ -213,6 +216,7 @@ std::vector<std::vector<T>> combinations(std::initializer_list<T> elements, int 
 
 template<typename T>
 std::vector<std::vector<T>> combinations_with_replacement(std::vector<T> elements, int size) {
+  CHECK_LE(0, size);
   absl::c_sort(elements);
   std::vector<std::vector<T>> ret;
   std::vector<T> buffer;
@@ -229,6 +233,7 @@ std::vector<std::vector<T>> combinations_with_replacement(std::initializer_list<
 
 template<typename T>
 std::vector<std::vector<T>> permutations(const std::vector<T>& elements, int size) {
+  CHECK_LE(0, size);
   std::vector<std::vector<T>> ret;
   for (const auto& c : combinations(elements, size)) {
     for (const auto& p : permutations(c)) {

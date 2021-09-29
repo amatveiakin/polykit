@@ -44,6 +44,7 @@ private:
 
 inline Gamma::Gamma(const XArgs& vars) {
   for (const X x : vars.as_x()) {
+    // TODO: Remove infinities. They cannot be used like this.
     if (x == Inf) {
       indices_ = {};
       return;
