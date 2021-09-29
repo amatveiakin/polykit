@@ -138,3 +138,8 @@ inline GammaExpr G(const XArgs& xargs) {
   Gamma g(xargs);
   return g.is_nil() ? GammaExpr{} : GammaExpr::single({g});
 }
+
+
+bool are_weakly_separated(const Gamma& g1, const Gamma& g2);
+bool is_weakly_separated(const GammaExpr::ObjectT& term);
+GammaExpr keep_weakly_separated(const GammaExpr& expr);
