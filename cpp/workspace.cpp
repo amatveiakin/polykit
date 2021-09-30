@@ -201,14 +201,52 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << t.to_string();
 
-  for (const int dimension : range_incl(2, 5)) {
-    for (const int num_points : range_incl(5, 8)) {
-      const auto points = seq_incl(1, num_points);
-      const auto a = GrL4_a_kernel(dimension, points);
-      const auto b = GrL4_b_kernel(dimension, points);
-      std::cout << "d=" << dimension << ", p=" << num_points << ":  ";
-      std::cout << a << "  vs  " << b << "\n";
+  // for (const int dimension : range_incl(2, 5)) {
+  //   for (const int num_points : range_incl(5, 8)) {
+  //     const auto points = seq_incl(1, num_points);
+  //     const auto a = GrL4_a_kernel(dimension, points);
+  //     const auto b = GrL4_b_kernel(dimension, points);
+  //     std::cout << "d=" << dimension << ", p=" << num_points << ":  ";
+  //     std::cout << a << "  vs  " << b << "\n";
+  //   }
+  // }
+
+  const auto prepare = [](const GammaExpr& expr) {
+    // return normalize_remove_consecutive(keep_weakly_separated(expr));
+    return normalize_remove_consecutive(expr);
+  };
+  const int dimension = 3;
+  const int weight = 4;
+  for (const int num_points : range_incl(5, 9)) {
+    Profiler profiler;
+    const auto points = seq_incl(1, num_points);
+    GrPolylogNCoSpace s1;
+    const auto alphabet = combinations(points, dimension);
+    for (const auto& w : get_lyndon_words(alphabet, weight)) {
+      const auto term = mapped(w, convert_to<Gamma>);
+      s1.push_back(ncomultiply(prepare(GammaExpr::single(term))));
     }
+    // for (const auto& alphabet_basis : combinations(points, num_points - 1)) {
+    //   const auto alphabet = combinations(alphabet_basis, dimension);
+    //   for (const auto& w : get_lyndon_words(alphabet, weight)) {
+    //     const auto term = mapped(w, convert_to<Gamma>);
+    //     s1.push_back(ncomultiply(prepare(GammaExpr::single(term))));
+    //   }
+    // }
+    const auto l1 = mapped(GrL1(dimension, points), prepare);
+    const auto l2 = mapped(GrL2(dimension, points), prepare);
+    const auto l3 = mapped(GrL3(dimension, points), prepare);
+    const auto s2 = mapped(
+      concat(
+        cartesian_product(l3, l1),
+        cartesian_product(l2, l2)
+      ),
+      APPLY(DISAMBIGUATE(ncoproduct))
+    );
+    profiler.finish("spaces");
+    const auto description = polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function));
+    profiler.finish("ranks");
+    std::cout << "p=" << num_points << ": " << description << "\n";
   }
 
   // for (const int dimension : range_incl(2, 9)) {
@@ -229,5 +267,26 @@ int main(int /*argc*/, char *argv[]) {
   //     // std::cout << compute_polylog_space_dim(GrLBasic(3, points), DISAMBIGUATE(to_lyndon_basis));
   //     std::cout << "\n";
   //   }
+  // }
+
+  // const int dimension = 3;
+  // const int num_points = 7;
+  // const auto points = seq_incl(1, num_points);
+  // const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, points));
+  // const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, points));
+  // for (const int num_l1 : range(0, 10)) {
+  //   Profiler profiler;
+  //   const auto space = mapped(
+  //     cartesian_product(l2, combinations(seq_incl(0, l1.size() - 1), num_l1)),
+  //     [&](const auto& args) {
+  //       const auto& [l2_arg, l1_indices] = args;
+  //       std::vector<GammaExpr> v = concat({l2_arg}, choose_indices(l1, l1_indices));
+  //       return ncoproduct(v);
+  //     }
+  //   );
+  //   profiler.finish("spaces");
+  //   const auto rank = compute_polylog_space_dim(space, DISAMBIGUATE(ncomultiply));
+  //   profiler.finish("rank");
+  //   std::cout << "l2*l1^" << num_l1 << ": " << rank << "\n";
   // }
 }
