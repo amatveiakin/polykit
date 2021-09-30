@@ -21,7 +21,7 @@ void EXPECT_POLYLOG_SPACE_EQUALS(const SpaceT& a, const SpaceT& b, const Prepare
 template<typename SpaceF>
 int simple_space_rank(const SpaceF& space, int num_points) {
   return matrix_rank(compute_polylog_space_matrix(
-    space(seq_incl(1, num_points)),
+    space(to_vector(range_incl(1, num_points))),
     DISAMBIGUATE(to_lyndon_basis)
   ));
 }

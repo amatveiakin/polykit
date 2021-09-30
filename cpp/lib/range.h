@@ -8,13 +8,22 @@ public:
   using value_type = int;
   using size_type = value_type;
 
+  // TODO: Make this a random access iterator.
+  // TODO: It is fine that `pointer` and `reference` are not defined?
   class Iterator {
   public:
+    using difference_type = int;
+    using value_type = int;
+    using pointer = void;
+    using reference = void;
+    using iterator_category = std::forward_iterator_tag;
+
     Iterator(value_type value) : value_(value) {}
     Iterator& operator++() { ++value_; return *this; }
     value_type operator*() const { return value_; }
     bool operator==(Iterator other) { return value_ == other.value_; }
     bool operator!=(Iterator other) { return value_ != other.value_; }
+
   private:
     value_type value_;
   };

@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
       );
     },
     num_points,
-    seq_incl(1, num_points - 1)
+    to_vector(range_incl(1, num_points - 1))
   );
 
   auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());

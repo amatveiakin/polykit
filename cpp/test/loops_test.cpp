@@ -13,7 +13,7 @@
 TEST(LoopsTest, LoopsLiraConversionReversible) {
   const int num_args = 8;  // should work for any even number
   auto expr = theta_expr_to_lira_expr_without_products(
-    LiQuad(num_args / 2 - 1, seq_incl(1, num_args))
+    LiQuad(num_args / 2 - 1, to_vector(range_incl(1, num_args)))
   );
   EXPECT_EXPR_EQ(
     expr,
@@ -28,12 +28,12 @@ TEST(LoopsTest, CurLoopsEquivalentToLiQuad) {
       return LiQuad(num_points / 2 - 1, args);
     },
     num_points,
-    seq_incl(1, num_points - 1)
+    to_vector(range_incl(1, num_points - 1))
   );
 
   auto lira_expr = theta_expr_to_lira_expr_without_products(theta_expr.without_annotations());
 
-  auto loop_expr = reverse_loops(cut_loops(seq_incl(1, num_points)));
+  auto loop_expr = reverse_loops(cut_loops(to_vector(range_incl(1, num_points))));
   auto loop_lira_expr = loop_expr_to_lira_expr(loop_expr);
 
   lira_expr = lira_expr_sort_args(lira_expr);

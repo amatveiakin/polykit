@@ -409,7 +409,7 @@ GrPolylogSpace GrL1(int dimension, const XArgs& xargs) {
   auto fixed_points = slice(args, args.size() - num_fixed_points);
   args = slice(args, 0, args.size() - num_fixed_points);
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(seq_incl(0, args.size() - 1), dimension - 2)) {
+  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
     const auto bonus_points = choose_indices(args, bonus_point_indices);
     const auto qli_points = removed_indices(args, bonus_point_indices);
     // TODO: Add `mapped_expanding` and use it here and in other places.
@@ -443,7 +443,7 @@ GrPolylogSpace GrL2(int dimension, const XArgs& xargs) {
   auto fixed_points = slice(args, args.size() - num_fixed_points);
   args = slice(args, 0, args.size() - num_fixed_points);
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(seq_incl(0, args.size() - 1), dimension - 2)) {
+  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
     const auto bonus_points = choose_indices(args, bonus_point_indices);
     const auto qli_points = removed_indices(args, bonus_point_indices);
     append_vector(
@@ -462,7 +462,7 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
   auto args = xargs.as_x();
   CHECK_LE(5, args.size());
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(seq_incl(0, args.size() - 1), dimension - 2)) {
+  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
     const auto bonus_points = choose_indices(args, bonus_point_indices);
     const auto qli_points = removed_indices(args, bonus_point_indices);
     append_vector(
@@ -481,7 +481,7 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
     );
   }
   if (dimension >= weight) {
-    for (const auto& bonus_point_indices : combinations(seq_incl(0, args.size() - 1), dimension - weight)) {
+    for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - weight)) {
       const auto bonus_points = choose_indices(args, bonus_point_indices);
       const auto qli_points = removed_indices(args, bonus_point_indices);
       append_vector(

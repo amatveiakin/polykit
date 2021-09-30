@@ -51,8 +51,8 @@ CorrCoExpr corr_comultiply(const CorrExpr& expr, std::pair<int, int> form) {
       const auto points_potated = rotated_vector(term.points, shift);
       const int n = term.points.size();
       for (int i : range(1, n-1)) {
-        std::vector<int> lhs_incides = seq_incl(0, i);
-        std::vector<int> rhs_incides = concat({0}, seq_incl(i+1, n-1));
+        std::vector<int> lhs_incides = to_vector(range_incl(0, i));
+        std::vector<int> rhs_incides = concat({0}, to_vector(range(i+1, n)));
         CorrFSymb lhs{choose_indices(points_potated, lhs_incides)};
         CorrFSymb rhs{choose_indices(points_potated, rhs_incides)};
         const int lhs_weight = lhs.points.size() - 1;

@@ -56,21 +56,6 @@ void sort_two(T& a, T& b) {
   }
 }
 
-// TODO: Replace with `to_vector(range_incl(from, to))`
-inline std::vector<int> seq_incl(int from, int to) {
-  CHECK_LE(from, to);
-  std::vector<int> ret(to - from + 1);
-  absl::c_iota(ret, from);
-  return ret;
-}
-
-template<int From, int To>
-inline std::array<int, To - From + 1> seq_incl_array() {
-  std::array<int, To - From + 1> ret;
-  absl::c_iota(ret, From);
-  return ret;
-}
-
 // TODO(C++20): Replace with std::identity.
 struct identity_function_t {
   template<class T>
