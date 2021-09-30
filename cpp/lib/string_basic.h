@@ -56,7 +56,6 @@ std::string str_join(const T& container, std::string separator) {
 }
 
 
-namespace internal {
 // Returns type name, unmangled if possible. Unmangling is supported for clang, gcc and MSVC.
 // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
 template<typename T>
@@ -86,6 +85,8 @@ constexpr std::string_view get_type_name() {
   return function.substr(start, size);
 }
 
+
+namespace internal {
 class DumpToStringHelper {
 private:
   template<typename Container>

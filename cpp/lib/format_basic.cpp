@@ -28,7 +28,7 @@ static thread_local FormattingConfig aggregated_formatting_config = default_form
 static thread_local std::vector<RichTextOptions> console_rich_text_options_stack;
 
 static int text_color_to_console_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return 0;   // normal
     case TextColor::red:            return 91;  // bright_red
     case TextColor::green:          return 92;  // bright_green
@@ -42,12 +42,11 @@ static int text_color_to_console_color(TextColor color) {
     case TextColor::pale_blue:      return 34;  // blue
     case TextColor::pale_magenta:   return 35;  // magenta
     case TextColor::pale_cyan:      return 36;  // cyan
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 static std::string text_color_to_html_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "Black";
     case TextColor::red:            return "Red";
     case TextColor::green:          return "LimeGreen";
@@ -61,8 +60,7 @@ static std::string text_color_to_html_color(TextColor color) {
     case TextColor::pale_blue:      return "DeepSkyBlue";
     case TextColor::pale_magenta:   return "Violet";
     case TextColor::pale_cyan:      return "MediumAquamarine";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 // Note. Color names are case-sensitive. Basic colors start with a small letter
@@ -70,7 +68,7 @@ static std::string text_color_to_html_color(TextColor color) {
 // letter. Colors that differ only in case can be very different, e.g. "Green"
 // is much darker than "green".
 static std::string text_color_to_latex_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "black";
     case TextColor::red:            return "red";
     case TextColor::green:          return "Green";
@@ -84,8 +82,7 @@ static std::string text_color_to_latex_color(TextColor color) {
     case TextColor::pale_blue:      return "SkyBlue";
     case TextColor::pale_magenta:   return "Lavender";
     case TextColor::pale_cyan:      return "Turquoise";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 static std::string get_command_for_console_rich_text_options() {
@@ -180,7 +177,7 @@ std::string AbstractEncoder::minus() { return "-"; }
 std::string AbstractEncoder::opname(const std::string& name) { return name; }
 
 std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
-  switch (*current_formatting_config().rich_text_format) {
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().rich_text_format, {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
       return {};
@@ -189,12 +186,11 @@ std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
       return absl::Substitute(R"(<span style="$0">)", rich_text_options_to_css(options));
-  }
-  FATAL("Illegal rich_text_format");
+  });
 }
 
 std::string AbstractEncoder::end_rich_text() {
-  switch (*current_formatting_config().rich_text_format) {
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().rich_text_format, {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
       return {};
@@ -203,8 +199,7 @@ std::string AbstractEncoder::end_rich_text() {
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
       return absl::Substitute("</span>");
-  }
-  FATAL("Illegal rich_text_format");
+  });
 }
 
 
@@ -583,10 +578,9 @@ AbstractEncoder* current_encoder() {
   static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
   static AbstractEncoder* latex_encoder = new LatexEncoder;
 
-  switch (*current_formatting_config().encoder) {
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().encoder, {
     case Encoder::ascii:      return ascii_encoder;
     case Encoder::unicode:    return unicode_encoder;
     case Encoder::latex:      return latex_encoder;
-  }
-  FATAL("Unknown encoder");
+  });
 }

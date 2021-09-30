@@ -11,7 +11,7 @@ std::string dump_to_string_impl(const Delta& d) {
 
 std::string to_string(const Delta& d) {
   HSpacing hspacing = *current_formatting_config().compact_x ? HSpacing::dense : HSpacing::sparse;
-  switch (d.b().form()) {
+  SWITCH_ENUM_OR_DIE(d.b().form(), {
     case XForm::var:
     case XForm::sq_var:
     case XForm::infinity:
@@ -26,8 +26,7 @@ std::string to_string(const Delta& d) {
     }
     case XForm::undefined:
       break;
-  }
-  FATAL(absl::StrCat("Unknown form: ", to_string(d.b().form())));
+  });
 }
 
 
@@ -74,7 +73,7 @@ static int num_distinct_variables(const std::vector<Delta>& term) {
 
 
 static X substitution_result(X orig, const std::vector<X>& new_points) {
-  switch (orig.form()) {
+  SWITCH_ENUM_OR_DIE_WITH_CONTEXT(orig.form(), "variable substitution", {
     case XForm::var:
       return new_points.at(orig.idx() - 1);
     case XForm::neg_var:
@@ -86,8 +85,7 @@ static X substitution_result(X orig, const std::vector<X>& new_points) {
       return orig;
     case XForm::undefined:
       break;
-  }
-  FATAL(absl::StrCat("Unsupported form for substitution: ", to_string(orig.form())));
+  });
 }
 
 DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {

@@ -18,6 +18,38 @@ inline void FATAL [[noreturn]] (const std::string& msg = {}) {
   std::abort();
 }
 
+// Usage:
+//   switch (v) {
+//     ...  // handle all enum values
+//   };
+//   FATAL_BAD_ENUM(v);
+template<typename T>
+inline void FATAL_BAD_ENUM [[noreturn]] (const T& value, const std::string& msg = {}) {
+  std::cerr << "\nIllegal " << get_type_name<T>() << " value == " << static_cast<int>(value);
+  if (!msg.empty()) {
+    std::cerr << ": " << msg;
+  }
+  std::cerr << std::endl;
+  std::abort();
+}
+
+// Usage:
+//   SWITCH_ENUM_OR_DIE(condition, {
+//     ...
+//   });
+// TODO: Why does putting `CHECK`s inside `SWITCH_ENUM_OR_DIE` triggers "-Wunused-value" in clang?
+#define SWITCH_ENUM_OR_DIE(value, body)  \
+  do {  \
+    switch (value) body  \
+    FATAL_BAD_ENUM(value);  \
+  } while (0)
+
+#define SWITCH_ENUM_OR_DIE_WITH_CONTEXT(value, context, body)  \
+  do {  \
+    switch (value) body  \
+    FATAL_BAD_ENUM(value, context);  \
+  } while (0)
+
 
 namespace internal {
 

@@ -68,7 +68,7 @@ std::string dump_to_string_impl(const Delta& d);
 std::string to_string(const Delta& d);
 
 inline X Delta::negate_x(X x) {
-  switch (x.form()) {
+  SWITCH_ENUM_OR_DIE(x.form(), {
     case XForm::var:
     case XForm::neg_var:
       return -x;
@@ -78,8 +78,7 @@ inline X Delta::negate_x(X x) {
     case XForm::infinity:
     case XForm::undefined:
       return x;
-  }
-  FATAL(absl::StrCat("Unknown form: ", to_string(x.form())));
+  });
 }
 
 inline void Delta::simplify() {
@@ -168,8 +167,9 @@ private:
       case XForm::zero:
         return kZeroCode;
       default:
-        FATAL(absl::StrCat("Unexpected form: ", to_string(x.form())));
+        break;
     }
+    FATAL_BAD_ENUM(x.form());
   }
 
   std::vector<Delta> deltas_;

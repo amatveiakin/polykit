@@ -5,12 +5,11 @@ static std::optional<X> projection_result(int axis, X x, X y) {
   if (x.idx() != axis) {
     return std::nullopt;
   }
-  switch (x.form()) {
+  SWITCH_ENUM_OR_DIE_WITH_CONTEXT(x.form(), "projection", {
     case XForm::var: return y;
     case XForm::neg_var: return y.negated();
     default: break;
-  }
-  FATAL(absl::StrCat("Unexpected form: ", to_string(x.form())));
+  });
 }
 
 ProjectionExpr project_on(int axis, const DeltaExpr& expr) {

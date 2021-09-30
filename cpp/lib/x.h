@@ -81,7 +81,7 @@ inline constexpr X::X(XForm form, int idx) : form_(form), idx_(idx) {
 }
 
 inline constexpr bool X::is_constant() const {
-  switch (form_) {
+  SWITCH_ENUM_OR_DIE(form_, {
     case XForm::var:
     case XForm::neg_var:
     case XForm::sq_var:
@@ -91,12 +91,11 @@ inline constexpr bool X::is_constant() const {
       return true;
     case XForm::undefined:
       break;
-  }
-  FATAL(absl::StrCat("Unknown form ", to_string(form_)));
+  });
 }
 
 inline X X::negated() const {
-  switch (form_) {
+  SWITCH_ENUM_OR_DIE_WITH_CONTEXT(form_, "negation", {
     case XForm::var:
       return X(XForm::neg_var, idx_);
     case XForm::neg_var:
@@ -108,8 +107,7 @@ inline X X::negated() const {
     case XForm::sq_var:
     case XForm::undefined:
       break;
-  }
-  FATAL(absl::StrCat("Negation not supported for ", to_string(form_)));
+  });
 }
 
 inline X X::operator-() const {

@@ -77,12 +77,11 @@ inline std::string pad_twosided(std::string str, int width, char padding = ' ') 
 }
 
 inline std::string pad_string(TextAlignment alignment, std::string str, int width, char padding = ' ') {
-  switch (alignment) {
+  SWITCH_ENUM_OR_DIE(alignment, {
     case TextAlignment::left: return pad_right(std::move(str), width, padding);
     case TextAlignment::center: return pad_twosided(std::move(str), width, padding);
     case TextAlignment::right: return pad_left(std::move(str), width, padding);
-  }
-  FATAL(absl::StrCat("Invalid alignment: ", alignment));
+  });
 }
 
 
