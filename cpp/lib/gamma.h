@@ -5,6 +5,7 @@
 #include <bitset>
 #include <climits>
 
+#include "bitset_util.h"
 #include "check.h"
 #include "coalgebra.h"
 #include "pvector.h"
@@ -21,14 +22,16 @@ static_assert(kMaxGammaVariables <= sizeof(unsigned long) * CHAR_BIT);  // for s
 // Generalization of `Delta` (assuming the latter uses only XForm::var).
 class Gamma {
 public:
+  using BitsetT = std::bitset<kMaxGammaVariables>;
+
   Gamma() {}
-  Gamma(std::bitset<kMaxGammaVariables> indices) : indices_(std::move(indices)) {}
-  Gamma(const XArgs& vars);
+  explicit Gamma(BitsetT indices) : indices_(std::move(indices)) {}
+  explicit Gamma(const XArgs& vars);
 
   bool is_nil() const { return indices_.none(); }
 
-  const std::bitset<kMaxGammaVariables>& index_bitset() const { return indices_; }
-  std::vector<int> index_vector() const;
+  const BitsetT& index_bitset() const { return indices_; }
+  std::vector<int> index_vector() const { return bitset_to_vector(indices_, 1); }
 
   bool operator==(const Gamma& other) const { return indices_ == other.indices_; }
   bool operator< (const Gamma& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
@@ -39,9 +42,10 @@ public:
   }
 
 private:
-  std::bitset<kMaxGammaVariables> indices_;  // 0-based
+  BitsetT indices_;  // 0-based
 };
 
+// TODO: rewrite via `vector_to_bitset`
 inline Gamma::Gamma(const XArgs& vars) {
   for (const X x : vars.as_x()) {
     // TODO: Remove infinities. They cannot be used like this.
@@ -55,20 +59,6 @@ inline Gamma::Gamma(const XArgs& vars) {
     CHECK_LE(idx, kMaxGammaVariables);
     indices_[idx - 1] = true;  // 1-based => 0-based
   }
-}
-
-inline std::vector<int> Gamma::index_vector() const {
-  std::bitset<kMaxGammaVariables> bitset = indices_;
-  int current_index = 1;  // 0-based => 1-based
-  std::vector<int> vector;
-  while (bitset.any()) {
-    if (bitset[0]) {
-      vector.push_back(current_index);
-    }
-    bitset >>= 1;
-    ++current_index;
-  }
-  return vector;
 }
 
 std::string to_string(const Gamma& g);

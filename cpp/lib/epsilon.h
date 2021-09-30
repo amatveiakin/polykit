@@ -11,6 +11,7 @@
 #include <variant>
 
 #include "bit.h"
+#include "bitset_util.h"
 #include "check.h"
 #include "coalgebra.h"
 #include "polylog_li_param.h"

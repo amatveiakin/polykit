@@ -1,3 +1,6 @@
+// TODO(C++20): Check what can be replaced or implemented via std bit manipulation:
+//   https://en.cppreference.com/w/cpp/numeric#Bit_manipulation_.28since_C.2B.2B20.29
+
 #pragma once
 
 #include <bitset>
@@ -36,14 +39,4 @@ inline int which_power_of_two(unsigned int x) {
   const int ret = MultiplyDeBruijnBitPosition2[(uint32_t)(x * 0x077CB531U) >> 27];
   CHECK_EQ(x, 1 << ret);
   return ret;
-}
-
-template<size_t DstN, size_t SrcN>
-std::bitset<DstN> convert_bitset(const std::bitset<SrcN>& src) {
-  if constexpr (SrcN <= sizeof(unsigned long) * CHAR_BIT) {
-    return std::bitset<DstN>(src.to_ulong());
-  } else {
-    static_assert(SrcN <= sizeof(unsigned long long) * CHAR_BIT, "Bitset too large");
-    return std::bitset<DstN>(src.to_ullong());
-  }
 }
