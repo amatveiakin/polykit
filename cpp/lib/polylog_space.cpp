@@ -264,107 +264,67 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
 }
 
 
-PolylogSpacePair polylog_space_3(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CB2(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_3(const XArgs& args) {
+  return mapped(
+    cartesian_product(CB2(args), CB1(args)),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogSpacePair polylog_space_4(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CB3(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CB2(args)) {
-    for (const auto& s2 : CB2(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_4(const XArgs& args) {
+  return mapped(
+    concat(
+      cartesian_product(CB3(args), CB1(args)),
+      cartesian_product(CB2(args), CB2(args))
+    ),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogSpacePair polylog_space_5(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CL4(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CB3(args)) {
-    for (const auto& s2 : CB2(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_5(const XArgs& args) {
+  return mapped(
+    concat(
+      cartesian_product(CL4(args), CB1(args)),
+      cartesian_product(CB3(args), CB2(args))
+    ),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogSpacePair polylog_space_6(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CL5(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CL4(args)) {
-    for (const auto& s2 : CB2(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CB3(args)) {
-    for (const auto& s2 : CB3(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_6(const XArgs& args) {
+  return mapped(
+    concat(
+      cartesian_product(CL5(args), CB1(args)),
+      cartesian_product(CL4(args), CB2(args)),
+      cartesian_product(CB3(args), CB3(args))
+    ),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogSpacePair polylog_space_6_alt(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CL5Alt(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CL4(args)) {
-    for (const auto& s2 : CB2(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : CB3(args)) {
-    for (const auto& s2 : CB3(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_6_alt(const XArgs& args) {
+  return mapped(
+    concat(
+      cartesian_product(CL5Alt(args), CB1(args)),
+      cartesian_product(CL4(args), CB2(args)),
+      cartesian_product(CB3(args), CB3(args))
+    ),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogSpacePair polylog_space_6_via_l(const XArgs& args) {
-  PolylogSpacePair ret;
-  for (const auto& s1 : CL5(args)) {
-    for (const auto& s2 : CB1(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : LInf(4, args)) {
-    for (const auto& s2 : CB2(args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  for (const auto& s1 : LInf(3, args)) {
-    for (const auto& s2 : LInf(3, args)) {
-      ret.push_back({s1, s2});
-    }
-  }
-  return ret;
+PolylogNCoSpace co_CL_6_via_l(const XArgs& args) {
+  return mapped(
+    concat(
+      cartesian_product(CL5(args), CB1(args)),
+      cartesian_product(LInf(4, args), CB2(args)),
+      cartesian_product(LInf(3, args), LInf(3, args))
+    ),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
 }
 
-PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs) {
+PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs) {
   PolylogNCoSpace ret;
   for (int w : range_incl(1, weight / 2)) {
     const auto space_a = QL(w, xargs.as_x());
@@ -493,27 +453,4 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
     }
   }
   return ret;
-}
-
-
-Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult) {
-  return compute_polylog_space_matrix(
-    polylog_space(weight)(points),
-    [&](const auto& s) {
-      const auto& [s1, s2] = s;
-      const auto prod = ncoproduct(s1, s2);
-      return apply_comult ? ncomultiply(prod) : prod;
-    }
-  );
-}
-
-Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult) {
-  return compute_polylog_space_matrix(
-    polylog_space_6_via_l(points),
-    [&](const auto& s) {
-      const auto& [s1, s2] = s;
-      const auto prod = ncoproduct(s1, s2);
-      return apply_comult ? ncomultiply(prod) : prod;
-    }
-  );
 }

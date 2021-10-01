@@ -11,7 +11,6 @@
 
 using PolylogSpace = std::vector<DeltaExpr>;
 using PolylogNCoSpace = std::vector<DeltaNCoExpr>;
-using PolylogSpacePair = std::vector<std::pair<DeltaExpr, DeltaExpr>>;
 using GrPolylogSpace = std::vector<GammaExpr>;
 using GrPolylogNCoSpace = std::vector<GammaNCoExpr>;
 
@@ -42,29 +41,14 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
-// TODO: Give more specific names to these spaces and functions for their ranks.
-PolylogSpacePair polylog_space_2(const XArgs& args);
-PolylogSpacePair polylog_space_3(const XArgs& args);
-PolylogSpacePair polylog_space_4(const XArgs& args);
-PolylogSpacePair polylog_space_5(const XArgs& args);
-PolylogSpacePair polylog_space_6(const XArgs& args);
-PolylogSpacePair polylog_space_6_alt(const XArgs& args);
-PolylogSpacePair polylog_space_6_via_l(const XArgs& args);
+PolylogNCoSpace co_CL_3(const XArgs& args);
+PolylogNCoSpace co_CL_4(const XArgs& args);
+PolylogNCoSpace co_CL_5(const XArgs& args);
+PolylogNCoSpace co_CL_6(const XArgs& args);
+PolylogNCoSpace co_CL_6_alt(const XArgs& args);
+PolylogNCoSpace co_CL_6_via_l(const XArgs& args);
 
-inline auto polylog_space(int weight) {
-  switch (weight) {
-    case 3: return &polylog_space_3;
-    case 4: return &polylog_space_4;
-    case 5: return &polylog_space_5;
-    case 6: return &polylog_space_6;
-  }
-  FATAL(absl::StrCat("Unsupported weight in polylog_space_by_weight: ", weight));
-}
-
-Matrix polylog_space_matrix(int weight, const XArgs& points, bool apply_comult);
-Matrix polylog_space_matrix_6_via_l(const XArgs& points, bool apply_comult);
-
-PolylogNCoSpace polylog_space_ql_wedge_ql(int weight, const XArgs& xargs);
+PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs);
 
 GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);  // dimension = 3
 GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
