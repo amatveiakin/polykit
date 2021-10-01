@@ -42,6 +42,7 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
+// TODO: Give more specific names to these spaces and functions for their ranks.
 PolylogSpacePair polylog_space_2(const XArgs& args);
 PolylogSpacePair polylog_space_3(const XArgs& args);
 PolylogSpacePair polylog_space_4(const XArgs& args);

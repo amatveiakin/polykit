@@ -121,6 +121,39 @@ struct convert_to_t {
 template<typename T>
 constexpr convert_to_t<T> convert_to;
 
+// No dependencies: space rank == space.size()
+GrPolylogSpace GrQLi3_test_space(const XArgs& xargs) {  // dimension = 3
+  auto args = xargs.as_x();
+  CHECK_EQ(6, args.size());
+  GrPolylogSpace ret;
+  for (int discarded_point : range(6)) {
+    const auto combines_args = removed_index(args, discarded_point);
+    for (const int shift : range(5)) {
+      const auto rotated_args = rotated_vector(combines_args, shift);
+      ret.push_back(GrQLi3(rotated_args[0])(slice(rotated_args, 1)));
+    }
+  }
+  return ret;
+}
+
+// No dependencies: space rank == space.size()
+GrPolylogSpace GrQLi4_test_space(const XArgs& xargs) {  // dimension = 3
+  const int weight = 4;
+  auto args = xargs.as_x();
+  CHECK_EQ(7, args.size());
+  GrPolylogSpace ret;
+  for (const int bonus_point_idx : range(7)) {
+    const X bonus_point = args[bonus_point_idx];
+    const auto main_args_set = removed_index(args, bonus_point_idx);
+    CHECK_EQ(6, main_args_set.size());
+    ret.push_back(GrQLiVec(weight, {bonus_point}, main_args_set));
+    for (const auto& main_args : combinations(main_args_set, 4)) {
+      ret.push_back(GrQLiVec(weight, {bonus_point}, main_args));
+    }
+  }
+  return ret;
+}
+
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -159,6 +192,18 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << "\n";
   // }
 
+  // const int num_points = 6;
+  // const auto points = seq_incl(1, num_points);
+  // std::cout << "p=" << num_points << ": ";
+  // std::cout << compute_polylog_space_dim(GrQLi3_test_space(points), DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << "\n";
+
+  // const int num_points = 7;
+  // const auto points = seq_incl(1, num_points);
+  // std::cout << "p=" << num_points << ": ";
+  // std::cout << compute_polylog_space_dim(GrQLi4_test_space(points), DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << "\n";
+
   // const int dimension = 3;
   // const int weight = 3;
   // for (const int num_points : range_incl(5, 9)) {
@@ -183,6 +228,32 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function)) << "\n";
   //   // Equals `compute_polylog_space_dim(GrLBasic(3, points), DISAMBIGUATE(to_lyndon_basis))`
   // }
+
+  const int dimension = 3;
+  const int weight = 4;
+  for (const int num_points : range_incl(5, 9)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto alphabet = combinations(points, dimension);
+    GrPolylogNCoSpace s1;
+    for (const auto& w : get_lyndon_words(alphabet, weight)) {
+      const auto term = mapped(w, convert_to<Gamma>);
+      if (is_weakly_separated(term)) {
+        s1.push_back(ncomultiply(GammaExpr::single(term)));
+      }
+    }
+    const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, points));
+    const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, points));
+    const auto l3 = normalize_space_remove_consecutive(GrL3(dimension, points));
+    const auto s2 = mapped(
+      concat(
+        cartesian_product(l3, l1),
+        cartesian_product(l2, l2)
+      ),
+      APPLY(DISAMBIGUATE(ncoproduct))
+    );
+    std::cout << "p=" << num_points << ": ";
+    std::cout << polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function)) << "\n";
+  }
 
   // DeltaExpr expr = DeltaExpr::single({Delta(x1,Zero), Delta(x2,Zero), Delta(x3,Zero), Delta(x4,Zero)});
   // std::cout << comultiply(expr, {1,1,2});
