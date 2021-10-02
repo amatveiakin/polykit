@@ -109,9 +109,28 @@ bool keep_for_normalize_remove_consecutive(const GammaExpr::ObjectT& term) {
   });
 }
 
+bool keep_for_normalize_remove_consecutive_circular(const GammaExpr::ObjectT& term, int dimension, int num_points) {
+  // TODO: Cache OR don't use at all
+  absl::flat_hash_set<Gamma> discard;
+  for (const int i : range(num_points)) {
+    discard.insert(Gamma(mapped(range(i, i + dimension), [&](const int idx) {
+      return idx % num_points + 1;
+    })));
+  }
+  return absl::c_none_of(term, [&](const Gamma& g) {
+    return discard.contains(g);
+  });
+}
+
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr) {
   return expr.filtered([](const auto& term) {
     return keep_for_normalize_remove_consecutive(term);
+  });
+}
+
+GammaExpr normalize_remove_consecutive_circular(const GammaExpr& expr, int dimension, int num_points) {
+  return expr.filtered([&](const auto& term) {
+    return keep_for_normalize_remove_consecutive_circular(term, dimension, num_points);
   });
 }
 
@@ -421,15 +440,18 @@ int main(int /*argc*/, char *argv[]) {
   for (const int num_points : range_incl(5, 9)) {
     const auto points = to_vector(range_incl(1, num_points));
     const auto alphabet = combinations(points, dimension);
+    Profiler profiler;
     GrPolylogACoSpace s1;
     for (const auto& w : get_lyndon_words(alphabet, weight)) {
       const auto term = mapped(w, convert_to<Gamma>);
-      if (is_weakly_separated(term) && keep_for_normalize_remove_consecutive(term)) {
+      // if (is_weakly_separated(term) && keep_for_normalize_remove_consecutive(term)) {
+      if (is_weakly_separated(term) && keep_for_normalize_remove_consecutive_circular(term, dimension, num_points)) {
         s1.push_back(expand_into_glued_pairs(GammaExpr::single(term)));
       }
     }
-    const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, points));
-    const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, points));
+    const auto l1 = mapped(GrL1(dimension, points), [&](const auto& expr) { return normalize_remove_consecutive_circular(expr, dimension, num_points); });
+    const auto l2 = mapped(GrL2(dimension, points), [&](const auto& expr) { return normalize_remove_consecutive_circular(expr, dimension, num_points); });
+    profiler.finish("space 1");
     const auto s2 = mapped(
       cartesian_product(l2, cartesian_power(l1, weight - 2)),
       [&](const auto& args) {
@@ -439,7 +461,9 @@ int main(int /*argc*/, char *argv[]) {
         return internal::abstract_coproduct_vec<GammaACoExpr>(v);
       }
     );
-    std::cout << "p=" << num_points << ": ";
-    std::cout << polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function)) << "\n";
+    profiler.finish("space 2");
+    const auto description = polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function));
+    profiler.finish("ranks");
+    std::cout << "p=" << num_points << ": " << description << "\n";
   }
 }
