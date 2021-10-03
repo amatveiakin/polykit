@@ -124,6 +124,12 @@ CheckResult check_ge(CheckLocation loc, const X& x, const Y& y, const char* x_st
 
 // Use tertiary operator to avoid evaluating arguments when check passes
 
+// TODO: To fix "-Wunused-value" clang warning when using inside a macro (like SWITCH_ENUM_OR_DIE):
+//   - Add `<< ""` to the fail branch of the ternary operator, or
+//   - Return `std::cerr` from a function
+//   (https://stackoverflow.com/questions/69415046/clang-issues-wunused-value-depending-on-whether-the-code-is-called-from-a-macro)
+// TODO: File the clang bug.
+
 #define CHECK(condition)  \
   internal::check({__FILE__, __LINE__}, condition, STRINGIFY(condition)).ok ? std::cerr : std::cerr
 

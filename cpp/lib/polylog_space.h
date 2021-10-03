@@ -1,3 +1,8 @@
+// TODO: Rename functions:
+//   - remove 'compute_' prefix;
+//   - rename 'dim' to 'rank'.
+//   - note: clean up workspace first !
+
 #pragma once
 
 #include "delta.h"
@@ -164,23 +169,4 @@ std::string polylog_space_kernel_describe(const SpaceT& space, const PrepareF& p
 
 inline std::string polylog_space_ncomultiply_kernel_describe(const PolylogNCoSpace& space) {
   return polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));
-}
-
-
-// For pybind11. Returns matrices: (a, b, united)
-template<typename SpaceT, typename PrepareF>
-std::tuple<Matrix, Matrix, Matrix> compute_polylog_space_matrices(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
-  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-
-  ExprMatrixBuilder<ExprT> matrix_builder_a;
-  add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
-  Matrix mat_a = matrix_builder_a.make_matrix();
-  add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
-  Matrix mat_united = matrix_builder_a.make_matrix();
-
-  ExprMatrixBuilder<ExprT> matrix_builder_b;
-  add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
-  Matrix mat_b = matrix_builder_b.make_matrix();
-
-  return {std::move(mat_a), std::move(mat_b), std::move(mat_united)};
 }
