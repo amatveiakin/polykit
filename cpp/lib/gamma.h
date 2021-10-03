@@ -133,4 +133,8 @@ inline GammaExpr G(const XArgs& xargs) {
 
 bool are_weakly_separated(const Gamma& g1, const Gamma& g2);
 bool is_weakly_separated(const GammaExpr::ObjectT& term);
-GammaExpr keep_weakly_separated(const GammaExpr& expr);
+bool is_weakly_separated(const GammaNCoExpr::ObjectT& term);
+bool is_totally_weakly_separated(const GammaExpr& expr);
+bool is_totally_weakly_separated(const GammaNCoExpr& expr);
+GammaExpr keep_non_weakly_separated(const GammaExpr& expr);
+GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);

@@ -48,7 +48,20 @@ bool is_weakly_separated(const GammaExpr::ObjectT& term) {
   }
   return true;
 }
+bool is_weakly_separated(const GammaNCoExpr::ObjectT& term) {
+  return is_weakly_separated(flatten(term));
+}
 
-GammaExpr keep_weakly_separated(const GammaExpr& expr) {
-  return expr.filtered(&is_weakly_separated);
+bool is_totally_weakly_separated(const GammaExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+bool is_totally_weakly_separated(const GammaNCoExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+GammaExpr keep_non_weakly_separated(const GammaExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
 }

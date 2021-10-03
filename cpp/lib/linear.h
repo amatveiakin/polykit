@@ -290,6 +290,25 @@ public:
     }
   }
 
+  template<typename F>
+  bool contains(F func) const {
+    for (const auto& [term, coeff] : *this) {
+      if (func(term)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  template<typename F>
+  bool contains_key(F func) const {
+    for (auto it = begin_key(); it != end_key(); ++it) {
+      if (func(it->second)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   template<typename NewBasicLinearT, typename F>
   NewBasicLinearT mapped(F func) const {
     NewBasicLinearT ret;
@@ -552,6 +571,11 @@ public:
   void foreach(F func) const { return main_.foreach(func); }
   template<typename F>
   void foreach_key(F func) const { return main_.foreach_key(func); }
+
+  template<typename F>
+  bool contains(F func) const { return main_.contains(func); }
+  template<typename F>
+  bool contains_key(F func) const { return main_.contains_key(func); }
 
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
