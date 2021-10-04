@@ -264,6 +264,7 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
 }
 
 
+// Optimization potential: can cartesian_combinations be used to co_CL_N?
 PolylogNCoSpace co_CL_3(const XArgs& args) {
   return mapped(
     cartesian_product(CB2(args), CB1(args)),

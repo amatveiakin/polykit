@@ -41,10 +41,24 @@ PolylogSpace H(int weight, const XArgs& xargs);
 
 PolylogSpace LInf(int weight, const XArgs& xargs);
 PolylogSpace L(int weight, const XArgs& xargs);
+inline PolylogSpace L1(const XArgs& xargs) { return L(1, xargs); }
+inline PolylogSpace L2(const XArgs& xargs) { return L(2, xargs); }
+inline PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
+inline PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
+inline PolylogSpace L5(const XArgs& xargs) { return L(5, xargs); }
+inline PolylogSpace L6(const XArgs& xargs) { return L(6, xargs); }
 
 PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
+
+// TODO: Autogenerator for co_L(weight, num_times_comultiplied, args).
+
+PolylogNCoSpace co_L_2(const XArgs& args);
+PolylogNCoSpace co_L_3(const XArgs& args);
+PolylogNCoSpace co_L_4(const XArgs& args);
+PolylogNCoSpace co_L_5(const XArgs& args);
+PolylogNCoSpace co_L_6(const XArgs& args);
 
 PolylogNCoSpace co_CL_3(const XArgs& args);
 PolylogNCoSpace co_CL_4(const XArgs& args);

@@ -12,10 +12,13 @@
 //   Note: the order may be different from the one `itertools` produces!
 //
 // * combinations(p, r)
-//   r-length tuples, in sorted order, no repeated elements
+//   r-length tuples, in sorted order[*], no repeated elements
 //
 // * combinations_with_replacement(p, r)
-//   r-length tuples, in sorted order, with repeated elements
+//   r-length tuples, in sorted order[*], with repeated elements
+//
+// [*] Here "sorted order" means the order in argument list, not the order of
+//   how elements compare with operator<.
 //
 // Some of the functions produce iterators that generate values on the fly.
 // Some functions generate the entire array of values immediately.
@@ -204,7 +207,6 @@ std::vector<std::vector<T>> cartesian_power(std::initializer_list<T> elements, i
 template<typename T>
 std::vector<std::vector<T>> combinations(std::vector<T> elements, int size) {
   CHECK_LE(0, size);
-  absl::c_sort(elements);
   std::vector<std::vector<T>> ret;
   std::vector<T> buffer;
   internal::fill_combinations(elements, 0, buffer, size, ret);
@@ -221,7 +223,6 @@ std::vector<std::vector<T>> combinations(std::initializer_list<T> elements, int 
 template<typename T>
 std::vector<std::vector<T>> combinations_with_replacement(std::vector<T> elements, int size) {
   CHECK_LE(0, size);
-  absl::c_sort(elements);
   std::vector<std::vector<T>> ret;
   std::vector<T> buffer;
   internal::fill_combinations_with_replacement(elements, 0, buffer, size, ret);

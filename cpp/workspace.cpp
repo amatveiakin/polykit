@@ -706,55 +706,39 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-
-  // TODO: Combined cartesian_product/combinations for equal args
-
-  const int num_points = 5;
+  const int num_points = 6;
   const auto points = to_vector(range_incl(1, num_points));
-  PolylogSpace l1 = L(1, points);
-  PolylogSpace l2 = L(2, points);
-  PolylogSpace l3 = L(3, points);
-  PolylogSpace l4 = L(4, points);
-
+  PolylogSpace l1 = L1(points);
+  PolylogSpace l2 = L2(points);
+  PolylogSpace l3 = L3(points);
+  PolylogSpace l4 = L4(points);
   Profiler profiler;
-
-  PolylogNCoSpace space_a;
-  for (const auto& [a, b] : cartesian_product(l4, l1)) {
-    const auto expr = ncoproduct(a, b);
-    space_a.push_back(expr);
-  };
-  for (const auto& [a, b] : cartesian_product(l3, l2)) {
-    const auto expr = ncoproduct(a, b);
-    space_a.push_back(expr);
-  };
+  const PolylogNCoSpace space_a = mapped(
+    concat(
+      cartesian_combinations<DeltaExpr>({{l4, 1}, {l1, 1}}),
+      cartesian_combinations<DeltaExpr>({{l3, 1}, {l2, 1}})
+    ),
+    DISAMBIGUATE(ncoproduct_vec)
+  );
   profiler.finish("space_a");
-
-  PolylogNCoSpace space_b;
-  for (const auto& [a, b, c] : cartesian_product(l2, l2, l1)) {
-    const auto expr = ncoproduct(a, b, c);
-    space_b.push_back(expr);
-  };
-  for (const auto& [a, b, c] : cartesian_product(l3, l1, l1)) {
-    const auto expr = ncoproduct(a, b, c);
-    space_b.push_back(expr);
-  };
+  const PolylogNCoSpace space_b = mapped(
+    concat(
+      cartesian_combinations<DeltaExpr>({{l2, 2}, {l1, 1}}),
+      cartesian_combinations<DeltaExpr>({{l3, 1}, {l1, 2}})
+    ),
+    DISAMBIGUATE(ncoproduct_vec)
+  );
   profiler.finish("space_b");
-
-  PolylogNCoSpace space_c;
-  for (const auto& [a, b, c, d] : cartesian_product(l2, l1, l1, l1)) {
-    const auto expr = ncoproduct(a, b, c, d);
-    space_c.push_back(expr);
-  };
+  const PolylogNCoSpace space_c = mapped(
+    cartesian_combinations<DeltaExpr>({{l2, 1}, {l1, 3}}),
+    DISAMBIGUATE(ncoproduct_vec)
+  );
   profiler.finish("space_c");
-
-  PolylogNCoSpace space_d;
-  // TODO: Extend `combinations` to do this internally.
-  for (const auto& indices : combinations(to_vector(range(l1.size())), 5)) {
-    const auto expr = ncoproduct_vec(choose_indices(l1, indices));
-    space_d.push_back(expr);
-  }
+  const PolylogNCoSpace space_d = mapped(
+    cartesian_combinations<DeltaExpr>({{l1, 5}}),
+    DISAMBIGUATE(ncoproduct_vec)
+  );
   profiler.finish("space_d");
-
   for (const auto& space : {space_a, space_b, space_c, space_d}) {
     std::cout << "---\n";
     const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
@@ -766,8 +750,4 @@ int main(int /*argc*/, char *argv[]) {
     });
     std::cout << "cl+comul: " << description2 << "\n";
   }
-
-
-
-  // std::cout << dump_to_string(cartesian_combinations<int>({{{1,2,3}, 2}, {{10, 20}, 1}})) << "\n";
 }

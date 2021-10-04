@@ -87,17 +87,6 @@ TEST(ItertoolsTest, Combinations_Elements4_Size2) {
   ));
 }
 
-TEST(ItertoolsTest, Combinations_Sorts) {
-  std::vector<std::vector<int>> result;
-  for (const auto& p : combinations({2, 1}, 2)) {
-    result.push_back(p);
-  }
-  absl::c_sort(result);
-  EXPECT_THAT(result, testing::ElementsAre(
-    std::vector{1, 2}
-  ));
-}
-
 TEST(ItertoolsTest, CombinationsWithReplacement_Elements4_Size2) {
   std::vector<std::string> result;
   for (const auto& p : combinations_with_replacement({"A", "B", "C", "D"}, 2)) {
