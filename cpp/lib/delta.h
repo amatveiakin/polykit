@@ -287,6 +287,14 @@ DeltaExpr terms_with_min_distinct_variables(const DeltaExpr& expr, int min_disti
 DeltaExpr terms_containing_only_variables(const DeltaExpr& expr, const std::vector<int>& indices);
 DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>& indices);
 
+bool are_weakly_separated(const Delta& d1, const Delta& d2);
+bool is_weakly_separated(const DeltaExpr::ObjectT& term);
+bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term);
+bool is_totally_weakly_separated(const DeltaExpr& expr);
+bool is_totally_weakly_separated(const DeltaNCoExpr& expr);
+DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr);
+DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr);
+
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 // For using together with `DeltaExpr::filter`

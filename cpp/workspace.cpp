@@ -250,66 +250,6 @@ GammaNCoExpr R_4_3(const std::vector<int>& points) {
 }
 
 
-bool between(int point, std::pair<int, int> segment) {
-  const auto [a, b] = segment;
-  CHECK_LT(a, b);
-  CHECK(all_unique_unsorted(std::array{point, a, b}));
-  return a < point && point < b;
-}
-
-int x_idx(X x) {
-  CHECK(x.is(XForm::var));
-  return x.idx();
-}
-
-// TODO: Rewrite properly and factor out!
-bool are_weakly_separated(const Delta& d1, const Delta& d2) {
-  const auto a = set_difference(std::vector{x_idx(d1.a()), x_idx(d1.b())}, std::vector{x_idx(d2.a()), x_idx(d2.b())});
-  const auto b = set_difference(std::vector{x_idx(d2.a()), x_idx(d2.b())}, std::vector{x_idx(d1.a()), x_idx(d1.b())});
-  for (const auto& s1 : combinations(a, 2)) {
-    for (const auto& s2 : combinations(b, 2)) {
-      const auto [x1, y1] = to_array<2>(s1);
-      const auto [x2, y2] = to_array<2>(s2);
-      const bool itersect = between(x1, {x2, y2}) != between(y1, {x2, y2});
-      if (itersect) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// Optimization potential: consider whether this can be done in O(N) time;
-bool is_weakly_separated(const DeltaExpr::ObjectT& term) {
-  for (int i : range(term.size())) {
-    for (int j : range(i)) {
-      if (!are_weakly_separated(term[i], term[j])) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term) {
-  return is_weakly_separated(flatten(term));
-}
-
-bool is_totally_weakly_separated(const DeltaExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-bool is_totally_weakly_separated(const DeltaNCoExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-
-DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-
-
-
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});

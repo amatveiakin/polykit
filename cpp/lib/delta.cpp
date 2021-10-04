@@ -223,6 +223,64 @@ DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>&
 }
 
 
+static bool between(int point, std::pair<int, int> segment) {
+  const auto [a, b] = segment;
+  CHECK_LT(a, b);
+  ASSERT(all_unique_unsorted(std::array{point, a, b}));
+  return a < point && point < b;
+}
+
+static int x_idx(X x) {
+  CHECK(x.is(XForm::var)) << dump_to_string(x);
+  return x.idx();
+}
+
+// TODO: Test.
+bool are_weakly_separated(const Delta& d1, const Delta& d2) {
+  if (d1.is_nil() || d2.is_nil()) {
+    return true;
+  }
+  const int x1 = x_idx(d1.a());
+  const int y1 = x_idx(d1.b());
+  const int x2 = x_idx(d2.a());
+  const int y2 = x_idx(d2.b());
+  if (!all_unique_unsorted(std::array{x1, y1, x2, y2})) {
+    return true;
+  }
+  const bool itersect = between(x1, {x2, y2}) != between(y1, {x2, y2});
+  return !itersect;
+}
+
+// Optimization potential: consider whether this can be done in O(N) time;
+bool is_weakly_separated(const DeltaExpr::ObjectT& term) {
+  for (int i : range(term.size())) {
+    for (int j : range(i)) {
+      if (!are_weakly_separated(term[i], term[j])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term) {
+  return is_weakly_separated(flatten(term));
+}
+
+bool is_totally_weakly_separated(const DeltaExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+bool is_totally_weakly_separated(const DeltaNCoExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+
 static void graph_mark_reached(
     int start,
     const std::vector<std::vector<int>>& nbrs,
