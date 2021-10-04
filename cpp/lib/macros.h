@@ -9,6 +9,7 @@
 #define DISAMBIGUATE(func)  \
     [](auto&&... args) { return func(std::forward<decltype(args)>(args)...); }
 
+// TODO: Make this a function rather than a macro.
 // Wraps a function accepting multiple arguments to accept a tuple.
 #define APPLY(func)  \
     [](auto&& tuple) { return std::apply(func, std::forward<decltype(tuple)>(tuple)); }

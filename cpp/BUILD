@@ -18,6 +18,7 @@ cc_library(
         "lib/call_cache.h",
         "lib/check.h",
         "lib/circular_view.h",
+        "lib/compact_variant.h",
         "lib/compare.h",
         "lib/compression.h",
         "lib/enumerator.h",

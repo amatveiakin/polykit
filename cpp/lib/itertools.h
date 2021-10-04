@@ -20,6 +20,8 @@
 // Some of the functions produce iterators that generate values on the fly.
 // Some functions generate the entire array of values immediately.
 // Optimization potential: Turn everything into generators.
+//
+// TODO: Have both tuple and vector version of each function.
 
 #pragma once
 
@@ -163,23 +165,6 @@ auto cartesian_product(const std::vector<T>& head, const Tail&... tail) {
   }
   return ret;
 }
-
-// template<typename Head, typename... Tail>
-// auto cartesian_product(const Head& head, const Tail&... tail) {
-//   const auto tail_product = cartesian_product(tail...);
-//   std::vector<decltype(std::tuple_cat(std::declval<std::tuple<tupename Head::value_type>>(), decltype(tail_product)::value_type))> ret;
-//   for (const T& h : head) {
-//     for (const auto& t : tail_product) {
-//       ret.push_back(std::tuple_cat(std::tuple(h), t));
-//     }
-//   }
-//   return ret;
-// }
-
-// template<typename T>
-// std::vector<T> cartesian_product(const std::vector<T>& elements) {
-//   return elements;
-// }
 
 
 template<typename T>

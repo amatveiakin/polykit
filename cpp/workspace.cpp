@@ -60,6 +60,36 @@ int binomial(int n, int k) {
 }
 
 
+template<typename T>
+void fill_cartesian_combinations(
+  const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers,
+  int next_element,
+  std::vector<T>& buffer,
+  std::vector<std::vector<T>>& result
+) {
+  if (next_element == elements_and_powers.size()) {
+    result.push_back(buffer);
+  } else {
+    const auto& [elements, power] = elements_and_powers[next_element];
+    for (const auto& seq : combinations(elements, power)) {
+      append_vector(buffer, seq);
+      fill_cartesian_combinations(elements_and_powers, next_element + 1, buffer, result);
+      buffer.erase(buffer.end() - seq.size(), buffer.end());
+    }
+  }
+}
+
+// Optimization potential: and `std::ref` around the inner vectors.
+template<typename T>
+std::vector<std::vector<T>> cartesian_combinations(const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers) {
+  std::vector<std::vector<T>> ret;
+  std::vector<T> buffer;
+  fill_cartesian_combinations(elements_and_powers, 0, buffer, ret);
+  CHECK(buffer.empty());
+  return ret;
+}
+
+
 template<typename SpaceT>
 void check_space_weight_eq(const SpaceT& space, int weight) {
   for (const auto& expr : space) {
@@ -91,7 +121,6 @@ using GrPolylogACoSpace = std::vector<GammaACoExpr>;
 //   + x1 * x1 * ... * (x{n-1}^xn)
 //
 GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr) {
-  using ExprT = GammaExpr;
   using CoExprT = GammaACoExpr;
   return expr.mapped_expanding([](const auto& term) {
     CoExprT expanded_expr;
@@ -249,6 +278,122 @@ GrPolylogSpace GrQLi4_test_space(const XArgs& xargs) {  // dimension = 3
   }
   return ret;
 }
+
+GammaNCoExpr R_4_3(const std::vector<int>& points) {
+  CHECK_EQ(points.size(), 4);
+  return sum_looped_vec([&](const std::vector<int>& args) {
+    const auto get_args = [&](const std::vector<int>& indices) {
+      // TODO: Change `sum` so that it doesn't requires nested `choose_indices_one_based`.
+      return choose_indices_one_based(points, choose_indices_one_based(args, indices));
+    };
+    return ncoproduct(G(get_args({1,2,3})), G(get_args({1,2,4})), G(get_args({1,3,4})));
+  }, 4, {1,2,3,4}, SumSign::alternating);
+}
+
+
+template<typename T>
+struct MultiExprMatrixBuilderByTuple {};
+template<typename... Ts>
+struct MultiExprMatrixBuilderByTuple<std::tuple<Ts...>> {
+  using type = MultiExprMatrixBuilder<Ts...>;
+};
+
+template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
+void add_polylog_space_to_matrix_builder_multi(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
+  const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
+    return prepare(s);
+  });
+  for (const auto& expr : space_prepared) {
+    // TODO: Why doesn't this work?
+    // std::apply([&](const auto& tuple) { matrix_builder.add_expr(tuple); }, expr);
+    matrix_builder.add_expr(expr);
+  }
+}
+
+template<typename SpaceT, typename PrepareF>
+Matrix compute_polylog_space_matrix_multi(const SpaceT& space, const PrepareF& prepare) {
+  using ExprTuple = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+  typename MultiExprMatrixBuilderByTuple<ExprTuple>::type matrix_builder;
+  add_polylog_space_to_matrix_builder_multi(space, prepare, matrix_builder);
+  return matrix_builder.make_matrix();
+}
+
+template<typename SpaceT, typename PrepareF, typename MapF>
+std::string polylog_space_kernel_describe_multi(const SpaceT& space, const PrepareF& prepare, const MapF& map) {
+  Profiler profiler(false);
+  const auto whole_space = compute_polylog_space_matrix(space, prepare);
+  profiler.finish("whole space");
+  const int whole_dim = matrix_rank(whole_space);
+  profiler.finish("whole dim");
+  const auto image_space = compute_polylog_space_matrix_multi(space, map);
+  profiler.finish("image space");
+  const int image_dim = matrix_rank(image_space);
+  profiler.finish("image dim");
+  const int kernel_dim = whole_dim - image_dim;
+  return absl::StrCat(whole_dim, " - ", image_dim, " = ", kernel_dim);
+}
+
+
+
+
+bool between(int point, std::pair<int, int> segment) {
+  const auto [a, b] = segment;
+  CHECK_LT(a, b);
+  CHECK(all_unique_unsorted(std::array{point, a, b}));
+  return a < point && point < b;
+}
+
+int x_idx(X x) {
+  CHECK(x.is(XForm::var));
+  return x.idx();
+}
+
+// TODO: Rewrite properly and factor out!
+bool are_weakly_separated(const Delta& d1, const Delta& d2) {
+  const auto a = set_difference(std::vector{x_idx(d1.a()), x_idx(d1.b())}, std::vector{x_idx(d2.a()), x_idx(d2.b())});
+  const auto b = set_difference(std::vector{x_idx(d2.a()), x_idx(d2.b())}, std::vector{x_idx(d1.a()), x_idx(d1.b())});
+  for (const auto& s1 : combinations(a, 2)) {
+    for (const auto& s2 : combinations(b, 2)) {
+      const auto [x1, y1] = to_array<2>(s1);
+      const auto [x2, y2] = to_array<2>(s2);
+      const bool itersect = between(x1, {x2, y2}) != between(y1, {x2, y2});
+      if (itersect) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Optimization potential: consider whether this can be done in O(N) time;
+bool is_weakly_separated(const DeltaExpr::ObjectT& term) {
+  for (int i : range(term.size())) {
+    for (int j : range(i)) {
+      if (!are_weakly_separated(term[i], term[j])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term) {
+  return is_weakly_separated(flatten(term));
+}
+
+bool is_totally_weakly_separated(const DeltaExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+bool is_totally_weakly_separated(const DeltaNCoExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+
 
 
 int main(int /*argc*/, char *argv[]) {
@@ -503,24 +648,272 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply)) << "\n";
   // }
 
-  // K_n rank
-  const int weight = 3;
-  for (const int dimension : range_incl(4, 5)) {
-    for (const int num_points : range_incl(5, 9)) {
-      const auto points = to_vector(range_incl(1, num_points));
-      const auto l1 = GrL1(dimension, points);
-      const auto l2 = GrL2(dimension, points);
-      const int l1_rank = compute_polylog_space_dim(l1, DISAMBIGUATE(to_lyndon_basis));
-      const int space_a_rank = binomial(l1_rank, weight);
-      const auto space_b = mapped(
-        cartesian_product(l2, l1),
-        APPLY(DISAMBIGUATE(ncoproduct))
-      );
-      check_space_weight_eq(space_b, weight);
-      const int space_b_image_rank = compute_polylog_space_dim(space_b, DISAMBIGUATE(ncomultiply));
-      const int diff = space_a_rank - space_b_image_rank;
-      std::cout << "d=" << dimension << ", p=" << num_points << ": ";
-      std::cout << space_a_rank << " - " << space_b_image_rank << " = " << diff << "\n";
-    }
+  // // K_n rank
+  // const int weight = 3;
+  // for (const int dimension : range_incl(4, 5)) {
+  //   for (const int num_points : range_incl(5, 9)) {
+  //     const auto points = to_vector(range_incl(1, num_points));
+  //     const auto l1 = GrL1(dimension, points);
+  //     const auto l2 = GrL2(dimension, points);
+  //     const int l1_rank = compute_polylog_space_dim(l1, DISAMBIGUATE(to_lyndon_basis));
+  //     const int space_a_rank = binomial(l1_rank, weight);
+  //     const auto space_b = mapped(
+  //       cartesian_product(l2, l1),
+  //       APPLY(DISAMBIGUATE(ncoproduct))
+  //     );
+  //     check_space_weight_eq(space_b, weight);
+  //     const int space_b_image_rank = compute_polylog_space_dim(space_b, DISAMBIGUATE(ncomultiply));
+  //     const int diff = space_a_rank - space_b_image_rank;
+  //     std::cout << "d=" << dimension << ", p=" << num_points << ": ";
+  //     std::cout << space_a_rank << " - " << space_b_image_rank << " = " << diff << "\n";
+  //   }
+  // }
+
+  // GrPolylogSpace space;
+  // const int num_points = 7;
+  // const int weight = 4;
+  // for (const int shift : range(num_points)) {
+  //   const auto args = mapped(range(num_points), [&](const int p) { return (p + shift) % num_points + 1; });
+  //   const int num_bonus_args = 1;
+  //   const auto bonus_args = slice(args, 0, num_bonus_args);
+  //   const auto main_args = slice(args, num_bonus_args);
+  //   space.push_back(GrQLiVec(weight, bonus_args, main_args));
+  // }
+  // const auto args_pool = to_vector(range_incl(1, num_points));
+  // for (const int bonus_arg_idx : range(num_points)) {
+  //   const auto bonus_args = std::vector{args_pool[bonus_arg_idx]};
+  //   const auto main_args_pool = removed_index(args_pool, bonus_arg_idx);
+  //   // for (const int main_args_start : range(num_points - 1)) {
+  //   //   const auto main_args = slice(rotated_vector(main_args_pool, main_args_start), 0, 4);
+  //   //   space.push_back(GrQLiVec(weight, bonus_args, main_args));
+  //   // }
+  //   for (const auto& main_args : combinations(main_args_pool, 4)) {
+  //     space.push_back(GrQLiVec(weight, bonus_args, main_args));
+  //   }
+  // }
+  // std::cout << dump_to_string(space) << "\n";
+  // std::cout << compute_polylog_space_dim(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  // const int num_points = 5;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto func = sum_looped_vec(R_4_3, 5, {1,2,3,4});
+  // GrPolylogNCoSpace func_space{func};
+  // // std::cout << func;
+  // GrPolylogSpace fx;
+  // for (const auto& p : combinations(points, 3)) {
+  //   fx.push_back(G(p));
+  // }
+  // GrPolylogSpace l2 = GrL2(3, points);
+  // GrPolylogNCoSpace space;
+  // for (const auto& [a, b] : cartesian_product(l2, fx)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   if (is_totally_weakly_separated(expr)) {
+  //     // space.push_back(expr);
+  //     space.push_back(ncomultiply(expr));
+  //   }
+  // };
+  // // std::cout << space.front();
+  // std::cout << polylog_spaces_intersection_describe(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
+  // // std::cout << polylog_space_contains(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
+
+  // const auto expr = GrQLi3(1)(2,3,4,5);
+  // std::cout << is_totally_weakly_separated(expr) << "\n";
+  // std::cout << is_totally_weakly_separated(ncomultiply(expr)) << "\n";
+
+  // const int num_points = 5;
+  // const int dimension = 3;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // GrPolylogNCoSpace grqli3_comult_space;
+  // for (const int bonus_arg_idx : range(num_points)) {
+  //   const auto bonus_args = std::vector{points[bonus_arg_idx]};
+  //   const auto main_args = removed_index(points, bonus_arg_idx);
+  //   grqli3_comult_space.push_back(ncomultiply(GrQLiVec(3, bonus_args, main_args)));
+  // }
+  // GrPolylogSpace fx;
+  // for (const auto& p : combinations(points, dimension)) {
+  //   fx.push_back(G(p));
+  // }
+  // GrPolylogSpace l2 = GrL2(dimension, points);
+  // GrPolylogNCoSpace space;
+  // for (const auto& [a, b] : cartesian_product(l2, fx)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   space.push_back(expr);
+  // };
+  // // std::cout << grqli3_comult_space.front();
+  // // std::cout << space.front();
+  // // std::cout << polylog_spaces_intersection_describe(space, grqli3_comult_space, DISAMBIGUATE(identity_function)) << "\n";
+  // std::cout << compute_polylog_space_dim(space, DISAMBIGUATE(identity_function)) << "\n";
+  // MultiExprMatrixBuilder<GammaNCoExpr, GammaNCoExpr> matrix_builder;
+  // for (const auto& expr : space) {
+  //   matrix_builder.add_expr(ncomultiply(expr), keep_non_weakly_separated(expr));
+  // }
+  // std::cout << matrix_rank(matrix_builder.make_matrix()) << "\n";
+
+
+
+  // const int num_points = 5;
+  // const int dimension = 2;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // GrPolylogSpace fx;
+  // for (const auto& p : combinations(points, dimension)) {
+  //   fx.push_back(G(p));
+  // }
+  // // GrPolylogSpace l1 = GrL1(dimension, points);
+  // GrPolylogSpace l1 = fx;
+  // GrPolylogSpace l2 = GrL2(dimension, points);
+  // GrPolylogSpace l3 = GrL3(dimension, points);
+
+  // Profiler profiler;
+
+  // GrPolylogNCoSpace space_a;
+  // for (const auto& [a, b] : cartesian_product(l3, l1)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   space_a.push_back(expr);
+  // };
+  // for (const auto& [a, b] : cartesian_product(l2, l2)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   space_a.push_back(expr);
+  // };
+  // profiler.finish("space_a");
+
+  // GrPolylogNCoSpace space_b;
+  // for (const auto& [a, b, c] : cartesian_product(l2, l1, l1)) {
+  //   const auto expr = ncoproduct(a, b, c);
+  //   space_b.push_back(expr);
+  // };
+  // profiler.finish("space_b");
+
+  // GrPolylogNCoSpace space_c;
+  // // TODO: Extend `combinations` to do this internally.
+  // for (const auto& indices : combinations(to_vector(range(l1.size())), 4)) {
+  //   const auto expr = ncoproduct_vec(choose_indices(l1, indices));
+  //   space_c.push_back(expr);
+  // }
+  // profiler.finish("space_c");
+
+  // for (const auto& space : {space_a, space_b, space_c}) {
+  //   std::cout << "---\n";
+  //   const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::make_tuple(keep_non_weakly_separated(expr));
+  //   });
+  //   std::cout << "cluster:  " << description1 << "\n";
+  //   const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+  //   });
+  //   std::cout << "cl+comul: " << description2 << "\n";
+  // }
+
+
+
+  // const int num_points = 7;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // PolylogSpace l1 = L(1, points);
+  // PolylogSpace l2 = L(2, points);
+  // PolylogSpace l3 = L(3, points);
+
+  // Profiler profiler;
+
+  // PolylogNCoSpace space_a;
+  // for (const auto& [a, b] : cartesian_product(l3, l1)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   space_a.push_back(expr);
+  // };
+  // for (const auto& [a, b] : cartesian_product(l2, l2)) {
+  //   const auto expr = ncoproduct(a, b);
+  //   space_a.push_back(expr);
+  // };
+  // profiler.finish("space_a");
+
+  // PolylogNCoSpace space_b;
+  // for (const auto& [a, b, c] : cartesian_product(l2, l1, l1)) {
+  //   const auto expr = ncoproduct(a, b, c);
+  //   space_b.push_back(expr);
+  // };
+  // profiler.finish("space_b");
+
+  // PolylogNCoSpace space_c;
+  // // TODO: Extend `combinations` to do this internally.
+  // for (const auto& indices : combinations(to_vector(range(l1.size())), 4)) {
+  //   const auto expr = ncoproduct_vec(choose_indices(l1, indices));
+  //   space_c.push_back(expr);
+  // }
+  // profiler.finish("space_c");
+
+  // for (const auto& space : {space_a, space_b, space_c}) {
+  //   std::cout << "---\n";
+  //   const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::make_tuple(keep_non_weakly_separated(expr));
+  //   });
+  //   std::cout << "cluster:  " << description1 << "\n";
+  //   const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+  //   });
+  //   std::cout << "cl+comul: " << description2 << "\n";
+  // }
+
+
+
+  // TODO: Combined cartesian_product/combinations for equal args
+
+  const int num_points = 6;
+  const auto points = to_vector(range_incl(1, num_points));
+  PolylogSpace l1 = L(1, points);
+  PolylogSpace l2 = L(2, points);
+  PolylogSpace l3 = L(3, points);
+  PolylogSpace l4 = L(4, points);
+
+  Profiler profiler;
+
+  PolylogNCoSpace space_a;
+  for (const auto& [a, b] : cartesian_product(l4, l1)) {
+    const auto expr = ncoproduct(a, b);
+    space_a.push_back(expr);
+  };
+  for (const auto& [a, b] : cartesian_product(l3, l2)) {
+    const auto expr = ncoproduct(a, b);
+    space_a.push_back(expr);
+  };
+  profiler.finish("space_a");
+
+  PolylogNCoSpace space_b;
+  for (const auto& [a, b, c] : cartesian_product(l2, l2, l1)) {
+    const auto expr = ncoproduct(a, b, c);
+    space_b.push_back(expr);
+  };
+  for (const auto& [a, b, c] : cartesian_product(l3, l1, l1)) {
+    const auto expr = ncoproduct(a, b, c);
+    space_b.push_back(expr);
+  };
+  profiler.finish("space_b");
+
+  PolylogNCoSpace space_c;
+  for (const auto& [a, b, c, d] : cartesian_product(l2, l1, l1, l1)) {
+    const auto expr = ncoproduct(a, b, c, d);
+    space_c.push_back(expr);
+  };
+  profiler.finish("space_c");
+
+  PolylogNCoSpace space_d;
+  // TODO: Extend `combinations` to do this internally.
+  for (const auto& indices : combinations(to_vector(range(l1.size())), 5)) {
+    const auto expr = ncoproduct_vec(choose_indices(l1, indices));
+    space_d.push_back(expr);
   }
+  profiler.finish("space_d");
+
+  for (const auto& space : {space_a, space_b, space_c, space_d}) {
+    std::cout << "---\n";
+    const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+      return std::make_tuple(keep_non_weakly_separated(expr));
+    });
+    std::cout << "cluster:  " << description1 << "\n";
+    const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+      return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+    });
+    std::cout << "cl+comul: " << description2 << "\n";
+  }
+
+
+
+  // std::cout << dump_to_string(cartesian_combinations<int>({{{1,2,3}, 2}, {{10, 20}, 1}})) << "\n";
 }
