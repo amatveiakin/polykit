@@ -291,51 +291,6 @@ GammaNCoExpr R_4_3(const std::vector<int>& points) {
 }
 
 
-template<typename T>
-struct MultiExprMatrixBuilderByTuple {};
-template<typename... Ts>
-struct MultiExprMatrixBuilderByTuple<std::tuple<Ts...>> {
-  using type = MultiExprMatrixBuilder<Ts...>;
-};
-
-template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
-void add_polylog_space_to_matrix_builder_multi(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
-  const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
-    return prepare(s);
-  });
-  for (const auto& expr : space_prepared) {
-    // TODO: Why doesn't this work?
-    // std::apply([&](const auto& tuple) { matrix_builder.add_expr(tuple); }, expr);
-    matrix_builder.add_expr(expr);
-  }
-}
-
-template<typename SpaceT, typename PrepareF>
-Matrix compute_polylog_space_matrix_multi(const SpaceT& space, const PrepareF& prepare) {
-  using ExprTuple = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  typename MultiExprMatrixBuilderByTuple<ExprTuple>::type matrix_builder;
-  add_polylog_space_to_matrix_builder_multi(space, prepare, matrix_builder);
-  return matrix_builder.make_matrix();
-}
-
-template<typename SpaceT, typename PrepareF, typename MapF>
-std::string polylog_space_kernel_describe_multi(const SpaceT& space, const PrepareF& prepare, const MapF& map) {
-  Profiler profiler(false);
-  const auto whole_space = compute_polylog_space_matrix(space, prepare);
-  profiler.finish("whole space");
-  const int whole_dim = matrix_rank(whole_space);
-  profiler.finish("whole dim");
-  const auto image_space = compute_polylog_space_matrix_multi(space, map);
-  profiler.finish("image space");
-  const int image_dim = matrix_rank(image_space);
-  profiler.finish("image dim");
-  const int kernel_dim = whole_dim - image_dim;
-  return absl::StrCat(whole_dim, " - ", image_dim, " = ", kernel_dim);
-}
-
-
-
-
 bool between(int point, std::pair<int, int> segment) {
   const auto [a, b] = segment;
   CHECK_LT(a, b);
@@ -743,7 +698,7 @@ int main(int /*argc*/, char *argv[]) {
   // // std::cout << space.front();
   // // std::cout << polylog_spaces_intersection_describe(space, grqli3_comult_space, DISAMBIGUATE(identity_function)) << "\n";
   // std::cout << compute_polylog_space_dim(space, DISAMBIGUATE(identity_function)) << "\n";
-  // MultiExprMatrixBuilder<GammaNCoExpr, GammaNCoExpr> matrix_builder;
+  // ExprMatrixBuilder<GammaNCoExpr, GammaNCoExpr> matrix_builder;
   // for (const auto& expr : space) {
   //   matrix_builder.add_expr(ncomultiply(expr), keep_non_weakly_separated(expr));
   // }
@@ -793,11 +748,11 @@ int main(int /*argc*/, char *argv[]) {
 
   // for (const auto& space : {space_a, space_b, space_c}) {
   //   std::cout << "---\n";
-  //   const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
   //     return std::make_tuple(keep_non_weakly_separated(expr));
   //   });
   //   std::cout << "cluster:  " << description1 << "\n";
-  //   const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto description2 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
   //     return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
   //   });
   //   std::cout << "cl+comul: " << description2 << "\n";
@@ -841,11 +796,11 @@ int main(int /*argc*/, char *argv[]) {
 
   // for (const auto& space : {space_a, space_b, space_c}) {
   //   std::cout << "---\n";
-  //   const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
   //     return std::make_tuple(keep_non_weakly_separated(expr));
   //   });
   //   std::cout << "cluster:  " << description1 << "\n";
-  //   const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto description2 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
   //     return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
   //   });
   //   std::cout << "cl+comul: " << description2 << "\n";
@@ -855,7 +810,7 @@ int main(int /*argc*/, char *argv[]) {
 
   // TODO: Combined cartesian_product/combinations for equal args
 
-  const int num_points = 6;
+  const int num_points = 5;
   const auto points = to_vector(range_incl(1, num_points));
   PolylogSpace l1 = L(1, points);
   PolylogSpace l2 = L(2, points);
@@ -903,11 +858,11 @@ int main(int /*argc*/, char *argv[]) {
 
   for (const auto& space : {space_a, space_b, space_c, space_d}) {
     std::cout << "---\n";
-    const auto description1 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::make_tuple(keep_non_weakly_separated(expr));
     });
     std::cout << "cluster:  " << description1 << "\n";
-    const auto description2 = polylog_space_kernel_describe_multi(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    const auto description2 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
     });
     std::cout << "cl+comul: " << description2 << "\n";

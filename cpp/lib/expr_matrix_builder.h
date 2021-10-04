@@ -8,57 +8,9 @@
 #include "util.h"
 
 
-// TODO: Rewrite as MultiExprMatrixBuilder with one expression;
-//   OR better yet: just make it a special case.
-template<typename ExprT>
-class ExprMatrixBuilder {
-public:
-  void add_expr(const ExprT& expr) {
-    std::vector<SparseElement> row;
-    for (const auto& [term, coeff] : expr) {
-      row.push_back({monoms_.index(term), coeff});
-    }
-    sparse_rows_.insert(row);
-  }
-
-  Matrix make_matrix() const {
-    const auto sparse_columns = unique_sparse_columns();
-    Matrix matrix;
-    int i_col = 0;
-    for (const auto& column : sparse_columns) {
-      for (const auto& [i_row, value] : column) {
-        matrix.insert(i_row, i_col) = value;
-      }
-      ++i_col;
-    }
-    return matrix;
-  }
-
-private:
-  using SparseElement = std::pair<int, int>;  // (row/col, value)
-
-  absl::flat_hash_set<std::vector<SparseElement>> unique_sparse_columns() const {
-    const int num_cols = monoms_.size();
-    std::vector<std::vector<SparseElement>> sparse_columns(num_cols);
-    int i_row = 0;
-    for (const auto& row : sparse_rows_) {
-      for (const auto& [i_col, coeff] : row) {
-        sparse_columns[i_col].push_back({i_row, coeff});
-      }
-      ++i_row;
-    }
-    return to_set(sparse_columns);
-  }
-
-  Enumerator<typename ExprT::ObjectT> monoms_;
-  // For each row: for each non-zero value: (column, value)
-  absl::flat_hash_set<std::vector<SparseElement>> sparse_rows_;
-};
-
-
 // TODO: Test, for distinct and duplicate types.
 template<typename... ExprTs>
-class MultiExprMatrixBuilder {
+class ExprMatrixBuilder {
 public:
   // TODO: Don't create an intermediate tuple. Implement tuple version via non-tuple instead.
   void add_expr(const std::tuple<ExprTs...>& expressions) {
@@ -127,3 +79,11 @@ private:
   // For each row: for each non-zero value: (column, value)
   absl::flat_hash_set<std::vector<SparseElement>> sparse_rows_;
 };
+
+
+template<typename... Ts>
+struct GetExprMatrixBuilder { using type = ExprMatrixBuilder<Ts...>; };
+template<typename... Ts>
+struct GetExprMatrixBuilder<std::tuple<Ts...>> { using type = ExprMatrixBuilder<Ts...>; };
+template<typename... Ts>
+using GetExprMatrixBuilder_t = typename GetExprMatrixBuilder<Ts...>::type;

@@ -63,8 +63,6 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
 void add_polylog_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
-  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  static_assert(std::is_same_v<MatrixBuilderT, ExprMatrixBuilder<ExprT>>);
   const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
     return prepare(s);
   });
@@ -76,7 +74,7 @@ void add_polylog_space_to_matrix_builder(const SpaceT& space, const PrepareF& pr
 template<typename SpaceT, typename PrepareF>
 Matrix compute_polylog_space_matrix(const SpaceT& space, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  ExprMatrixBuilder<ExprT> matrix_builder;
+  GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_polylog_space_to_matrix_builder(space, prepare, matrix_builder);
   return matrix_builder.make_matrix();
 }
@@ -90,7 +88,7 @@ int compute_polylog_space_dim(const SpaceT& space, const PrepareF& prepare) {
 template<typename SpaceT, typename PrepareF>
 bool polylog_space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
-  ExprMatrixBuilder<ExprT> matrix_builder;
+  GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_polylog_space_to_matrix_builder(haystack, prepare, matrix_builder);
   const int haystack_rank = matrix_rank(matrix_builder.make_matrix());
   add_polylog_space_to_matrix_builder(needle, prepare, matrix_builder);
@@ -111,7 +109,7 @@ PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const S
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   Profiler profiler(false);
 
-  ExprMatrixBuilder<ExprT> matrix_builder_a;
+  GetExprMatrixBuilder_t<ExprT> matrix_builder_a;
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
   profiler.finish("A space");
   const int a_rank = matrix_rank(matrix_builder_a.make_matrix());
@@ -121,7 +119,7 @@ PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const S
   const int united_rank = matrix_rank(matrix_builder_a.make_matrix());
   profiler.finish("united dim");
 
-  ExprMatrixBuilder<ExprT> matrix_builder_b;
+  GetExprMatrixBuilder_t<ExprT> matrix_builder_b;
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
   profiler.finish("B space");
   const int b_rank = matrix_rank(matrix_builder_b.make_matrix());
