@@ -60,36 +60,6 @@ int binomial(int n, int k) {
 }
 
 
-template<typename T>
-void fill_cartesian_combinations(
-  const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers,
-  int next_element,
-  std::vector<T>& buffer,
-  std::vector<std::vector<T>>& result
-) {
-  if (next_element == elements_and_powers.size()) {
-    result.push_back(buffer);
-  } else {
-    const auto& [elements, power] = elements_and_powers[next_element];
-    for (const auto& seq : combinations(elements, power)) {
-      append_vector(buffer, seq);
-      fill_cartesian_combinations(elements_and_powers, next_element + 1, buffer, result);
-      buffer.erase(buffer.end() - seq.size(), buffer.end());
-    }
-  }
-}
-
-// Optimization potential: and `std::ref` around the inner vectors.
-template<typename T>
-std::vector<std::vector<T>> cartesian_combinations(const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers) {
-  std::vector<std::vector<T>> ret;
-  std::vector<T> buffer;
-  fill_cartesian_combinations(elements_and_powers, 0, buffer, ret);
-  CHECK(buffer.empty());
-  return ret;
-}
-
-
 template<typename SpaceT>
 void check_space_weight_eq(const SpaceT& space, int weight) {
   for (const auto& expr : space) {

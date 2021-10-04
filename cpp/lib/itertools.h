@@ -146,6 +146,25 @@ void fill_combinations_with_replacement(
   }
 }
 
+template<typename T>
+void fill_cartesian_combinations(
+  const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers,
+  int next_element,
+  std::vector<T>& buffer,
+  std::vector<std::vector<T>>& result
+) {
+  if (next_element == elements_and_powers.size()) {
+    result.push_back(buffer);
+  } else {
+    const auto& [elements, power] = elements_and_powers[next_element];
+    for (const auto& seq : combinations(elements, power)) {
+      append_vector(buffer, seq);
+      fill_cartesian_combinations(elements_and_powers, next_element + 1, buffer, result);
+      buffer.erase(buffer.end() - seq.size(), buffer.end());
+    }
+  }
+}
+
 }  // namespace internal
 
 
@@ -231,4 +250,16 @@ std::vector<std::vector<T>> permutations(const std::vector<T>& elements, int siz
 template<typename T>
 std::vector<std::vector<T>> permutations(std::initializer_list<T> elements, int size) {
   return permutations(std::vector(elements), size);
+}
+
+
+// Like `cartesian_product(combinations(...), ..., combinations(...))`, but the result is not nested.
+// TODO: Find a more adequate solution for this.
+template<typename T>
+std::vector<std::vector<T>> cartesian_combinations(const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers) {
+  std::vector<std::vector<T>> ret;
+  std::vector<T> buffer;
+  internal::fill_cartesian_combinations(elements_and_powers, 0, buffer, ret);
+  CHECK(buffer.empty());
+  return ret;
 }
