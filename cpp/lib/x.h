@@ -28,7 +28,6 @@ public:
   constexpr X(XForm form, int idx);
   constexpr X() : X(XForm::undefined, kFakeIndex) {}
   constexpr X(int idx) : X(XForm::var, idx) {}
-  static constexpr X Var(int idx) { return X(idx); }
   static constexpr X Zero() { return X(XForm::zero, kFakeIndex); }
   static constexpr X Inf() { return X(XForm::infinity, kFakeIndex); }
 
@@ -163,7 +162,7 @@ inline static const X x16s = X(XForm::sq_var, 16);
 class XArgs {
 public:
   XArgs(absl::Span<const X> points) : data_(to_vector(points)) {}
-  XArgs(absl::Span<const int> points) : data_(mapped(points, X::Var)) {}
+  XArgs(absl::Span<const int> points) : data_(mapped(points, convert_to<X>)) {}
   XArgs(std::vector<X> points) : data_(std::move(points)) {}
   XArgs(const std::vector<int>& points) : XArgs(absl::MakeConstSpan(points)) {}
   template<size_t N>

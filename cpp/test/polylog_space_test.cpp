@@ -81,7 +81,7 @@ INSTANTIATE_TEST_SUITE_P(LARGE_Cases, PolylogSpaceTest_Weight_NumPoints, ::testi
 
 TEST(PolylogSpaceTest, L3SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
-    auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+    auto points = mapped(range_incl(1, num_points), convert_to<X>);
     points.back() = Inf;
     EXPECT_POLYLOG_SPACE_EQUALS(L(3, points), L3_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }
@@ -89,7 +89,7 @@ TEST(PolylogSpaceTest, L3SameAsAlternative) {
 
 TEST(PolylogSpaceTest, LARGE_L4SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
-    auto points = mapped(range_incl(1, num_points), [](int i) { return X(i); });
+    auto points = mapped(range_incl(1, num_points), convert_to<X>);
     points.back() = Inf;
     EXPECT_POLYLOG_SPACE_EQUALS(L(4, points), L4_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }

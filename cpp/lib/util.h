@@ -65,6 +65,17 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
+// TODO: For using together with `mapped`.
+template<typename T>
+struct convert_to_t {
+  template<class U>
+  T operator()(U&& u) const {
+    return T(std::forward<U>(u));
+  }
+};
+template<typename T>
+constexpr convert_to_t<T> convert_to;
+
 
 template<typename Container, typename Key>
 auto value_or(const Container& container, const Key& key, const typename Container::mapped_type& default_value) {

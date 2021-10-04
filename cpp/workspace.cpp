@@ -205,17 +205,6 @@ std::string GrL4_b_kernel(int dimension, const XArgs& xargs) {
   );
 }
 
-// TODO: Use for converting to `X`
-template<typename T>
-struct convert_to_t {
-  template<class U>
-  T operator()(U&& u) const {
-    return T(std::forward<U>(u));
-  }
-};
-template<typename T>
-constexpr convert_to_t<T> convert_to;
-
 // No dependencies: space rank == space.size()
 GrPolylogSpace GrQLi3_test_space(const XArgs& xargs) {  // dimension = 3
   auto args = xargs.as_x();
