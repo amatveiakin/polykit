@@ -275,8 +275,12 @@ PolylogNCoSpace co_L(int weight, int num_coparts, int num_points) {
   const int max_l_weight = max_value(flatten(weights_per_summand));
   const std::vector<PolylogSpace> l_spaces = mapped(
     range_incl(1, max_l_weight),
-    // [&](const int w) { return L(w, points); }
-    [&](const int w) { return normalize_space_remove_consecutive(L(w, points)); }
+    [&](const int w) {
+      return mapped(L(w, points), [](const auto& expr) {
+        // Precompute Lyndon basis to speed up coproduct.
+        return to_lyndon_basis(normalize_remove_consecutive(expr));
+      });
+    }
   );
   PolylogNCoSpace ret;
   for (const auto& summand_weights : weights_per_summand) {

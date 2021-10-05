@@ -49,6 +49,7 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
+// Note: applies normalize_remove_consecutive.
 PolylogNCoSpace co_L(int weight, int num_coparts, int num_points);
 
 PolylogNCoSpace co_CL_3(const XArgs& args);
