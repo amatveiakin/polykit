@@ -52,7 +52,7 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
-PolylogNCoSpace co_L(int weight, int coparts, const XArgs& args);
+PolylogNCoSpace co_L(int weight, int num_coparts, int num_points);
 
 PolylogNCoSpace co_CL_3(const XArgs& args);
 PolylogNCoSpace co_CL_4(const XArgs& args);
@@ -68,6 +68,11 @@ GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL2(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
 
+
+template<typename SpaceT>
+SpaceT normalize_space_remove_consecutive(const SpaceT& space) {
+  return mapped(space, DISAMBIGUATE(normalize_remove_consecutive));
+}
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
 void add_polylog_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {

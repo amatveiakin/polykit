@@ -138,3 +138,6 @@ bool is_totally_weakly_separated(const GammaExpr& expr);
 bool is_totally_weakly_separated(const GammaNCoExpr& expr);
 GammaExpr keep_non_weakly_separated(const GammaExpr& expr);
 GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);
+
+bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term);
+GammaExpr normalize_remove_consecutive(const GammaExpr& expr);

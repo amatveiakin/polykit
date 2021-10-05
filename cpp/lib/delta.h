@@ -301,13 +301,13 @@ bool is_totally_weakly_separated(const DeltaNCoExpr& expr);
 DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr);
 DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr);
 
+// TODO: Allow circular normalization when the number of points is odd.
+bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term);
+DeltaExpr normalize_remove_consecutive(const DeltaExpr& expr);
+
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 // For using together with `DeltaExpr::filter`
-inline int count_var(const DeltaExpr::ObjectT& term, int var) {
-  return absl::c_count_if(term, [&](const Delta& d) {
-    return d.a().idx() == var || d.b().idx() == var;
-  });
-};
+int count_var(const DeltaExpr::ObjectT& term, int var);
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);

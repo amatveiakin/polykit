@@ -280,6 +280,22 @@ DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
   return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
 }
 
+bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term) {
+  return absl::c_all_of(term, [](const Delta& d) {
+    CHECK(d.a().is(XForm::var) && d.b().is(XForm::var)) << dump_to_string(d);
+    int a = d.a().idx();
+    int b = d.b().idx();
+    sort_two(a, b);
+    return b != a + 1;
+  });
+}
+
+DeltaExpr normalize_remove_consecutive(const DeltaExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return passes_normalize_remove_consecutive(term);
+  });
+}
+
 
 static void graph_mark_reached(
     int start,
@@ -328,6 +344,12 @@ DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr) {
     return graph_is_connected(term);
   });
 }
+
+int count_var(const DeltaExpr::ObjectT& term, int var) {
+  return absl::c_count_if(term, [&](const Delta& d) {
+    return d.a().idx() == var || d.b().idx() == var;
+  });
+};
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr) {
   to_ostream_grouped(

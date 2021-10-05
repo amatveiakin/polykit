@@ -65,3 +65,20 @@ GammaExpr keep_non_weakly_separated(const GammaExpr& expr) {
 GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr) {
   return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
 }
+
+bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term) {
+  return absl::c_all_of(term, [](const Gamma& g) {
+    // Optimization potential: check this on bitset level.
+    const auto& v = g.index_vector();
+    const auto it = absl::c_adjacent_find(v, [](int a, int b) {
+      return b != a + 1;
+    });
+    return it != v.end();
+  });
+}
+
+GammaExpr normalize_remove_consecutive(const GammaExpr& expr) {
+  return expr.filtered([](const auto& term) {
+    return passes_normalize_remove_consecutive(term);
+  });
+}

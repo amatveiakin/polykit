@@ -265,13 +265,18 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
 }
 
 
-PolylogNCoSpace co_L(int weight, int coparts, const XArgs& args) {
-  CHECK_LE(coparts, weight);
-  const auto weights_per_summand = get_partitions(weight, coparts);
+// Note: If changed to support any set of points, normalization should probably be disabled.
+// Interface idea: Replace points/num_point with a functor that takes weight and returns L space.
+//   Then things like normalization of usage of F^\times instead of L_1 could be moved there.
+PolylogNCoSpace co_L(int weight, int num_coparts, int num_points) {
+  CHECK_LE(num_coparts, weight);
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto weights_per_summand = get_partitions(weight, num_coparts);
   const int max_l_weight = max_value(flatten(weights_per_summand));
   const std::vector<PolylogSpace> l_spaces = mapped(
     range_incl(1, max_l_weight),
-    [&](const int w) { return L(w, args); }
+    // [&](const int w) { return L(w, points); }
+    [&](const int w) { return normalize_space_remove_consecutive(L(w, points)); }
   );
   PolylogNCoSpace ret;
   for (const auto& summand_weights : weights_per_summand) {

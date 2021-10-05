@@ -110,45 +110,6 @@ GammaExpr glue_unglue_transform(const GammaExpr& expr) {
 }
 
 
-bool keep_for_normalize_remove_consecutive(const GammaExpr::ObjectT& term) {
-  return absl::c_none_of(term, [](const Gamma& g) {
-    const auto& v = g.index_vector();
-    const auto it = absl::c_adjacent_find(v, [](int a, int b) {
-      return b != a + 1;
-    });
-    return it == v.end();
-  });
-}
-
-bool keep_for_normalize_remove_consecutive_circular(const GammaExpr::ObjectT& term, int dimension, int num_points) {
-  // TODO: Cache OR don't use at all
-  absl::flat_hash_set<Gamma> discard;
-  for (const int i : range(num_points)) {
-    discard.insert(Gamma(mapped(range(i, i + dimension), [&](const int idx) {
-      return idx % num_points + 1;
-    })));
-  }
-  return absl::c_none_of(term, [&](const Gamma& g) {
-    return discard.contains(g);
-  });
-}
-
-GammaExpr normalize_remove_consecutive(const GammaExpr& expr) {
-  return expr.filtered([](const auto& term) {
-    return keep_for_normalize_remove_consecutive(term);
-  });
-}
-
-GammaExpr normalize_remove_consecutive_circular(const GammaExpr& expr, int dimension, int num_points) {
-  return expr.filtered([&](const auto& term) {
-    return keep_for_normalize_remove_consecutive_circular(term, dimension, num_points);
-  });
-}
-
-GrPolylogSpace normalize_space_remove_consecutive(const GrPolylogSpace& space) {
-  return mapped(space, &normalize_remove_consecutive);
-}
-
 std::string GrL3_kernel(int dimension, const XArgs& xargs) {
   const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, xargs));
   const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, xargs));
@@ -456,8 +417,8 @@ int main(int /*argc*/, char *argv[]) {
   //   GrPolylogACoSpace s1;
   //   for (const auto& w : get_lyndon_words(alphabet, weight)) {
   //     const auto term = mapped(w, convert_to<Gamma>);
-  //     // if (is_weakly_separated(term) && keep_for_normalize_remove_consecutive(term)) {
-  //     if (is_weakly_separated(term) && keep_for_normalize_remove_consecutive_circular(term, dimension, num_points)) {
+  //     // if (is_weakly_separated(term) && passes_normalize_remove_consecutive(term)) {
+  //     if (is_weakly_separated(term) && passes_normalize_remove_consecutive_circular(term, dimension, num_points)) {
   //       s1.push_back(expand_into_glued_pairs(GammaExpr::single(term)));
   //     }
   //   }
@@ -810,9 +771,8 @@ int main(int /*argc*/, char *argv[]) {
   // TODO: Test polylog_space_kernel_describe(L, keep_non_weakly_separated) rank == CL rank
   const int weight = 4;
   const int num_points = 6;
-  const auto points = to_vector(range_incl(1, num_points));
   for (const int num_coparts : range_incl(2, weight)) {
-    const auto space = co_L(weight, num_coparts, points);
+    const auto space = co_L(weight, num_coparts, num_points);
     std::cout << "---\n";
     const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::make_tuple(keep_non_weakly_separated(expr));
