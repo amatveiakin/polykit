@@ -4,6 +4,8 @@
 
 #include "linalg.h"
 
+#include <queue>
+
 #include <linbox/linbox-config.h>
 #include <givaro/givrational.h>
 #include <linbox/ring/modular.h>
@@ -37,25 +39,36 @@ std::vector<MatrixView::Triplet> MatrixView::as_triplets() const {
 }
 
 
-void extract_block(
-  int i_row,
-  int i_col,
+// Finds one diagonal block in a matrix given by `rows` and `cols`, which must be synchronized,
+// i.e. for each element (col, value) in `rows` there must be a corresponding element (row, value)
+// in `cols` and vice versa. Removes the elements corresponding to the block from `rows` and `cols`.
+// Returns the block as a map: (row, col) -> value.
+absl::flat_hash_map<std::pair<int, int>, int> extract_block(
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& rows,
-  absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& cols,
-  absl::flat_hash_map<std::pair<int, int>, int>& block
+  absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& cols
 ) {
-  const auto row = extract_value_or(rows, i_row);
-  const auto col = extract_value_or(cols, i_col);
-  for (const auto& [c, v] : row) {
-    if (block.insert({{i_row, c}, v}).second) {
-      extract_block(i_row, c, rows, cols, block);
+  absl::flat_hash_map<std::pair<int, int>, int> block;
+  std::queue<std::pair<int, int>> extraction_queue;  // queue of (row, col)
+  const auto it = rows.begin();
+  const auto it_it = it->second.begin();
+  extraction_queue.push({it->first, it_it->first});
+  while (!extraction_queue.empty()) {
+    const auto [i_row, i_col] = extraction_queue.front();
+    extraction_queue.pop();
+    const auto row = extract_value_or(rows, i_row);
+    const auto col = extract_value_or(cols, i_col);
+    for (const auto& [c, v] : row) {
+      if (block.insert({{i_row, c}, v}).second) {
+        extraction_queue.push({i_row, c});
+      }
+    }
+    for (const auto& [r, v] : col) {
+      if (block.insert({{r, i_col}, v}).second) {
+        extraction_queue.push({r, i_col});
+      }
     }
   }
-  for (const auto& [r, v] : col) {
-    if (block.insert({{r, i_col}, v}).second) {
-      extract_block(r, i_col, rows, cols, block);
-    }
-  }
+  return block;
 }
 
 std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
@@ -67,11 +80,7 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
   }
   std::vector<Matrix> blocks;
   while (!rows.empty()) {
-    absl::flat_hash_map<std::pair<int, int>, int> block;
-    const auto it = rows.begin();
-    const auto it_it = it->second.begin();
-    // extract_block(it->first, it_it->first, it_it->second, rows, cols, block);
-    extract_block(it->first, it_it->first, rows, cols, block);
+    const auto block = extract_block(rows, cols);
     Matrix block_matrix;
     for (const auto& [rowcol, value] : block) {
       const auto [row, col] = rowcol;
@@ -267,9 +276,7 @@ static int matrix_rank_fancy(const Matrix& matrix) {
 
 #if 1
 int matrix_rank(const Matrix& matrix) {
-  // TODO: Fix stack overflows in `extract_block` and re-enable.
-  // return matrix_rank_fancy(matrix);
-  return matrix_rank_raw_linbox(matrix);
+  return matrix_rank_fancy(matrix);
 }
 #else
 int matrix_rank(const Matrix& matrix) {
