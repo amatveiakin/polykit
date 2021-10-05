@@ -59,57 +59,6 @@ void check_space_weight_eq(const SpaceT& space, int weight) {
 }
 
 
-struct GammaACoExprParam : GammaCoExpr::Param {
-  static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
-    using namespace cmp;
-    return projected(lhs, rhs, [](const auto& v) {
-      return std::tuple{desc_val(v.size()), asc_ref(v)};
-    });
-  };
-};
-
-using GammaACoExpr = Linear<GammaACoExprParam>;
-
-using GrPolylogACoSpace = std::vector<GammaACoExpr>;
-
-// Converts each term
-//     x1 * x2 * ... * xn
-// into a sum
-//   + (x1^x2) * x3 * ... * xn
-//   + x1 * (x2^x3) * ... * xn
-//     ...
-//   + x1 * x1 * ... * (x{n-1}^xn)
-//
-GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr) {
-  using CoExprT = GammaACoExpr;
-  return expr.mapped_expanding([](const auto& term) {
-    CoExprT expanded_expr;
-    for (const int i : range(term.size() - 1)) {
-      std::vector<GammaExpr> expanded_term;
-      for (const int j : range(term.size() - 1)) {
-        if (j < i) {
-          expanded_term.push_back(GammaExpr::single({term[j]}));
-        } else if (j == i) {
-          expanded_term.push_back(GammaExpr::single({term[j], term[j+1]}));
-        } else {
-          expanded_term.push_back(GammaExpr::single({term[j+1]}));
-        }
-      }
-      expanded_expr += internal::abstract_coproduct_vec<CoExprT>(expanded_term);
-    }
-    return expanded_expr;
-  });
-}
-
-GammaExpr unglue_pairs(const GammaACoExpr& coexpr) {
-  return coexpr.mapped<GammaExpr>(DISAMBIGUATE(flatten));
-}
-
-GammaExpr glue_unglue_transform(const GammaExpr& expr) {
-  return unglue_pairs(expand_into_glued_pairs(expr));
-}
-
-
 std::string GrL3_kernel(int dimension, const XArgs& xargs) {
   const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, xargs));
   const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, xargs));
@@ -406,38 +355,6 @@ int main(int /*argc*/, char *argv[]) {
   //   const auto rank = compute_polylog_space_dim(space, DISAMBIGUATE(ncomultiply));
   //   profiler.finish("rank");
   //   std::cout << "l2*l1^" << num_l1 << ": " << rank << "\n";
-  // }
-
-  // const int dimension = 3;
-  // const int weight = 5;
-  // for (const int num_points : range_incl(5, 9)) {
-  //   const auto points = to_vector(range_incl(1, num_points));
-  //   const auto alphabet = combinations(points, dimension);
-  //   Profiler profiler;
-  //   GrPolylogACoSpace s1;
-  //   for (const auto& w : get_lyndon_words(alphabet, weight)) {
-  //     const auto term = mapped(w, convert_to<Gamma>);
-  //     // if (is_weakly_separated(term) && passes_normalize_remove_consecutive(term)) {
-  //     if (is_weakly_separated(term) && passes_normalize_remove_consecutive_circular(term, dimension, num_points)) {
-  //       s1.push_back(expand_into_glued_pairs(GammaExpr::single(term)));
-  //     }
-  //   }
-  //   const auto l1 = mapped(GrL1(dimension, points), [&](const auto& expr) { return normalize_remove_consecutive_circular(expr, dimension, num_points); });
-  //   const auto l2 = mapped(GrL2(dimension, points), [&](const auto& expr) { return normalize_remove_consecutive_circular(expr, dimension, num_points); });
-  //   profiler.finish("space 1");
-  //   const auto s2 = mapped(
-  //     cartesian_product(l2, cartesian_power(l1, weight - 2)),
-  //     [&](const auto& args) {
-  //       const auto& [l2_arg, l1_args] = args;
-  //       std::vector<GammaExpr> v = concat({l2_arg}, to_vector(l1_args));
-  //       // TODO: Promote abstract_coproduct.
-  //       return internal::abstract_coproduct_vec<GammaACoExpr>(v);
-  //     }
-  //   );
-  //   profiler.finish("space 2");
-  //   const auto description = polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function));
-  //   profiler.finish("ranks");
-  //   std::cout << "p=" << num_points << ": " << description << "\n";
   // }
 
   // const int dimension = 3;
