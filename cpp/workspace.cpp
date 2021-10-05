@@ -61,9 +61,10 @@ void check_space_weight_eq(const SpaceT& space, int weight) {
 
 struct GammaACoExprParam : GammaCoExpr::Param {
   static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
-    const auto lhs_size = -static_cast<int>(lhs.size());
-    const auto rhs_size = -static_cast<int>(rhs.size());
-    return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
+    using namespace cmp;
+    return projected(lhs, rhs, [](const auto& v) {
+      return std::tuple{desc_val(v.size()), asc_ref(v)};
+    });
   };
 };
 

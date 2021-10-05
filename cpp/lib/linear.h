@@ -77,6 +77,7 @@
 
 #include "absl/container/flat_hash_map.h"
 
+#include "compare.h"
 #include "format.h"
 #include "util.h"
 
@@ -134,9 +135,10 @@ struct SimpleLinearParam {
 
 template<typename T>
 bool compare_length_first(const T& lhs, const T& rhs) {
-  const auto lhs_size = lhs.size();
-  const auto rhs_size = rhs.size();
-  return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
+  using namespace cmp;
+  return projected(lhs, rhs, [](const auto& v) {
+    return std::tuple{asc_val(v.size()), asc_ref(v)};
+  });
 }
 
 #define LYNDON_COMPARE_DEFAULT                                                 \
