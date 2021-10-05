@@ -485,3 +485,12 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
   }
   return ret;
 }
+
+std::string to_string(const SpaceUnionIntersectionRanks& ranks) {
+  // TODO: Use `fmt` for special characters.
+  return absl::StrCat("(", ranks.a(), ", ", ranks.b(), "), ∩ = ", ranks.intersected());
+}
+
+std::string to_string(const SpaceImageKernelRank& ranks) {
+  return absl::StrCat(ranks.space(), " - ", ranks.image(), " = ", ranks.kernel());
+}

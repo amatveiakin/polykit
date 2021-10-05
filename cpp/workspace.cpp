@@ -66,11 +66,11 @@ std::string GrL3_kernel(int dimension, const XArgs& xargs) {
     cartesian_product(l2, l1),
     APPLY(DISAMBIGUATE(ncoproduct))
   );
-  return polylog_space_kernel_describe(
+  return to_string(polylog_space_kernel(
     product_space,
     DISAMBIGUATE(identity_function),
     DISAMBIGUATE(ncomultiply)
-  );
+  ));
 }
 
 std::string GrL4_a_kernel(int dimension, const XArgs& xargs) {
@@ -84,11 +84,11 @@ std::string GrL4_a_kernel(int dimension, const XArgs& xargs) {
     ),
     APPLY(DISAMBIGUATE(ncoproduct))
   );
-  return polylog_space_kernel_describe(
+  return to_string(polylog_space_kernel(
     product_space,
     DISAMBIGUATE(identity_function),
     DISAMBIGUATE(ncomultiply)
-  );
+  ));
 }
 
 std::string GrL4_b_kernel(int dimension, const XArgs& xargs) {
@@ -98,11 +98,11 @@ std::string GrL4_b_kernel(int dimension, const XArgs& xargs) {
     cartesian_product(l2, l1, l1),
     APPLY(DISAMBIGUATE(ncoproduct))
   );
-  return polylog_space_kernel_describe(
+  return to_string(polylog_space_kernel(
     product_space,
     DISAMBIGUATE(identity_function),
     DISAMBIGUATE(ncomultiply)
-  );
+  ));
 }
 
 // No dependencies: space rank == space.size()
@@ -691,13 +691,13 @@ int main(int /*argc*/, char *argv[]) {
   for (const int num_coparts : range_incl(2, weight)) {
     const auto space = co_L(weight, num_coparts, num_points);
     std::cout << "---\n";
-    const auto description1 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    const auto description1 = to_string(polylog_space_kernel(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::make_tuple(keep_non_weakly_separated(expr));
-    });
+    }));
     std::cout << "cluster:  " << description1 << "\n";
-    const auto description2 = polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    const auto description2 = to_string(polylog_space_kernel(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
-    });
+    }));
     std::cout << "cl+comul: " << description2 << "\n";
   }
 }

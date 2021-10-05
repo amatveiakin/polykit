@@ -1,7 +1,4 @@
-// TODO: Rename functions:
-//   - remove 'compute_' prefix;
-//   - rename 'dim' to 'rank'.
-//   - note: clean up workspace first !
+// Optimization potential: convert to Lyndon basis earlier to avoid doing this multiple times.
 
 #pragma once
 
@@ -69,6 +66,38 @@ GrPolylogSpace GrL2(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
 
 
+class SpaceUnionIntersectionRanks {
+public:
+  SpaceUnionIntersectionRanks(int a, int b, int united) : a_(a), b_(b), united_(united) {}
+
+  int a() const { return a_; }
+  int b() const { return b_; }
+  int united() const { return united_; }
+  int intersected() const { return a_ + b_ - united_; }
+
+private:
+  int a_ = 0;
+  int b_ = 0;
+  int united_ = 0;
+};
+
+class SpaceImageKernelRank {
+public:
+  SpaceImageKernelRank(int space, int image) : space_(space), image_(image) {}
+
+  int space() const { return space_; }
+  int image() const { return image_; }
+  int kernel() const { return space_ - image_; }
+
+private:
+  int space_ = 0;
+  int image_ = 0;
+};
+
+std::string to_string(const SpaceUnionIntersectionRanks& ranks);
+std::string to_string(const SpaceImageKernelRank& ranks);
+
+
 template<typename SpaceT>
 SpaceT normalize_space_remove_consecutive(const SpaceT& space) {
   return mapped(space, DISAMBIGUATE(normalize_remove_consecutive));
@@ -85,7 +114,7 @@ void add_polylog_space_to_matrix_builder(const SpaceT& space, const PrepareF& pr
 }
 
 template<typename SpaceT, typename PrepareF>
-Matrix compute_polylog_space_matrix(const SpaceT& space, const PrepareF& prepare) {
+Matrix polylog_space_matrix(const SpaceT& space, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_polylog_space_to_matrix_builder(space, prepare, matrix_builder);
@@ -93,8 +122,8 @@ Matrix compute_polylog_space_matrix(const SpaceT& space, const PrepareF& prepare
 }
 
 template<typename SpaceT, typename PrepareF>
-int compute_polylog_space_dim(const SpaceT& space, const PrepareF& prepare) {
-  return matrix_rank(compute_polylog_space_matrix(space, prepare));
+int polylog_space_rank(const SpaceT& space, const PrepareF& prepare) {
+  return matrix_rank(polylog_space_matrix(space, prepare));
 }
 
 // TODO: Version when `needle` is a single function
@@ -110,15 +139,8 @@ bool polylog_space_contains(const SpaceT& haystack, const SpaceT& needle, const 
   return united_rank == haystack_rank;
 }
 
-
-struct PolylogSpaceDimensions {
-  int a;
-  int b;
-  int united;
-};
-
 template<typename SpaceT, typename PrepareF>
-PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+SpaceUnionIntersectionRanks polylog_space_ranks(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   Profiler profiler(false);
 
@@ -126,58 +148,44 @@ PolylogSpaceDimensions compute_polylog_space_dimensions(const SpaceT& a, const S
   add_polylog_space_to_matrix_builder(a, prepare, matrix_builder_a);
   profiler.finish("A space");
   const int a_rank = matrix_rank(matrix_builder_a.make_matrix());
-  profiler.finish("A dim");
+  profiler.finish("A rank");
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_a);
   profiler.finish("united space");
   const int united_rank = matrix_rank(matrix_builder_a.make_matrix());
-  profiler.finish("united dim");
+  profiler.finish("united rank");
 
   GetExprMatrixBuilder_t<ExprT> matrix_builder_b;
   add_polylog_space_to_matrix_builder(b, prepare, matrix_builder_b);
   profiler.finish("B space");
   const int b_rank = matrix_rank(matrix_builder_b.make_matrix());
-  profiler.finish("B dim");
+  profiler.finish("B rank");
 
   CHECK_LE(a_rank, united_rank);
   CHECK_LE(b_rank, united_rank);
-  return PolylogSpaceDimensions{a_rank, b_rank, united_rank};
+  return SpaceUnionIntersectionRanks{a_rank, b_rank, united_rank};
 }
 
 template<typename SpaceT, typename PrepareF>
-bool polylog_space_equals(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
-  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
-  return all_equal(absl::MakeConstSpan({dim.a, dim.b, dim.united}));
-}
-
-template<typename SpaceT, typename PrepareF>
-int polylog_space_intersection_dimension(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
-  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
-  return dim.a + dim.b - dim.united;
-}
-
-template<typename SpaceT, typename PrepareF>
-std::string polylog_spaces_intersection_describe(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
-  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
-  const int intersection = dim.a + dim.b - dim.united;
-  // TODO: Use `fmt` for special characters.
-  return absl::StrCat("(", dim.a, ", ", dim.b, "), ∩ = ", intersection);
+bool polylog_space_equal(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto ranks = polylog_space_ranks(a, b, prepare);
+  return all_equal(absl::MakeConstSpan({ranks.a(), ranks.b(), ranks.united()}));
 }
 
 template<typename SpaceT, typename PrepareF, typename MapF>
-std::string polylog_space_kernel_describe(const SpaceT& space, const PrepareF& prepare, const MapF& map) {
+SpaceImageKernelRank polylog_space_kernel(const SpaceT& raw_space, const PrepareF& prepare, const MapF& map) {
   Profiler profiler(false);
-  const auto whole_space = compute_polylog_space_matrix(space, prepare);
-  profiler.finish("whole space");
-  const int whole_dim = matrix_rank(whole_space);
-  profiler.finish("whole dim");
-  const auto image_space = compute_polylog_space_matrix(space, map);
-  profiler.finish("image space");
-  const int image_dim = matrix_rank(image_space);
-  profiler.finish("image dim");
-  const int kernel_dim = whole_dim - image_dim;
-  return absl::StrCat(whole_dim, " - ", image_dim, " = ", kernel_dim);
+  const auto space = polylog_space_matrix(raw_space, prepare);
+  profiler.finish("space");
+  const int space_rank = matrix_rank(space);
+  profiler.finish("space rank");
+  const auto image = polylog_space_matrix(raw_space, map);
+  profiler.finish("image");
+  const int image_rank = matrix_rank(image);
+  profiler.finish("image rank");
+  return SpaceImageKernelRank{space_rank, image_rank};
 }
 
-inline std::string polylog_space_ncomultiply_kernel_describe(const PolylogNCoSpace& space) {
-  return polylog_space_kernel_describe(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));
+template<typename SpaceT>
+SpaceImageKernelRank polylog_space_ncomultiply_kernel(const SpaceT& space) {
+  return polylog_space_kernel(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));
 }
