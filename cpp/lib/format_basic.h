@@ -23,13 +23,21 @@ enum class Encoder {
 // ----------+------------------------------------------
 //   ASCII   |      no        no         YES       YES
 //  Unicode  |      no        no         YES       YES
-//   LaTeX   |      no        TBD        no        no
+//   LaTeX   |      no        YES        no        no
 //
 enum class RichTextFormat {
   native,
   plain_text,
   console,
   html,
+};
+
+// For now the criteria are:
+//   - `simple` means it is rendered by Windows 10 terminal with "DejaVu Sans Mono" font.
+//   - `full` is everything else; but still trying to stay within things supported by modern browsers.
+enum class UnicodeVersion {
+  simple,
+  full,
 };
 
 enum class AnnotationSorting {
@@ -45,6 +53,7 @@ struct FormattingConfig {
 
   std::optional<Encoder> encoder;
   std::optional<RichTextFormat> rich_text_format;
+  std::optional<UnicodeVersion> unicode_version;
   std::optional<AnnotationSorting> annotation_sorting;
   std::optional<int> expression_line_limit;
   std::optional<bool> expression_include_annotations;
@@ -55,6 +64,7 @@ struct FormattingConfig {
 
   FormattingConfig& set_encoder(Encoder v) { encoder = v; return *this; }
   FormattingConfig& set_rich_text_format(RichTextFormat v) { rich_text_format = v; return *this; }
+  FormattingConfig& set_unicode_version(UnicodeVersion v) { unicode_version = v; return *this; }
   FormattingConfig& set_annotation_sorting(AnnotationSorting v) { annotation_sorting = v; return *this; }
   FormattingConfig& set_expression_line_limit(int v) { expression_line_limit = v; return *this; }
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
@@ -175,6 +185,9 @@ public:
       const std::string& main,
       const std::vector<std::string>& indices) = 0;
 
+  virtual std::string mathcal(const std::string& str) = 0;
+  virtual std::string mathbb(const std::string& str) = 0;
+
   virtual std::string var(int idx) = 0;
   virtual std::string opname(const std::string& name);
   virtual std::string function(
@@ -282,6 +295,13 @@ inline std::string super_num(
     const std::string& main,
     absl::Span<const int> indices) {
   return super(main, mapped_to_string(indices));
+}
+
+inline std::string mathcal(const std::string& str) {
+  return current_encoder()->mathcal(str);
+}
+inline std::string mathbb(const std::string& str) {
+  return current_encoder()->mathbb(str);
 }
 
 inline std::string var(int idx) {

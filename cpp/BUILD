@@ -40,6 +40,7 @@ cc_library(
         "lib/string.h",
         "lib/string_basic.h",
         "lib/table_printer.h",
+        "lib/unicode_alphabets.h",
         "lib/util.h",
         "lib/zip.h",
     ],
@@ -52,6 +53,7 @@ cc_library(
         "lib/sequence_iteration.cpp",
         "lib/string.cpp",
         "lib/table_printer.cpp",
+        "lib/unicode_alphabets.cpp",
     ],
     deps = [
         "@absl//absl/algorithm:container",

@@ -5,10 +5,25 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
 
+#include "unicode_alphabets.h"
+
+
+template<typename F>
+static auto string_mapper(const F& char_mapper) {
+  return [&](const std::string& s) {
+    std::string ret;
+    for (const char ch : s) {
+      ret += char_mapper(ch);
+    }
+    return ret;
+  };
+}
+
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_encoder(Encoder::ascii)
   .set_rich_text_format(RichTextFormat::native)
+  .set_unicode_version(UnicodeVersion::full)
   .set_annotation_sorting(AnnotationSorting::lexicographic)
   .set_expression_line_limit(100)
   .set_expression_include_annotations(true)
@@ -114,6 +129,7 @@ static void apply_field_override(
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(encoder, src.encoder);
   apply_field_override(rich_text_format, src.rich_text_format);
+  apply_field_override(unicode_version, src.unicode_version);
   apply_field_override(annotation_sorting, src.annotation_sorting);
   apply_field_override(expression_line_limit, src.expression_line_limit);
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
@@ -161,6 +177,10 @@ ScopedRichTextOptions::~ScopedRichTextOptions() {
   (*stream) << current_encoder()->end_rich_text();
 }
 
+
+static bool is_full_unicode() {
+  return *current_formatting_config().unicode_version == UnicodeVersion::full;
+}
 
 static bool is_html() {
   return *current_formatting_config().rich_text_format == RichTextFormat::html;
@@ -295,6 +315,9 @@ class AsciiEncoder : public AbstractEncoder {
         : absl::StrCat(main, "^", str_join(indices, "^"));
   }
 
+  std::string mathcal(const std::string& str) override { return str; }
+  std::string mathbb(const std::string& str) override { return str; }
+
   std::string var(int idx) override {
     return absl::StrCat("x", idx);
   }
@@ -311,15 +334,14 @@ class UnicodeEncoder : public AbstractEncoder {
   static constexpr char kThinNbsp[] = " ";
   static constexpr char kMinusSign[] = "−";
 
-  // TODO: Test unicode in different terminals, browsers and operating systems; add "compatibility level" setting.
+  // TODO: Test unicode in different terminals, browsers and operating systems.
   std::string newline() override { return maybe_html_newline(); }
   std::string inf() override { return "∞"; }
   std::string dot() override { return ""; }
   std::string minus() override { return kMinusSign; }
-  // std::string tensor_prod() override { return "⨂"; }  // smaller sign: looks better, but not supported by Windows console fonts
-  std::string tensor_prod() override { return "⊗"; }  // circled times
+  std::string tensor_prod() override { return is_full_unicode() ? "⨂" : "⊗"; }
   std::string coprod_normal() override { return hspace("∧"); }
-  std::string coprod_iterated() override { return hspace("⦻"); }
+  std::string coprod_iterated() override { return is_full_unicode() ? hspace("⦻") : hspace(tensor_prod()); }
   std::string coprod_hopf() override { return hspace("☒"); }
   std::string comult() override { return "△"; }
 
@@ -384,53 +406,25 @@ class UnicodeEncoder : public AbstractEncoder {
     }
   }
 
-  static std::string char_to_subscript(char ch) {
-    switch (ch) {
-      case '+': return "₊";
-      case '-': return "₋";
-      case '0': return "₀";
-      case '1': return "₁";
-      case '2': return "₂";
-      case '3': return "₃";
-      case '4': return "₄";
-      case '5': return "₅";
-      case '6': return "₆";
-      case '7': return "₇";
-      case '8': return "₈";
-      case '9': return "₉";
-    }
-    FATAL(absl::StrCat("There is no known subscript for '", std::string(1, ch), "'"));
+  static std::string to_subscript(char ch) {
+    const auto ret = unicode_subscript(ch);
+    CHECK(ret.has_value()) << "There is no known subscript for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string char_to_superscript(char ch) {
-    switch (ch) {
-      case '+': return "⁺";
-      case '-': return "⁻";
-      case '0': return "⁰";
-      case '1': return "¹";
-      case '2': return "²";
-      case '3': return "³";
-      case '4': return "⁴";
-      case '5': return "⁵";
-      case '6': return "⁶";
-      case '7': return "⁷";
-      case '8': return "⁸";
-      case '9': return "⁹";
-    }
-    FATAL(absl::StrCat("There is no known superscript for '", std::string(1, ch), "'"));
+  static std::string to_superscript(char ch) {
+    const auto ret = unicode_superscript(ch);
+    CHECK(ret.has_value()) << "There is no known superscript for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string string_to_subscript(const std::string& str) {
-    std::string ret;
-    for (const char ch : str) {
-      ret += char_to_subscript(ch);
-    }
-    return ret;
+  static std::string to_mathcal(char ch) {
+    const auto ret = unicode_mathcal(ch);
+    CHECK(ret.has_value()) << "There is no mathcal for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string string_to_superscript(const std::string& str) {
-    std::string ret;
-    for (const char ch : str) {
-      ret += char_to_superscript(ch);
-    }
-    return ret;
+  static std::string to_mathbb(char ch) {
+    const auto ret = unicode_mathbb(ch);
+    CHECK(ret.has_value()) << "There is no mathbb for '" << std::string(1, ch) << "'";
+    return *ret;
   }
 
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
@@ -438,12 +432,12 @@ class UnicodeEncoder : public AbstractEncoder {
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
       return strlen_utf8(s) == 1;
     }) ? "" : ",";
-    return absl::StrCat(main, str_join(indices, separator, string_to_subscript));
+    return absl::StrCat(main, str_join(indices, separator, string_mapper(to_subscript)));
   }
   std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     return absl::StrCat(
-      string_to_subscript(left_index),
+      string_mapper(to_subscript)(left_index),
       sub(main, right_indices)
     );
   }
@@ -453,7 +447,14 @@ class UnicodeEncoder : public AbstractEncoder {
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
       return strlen_utf8(s) == 1;
     }) ? "" : "˒";
-    return absl::StrCat(main, str_join(indices, separator, string_to_superscript));
+    return absl::StrCat(main, str_join(indices, separator, string_mapper(to_superscript)));
+  }
+
+  std::string mathcal(const std::string& str) override {
+    return is_full_unicode() ? string_mapper(to_mathcal)(str) : str;
+  }
+  std::string mathbb(const std::string& str) override {
+    return is_full_unicode() ? string_mapper(to_mathbb)(str) : str;
   }
 
   std::string var(int idx) override {
@@ -544,6 +545,16 @@ class LatexEncoder : public AbstractEncoder {
   std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "^{", str_join(indices, ","), "}");
+  }
+
+  // Note: default LaTeX fonts define \mathcal only for capical letters.
+  std::string mathcal(const std::string& str) override {
+    return absl::StrCat("\\mathcal{", str, "}");
+  }
+  // Note: requires `amsfonts` package.
+  // Note: default LaTeX fonts define \mathbb only for capical letters.
+  std::string mathbb(const std::string& str) override {
+    return absl::StrCat("\\mathbb{", str, "}");
   }
 
   std::string var(int idx) override {

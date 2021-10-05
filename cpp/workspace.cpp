@@ -259,6 +259,7 @@ int main(int /*argc*/, char *argv[]) {
     .set_encoder(Encoder::unicode)
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
+    .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     .set_expression_line_limit(100)
     .set_annotation_sorting(AnnotationSorting::length)
