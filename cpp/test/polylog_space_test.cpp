@@ -11,16 +11,14 @@
 
 
 template<typename SpaceT, typename PrepareF>
-void EXPECT_POLYLOG_SPACE_EQUALS(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
-  const auto dim = compute_polylog_space_dimensions(a, b, prepare);
-  // TODO: Use `fmt` for the union sign.
-  EXPECT_TRUE(all_equal(absl::MakeConstSpan({dim.a, dim.b, dim.united})))
-      << "Expected spaces to be equal, found: " << dim.a << " ∪ " << dim.b << " = " << dim.united;
+void EXPECT_POLYLOG_SPACE_EQ(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  const auto ranks = space_venn_ranks(a, b, prepare);
+  EXPECT_TRUE(ranks.are_equal()) << to_string(ranks);
 }
 
 template<typename SpaceF>
 int simple_space_rank(const SpaceF& space, int num_points) {
-  return matrix_rank(compute_polylog_space_matrix(
+  return matrix_rank(space_matrix(
     space(to_vector(range_incl(1, num_points))),
     DISAMBIGUATE(to_lyndon_basis)
   ));
@@ -83,7 +81,7 @@ TEST(PolylogSpaceTest, L3SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto points = mapped(range_incl(1, num_points), convert_to<X>);
     points.back() = Inf;
-    EXPECT_POLYLOG_SPACE_EQUALS(L(3, points), L3_alternative(points), DISAMBIGUATE(to_lyndon_basis));
+    EXPECT_POLYLOG_SPACE_EQ(L(3, points), L3_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }
 }
 
@@ -91,14 +89,14 @@ TEST(PolylogSpaceTest, LARGE_L4SameAsAlternative) {
   for (int num_points : range_incl(4, 6)) {
     auto points = mapped(range_incl(1, num_points), convert_to<X>);
     points.back() = Inf;
-    EXPECT_POLYLOG_SPACE_EQUALS(L(4, points), L4_alternative(points), DISAMBIGUATE(to_lyndon_basis));
+    EXPECT_POLYLOG_SPACE_EQ(L(4, points), L4_alternative(points), DISAMBIGUATE(to_lyndon_basis));
   }
 }
 
 TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
   auto points = mapped(range_incl(1, num_points()), [](int i) { return X(i); });
   points.back() = Inf;
-  EXPECT_POLYLOG_SPACE_EQUALS(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(to_lyndon_basis));
+  EXPECT_POLYLOG_SPACE_EQ(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(to_lyndon_basis));
 }
 
 TEST(PolylogSpaceTest, DimCB1) {
