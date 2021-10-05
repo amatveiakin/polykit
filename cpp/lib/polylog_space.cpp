@@ -15,6 +15,7 @@
 #include "polylog_space.h"
 
 #include "expr_matrix_builder.h"
+#include "integer_math.h"
 #include "iterated_integral.h"
 #include "itertools.h"
 #include "polylog_grli.h"
@@ -259,6 +260,30 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
         mapped(word, [](const auto& d) { return D(d.first, d.second); })
       )));
     }
+  }
+  return ret;
+}
+
+
+PolylogNCoSpace co_L(int weight, int coparts, const XArgs& args) {
+  CHECK_LE(coparts, weight);
+  const auto weights_per_summand = get_partitions(weight, coparts);
+  const int max_l_weight = max_value(flatten(weights_per_summand));
+  const std::vector<PolylogSpace> l_spaces = mapped(
+    range_incl(1, max_l_weight),
+    [&](const int w) { return L(w, args); }
+  );
+  PolylogNCoSpace ret;
+  for (const auto& summand_weights : weights_per_summand) {
+    auto summand_components = cartesian_combinations(
+      mapped(group_equal(summand_weights), [&](const auto& equal_weight_group) {
+        return std::pair{
+          l_spaces.at(equal_weight_group.front() - 1),
+          static_cast<int>(equal_weight_group.size())
+        };
+      })
+    );
+    append_vector(ret, mapped(summand_components, DISAMBIGUATE(ncoproduct_vec)));
   }
   return ret;
 }

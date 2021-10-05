@@ -52,13 +52,7 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
-// TODO: Autogenerator for co_L(weight, num_times_comultiplied, args).
-
-PolylogNCoSpace co_L_2(const XArgs& args);
-PolylogNCoSpace co_L_3(const XArgs& args);
-PolylogNCoSpace co_L_4(const XArgs& args);
-PolylogNCoSpace co_L_5(const XArgs& args);
-PolylogNCoSpace co_L_6(const XArgs& args);
+PolylogNCoSpace co_L(int weight, int coparts, const XArgs& args);
 
 PolylogNCoSpace co_CL_3(const XArgs& args);
 PolylogNCoSpace co_CL_4(const XArgs& args);

@@ -1,3 +1,5 @@
+// TODO(C++20): Replace with / rewrite via std::ranges or range-v3.
+
 #pragma once
 
 #include "absl/algorithm/container.h"
@@ -295,6 +297,28 @@ std::vector<T> filtered(std::vector<T> src, F&& func) {
   return src;
 }
 
+template<typename T, typename F>
+std::vector<std::vector<T>> group_by(const std::vector<T>& src, const F& func) {
+  std::vector<std::vector<T>> ret;
+  std::vector<T> group;
+  for (const T& element : src) {
+    if (!group.empty() && !func(group.back(), element)) {
+      ret.push_back(std::move(group));
+      group.clear();
+    }
+    group.push_back(element);
+  }
+  if (!group.empty()) {
+    ret.push_back(std::move(group));
+  }
+  return ret;
+}
+
+template<typename T>
+std::vector<std::vector<T>> group_equal(const std::vector<T>& src) {
+  return group_by(src, [](const T& lhs, const T& rhs) { return lhs == rhs; });
+}
+
 inline std::vector<int> odd_elements(std::vector<int> v) {
   return filtered(std::move(v), [](int x) { return x % 2 == 1; });
 }
@@ -414,4 +438,18 @@ bool all_equal(const Container& c) {
 template<typename Container>
 auto sum(const Container& c) {
   return absl::c_accumulate(c, typename Container::value_type());
+}
+
+template<typename Container>
+auto min_value(const Container& c) {
+  return *absl::c_min_element(c);
+}
+template<typename Container>
+auto max_value(const Container& c) {
+  return *absl::c_max_element(c);
+}
+template<typename Container>
+auto minmax_value(const Container& c) {
+  const auto minmax_it = absl::c_minmax_element(c);
+  return std::pair{*minmax_it.first, *minmax_it.second};
 }
