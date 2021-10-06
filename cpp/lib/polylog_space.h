@@ -30,12 +30,12 @@ PolylogSpace CB4(const XArgs& xargs);
 PolylogSpace CB5(const XArgs& xargs);
 
 PolylogSpace CL4(const XArgs& xargs);
-// TODO: Keep only one version
 PolylogSpace CL5(const XArgs& xargs);
-PolylogSpace CL5Alt(const XArgs& xargs);
 
 PolylogSpace CB(int weight, const XArgs& xargs);
 PolylogSpace CL(int weight, const XArgs& xargs);
+
+PolylogSpace old_CL4_via_A2(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
@@ -59,7 +59,6 @@ PolylogNCoSpace co_CL_3(const XArgs& args);
 PolylogNCoSpace co_CL_4(const XArgs& args);
 PolylogNCoSpace co_CL_5(const XArgs& args);
 PolylogNCoSpace co_CL_6(const XArgs& args);
-PolylogNCoSpace co_CL_6_alt(const XArgs& args);
 PolylogNCoSpace co_CL_6_via_l(const XArgs& args);
 
 PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs);

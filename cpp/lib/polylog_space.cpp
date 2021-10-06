@@ -96,7 +96,7 @@ PolylogSpace CB5(const XArgs& args) {
 PolylogSpace CL4(const XArgs& args) {
   return concat(
     CB4(args),
-    mapped(combinations(args.as_x(), 5), [](const auto& p) { return A2(p); })
+    mapped(combinations(args.as_x(), 6), [](const auto& p) { return QLi4(p); })
   );
 }
 PolylogSpace CL5(const XArgs& args) {
@@ -105,20 +105,13 @@ PolylogSpace CL5(const XArgs& args) {
     mapped(combinations(args.as_x(), 6), [](const auto& p) { return QLi5(p); })
   );
 }
-PolylogSpace CL5Alt(const XArgs& args) {
+
+// TODO: Generic CB/CL definitions
+
+PolylogSpace old_CL4_via_A2(const XArgs& args) {
   return concat(
-    CL5(args),
-    mapped(combinations(args.as_x(), 4), [](const auto& p) {
-      auto a = mapped(p, [](X x) { return x.idx(); });
-      return theta_expr_to_delta_expr(
-        Lira3(1,1)(
-          // CR(choose_indices_one_based(p, std::vector{1,2,3,4})),
-          // CR(choose_indices_one_based(p, std::vector{1,4,3,2}))
-          CR(a[0], a[1], a[2], a[3]),
-          CR(a[0], a[3], a[2], a[1])
-        )
-      );
-    })
+    CB4(args),
+    mapped(combinations(args.as_x(), 5), [](const auto& p) { return A2(p); })
   );
 }
 
@@ -352,17 +345,6 @@ PolylogNCoSpace co_CL_6(const XArgs& args) {
   return mapped(
     concat(
       cartesian_product(CL5(args), CB1(args)),
-      cartesian_product(CL4(args), CB2(args)),
-      cartesian_product(CB3(args), CB3(args))
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace co_CL_6_alt(const XArgs& args) {
-  return mapped(
-    concat(
-      cartesian_product(CL5Alt(args), CB1(args)),
       cartesian_product(CL4(args), CB2(args)),
       cartesian_product(CB3(args), CB3(args))
     ),

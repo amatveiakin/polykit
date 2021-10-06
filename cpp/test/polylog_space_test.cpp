@@ -141,9 +141,7 @@ TEST(PolylogSpaceTest, LARGE_RankCB3) {
 }
 
 TEST(PolylogSpaceTest, LARGE_CLIsClusterL) {
-  // TODO: What happens in weight 4?
-  // for (const int weight : range_incl(1, 5)) {
-  for (const int weight : {1, 2, 3, 5}) {
+  for (const int weight : range_incl(1, 5)) {
     for (const int num_points : range_incl(5, 6)) {
       const auto points = to_vector(range_incl(1, num_points));
       const auto cl = mapped(CL(weight, points), DISAMBIGUATE(to_lyndon_basis));
