@@ -34,6 +34,9 @@ PolylogSpace CL4(const XArgs& xargs);
 PolylogSpace CL5(const XArgs& xargs);
 PolylogSpace CL5Alt(const XArgs& xargs);
 
+PolylogSpace CB(int weight, const XArgs& xargs);
+PolylogSpace CL(int weight, const XArgs& xargs);
+
 PolylogSpace H(int weight, const XArgs& xargs);
 
 PolylogSpace LInf(int weight, const XArgs& xargs);

@@ -122,6 +122,28 @@ PolylogSpace CL5Alt(const XArgs& args) {
   );
 }
 
+PolylogSpace CB(int weight, const XArgs& xargs) {
+  switch (weight) {
+    case 1: return CB1(xargs);
+    case 2: return CB2(xargs);
+    case 3: return CB3(xargs);
+    case 4: return CB4(xargs);
+    case 5: return CB5(xargs);
+  }
+  FATAL(absl::StrCat("Unsupported weight for CB: ", weight));
+}
+
+PolylogSpace CL(int weight, const XArgs& xargs) {
+  switch (weight) {
+    case 1: return CB1(xargs);
+    case 2: return CB2(xargs);
+    case 3: return CB3(xargs);
+    case 4: return CL4(xargs);
+    case 5: return CL5(xargs);
+  }
+  FATAL(absl::StrCat("Unsupported weight for CL: ", weight));
+}
+
 // PolylogSpace H(int weight, const XArgs& xargs) {
 //   auto args = xargs.as_x();
 //   const X special_point = args.back();

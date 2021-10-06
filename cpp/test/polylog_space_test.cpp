@@ -1,6 +1,6 @@
 // Some tests use
 //   [ref] https://www.brown.edu/academics/physics/sites/physics/files/images/Parker-2015.pdf#page63
-// as a reference point for polylog space dimensions.
+// as a reference point for polylog space ranks.
 
 #include "lib/polylog_space.h"
 
@@ -22,6 +22,23 @@ int simple_space_rank(const SpaceF& space, int num_points) {
     space(to_vector(range_incl(1, num_points))),
     DISAMBIGUATE(to_lyndon_basis)
   ));
+}
+
+struct ClusterCoLRanks {
+  int space = 0;
+  int kernel = 0;
+  bool operator==(const ClusterCoLRanks& other) const { return space == other.space && kernel == other.kernel; }
+};
+
+ClusterCoLRanks cluster_co_l_ranks(int weight, int num_coparts, int num_points) {
+  const auto space = co_L(weight, num_coparts, num_points);
+  const int space_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    return keep_non_weakly_separated(expr);
+  }).kernel();
+  const int kernel_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+  }).kernel();
+  return {space_rank, kernel_rank};
 }
 
 
@@ -99,7 +116,7 @@ TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
   EXPECT_POLYLOG_SPACE_EQ(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(to_lyndon_basis));
 }
 
-TEST(PolylogSpaceTest, DimCB1) {
+TEST(PolylogSpaceTest, RankCB1) {
   // (dim B1, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB1, 6), 9);
   EXPECT_EQ(simple_space_rank(CB1, 7), 14);
@@ -107,7 +124,7 @@ TEST(PolylogSpaceTest, DimCB1) {
   EXPECT_EQ(simple_space_rank(CB1, 9), 27);
 }
 
-TEST(PolylogSpaceTest, DimCB2) {
+TEST(PolylogSpaceTest, RankCB2) {
   // (dim B2, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB2, 6), 10);
   EXPECT_EQ(simple_space_rank(CB2, 7), 20);
@@ -115,10 +132,54 @@ TEST(PolylogSpaceTest, DimCB2) {
   EXPECT_EQ(simple_space_rank(CB2, 9), 56);
 }
 
-TEST(PolylogSpaceTest, LARGE_DimCB3) {
+TEST(PolylogSpaceTest, LARGE_RankCB3) {
   // (dim B3, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB3, 6), 15);
   EXPECT_EQ(simple_space_rank(CB3, 7), 35);
   EXPECT_EQ(simple_space_rank(CB3, 8), 70);
   EXPECT_EQ(simple_space_rank(CB3, 9), 126);
+}
+
+TEST(PolylogSpaceTest, LARGE_CLIsClusterL) {
+  // TODO: What happens in weight 4?
+  // for (const int weight : range_incl(1, 5)) {
+  for (const int weight : {1, 2, 3, 5}) {
+    for (const int num_points : range_incl(5, 6)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      const auto cl = mapped(CL(weight, points), DISAMBIGUATE(to_lyndon_basis));
+      const auto l = mapped(L(weight, points), DISAMBIGUATE(to_lyndon_basis));
+      const int cl_rank = space_rank(cl, DISAMBIGUATE(identity_function));
+      const auto l_mapping_ranks = space_mapping_ranks(l, DISAMBIGUATE(identity_function), DISAMBIGUATE(keep_non_weakly_separated));
+      EXPECT_EQ(cl_rank, l_mapping_ranks.kernel()) << "w=" << weight << ", p=" << num_points;
+    }
+  }
+}
+
+// Comparing against results previously computed by the app.
+TEST(PolylogSpaceTest, LARGE_ClusterCoL_Dim2_Weight3) {
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 5), (ClusterCoLRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 5), (ClusterCoLRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 6), (ClusterCoLRanks{30, 15}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 6), (ClusterCoLRanks{16, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 7), (ClusterCoLRanks{105, 35}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 7), (ClusterCoLRanks{84, 84}));
+}
+
+// Comparing against results previously computed by the app.
+TEST(PolylogSpaceTest, LARGE_ClusterCoL_Dim2_Weight4) {
+  EXPECT_EQ(cluster_co_l_ranks(4, 2, 5), (ClusterCoLRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 3, 5), (ClusterCoLRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 2, 6), (ClusterCoLRanks{39, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 3, 6), (ClusterCoLRanks{26, 23}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 4, 6), (ClusterCoLRanks{3, 3}));
+}
+
+// Comparing against results previously computed by the app.
+TEST(PolylogSpaceTest, HUGE_ClusterCoL_Dim2_Weight5) {
+  EXPECT_EQ(cluster_co_l_ranks(5, 2, 5), (ClusterCoLRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 3, 5), (ClusterCoLRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 2, 6), (ClusterCoLRanks{43, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 3, 6), (ClusterCoLRanks{33, 27}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 4, 6), (ClusterCoLRanks{6, 6}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoLRanks{0, 0}));
 }
