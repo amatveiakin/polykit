@@ -22,15 +22,15 @@ GammaExpr GrLiVec(const std::vector<int>& bonus_points, const std::vector<int>& 
       return Gamma(concat(bonus_points, slice(p, k, k + weight)));
     }), sign);
   }
-  const std::string bonux_points_prefix = bonus_points.empty()
-    ? std::string{}
-    : absl::StrCat(str_join(bonus_points, ","), " / ");
   return ret.annotate(
     absl::StrCat(
       fmt::opname("GrLi"),
-      fmt::parens(absl::StrCat(
-        bonux_points_prefix,
-        str_join(main_points, ",")
+      fmt::parens(str_join_skip_empty(
+        std::array{
+          str_join(bonus_points, ","),
+          str_join(main_points, ",")
+        },
+        " / "
       ))
     )
   );

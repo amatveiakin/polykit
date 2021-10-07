@@ -55,6 +55,28 @@ std::string str_join(const T& container, std::string separator) {
   });
 }
 
+template<typename T, typename F>
+std::string str_join_skip_empty(const T& container, std::string separator, F element_to_string) {
+  std::string ret;
+  for (const auto& value : container) {
+    auto str = element_to_string(value);
+    if (!str.empty()) {
+      if (!ret.empty()) {
+        ret += separator;
+      }
+      ret += std::move(str);
+    }
+  }
+  return ret;
+}
+
+template<typename T>
+std::string str_join_skip_empty(const T& container, std::string separator) {
+  return str_join_skip_empty(container, separator, [](const auto& value) {
+    return to_string(value);
+  });
+}
+
 
 // Returns type name, unmangled if possible. Unmangling is supported for clang, gcc and MSVC.
 // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname

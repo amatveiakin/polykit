@@ -161,6 +161,7 @@ inline static const X x16s = X(XForm::sq_var, 16);
 
 class XArgs {
 public:
+  XArgs() {}
   XArgs(absl::Span<const X> points) : data_(to_vector(points)) {}
   XArgs(absl::Span<const int> points) : data_(mapped(points, convert_to<X>)) {}
   XArgs(std::vector<X> points) : data_(std::move(points)) {}

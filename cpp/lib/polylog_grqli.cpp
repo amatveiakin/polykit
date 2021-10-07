@@ -15,10 +15,12 @@ GammaExpr GrQLiVec(int weight, const XArgs& bonus_points, const XArgs& qli_point
   }).without_annotations().annotate(
     absl::StrCat(
       fmt::sub_num(fmt::opname("GrQLi"), {weight}),
-      fmt::parens(absl::StrCat(
-        str_join(bonus_points.as_x(), ","),
-        " / ",
-        str_join(qli_points.as_x(), ",")
+      fmt::parens(str_join_skip_empty(
+        std::array{
+          str_join(bonus_points.as_x(), ","),
+          str_join(qli_points.as_x(), ",")
+        },
+        " / "
       ))
     )
   );
