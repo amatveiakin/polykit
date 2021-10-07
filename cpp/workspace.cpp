@@ -373,37 +373,4 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << polylog_spaces_intersection_describe(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
   // // std::cout << polylog_space_contains(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
 
-  // const auto expr = GrQLi3(1)(2,3,4,5);
-  // std::cout << is_totally_weakly_separated(expr) << "\n";
-  // std::cout << is_totally_weakly_separated(ncomultiply(expr)) << "\n";
-
-  // const int num_points = 5;
-  // const int dimension = 3;
-  // const auto points = to_vector(range_incl(1, num_points));
-  // GrPolylogNCoSpace grqli3_comult_space;
-  // for (const int bonus_arg_idx : range(num_points)) {
-  //   const auto bonus_args = std::vector{points[bonus_arg_idx]};
-  //   const auto main_args = removed_index(points, bonus_arg_idx);
-  //   grqli3_comult_space.push_back(ncomultiply(GrQLiVec(3, bonus_args, main_args)));
-  // }
-  // GrPolylogSpace fx;
-  // for (const auto& p : combinations(points, dimension)) {
-  //   fx.push_back(G(p));
-  // }
-  // GrPolylogSpace l2 = GrL2(dimension, points);
-  // GrPolylogNCoSpace space;
-  // for (const auto& [a, b] : cartesian_product(l2, fx)) {
-  //   const auto expr = ncoproduct(a, b);
-  //   space.push_back(expr);
-  // };
-  // // std::cout << grqli3_comult_space.front();
-  // // std::cout << space.front();
-  // // std::cout << polylog_spaces_intersection_describe(space, grqli3_comult_space, DISAMBIGUATE(identity_function)) << "\n";
-  // std::cout << compute_polylog_space_dim(space, DISAMBIGUATE(identity_function)) << "\n";
-  // ExprMatrixBuilder<GammaNCoExpr, GammaNCoExpr> matrix_builder;
-  // for (const auto& expr : space) {
-  //   matrix_builder.add_expr(ncomultiply(expr), keep_non_weakly_separated(expr));
-  // }
-  // std::cout << matrix_rank(matrix_builder.make_matrix()) << "\n";
-
 }

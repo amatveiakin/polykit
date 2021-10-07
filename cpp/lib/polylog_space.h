@@ -41,6 +41,8 @@ PolylogSpace old_CL4_via_A2(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
+PolylogSpace Fx(const XArgs& xargs);
+
 PolylogSpace LInf(int weight, const XArgs& xargs);
 PolylogSpace L(int weight, const XArgs& xargs);
 inline PolylogSpace L1(const XArgs& xargs) { return L(1, xargs); }
@@ -61,6 +63,8 @@ PolylogNCoSpace co_CL_6(const XArgs& args);
 PolylogNCoSpace co_CL_6_via_l(const XArgs& args);
 
 PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs);
+
+GrPolylogSpace GrFx(int dimension, const XArgs& xargs);
 
 GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);  // dimension = 3
 GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
@@ -161,7 +165,6 @@ int space_rank(const SpaceT& space, const PrepareF& prepare) {
   return matrix_rank(space_matrix(space, prepare));
 }
 
-// TODO: Version when `needle` is a single function
 template<typename SpaceT, typename PrepareF>
 bool space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF& prepare) {
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;

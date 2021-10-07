@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/itertools.h"
+#include "lib/polylog_grqli.h"
 #include "lib/polylog_qli.h"
 
 
@@ -180,4 +181,25 @@ TEST(PolylogSpaceTest, HUGE_ClusterCoL_Dim2_Weight5) {
   EXPECT_EQ(cluster_co_l_ranks(5, 3, 6), (ClusterCoLRanks{33, 27}));
   EXPECT_EQ(cluster_co_l_ranks(5, 4, 6), (ClusterCoLRanks{6, 6}));
   EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoLRanks{0, 0}));
+}
+
+TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
+  const int num_points = 5;
+  const int dimension = 3;
+  const auto points = to_vector(range_incl(1, num_points));
+  const GrPolylogSpace fx = GrFx(dimension, points);
+  const GrPolylogSpace l2 = GrL2(dimension, points);
+  const GrPolylogNCoSpace space = mapped(
+    cartesian_product(l2, fx),
+    APPLY(DISAMBIGUATE(ncoproduct))
+  );
+  const GrPolylogNCoSpace grqli3_space = mapped(
+    range(num_points),
+    [&](int bonus_arg_idx) {
+      const auto bonus_args = std::vector{points[bonus_arg_idx]};
+      const auto main_args = removed_index(points, bonus_arg_idx);
+      return ncomultiply(GrQLiVec(3, bonus_args, main_args));
+    }
+  );
+  EXPECT_TRUE(space_contains(space, grqli3_space, DISAMBIGUATE(identity_function)));
 }

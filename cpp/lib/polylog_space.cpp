@@ -162,6 +162,13 @@ PolylogSpace H(int weight, const XArgs& xargs) {
   return ret;
 }
 
+PolylogSpace Fx(const XArgs& xargs) {
+  return mapped(combinations(xargs.as_x(), 2), [](const auto& p) {
+    const auto [a, b] = to_array<2>(p);
+    return D(a, b);
+  });
+}
+
 PolylogSpace LInf(int weight, const XArgs& xargs) {
   const auto& args = xargs.as_x();
   // Note: See tests for alternative definitions that support arbitrary arguments, but have duplicates.
@@ -346,6 +353,10 @@ PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs) {
     }));
   }
   return ret;
+}
+
+GrPolylogSpace GrFx(int dimension, const XArgs& xargs) {
+  return mapped(combinations(xargs.as_x(), dimension), DISAMBIGUATE(G));
 }
 
 GrPolylogSpace GrLBasic(int weight, const XArgs& xargs) {
