@@ -59,52 +59,6 @@ void check_space_weight_eq(const SpaceT& space, int weight) {
 }
 
 
-std::string GrL3_kernel(int dimension, const XArgs& xargs) {
-  const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, xargs));
-  const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, xargs));
-  const auto product_space = mapped(
-    cartesian_product(l2, l1),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-  return to_string(space_mapping_ranks(
-    product_space,
-    DISAMBIGUATE(identity_function),
-    DISAMBIGUATE(ncomultiply)
-  ));
-}
-
-std::string GrL4_a_kernel(int dimension, const XArgs& xargs) {
-  const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, xargs));
-  const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, xargs));
-  const auto l3 = normalize_space_remove_consecutive(GrL3(dimension, xargs));
-  const auto product_space = mapped(
-    concat(
-      cartesian_product(l3, l1),
-      cartesian_product(l2, l2)
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-  return to_string(space_mapping_ranks(
-    product_space,
-    DISAMBIGUATE(identity_function),
-    DISAMBIGUATE(ncomultiply)
-  ));
-}
-
-std::string GrL4_b_kernel(int dimension, const XArgs& xargs) {
-  const auto l1 = normalize_space_remove_consecutive(GrL1(dimension, xargs));
-  const auto l2 = normalize_space_remove_consecutive(GrL2(dimension, xargs));
-  const auto product_space = mapped(
-    cartesian_product(l2, l1, l1),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-  return to_string(space_mapping_ranks(
-    product_space,
-    DISAMBIGUATE(identity_function),
-    DISAMBIGUATE(ncomultiply)
-  ));
-}
-
 // No dependencies: space rank == space.size()
 GrPolylogSpace GrQLi3_test_space(const XArgs& xargs) {  // dimension = 3
   auto args = xargs.as_x();
@@ -314,26 +268,6 @@ int main(int /*argc*/, char *argv[]) {
   //   const auto description = polylog_spaces_intersection_describe(s1, s2, DISAMBIGUATE(identity_function));
   //   profiler.finish("ranks");
   //   std::cout << "p=" << num_points << ": " << description << "\n";
-  // }
-
-  // for (const int dimension : range_incl(2, 9)) {
-  //   for (const int num_points : range_incl(5, 11)) {
-  //     const auto points = seq_incl(1, num_points);
-  //     const auto description = GrL3_kernel(dimension, points);
-  //     std::cout << "d=" << dimension << ", p=" << num_points << ": ";
-  //     std::cout << description << "\n";
-  //   }
-  // }
-
-  // for (const int dimension : range_incl(4, 4)) {
-  //   for (const int num_points : range_incl(5, 10)) {
-  //     const auto points = seq_incl(1, num_points);
-  //     std::cout << "d=" << dimension << ", p=" << num_points << ":  ";
-  //     std::cout << GrL3_kernel(dimension, points);
-  //     // std::cout << "  vs  ";
-  //     // std::cout << compute_polylog_space_dim(GrLBasic(3, points), DISAMBIGUATE(to_lyndon_basis));
-  //     std::cout << "\n";
-  //   }
   // }
 
   // const int dimension = 3;

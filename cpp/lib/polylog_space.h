@@ -67,6 +67,8 @@ GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL2(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
 
+GrPolylogSpace GrL(int weight, int dimension, const XArgs& xargs);
+
 // Computes a co-space of a given structure from spaces provided by `get_space`.
 // E.g. for weight == 5, num_coparts == 3 returns:
 //   + get_space(3) * lambda^2 get_space(1)
@@ -93,15 +95,8 @@ auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
 }
 
 // Note: applies normalize_remove_consecutive (hence not allowing arbitrary input points).
-inline PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
-  return co_space(weight, num_coparts, [&](const int w) {
-    return mapped(L(w, points), [&](const auto& expr) {
-      // Precompute Lyndon basis to speed up coproduct.
-      return to_lyndon_basis(normalize_remove_consecutive(expr));
-    });
-  });
-}
+PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points);
+GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
 
 
 class SpaceVennRanks {

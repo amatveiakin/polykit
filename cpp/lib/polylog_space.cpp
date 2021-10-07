@@ -459,6 +459,35 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
   return ret;
 }
 
+GrPolylogSpace GrL(int weight, int dimension, const XArgs& xargs) {
+  switch (weight) {
+    case 1: return GrL1(dimension, xargs);
+    case 2: return GrL2(dimension, xargs);
+    case 3: return GrL3(dimension, xargs);
+  }
+  FATAL(absl::StrCat("Unsupported weight for GrL: ", weight));
+}
+
+PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
+  const auto points = to_vector(range_incl(1, num_points));
+  return co_space(weight, num_coparts, [&](const int w) {
+    return mapped(L(w, points), [&](const auto& expr) {
+      // Precompute Lyndon basis to speed up coproduct.
+      return to_lyndon_basis(normalize_remove_consecutive(expr));
+    });
+  });
+}
+
+GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points) {
+  const auto points = to_vector(range_incl(1, num_points));
+  return co_space(weight, num_coparts, [&](const int w) {
+    return mapped(GrL(w, dimension, points), [&](const auto& expr) {
+      // Precompute Lyndon basis to speed up coproduct.
+      return to_lyndon_basis(normalize_remove_consecutive(expr));
+    });
+  });
+}
+
 std::string to_string(const SpaceVennRanks& ranks) {
   // TODO: Use `fmt` for special characters.
   return absl::StrCat("(", ranks.a(), ", ", ranks.b(), "), ∩ = ", ranks.intersected());
