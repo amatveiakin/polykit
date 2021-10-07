@@ -15,9 +15,7 @@
 #include "polylog_space.h"
 
 #include "expr_matrix_builder.h"
-#include "integer_math.h"
 #include "iterated_integral.h"
-#include "itertools.h"
 #include "polylog_grli.h"
 #include "polylog_grqli.h"
 #include "polylog_lira.h"
@@ -275,39 +273,6 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
         mapped(word, [](const auto& d) { return D(d.first, d.second); })
       )));
     }
-  }
-  return ret;
-}
-
-
-// Note: If changed to support any set of points, normalization should probably be disabled.
-// Interface idea: Replace points/num_point with a functor that takes weight and returns L space.
-//   Then things like normalization of usage of F^\times instead of L_1 could be moved there.
-PolylogNCoSpace co_L(int weight, int num_coparts, int num_points) {
-  CHECK_LE(num_coparts, weight);
-  const auto points = to_vector(range_incl(1, num_points));
-  const auto weights_per_summand = get_partitions(weight, num_coparts);
-  const int max_l_weight = max_value(flatten(weights_per_summand));
-  const std::vector<PolylogSpace> l_spaces = mapped(
-    range_incl(1, max_l_weight),
-    [&](const int w) {
-      return mapped(L(w, points), [](const auto& expr) {
-        // Precompute Lyndon basis to speed up coproduct.
-        return to_lyndon_basis(normalize_remove_consecutive(expr));
-      });
-    }
-  );
-  PolylogNCoSpace ret;
-  for (const auto& summand_weights : weights_per_summand) {
-    auto summand_components = cartesian_combinations(
-      mapped(group_equal(summand_weights), [&](const auto& equal_weight_group) {
-        return std::pair{
-          l_spaces.at(equal_weight_group.front() - 1),
-          static_cast<int>(equal_weight_group.size())
-        };
-      })
-    );
-    append_vector(ret, mapped(summand_components, DISAMBIGUATE(ncoproduct_vec)));
   }
   return ret;
 }

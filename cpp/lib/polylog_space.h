@@ -5,6 +5,8 @@
 #include "delta.h"
 #include "expr_matrix_builder.h"
 #include "gamma.h"
+#include "integer_math.h"
+#include "itertools.h"
 #include "linalg.h"
 #include "parallel_util.h"
 #include "profiler.h"
@@ -52,9 +54,6 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
-// Note: applies normalize_remove_consecutive.
-PolylogNCoSpace co_L(int weight, int num_coparts, int num_points);
-
 PolylogNCoSpace co_CL_3(const XArgs& args);
 PolylogNCoSpace co_CL_4(const XArgs& args);
 PolylogNCoSpace co_CL_5(const XArgs& args);
@@ -67,6 +66,42 @@ GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);  // dimension = 3
 GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL2(int dimension, const XArgs& xargs);
 GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
+
+// Computes a co-space of a given structure from spaces provided by `get_space`.
+// E.g. for weight == 5, num_coparts == 3 returns:
+//   + get_space(3) * lambda^2 get_space(1)
+//   + lambda^2 get_space(2) * get_space(1)
+template<typename SpaceF>
+auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
+  CHECK_LE(num_coparts, weight);
+  const auto weights_per_summand = get_partitions(weight, num_coparts);
+  const int max_atom_weight = max_value(flatten(weights_per_summand));
+  const auto atom_spaces = mapped(range_incl(1, max_atom_weight), get_space);
+  std::vector<NCoExprForExpr_t<typename decltype(atom_spaces)::value_type::value_type>> ret;
+  for (const auto& summand_weights : weights_per_summand) {
+    auto summand_components = cartesian_combinations(
+      mapped(group_equal(summand_weights), [&](const auto& equal_weight_group) {
+        return std::pair{
+          atom_spaces.at(equal_weight_group.front() - 1),
+          static_cast<int>(equal_weight_group.size())
+        };
+      })
+    );
+    append_vector(ret, mapped(summand_components, DISAMBIGUATE(ncoproduct_vec)));
+  }
+  return ret;
+}
+
+// Note: applies normalize_remove_consecutive (hence not allowing arbitrary input points).
+inline PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
+  const auto points = to_vector(range_incl(1, num_points));
+  return co_space(weight, num_coparts, [&](const int w) {
+    return mapped(L(w, points), [&](const auto& expr) {
+      // Precompute Lyndon basis to speed up coproduct.
+      return to_lyndon_basis(normalize_remove_consecutive(expr));
+    });
+  });
+}
 
 
 class SpaceVennRanks {

@@ -31,7 +31,7 @@ struct ClusterCoLRanks {
 };
 
 ClusterCoLRanks cluster_co_l_ranks(int weight, int num_coparts, int num_points) {
-  const auto space = co_L(weight, num_coparts, num_points);
+  const auto space = simple_co_L(weight, num_coparts, num_points);
   const int space_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
     return keep_non_weakly_separated(expr);
   }).kernel();
