@@ -64,14 +64,14 @@ PolylogNCoSpace co_CL_6_via_l(const XArgs& args);
 
 PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs);
 
-GrPolylogSpace GrFx(int dimension, const XArgs& xargs);
+GrPolylogSpace GrFx(int dimension, const std::vector<int>& args);
 
-GrPolylogSpace GrLBasic(int weight, const XArgs& xargs);  // dimension = 3
-GrPolylogSpace GrL1(int dimension, const XArgs& xargs);
-GrPolylogSpace GrL2(int dimension, const XArgs& xargs);
-GrPolylogSpace GrL3(int dimension, const XArgs& xargs);
+GrPolylogSpace GrLBasic(int weight, const std::vector<int>& args);  // dimension = 3
+GrPolylogSpace GrL1(int dimension, const std::vector<int>& args);
+GrPolylogSpace GrL2(int dimension, const std::vector<int>& args);
+GrPolylogSpace GrL3(int dimension, const std::vector<int>& args);
 
-GrPolylogSpace GrL(int weight, int dimension, const XArgs& xargs);
+GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args);
 
 // Computes a co-space of a given structure from spaces provided by `get_space`.
 // E.g. for weight == 5, num_coparts == 3 returns:

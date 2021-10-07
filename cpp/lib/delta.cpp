@@ -230,20 +230,15 @@ static bool between(int point, std::pair<int, int> segment) {
   return a < point && point < b;
 }
 
-static int x_idx(X x) {
-  CHECK(x.is(XForm::var)) << dump_to_string(x);
-  return x.idx();
-}
-
 // TODO: Test.
 bool are_weakly_separated(const Delta& d1, const Delta& d2) {
   if (d1.is_nil() || d2.is_nil()) {
     return true;
   }
-  const int x1 = x_idx(d1.a());
-  const int y1 = x_idx(d1.b());
-  const int x2 = x_idx(d2.a());
-  const int y2 = x_idx(d2.b());
+  const int x1 = d1.a().as_simple_var();
+  const int y1 = d1.b().as_simple_var();
+  const int x2 = d2.a().as_simple_var();
+  const int y2 = d2.b().as_simple_var();
   if (!all_unique_unsorted(std::array{x1, y1, x2, y2})) {
     return true;
   }
@@ -282,9 +277,8 @@ DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
 
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term) {
   return absl::c_all_of(term, [](const Delta& d) {
-    CHECK(d.a().is(XForm::var) && d.b().is(XForm::var)) << dump_to_string(d);
-    int a = d.a().idx();
-    int b = d.b().idx();
+    int a = d.a().as_simple_var();
+    int b = d.b().as_simple_var();
     sort_two(a, b);
     return b != a + 1;
   });

@@ -35,6 +35,7 @@ public:
   // It is guaranteed that `idx` for any constant if different from any valid variable index.
   // Thus `x.idx() == my_var_idx` is equivalent to `!x.is_constant() && x.idx() == my_var_idx`.
   constexpr int idx() const { return idx_; }
+  int as_simple_var() const { CHECK(is(XForm::var)); return idx_; }
   constexpr bool is(XForm form) const { return form_ == form; }
   constexpr bool is_constant() const;
 

@@ -23,15 +23,6 @@
 #include "triangulation.h"
 
 
-// TODO: Fix arg types and remove. Or at least, promote.
-static std::vector<int> x_to_int(const XArgs& points) {
-  return mapped(points.as_x(), [](X x) {
-    CHECK(x.is(XForm::var)) << dump_to_string(x);
-    return x.idx();
-  });
-}
-
-
 template<typename SpaceT>
 std::string space_to_string(const SpaceT& space) {
   return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
@@ -355,12 +346,11 @@ PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs) {
   return ret;
 }
 
-GrPolylogSpace GrFx(int dimension, const XArgs& xargs) {
-  return mapped(combinations(xargs.as_x(), dimension), DISAMBIGUATE(G));
+GrPolylogSpace GrFx(int dimension, const std::vector<int>& args) {
+  return mapped(combinations(args, dimension), DISAMBIGUATE(G));
 }
 
-GrPolylogSpace GrLBasic(int weight, const XArgs& xargs) {
-  const auto& args = xargs.as_x();
+GrPolylogSpace GrLBasic(int weight, const std::vector<int>& args) {
   CHECK_LE(5, args.size());
   GrPolylogSpace ret;
   for (const int i : range(args.size())) {
@@ -375,18 +365,17 @@ GrPolylogSpace GrLBasic(int weight, const XArgs& xargs) {
 }
 
 // TODO: Test against zero fixed points
-GrPolylogSpace GrL1(int dimension, const XArgs& xargs) {
+GrPolylogSpace GrL1(int dimension, const std::vector<int>& args) {
   const int weight = 1;
   CHECK_LE(2, dimension);
   const int num_fixed_points = 2;  // should be equivalent to zero fixed points
-  auto args = xargs.as_x();
   CHECK_LE(5, args.size());
-  auto fixed_points = slice(args, args.size() - num_fixed_points);
-  args = slice(args, 0, args.size() - num_fixed_points);
+  const auto fixed_points = slice(args, args.size() - num_fixed_points);
+  const auto main_args = slice(args, 0, args.size() - num_fixed_points);
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
-    const auto bonus_points = choose_indices(args, bonus_point_indices);
-    const auto qli_points = removed_indices(args, bonus_point_indices);
+  for (const auto& bonus_point_indices : combinations(to_vector(range(main_args.size())), dimension - 2)) {
+    const auto bonus_points = choose_indices(main_args, bonus_point_indices);
+    const auto qli_points = removed_indices(main_args, bonus_point_indices);
     // TODO: Add `mapped_expanding` and use it here and in other places.
     append_vector(
       ret,
@@ -409,18 +398,17 @@ GrPolylogSpace GrL1(int dimension, const XArgs& xargs) {
 
 // TODO: Test against zero fixed points
 // TODO: Test against naive: `GrLBasic(2, xargs)`
-GrPolylogSpace GrL2(int dimension, const XArgs& xargs) {
+GrPolylogSpace GrL2(int dimension, const std::vector<int>& args) {
   const int weight = 2;
   CHECK_LE(2, dimension);
   const int num_fixed_points = 1;  // should be equivalent to zero fixed points
-  auto args = xargs.as_x();
   CHECK_LE(5, args.size());
-  auto fixed_points = slice(args, args.size() - num_fixed_points);
-  args = slice(args, 0, args.size() - num_fixed_points);
+  const auto fixed_points = slice(args, args.size() - num_fixed_points);
+  const auto main_args = slice(args, 0, args.size() - num_fixed_points);
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
-    const auto bonus_points = choose_indices(args, bonus_point_indices);
-    const auto qli_points = removed_indices(args, bonus_point_indices);
+  for (const auto& bonus_point_indices : combinations(to_vector(range(main_args.size())), dimension - 2)) {
+    const auto bonus_points = choose_indices(main_args, bonus_point_indices);
+    const auto qli_points = removed_indices(main_args, bonus_point_indices);
     append_vector(
       ret,
       mapped(combinations(qli_points, 4 - num_fixed_points), [&](const auto& p) {
@@ -431,10 +419,9 @@ GrPolylogSpace GrL2(int dimension, const XArgs& xargs) {
   return ret;
 }
 
-GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
+GrPolylogSpace GrL3(int dimension, const std::vector<int>& args) {
   const int weight = 3;
   CHECK_LE(2, dimension);
-  auto args = xargs.as_x();
   CHECK_LE(5, args.size());
   GrPolylogSpace ret;
   for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
@@ -462,7 +449,7 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
       append_vector(
         ret,
         mapped(combinations(qli_points, 6), [&](auto p) {
-          return GrLiVec(x_to_int(bonus_points), x_to_int(p));
+          return GrLiVec(bonus_points, p);
         })
       );
     }
@@ -470,11 +457,11 @@ GrPolylogSpace GrL3(int dimension, const XArgs& xargs) {
   return ret;
 }
 
-GrPolylogSpace GrL(int weight, int dimension, const XArgs& xargs) {
+GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args) {
   switch (weight) {
-    case 1: return GrL1(dimension, xargs);
-    case 2: return GrL2(dimension, xargs);
-    case 3: return GrL3(dimension, xargs);
+    case 1: return GrL1(dimension, args);
+    case 2: return GrL2(dimension, args);
+    case 3: return GrL3(dimension, args);
   }
   FATAL(absl::StrCat("Unsupported weight for GrL: ", weight));
 }

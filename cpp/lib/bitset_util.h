@@ -21,16 +21,21 @@ std::bitset<DstN> convert_bitset(const std::bitset<SrcN>& src) {
   }
 }
 
-template<size_t N>
-std::bitset<N> vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
-  std::bitset<N> bitset;
+template<typename T>
+T vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
+  T bitset;
   for (int idx : vector) {
     idx -= offset;
     CHECK_LE(0, idx);
-    CHECK_LT(idx, N);
+    CHECK_LT(idx, bitset.size());
     bitset[idx] = true;
   }
   return bitset;
+}
+
+template<size_t N>
+std::bitset<N> vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
+  return vector_to_bitset<std::bitset<N>>(vector, offset);
 }
 
 template<size_t N>

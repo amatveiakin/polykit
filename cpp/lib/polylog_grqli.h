@@ -3,14 +3,13 @@
 #include "gamma.h"
 
 
-// TODO: Replace XArgs with vector<int>
-GammaExpr GrQLiVec(int weight, const XArgs& bonus_points, const XArgs& qli_points);
+GammaExpr GrQLiVec(int weight, const std::vector<int>& bonus_points, const std::vector<int>& qli_points);
 
 
 namespace internal {
 class GrQLiFixedBonusPoints {
 public:
-  GrQLiFixedBonusPoints(int weight, XArgs bonus_points)
+  GrQLiFixedBonusPoints(int weight, std::vector<int> bonus_points)
     : weight_(weight), bonus_points_(std::move(bonus_points)) {}
   template<typename... Args>
   GammaExpr operator()(Args... qli_points) const {
@@ -18,7 +17,7 @@ public:
   }
 private:
   int weight_;
-  XArgs bonus_points_;
+  std::vector<int> bonus_points_;
 };
 }  // namespace internal
 

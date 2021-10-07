@@ -9,7 +9,6 @@
 #include "check.h"
 #include "coalgebra.h"
 #include "pvector.h"
-#include "x.h"
 
 
 constexpr int kMaxGammaVariables = 16;
@@ -26,7 +25,7 @@ public:
 
   Gamma() {}
   explicit Gamma(BitsetT indices) : indices_(std::move(indices)) {}
-  explicit Gamma(const XArgs& vars);
+  explicit Gamma(const std::vector<int>& vars) : indices_(vector_to_bitset<BitsetT>(vars, 1)) {}
 
   bool is_nil() const { return indices_.none(); }
 
@@ -44,22 +43,6 @@ public:
 private:
   BitsetT indices_;  // 0-based
 };
-
-// TODO: rewrite via `vector_to_bitset`
-inline Gamma::Gamma(const XArgs& vars) {
-  for (const X x : vars.as_x()) {
-    // TODO: Remove infinities. They cannot be used like this.
-    if (x == Inf) {
-      indices_ = {};
-      return;
-    }
-    CHECK(x.is(XForm::var)) << to_string(x);
-    const int idx = x.idx();
-    CHECK_LE(1, idx);
-    CHECK_LE(idx, kMaxGammaVariables);
-    indices_[idx - 1] = true;  // 1-based => 0-based
-  }
-}
 
 std::string to_string(const Gamma& g);
 
@@ -125,8 +108,8 @@ using GammaNCoExpr = Linear<internal::GammaNCoExprParam>;
 template<> struct CoExprForExpr<GammaExpr> { using type = GammaCoExpr; };
 template<> struct NCoExprForExpr<GammaExpr> { using type = GammaNCoExpr; };
 
-inline GammaExpr G(const XArgs& xargs) {
-  Gamma g(xargs);
+inline GammaExpr G(const std::vector<int>& vars) {
+  Gamma g(vars);
   return g.is_nil() ? GammaExpr{} : GammaExpr::single({g});
 }
 
