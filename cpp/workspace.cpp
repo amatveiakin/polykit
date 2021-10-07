@@ -92,17 +92,6 @@ GrPolylogSpace GrQLi4_test_space(const XArgs& xargs) {  // dimension = 3
   return ret;
 }
 
-GammaNCoExpr R_4_3(const std::vector<int>& points) {
-  CHECK_EQ(points.size(), 4);
-  return sum_looped_vec([&](const std::vector<int>& args) {
-    const auto get_args = [&](const std::vector<int>& indices) {
-      // TODO: Change `sum` so that it doesn't requires nested `choose_indices_one_based`.
-      return choose_indices_one_based(points, choose_indices_one_based(args, indices));
-    };
-    return ncoproduct(G(get_args({1,2,3})), G(get_args({1,2,4})), G(get_args({1,3,4})));
-  }, 4, {1,2,3,4}, SumSign::alternating);
-}
-
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -350,27 +339,5 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << dump_to_string(space) << "\n";
   // std::cout << compute_polylog_space_dim(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
-
-  // const int num_points = 5;
-  // const auto points = to_vector(range_incl(1, num_points));
-  // const auto func = sum_looped_vec(R_4_3, 5, {1,2,3,4});
-  // GrPolylogNCoSpace func_space{func};
-  // // std::cout << func;
-  // GrPolylogSpace fx;
-  // for (const auto& p : combinations(points, 3)) {
-  //   fx.push_back(G(p));
-  // }
-  // GrPolylogSpace l2 = GrL2(3, points);
-  // GrPolylogNCoSpace space;
-  // for (const auto& [a, b] : cartesian_product(l2, fx)) {
-  //   const auto expr = ncoproduct(a, b);
-  //   if (is_totally_weakly_separated(expr)) {
-  //     // space.push_back(expr);
-  //     space.push_back(ncomultiply(expr));
-  //   }
-  // };
-  // // std::cout << space.front();
-  // std::cout << polylog_spaces_intersection_describe(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
-  // // std::cout << polylog_space_contains(space, func_space, DISAMBIGUATE(identity_function)) << "\n";
 
 }

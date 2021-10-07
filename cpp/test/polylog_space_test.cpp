@@ -9,6 +9,7 @@
 #include "lib/itertools.h"
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_qli.h"
+#include "lib/summation.h"
 
 
 template<typename SpaceT, typename PrepareF>
@@ -42,6 +43,16 @@ ClusterCoLRanks cluster_co_l_ranks(int weight, int num_coparts, int num_points) 
   return {space_rank, kernel_rank};
 }
 
+GammaNCoExpr R_4_3(const std::vector<int>& points) {
+  CHECK_EQ(points.size(), 4);
+  return sum_looped_vec([&](const std::vector<int>& args) {
+    const auto get_args = [&](const std::vector<int>& indices) {
+      // TODO: Change `sum` so that it doesn't requires nested `choose_indices_one_based`.
+      return choose_indices_one_based(points, choose_indices_one_based(args, indices));
+    };
+    return ncoproduct(G(get_args({1,2,3})), G(get_args({1,2,4})), G(get_args({1,3,4})));
+  }, 4, {1,2,3,4}, SumSign::alternating);
+}
 
 PolylogSpace L3_alternative(const XArgs& args) {
   return concat(
@@ -202,4 +213,21 @@ TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
     }
   );
   EXPECT_TRUE(space_contains(space, grqli3_space, DISAMBIGUATE(identity_function)));
+}
+
+TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
+  const int num_points = 5;
+  const int dimension = 3;
+  const auto points = to_vector(range_incl(1, num_points));
+  const GrPolylogSpace fx = GrFx(dimension, points);
+  const GrPolylogSpace l2 = GrL2(dimension, points);
+  GrPolylogNCoSpace space;
+  for (const auto& [a, b] : cartesian_product(l2, fx)) {
+    const auto expr = ncoproduct(a, b);
+    if (is_totally_weakly_separated(expr)) {
+      space.push_back(ncomultiply(expr));
+    }
+  };
+  const auto expr = sum_looped_vec(R_4_3, 5, {1,2,3,4});
+  EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
 }
