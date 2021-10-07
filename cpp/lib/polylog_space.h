@@ -103,6 +103,15 @@ PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points);
 GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
 
 
+template<typename SpaceT>
+void check_space_weight_eq(const SpaceT& space, int weight) {
+  for (const auto& expr : space) {
+    if (!expr.is_zero()) {
+      CHECK_EQ(expr.weight(), weight);
+    }
+  }
+}
+
 class SpaceVennRanks {
 public:
   SpaceVennRanks(int a, int b, int united) : a_(a), b_(b), united_(united) {}
