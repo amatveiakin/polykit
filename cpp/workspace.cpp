@@ -49,6 +49,52 @@
 #include "lib/zip.h"
 
 
+auto annotated_co_space_summands(int weight, int num_coparts, int num_points) {
+  CHECK_LE(num_coparts, weight);
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto weights_per_summand = get_partitions(weight, num_coparts);
+  const int max_atom_weight = max_value(flatten(weights_per_summand));
+  const auto atom_spaces = mapped(range_incl(1, max_atom_weight), [&](const int w) {
+    return mapped(L(w, points), [&](const auto& expr) {
+      return to_lyndon_basis(normalize_remove_consecutive(expr));
+    });
+  });
+  using ExprT = typename decltype(atom_spaces)::value_type::value_type;
+  std::vector<std::pair<std::string, std::vector<NCoExprForExpr_t<ExprT>>>> ret;
+  for (const auto& summand_weights : weights_per_summand) {
+    const auto weights_with_counts = mapped(
+      group_equal(summand_weights),
+      [&](const auto& equal_weight_group) {
+        return std::pair{equal_weight_group.front(), static_cast<int>(equal_weight_group.size())};
+      }
+    );
+    const std::string annotation = str_join(
+      weights_with_counts,
+      fmt::tensor_prod(),
+      [](const auto& weight_and_count) {
+        const auto& [weight, count] = weight_and_count;
+        return absl::StrCat(
+          count > 1 ? fmt::super_num("Λ", {count}) : "",
+          fmt::sub_num(fmt::mathcal("L"), {weight})
+        );
+      }
+    );
+    const auto summand_components = cartesian_combinations(
+      // TODO: Introduce `mapped_apply`, use it here and in other places.
+      mapped(weights_with_counts, [&](const auto& weight_and_count) {
+        const auto& [weight, count] = weight_and_count;
+        return std::pair{atom_spaces.at(weight - 1), count};
+      })
+    );
+    ret.push_back({
+      annotation,
+      mapped(summand_components, DISAMBIGUATE(ncoproduct_vec))
+    });
+  }
+  return ret;
+}
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -65,4 +111,41 @@ int main(int /*argc*/, char *argv[]) {
     .set_compact_x(true)
   );
 
+
+  const int weight = 5;
+  for (const int num_points : range_incl(4, 10)) {
+    for (const int num_coparts : range_incl(2, weight)) {
+      Profiler profiler;
+      const auto summands = annotated_co_space_summands(weight, num_coparts, num_points);
+      profiler.finish("spaces");
+      const bool compute_kernel = num_coparts < weight;
+      std::vector<std::string> annotations;
+      std::vector<int> space_ranks;
+      PolylogNCoSpace united_space;
+      for (const auto& [annotation, space] : summands) {
+        annotations.push_back(annotation);
+        space_ranks.push_back(space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+          return keep_non_weakly_separated(expr);
+        }).kernel());
+        if (compute_kernel) {
+          append_vector(united_space, space);
+        }
+      }
+      int kernel_rank = 0;
+      profiler.finish("space ranks");
+      if (compute_kernel) {
+        kernel_rank = space_mapping_ranks(united_space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+          return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+        }).kernel();
+        profiler.finish("kernel rank");
+      }
+      std::cout << "w=" << weight << ", p=" << num_points << ", co=" << num_coparts << ": ";
+      std::cout << str_join(annotations, " ⊕ ") << "\n";
+      std::cout << sum(space_ranks) << "=" << str_join(space_ranks, "+");
+      if (compute_kernel) {
+        std::cout << " -> " << kernel_rank;
+      }
+      std::cout << "\n\n";
+    }
+  }
 }

@@ -83,7 +83,8 @@ auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
   const auto weights_per_summand = get_partitions(weight, num_coparts);
   const int max_atom_weight = max_value(flatten(weights_per_summand));
   const auto atom_spaces = mapped(range_incl(1, max_atom_weight), get_space);
-  std::vector<NCoExprForExpr_t<typename decltype(atom_spaces)::value_type::value_type>> ret;
+  using ExprT = typename decltype(atom_spaces)::value_type::value_type;
+  std::vector<NCoExprForExpr_t<ExprT>> ret;
   for (const auto& summand_weights : weights_per_summand) {
     auto summand_components = cartesian_combinations(
       mapped(group_equal(summand_weights), [&](const auto& equal_weight_group) {
