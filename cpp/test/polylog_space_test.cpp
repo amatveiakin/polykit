@@ -128,6 +128,18 @@ TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
   EXPECT_POLYLOG_SPACE_EQ(L(weight(), points), LInf(weight(), points), DISAMBIGUATE(to_lyndon_basis));
 }
 
+TEST(PolylogSpaceTest, CB2SameAsNaive) {
+  const int weight = 2;
+  for (int num_points : range_incl(4, 6)) {
+    auto points = to_vector(range_incl(1, num_points));
+    EXPECT_POLYLOG_SPACE_EQ(
+      CB(weight, points),
+      CB_naive_via_QLi_fours(weight, points),
+      DISAMBIGUATE(to_lyndon_basis)
+    );
+  }
+}
+
 TEST(PolylogSpaceTest, RankCB1) {
   // (dim B1, A_{n-3}) in [ref]
   EXPECT_EQ(simple_space_rank(CB1, 6), 9);

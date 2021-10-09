@@ -23,20 +23,26 @@ std::string dump_to_string_impl(const PolylogNCoSpace& space);
 std::string dump_to_string_impl(const GrPolylogSpace& space);
 std::string dump_to_string_impl(const GrPolylogNCoSpace& space);
 
-PolylogSpace QL(int weight, const XArgs& xargs);
-
-PolylogSpace CB1(const XArgs& xargs);
-PolylogSpace CB2(const XArgs& xargs);
-PolylogSpace CB3(const XArgs& xargs);
-PolylogSpace CB4(const XArgs& xargs);
-PolylogSpace CB5(const XArgs& xargs);
-
-PolylogSpace CL4(const XArgs& xargs);
-PolylogSpace CL5(const XArgs& xargs);
-
+PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs);
 PolylogSpace CB(int weight, const XArgs& xargs);
-PolylogSpace CL(int weight, const XArgs& xargs);
+inline PolylogSpace CB1(const XArgs& xargs) { return CB(1, xargs); }
+inline PolylogSpace CB2(const XArgs& xargs) { return CB(2, xargs); }
+inline PolylogSpace CB3(const XArgs& xargs) { return CB(3, xargs); }
+inline PolylogSpace CB4(const XArgs& xargs) { return CB(4, xargs); }
+inline PolylogSpace CB5(const XArgs& xargs) { return CB(5, xargs); }
+inline PolylogSpace CB6(const XArgs& xargs) { return CB(6, xargs); }
+inline PolylogSpace CB7(const XArgs& xargs) { return CB(7, xargs); }
+inline PolylogSpace CB8(const XArgs& xargs) { return CB(8, xargs); }
 
+PolylogSpace CL(int weight, const XArgs& xargs);
+inline PolylogSpace CL1(const XArgs& xargs) { return CL(1, xargs); }
+inline PolylogSpace CL2(const XArgs& xargs) { return CL(2, xargs); }
+inline PolylogSpace CL3(const XArgs& xargs) { return CL(3, xargs); }
+inline PolylogSpace CL4(const XArgs& xargs) { return CL(4, xargs); }
+inline PolylogSpace CL5(const XArgs& xargs) { return CL(5, xargs); }
+inline PolylogSpace CL6(const XArgs& xargs) { return CL(6, xargs); }
+inline PolylogSpace CL7(const XArgs& xargs) { return CL(7, xargs); }
+inline PolylogSpace CL8(const XArgs& xargs) { return CL(8, xargs); }
 PolylogSpace old_CL4_via_A2(const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
@@ -51,18 +57,12 @@ inline PolylogSpace L3(const XArgs& xargs) { return L(3, xargs); }
 inline PolylogSpace L4(const XArgs& xargs) { return L(4, xargs); }
 inline PolylogSpace L5(const XArgs& xargs) { return L(5, xargs); }
 inline PolylogSpace L6(const XArgs& xargs) { return L(6, xargs); }
+inline PolylogSpace L7(const XArgs& xargs) { return L(7, xargs); }
+inline PolylogSpace L8(const XArgs& xargs) { return L(8, xargs); }
 
 PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
-
-PolylogNCoSpace co_CL_3(const XArgs& args);
-PolylogNCoSpace co_CL_4(const XArgs& args);
-PolylogNCoSpace co_CL_5(const XArgs& args);
-PolylogNCoSpace co_CL_6(const XArgs& args);
-PolylogNCoSpace co_CL_6_via_l(const XArgs& args);
-
-PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs);
 
 GrPolylogSpace GrFx(int dimension, const std::vector<int>& args);
 
@@ -70,7 +70,6 @@ GrPolylogSpace GrLBasic(int weight, const std::vector<int>& args);  // dimension
 GrPolylogSpace GrL1(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL2(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL3(int dimension, const std::vector<int>& args);
-
 GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args);
 
 // Computes a co-space of a given structure from spaces provided by `get_space`.
@@ -102,6 +101,8 @@ auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
 // Note: applies normalize_remove_consecutive (hence not allowing arbitrary input points).
 PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points);
 GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
+
+PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs);
 
 
 template<typename SpaceT>

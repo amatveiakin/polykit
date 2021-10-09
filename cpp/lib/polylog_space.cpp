@@ -36,94 +36,59 @@ std::string dump_to_string_impl(const GrPolylogSpace& space) { return space_to_s
 std::string dump_to_string_impl(const GrPolylogNCoSpace& space) { return space_to_string(space); }
 
 
-PolylogSpace QL(int weight, const XArgs& xargs) {
-  if (weight == 1) {
-    return CB1(xargs);
+PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs) {
+  return mapped(combinations(xargs.as_x(), 4), [&](const auto& p) { return QLiVec(weight, p); });
+}
+
+PolylogSpace CB(int weight, const XArgs& xargs) {
+  const auto& args = xargs.as_x();
+  switch (weight) {
+    case 1: {
+      const int n = args.size();
+      PolylogSpace ret;
+      for (const int i : range(n)) {
+        for (const int j : range(i+2, n)) {
+          const int ip = i + 1;
+          CHECK_LT(ip, n);
+          const int jp = (j + 1) % n;
+          if (jp != i) {
+            ret.push_back(Log(args[i], args[j], args[ip], args[jp]));
+          }
+        }
+      }
+      return ret;
+    }
+    case 2: {
+      const auto head = slice(args, 0, 1);
+      const auto tail = slice(args, 1);
+      return mapped(combinations(tail, 3), [&](const auto& p) { return QLi2(concat(head, p)); });
+    }
+    default: {
+      return CB_naive_via_QLi_fours(weight, xargs);
+    }
+  }
+}
+
+PolylogSpace CL(int weight, const XArgs& xargs) {
+  if (weight <= 2) {
+    return CB(weight, xargs);
   }
   const auto& args = xargs.as_x();
   PolylogSpace space;
   const int max_args = std::min<int>(args.size(), (weight / 2 + 1) * 2);
   for (int num_args = 4; num_args <= max_args; num_args += 2) {
-    append_vector(space, mapped_parallel(combinations(args, num_args), [&](const auto& p) {
+    append_vector(space, mapped(combinations(args, num_args), [&](const auto& p) {
       return QLiVec(weight, p);
     }));
   }
   return space;
 }
 
-PolylogSpace CB1(const XArgs& xargs) {
-  const auto& args = xargs.as_x();
-  const int n = args.size();
-  PolylogSpace ret;
-  for (const int i : range(n)) {
-    for (const int j : range(i+2, n)) {
-      const int ip = i + 1;
-      CHECK_LT(ip, n);
-      const int jp = (j + 1) % n;
-      if (jp != i) {
-        ret.push_back(Log(args[i], args[j], args[ip], args[jp]));
-      }
-    }
-  }
-  return ret;
-}
-PolylogSpace CB2(const XArgs& args) {
-  const auto head = slice(args.as_x(), 0, 1);
-  const auto tail = slice(args.as_x(), 1);
-  return mapped(combinations(tail, 3), [&](const auto& p) { return QLi2(concat(head, p)); });
-}
-PolylogSpace CB3(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi3(p); });
-}
-PolylogSpace CB4(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi4(p); });
-}
-PolylogSpace CB5(const XArgs& args) {
-  return mapped(combinations(args.as_x(), 4), [](const auto& p) { return QLi5(p); });
-}
-
-PolylogSpace CL4(const XArgs& args) {
-  return concat(
-    CB4(args),
-    mapped(combinations(args.as_x(), 6), [](const auto& p) { return QLi4(p); })
-  );
-}
-PolylogSpace CL5(const XArgs& args) {
-  return concat(
-    CB5(args),
-    mapped(combinations(args.as_x(), 6), [](const auto& p) { return QLi5(p); })
-  );
-}
-
-// TODO: Generic CB/CL definitions
-
 PolylogSpace old_CL4_via_A2(const XArgs& args) {
   return concat(
     CB4(args),
     mapped(combinations(args.as_x(), 5), [](const auto& p) { return A2(p); })
   );
-}
-
-PolylogSpace CB(int weight, const XArgs& xargs) {
-  switch (weight) {
-    case 1: return CB1(xargs);
-    case 2: return CB2(xargs);
-    case 3: return CB3(xargs);
-    case 4: return CB4(xargs);
-    case 5: return CB5(xargs);
-  }
-  FATAL(absl::StrCat("Unsupported weight for CB: ", weight));
-}
-
-PolylogSpace CL(int weight, const XArgs& xargs) {
-  switch (weight) {
-    case 1: return CB1(xargs);
-    case 2: return CB2(xargs);
-    case 3: return CB3(xargs);
-    case 4: return CL4(xargs);
-    case 5: return CL5(xargs);
-  }
-  FATAL(absl::StrCat("Unsupported weight for CL: ", weight));
 }
 
 // PolylogSpace H(int weight, const XArgs& xargs) {
@@ -275,77 +240,6 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
   return ret;
 }
 
-
-// Optimization potential: can cartesian_combinations be used to co_CL_N?
-PolylogNCoSpace co_CL_3(const XArgs& args) {
-  return mapped(
-    cartesian_product(CB2(args), CB1(args)),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace co_CL_4(const XArgs& args) {
-  return mapped(
-    concat(
-      cartesian_product(CB3(args), CB1(args)),
-      cartesian_product(CB2(args), CB2(args))
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace co_CL_5(const XArgs& args) {
-  return mapped(
-    concat(
-      cartesian_product(CL4(args), CB1(args)),
-      cartesian_product(CB3(args), CB2(args))
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace co_CL_6(const XArgs& args) {
-  return mapped(
-    concat(
-      cartesian_product(CL5(args), CB1(args)),
-      cartesian_product(CL4(args), CB2(args)),
-      cartesian_product(CB3(args), CB3(args))
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace co_CL_6_via_l(const XArgs& args) {
-  return mapped(
-    concat(
-      cartesian_product(CL5(args), CB1(args)),
-      cartesian_product(LInf(4, args), CB2(args)),
-      cartesian_product(LInf(3, args), LInf(3, args))
-    ),
-    APPLY(DISAMBIGUATE(ncoproduct))
-  );
-}
-
-PolylogNCoSpace QL_wedge_QL(int weight, const XArgs& xargs) {
-  PolylogNCoSpace ret;
-  for (int w : range_incl(1, weight / 2)) {
-    const auto space_a = QL(w, xargs.as_x());
-    const auto space_b = QL(weight - w, xargs.as_x());
-
-    // for (const auto& a : space_a) {
-    //   for (const auto& b : space_b) {
-    //     ret.push_back(ncoproduct(a, b));
-    //   }
-    // }
-    // TODO: Why is there virtually no difference between `mapped` and `mapped_parallel`?
-    append_vector(ret, mapped_parallel(cartesian_product(space_a, space_b), [](const auto& p) {
-      const auto& [a, b] = p;
-      return ncoproduct(a, b);
-    }));
-  }
-  return ret;
-}
-
 GrPolylogSpace GrFx(int dimension, const std::vector<int>& args) {
   return mapped(combinations(args, dimension), DISAMBIGUATE(G));
 }
@@ -483,6 +377,14 @@ GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int 
       // Precompute Lyndon basis to speed up coproduct.
       return to_lyndon_basis(normalize_remove_consecutive(expr));
     });
+  });
+}
+
+PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs) {
+  const auto points = xargs.as_x();
+  return co_space(weight, num_coparts, [&](const int w) {
+    // Precompute Lyndon basis to speed up coproduct.
+    return mapped(CL(w, points), DISAMBIGUATE(to_lyndon_basis));
   });
 }
 
