@@ -23,6 +23,16 @@
 #include "triangulation.h"
 
 
+// Permutes elements such that
+//   cross_ratio(one_minus_cross_ratio(p)) == 1 - cross_ratio(p)
+template<typename Container>
+static Container one_minus_cross_ratio(Container p) {
+  CHECK_EQ(4, p.size());
+  std::swap(p[1], p[2]);
+  return p;
+}
+
+
 template<typename SpaceT>
 std::string space_to_string(const SpaceT& space) {
   return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
@@ -270,20 +280,13 @@ GrPolylogSpace GrL1(int dimension, const std::vector<int>& args) {
   for (const auto& bonus_point_indices : combinations(to_vector(range(main_args.size())), dimension - 2)) {
     const auto bonus_points = choose_indices(main_args, bonus_point_indices);
     const auto qli_points = removed_indices(main_args, bonus_point_indices);
-    // TODO: Add `mapped_expanding` and use it here and in other places.
     append_vector(
       ret,
-      mapped(combinations(qli_points, 4 - num_fixed_points), [&](auto p) {
-        return GrQLiVec(weight, bonus_points, concat(p, fixed_points));
-      })
-    );
-    append_vector(
-      ret,
-      mapped(combinations(qli_points, 4 - num_fixed_points), [&](auto p) {
-        append_vector(p, fixed_points);
-        CHECK_EQ(4, p.size());
-        std::swap(p[1], p[2]);  // 1 - cross_ratio
-        return GrQLiVec(weight, bonus_points, p);
+      mapped_expanding(combinations(qli_points, 4 - num_fixed_points), [&](auto p) {
+        return std::array{
+          GrQLiVec(weight, bonus_points, concat(p, fixed_points)),
+          GrQLiVec(weight, bonus_points, one_minus_cross_ratio(concat(p, fixed_points)))
+        };
       })
     );
   }
@@ -323,16 +326,11 @@ GrPolylogSpace GrL3(int dimension, const std::vector<int>& args) {
     const auto qli_points = removed_indices(args, bonus_point_indices);
     append_vector(
       ret,
-      mapped(combinations(qli_points, 4), [&](auto p) {
-        return GrQLiVec(weight, bonus_points, p);
-      })
-    );
-    append_vector(
-      ret,
-      mapped(combinations(qli_points, 4), [&](auto p) {
-        CHECK_EQ(4, p.size());
-        std::swap(p[1], p[2]);  // 1 - cross_ratio
-        return GrQLiVec(weight, bonus_points, p);
+      mapped_expanding(combinations(qli_points, 4), [&](auto p) {
+        return std::array{
+          GrQLiVec(weight, bonus_points, p),
+          GrQLiVec(weight, bonus_points, one_minus_cross_ratio(p)),
+        };
       })
     );
   }

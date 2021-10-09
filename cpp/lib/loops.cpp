@@ -418,12 +418,12 @@ static LoopCutResult cut_loop(const std::vector<int>& points, int from, int to) 
 LoopExpr cut_loops_recursively(const std::vector<int>& points, const Loops& loops) {
   if (points.size() <= 5) {
     CHECK_EQ(points.size(), 5);
-    return LoopExpr::single(appended(loops, points));
+    return LoopExpr::single(concat(loops, {points}));
   }
   LoopExpr ret;
   for (int i : range(points.size())) {
     auto cut_result = cut_loop(rotated_vector(points, i), 0, 4);
-    ret += cut_loops_recursively(cut_result.remains, appended(loops, cut_result.loop));
+    ret += cut_loops_recursively(cut_result.remains, concat(loops, {cut_result.loop}));
   }
   return ret;
 }

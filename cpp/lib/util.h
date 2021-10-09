@@ -108,12 +108,6 @@ auto extract_value_or(Container& container, const Key& key) {
 }
 
 
-template<typename T>
-std::vector<T> appended(std::vector<T> c, T element) {
-  c.push_back(std::move(element));
-  return c;
-}
-
 namespace internal {
 template <typename T>
 class HasIterator {
@@ -242,6 +236,15 @@ std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& in
   return choose_indices(v, indices);
 }
 
+// Optimization potential: Replace instances of `append_vector(out, mapped(in))`
+//   with `absl::transform(in, std::back_inserter(out))`.
+template<typename T, typename SrcContainerT>
+void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
+  const size_t old_size = dst.size();
+  dst.reserve(old_size + src.size());
+  absl::c_move(src, std::back_inserter(dst));
+}
+
 template<typename Src, typename F>
 auto mapped(const Src& src, F&& func) {
   std::vector<std::invoke_result_t<F, typename Src::value_type>> dst;
@@ -284,6 +287,17 @@ auto mapped_array(const std::array<In, N>& src, F&& func) {
 template<typename Src>
 auto mapped_to_string(const Src& src) {
   return mapped(src, DISAMBIGUATE(to_string));
+}
+
+// Equivalent to `flatten(mapped(src, func))`.
+template<typename Src, typename F>
+auto mapped_expanding(const Src& src, const F& func) {
+  using ResultContainer = std::invoke_result_t<F, typename Src::value_type>;
+  std::vector<typename ResultContainer::value_type> dst;
+  for (const auto& value : src) {
+    append_vector(dst, func(value));
+  }
+  return dst;
 }
 
 template<typename T, typename F>
@@ -343,13 +357,6 @@ std::vector<T> rotated_vector(std::vector<T> v, int n) {
   n = pos_mod(n, v.size());
   absl::c_rotate(v, v.begin() + n);
   return v;
-}
-
-template<typename T, typename SrcContainerT>
-void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
-  const size_t old_size = dst.size();
-  dst.resize(old_size + src.size());
-  absl::c_move(src, dst.begin() + old_size);
 }
 
 template<typename Container>
