@@ -61,8 +61,4 @@ inline Range range_incl(int from, int to) {
 
 // Usage:
 //   for (EACH : range(...)) { ... }
-#ifdef __GNUC__
-#  define EACH  __attribute__((unused)) auto&& _loop_counter_
-#else
-#  define EACH  auto&& _loop_counter_
-#endif
+#define EACH  [[maybe_unused]] auto&& _loop_counter_
