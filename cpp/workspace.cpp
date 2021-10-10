@@ -49,13 +49,13 @@
 #include "lib/zip.h"
 
 
-auto annotated_co_space_summands(int weight, int num_coparts, int num_points) {
+auto annotated_co_space_summands(int weight, int num_coparts, int dimension, int num_points) {
   CHECK_LE(num_coparts, weight);
   const auto points = to_vector(range_incl(1, num_points));
   const auto weights_per_summand = get_partitions(weight, num_coparts);
   const int max_atom_weight = max_value(flatten(weights_per_summand));
   const auto atom_spaces = mapped(range_incl(1, max_atom_weight), [&](const int w) {
-    return mapped(L(w, points), [&](const auto& expr) {
+    return mapped(GrL(w, dimension, points), [&](const auto& expr) {
       return to_lyndon_basis(normalize_remove_consecutive(expr));
     });
   });
@@ -112,16 +112,17 @@ int main(int /*argc*/, char *argv[]) {
   );
 
 
-  const int weight = 5;
-  for (const int num_points : range_incl(4, 10)) {
+  const int dimension = 3;
+  const int weight = 3;
+  for (const int num_points : range_incl(5, 10)) {
     for (const int num_coparts : range_incl(2, weight)) {
       Profiler profiler;
-      const auto summands = annotated_co_space_summands(weight, num_coparts, num_points);
+      const auto summands = annotated_co_space_summands(weight, num_coparts, dimension, num_points);
       profiler.finish("spaces");
       const bool compute_kernel = num_coparts < weight;
       std::vector<std::string> annotations;
       std::vector<int> space_ranks;
-      PolylogNCoSpace united_space;
+      GrPolylogNCoSpace united_space;
       for (const auto& [annotation, space] : summands) {
         annotations.push_back(annotation);
         space_ranks.push_back(space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
@@ -139,7 +140,7 @@ int main(int /*argc*/, char *argv[]) {
         }).kernel();
         profiler.finish("kernel rank");
       }
-      std::cout << "w=" << weight << ", p=" << num_points << ", co=" << num_coparts << ": ";
+      std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ", co=" << num_coparts << ": ";
       std::cout << str_join(annotations, " ⊕ ") << "\n";
       std::cout << sum(space_ranks) << "=" << str_join(space_ranks, "+");
       if (compute_kernel) {
