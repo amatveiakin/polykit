@@ -15,7 +15,7 @@
 
 TEST(CoproductTest, TwoExpressions) {
   EXPECT_EXPR_EQ(
-    coproduct(
+    icoproduct(
       +  SV({1})
       -  SV({2})
       ,
@@ -33,7 +33,7 @@ TEST(CoproductTest, TwoExpressions) {
 
 TEST(ComultiplyTest, Form_1_1) {
   EXPECT_EXPR_EQ(
-    comultiply(
+    icomultiply(
       +2*SV({1,2})
       ,
       {1, 1}
@@ -46,7 +46,7 @@ TEST(ComultiplyTest, Form_1_1) {
 
 TEST(ComultiplyTest, Form_1_2) {
   EXPECT_EXPR_EQ(
-    comultiply(
+    icomultiply(
       + SV({1,2,3})
       ,
       {1, 2}
@@ -60,7 +60,7 @@ TEST(ComultiplyTest, Form_1_2) {
 
 TEST(ComultiplyTest, Form_2_2) {
   EXPECT_EXPR_EQ(
-    comultiply(
+    icomultiply(
       + SV({1,3,2,4})
       + SV({4,3,2,1})
       ,
@@ -75,18 +75,18 @@ TEST(ComultiplyTest, Form_2_2) {
 
 TEST(ComultiplyTest, ZeroResult) {
   EXPECT_EXPR_EQ(
-    comultiply(
+    icomultiply(
       + SV({1,1,2,3})
       ,
       {2, 2}
     ),
-    SimpleVectorCoExpr{}
+    SimpleVectorICoExpr{}
   );
 }
 
 TEST(CoproductTest, IteratedComultiplication_2_2_2) {
   EXPECT_EXPR_EQ(
-    comultiply(
+    icomultiply(
       + SV({4,3,1,2,5,6})
       ,
       {2, 2, 2}
@@ -127,8 +127,8 @@ TEST(CoalgebraUtilTest, FilterCoExpr) {
       }
     ),
     (
-      - coproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EVar(1))
-      + coproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EComplementIndexList({1}))
+      - icoproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EVar(1))
+      + icoproduct(EFormalSymbolPositive(LiParam(0, {5}, {{1,2}})), EComplementIndexList({1}))
     )
   );
 }

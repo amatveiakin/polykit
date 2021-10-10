@@ -215,7 +215,7 @@ struct DeltaExprParam {
   }
 };
 
-struct DeltaCoExprParam {
+struct DeltaICoExprParam {
   using PartExprParam = DeltaExprParam;
   using ObjectT = std::vector<std::vector<Delta>>;
 #if DISABLE_PACKING
@@ -242,7 +242,7 @@ struct DeltaCoExprParam {
   static constexpr bool coproduct_is_iterated = true;
 };
 
-struct DeltaNCoExprParam : DeltaCoExprParam {
+struct DeltaNCoExprParam : DeltaICoExprParam {
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_normal(), DeltaExprParam::object_to_string);
   }
@@ -252,9 +252,9 @@ struct DeltaNCoExprParam : DeltaCoExprParam {
 
 
 using DeltaExpr = Linear<internal::DeltaExprParam>;
-using DeltaCoExpr = Linear<internal::DeltaCoExprParam>;
+using DeltaICoExpr = Linear<internal::DeltaICoExprParam>;
 using DeltaNCoExpr = Linear<internal::DeltaNCoExprParam>;
-template<> struct CoExprForExpr<DeltaExpr> { using type = DeltaCoExpr; };
+template<> struct ICoExprForExpr<DeltaExpr> { using type = DeltaICoExpr; };
 template<> struct NCoExprForExpr<DeltaExpr> { using type = DeltaNCoExpr; };
 
 inline DeltaExpr delta_to_expr(Delta d) {

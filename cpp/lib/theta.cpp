@@ -73,8 +73,8 @@ ThetaExpr substitute_ratios(
   }).without_annotations();
 }
 
-ThetaCoExpr substitute_ratios(
-    const EpsilonCoExpr& expr,
+ThetaICoExpr substitute_ratios(
+    const EpsilonICoExpr& expr,
     const std::vector<CompoundRatio>& ratios) {
   return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
     CHECK_EQ(term.size(), kThetaCoExprParts);
@@ -83,7 +83,7 @@ ThetaCoExpr substitute_ratios(
         return substitute_ratios(EpsilonExpr::single(pack), ratios);
       });
     static_assert(kThetaCoExprParts == 2);
-    return outer_product<ThetaCoExpr>(
+    return outer_product<ThetaICoExpr>(
       multipliers[0],
       multipliers[1],
       [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
@@ -169,12 +169,12 @@ ThetaExpr keep_monsters(const ThetaExpr& expr) {
     return is_monster(term);
   });
 }
-ThetaCoExpr without_monsters(const ThetaCoExpr& expr) {
+ThetaICoExpr without_monsters(const ThetaICoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return !absl::c_any_of(term, is_monster);
   });
 }
-ThetaCoExpr keep_monsters(const ThetaCoExpr& expr) {
+ThetaICoExpr keep_monsters(const ThetaICoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return absl::c_any_of(term, is_monster);
   });

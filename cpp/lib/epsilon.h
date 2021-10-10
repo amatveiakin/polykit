@@ -199,7 +199,7 @@ struct EpsilonExprParam {
   }
 };
 
-struct EpsilonCoExprParam {
+struct EpsilonICoExprParam {
   using ObjectT = std::vector<EpsilonPack>;
   using PartStorageT = EpsilonExprParam::StorageT;
   using StorageT = PVector<PartStorageT, 2>;
@@ -219,8 +219,8 @@ struct EpsilonCoExprParam {
 
 
 using EpsilonExpr = Linear<internal::EpsilonExprParam>;
-using EpsilonCoExpr = Linear<internal::EpsilonCoExprParam>;
-template<> struct CoExprForExpr<EpsilonExpr> { using type = EpsilonCoExpr; };
+using EpsilonICoExpr = Linear<internal::EpsilonICoExprParam>;
+template<> struct ICoExprForExpr<EpsilonExpr> { using type = EpsilonICoExpr; };
 
 // Whether expr is one w.r.t. shuffle multiplication.
 inline bool is_unity(const EpsilonPack& pack) {
@@ -285,5 +285,5 @@ EpsilonExpr substitute_variables(
 // and here we assume that it never is.
 EpsilonExpr without_monsters(const EpsilonExpr& expr);
 EpsilonExpr keep_monsters(const EpsilonExpr& expr);
-EpsilonCoExpr without_monsters(const EpsilonCoExpr& expr);
-EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr);
+EpsilonICoExpr without_monsters(const EpsilonICoExpr& expr);
+EpsilonICoExpr keep_monsters(const EpsilonICoExpr& expr);

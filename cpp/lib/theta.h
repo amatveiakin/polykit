@@ -155,7 +155,7 @@ struct ThetaExprParam {
   }
 };
 
-struct ThetaCoExprParam {
+struct ThetaICoExprParam {
   using ObjectT = std::array<ThetaPack, kThetaCoExprParts>;
   using StorageT = std::array<ThetaExprParam::StorageT, kThetaCoExprParts>;
   static StorageT object_to_key(const ObjectT& obj) {
@@ -174,8 +174,8 @@ struct ThetaCoExprParam {
 
 
 using ThetaExpr = Linear<internal::ThetaExprParam>;
-using ThetaCoExpr = Linear<internal::ThetaCoExprParam>;
-template<> struct CoExprForExpr<ThetaExpr> { using type = ThetaCoExpr; };
+using ThetaICoExpr = Linear<internal::ThetaICoExprParam>;
+template<> struct ICoExprForExpr<ThetaExpr> { using type = ThetaICoExpr; };
 
 
 // Whether expr is one w.r.t. shuffle multiplication.
@@ -199,8 +199,8 @@ inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) { return ThetaExpr::
 ThetaExpr substitute_ratios(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios);
-ThetaCoExpr substitute_ratios(
-    const EpsilonCoExpr& expr,
+ThetaICoExpr substitute_ratios(
+    const EpsilonICoExpr& expr,
     const std::vector<CompoundRatio>& ratios);
 
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
@@ -216,5 +216,5 @@ StringExpr count_functions(const ThetaExpr& expr);
 // "Monster" is something that cannot be decomposed into a product of Plücker coordinates.
 ThetaExpr without_monsters(const ThetaExpr& expr);
 ThetaExpr keep_monsters(const ThetaExpr& expr);
-ThetaCoExpr without_monsters(const ThetaCoExpr& expr);
-ThetaCoExpr keep_monsters(const ThetaCoExpr& expr);
+ThetaICoExpr without_monsters(const ThetaICoExpr& expr);
+ThetaICoExpr keep_monsters(const ThetaICoExpr& expr);

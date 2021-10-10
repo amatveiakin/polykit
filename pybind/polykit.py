@@ -33,11 +33,11 @@ x8s = pb.x8s
 
 Delta = pb.Delta
 DeltaExpr = pb.DeltaExpr
-DeltaCoExpr = pb.DeltaCoExpr
+DeltaICoExpr = pb.DeltaICoExpr
 ProjectionExpr = pb.ProjectionExpr
 
 substitute_variables = pb.substitute_variables
-comultiply = pb.comultiply
+icomultiply = pb.icomultiply
 ncomultiply = pb.ncomultiply
 involute = pb.involute
 project_on = pb.project_on
@@ -65,7 +65,7 @@ loops_matrix = pb.loops_matrix
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
 def tensor_product(*parts): return pb.tensor_product_vec(args_to_iterable(parts))
-def coproduct(*parts): return pb.coproduct_vec(args_to_iterable(parts))
+def icoproduct(*parts): return pb.icoproduct_vec(args_to_iterable(parts))
 def ncoproduct(*parts): return pb.ncoproduct_vec(args_to_iterable(parts))
 
 def I(*points): return pb.IVec(args_to_iterable(points))

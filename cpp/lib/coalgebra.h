@@ -7,33 +7,32 @@
 //   * "Hopf": parts are fixed in place and cannot be reordered. There is no Hopf
 //     comultiplication operation, but such an expression can be constructed by hand.
 //
-// All functions come in two forms: "n" version means "normal", default is iterative.
-// TODO: Change the names if "normal" is indeed normal.
+// All functions come in two forms: prefix "n" stands for "normal", "i" for "iterative".
 //
 // Contains two main functions:
 //
-//   * `coproduct(expr1, expr2, ..., exprN)` / `ncoproduct(expr1, expr2, ..., exprN)`
+//   * `ncoproduct(expr1, expr2, ..., exprN)` / `icoproduct(expr1, expr2, ..., exprN)`
 //     constructs a formal tuple (expr1, expr2, ..., exprN) that corresponds to one
 //     comultiplication term. This is not a mathematical operation, this is merely a
 //     tool for constructing the comultiplication.
-//     `coproduct_vec(expressions)` / `coproduct_vec(expressions)`
+//     `ncoproduct_vec(expressions)` / `icoproduct_vec(expressions)`
 //     same as above, vector form.
 //
-//   * `comultiply(expression, form)` / `ncomultiply(expression, [form])`
+//   * `ncomultiply(expression, form)` / `icomultiply(expression, [form])`
 //     computes comultiplication. If `form` is given, only the specified component
 //     is computed. The order of elements in `form` does not matter: comultiplication
 //     is always ordered accordingly.
-//     Example: `comultiply(QLi4(...), {1,3})`
+//     Example: `ncomultiply(QLi4(...), {1,3})`
 //
-// Also contains a type trait `CoExprForExpr` / `NCoExprForExpr`. When defining a new
+// Also contains a type trait `NCoExprForExpr` / `ICoExprForExpr`. When defining a new
 // coexpression one should extend it like this:
 //
-//   template<> struct CoExprForExpr<MyExpr> { using type = MyCoExpr; };
 //   template<> struct NCoExprForExpr<MyExpr> { using type = MyNCoExpr; };
+//   template<> struct ICoExprForExpr<MyExpr> { using type = MyICoExpr; };
 //
-// NCoExprForExpr<MyExpr> enables `ncoproduct` and `comultiply` for `MyExpr`.
-// CoExprForExpr<MyExpr> enables `coproduct` in all cases, and `comultiply` if
-//   `MyCoExpr` supports Lyndon.
+// NCoExprForExpr<MyExpr> enables `ncoproduct` and `ncomultiply` for `MyExpr`.
+// ICoExprForExpr<MyExpr> enables `icoproduct` in all cases, and `icomultiply` if
+//   `MyCoExpr` supports Lyndon basis.
 
 #pragma once
 
@@ -43,18 +42,18 @@
 
 
 template<typename ExprT>
-struct CoExprForExpr {
-  using type = void;
-};
-template<typename ExprT>
-using CoExprForExpr_t = typename CoExprForExpr<ExprT>::type;
-
-template<typename ExprT>
 struct NCoExprForExpr {
   using type = void;
 };
 template<typename ExprT>
 using NCoExprForExpr_t = typename NCoExprForExpr<ExprT>::type;
+
+template<typename ExprT>
+struct ICoExprForExpr {
+  using type = void;
+};
+template<typename ExprT>
+using ICoExprForExpr_t = typename ICoExprForExpr<ExprT>::type;
 
 
 namespace internal {
@@ -124,18 +123,13 @@ auto abstract_coproduct_vec(const std::vector<ExprT>& expr) {
 
 
 template<typename ExprT>
-auto coproduct_vec(const std::vector<ExprT>& expr) {
-  return internal::abstract_coproduct_vec<CoExprForExpr_t<ExprT>>(expr);
-}
-
-template<typename ExprT>
 auto ncoproduct_vec(const std::vector<ExprT>& expr) {
   return internal::abstract_coproduct_vec<NCoExprForExpr_t<ExprT>>(expr);
 }
 
-template<typename... Args>
-auto coproduct(Args&&... args) {
-  return coproduct_vec(std::vector{std::forward<Args>(args)...});
+template<typename ExprT>
+auto icoproduct_vec(const std::vector<ExprT>& expr) {
+  return internal::abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
 }
 
 template<typename... Args>
@@ -143,10 +137,15 @@ auto ncoproduct(Args&&... args) {
   return ncoproduct_vec(std::vector{std::forward<Args>(args)...});
 }
 
+template<typename... Args>
+auto icoproduct(Args&&... args) {
+  return icoproduct_vec(std::vector{std::forward<Args>(args)...});
+}
+
 
 template<typename ExprT>
-auto comultiply(const ExprT& expr, std::vector<int> form) {
-  using CoExprT = CoExprForExpr_t<ExprT>;
+auto icomultiply(const ExprT& expr, std::vector<int> form) {
+  using CoExprT = ICoExprForExpr_t<ExprT>;
   static_assert(CoExprT::Param::coproduct_is_lie_algebra);
   if (expr.is_zero()) {
     return CoExprT{};
@@ -157,13 +156,13 @@ auto comultiply(const ExprT& expr, std::vector<int> form) {
       << " into parts " << str_join(form, " + ") << " = " << sum(form);
   CHECK(form.size() >= 2) << dump_to_string(form);
   CHECK(form.size() == 2 || all_equal(form))
-      << "Comultiplication into three or more unequal parts is not supported: " << dump_to_string(form);
+      << "Iterated comultiplication into three or more unequal parts is not supported: " << dump_to_string(form);
   absl::c_sort(form);  // avoid unnecessary work in `normalize_coproduct`
 
   using MonomT = typename ExprT::StorageT;
   // Optimization potential: remove conversion of vector form to key (here) and back
   // (inside to_lyndon_basis inside coproduct). Idea: convert to Lyndon basis here
-  // and add a compile-time flag to `coproduct` saying that this is no longer required;
+  // and add a compile-time flag to `icoproduct` saying that this is no longer required;
   // note that in this case it might be better to convert the entire expression first
   // (see above).
   static auto make_copart = [](auto span) {
@@ -178,13 +177,13 @@ auto comultiply(const ExprT& expr, std::vector<int> form) {
     const auto span = absl::MakeConstSpan(monom_vec);
     if (form.size() == 2) {
       const int split = form[0];
-      ret += coeff * coproduct(
+      ret += coeff * icoproduct(
         make_copart(span.subspan(0, split)),
         make_copart(span.subspan(split))
       );
       if (form[0] != form[1]) {
         const int split = form[1];
-        ret -= coeff * coproduct(
+        ret -= coeff * icoproduct(
           make_copart(span.subspan(split)),
           make_copart(span.subspan(0, split))
         );
@@ -197,7 +196,7 @@ auto comultiply(const ExprT& expr, std::vector<int> form) {
         part_begin += part_weight;
       }
       CHECK_EQ(part_begin, span.size());
-      ret += coeff * coproduct_vec(parts);
+      ret += coeff * icoproduct_vec(parts);
     }
   });
   return ret.copy_annotations_mapped(

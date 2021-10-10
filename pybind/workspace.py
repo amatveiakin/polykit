@@ -14,7 +14,7 @@ from delta_matrix import DeltaExprMatrixBuilder
 
 from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, reset_formatting, NoLineLimit
 from polykit import tensor_product, to_lyndon_basis
-from polykit import coproduct, ncoproduct, comultiply, ncomultiply
+from polykit import icoproduct, ncoproduct, icomultiply, ncomultiply
 from polykit import X, Inf, Zero, x1, x2, x3, x4, x5, x6, x7, x8, x1s, x2s, x3s, x4s, x5s, x6s, x7s, x8s
 from polykit import Delta, DeltaExpr, substitute_variables, involute
 from polykit import ProjectionExpr, project_on

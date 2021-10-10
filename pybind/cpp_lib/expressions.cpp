@@ -45,14 +45,14 @@ void pybind_delta(py::module_& m) {
   ;
 
   py_register_linear<DeltaExpr>(m, "DeltaExpr");
-  py_register_linear<DeltaCoExpr>(m, "DeltaCoExpr");
+  py_register_linear<DeltaICoExpr>(m, "DeltaICoExpr");
   py_register_linear<DeltaNCoExpr>(m, "DeltaNCoExpr");
 
   m.def("tensor_product_vec", [](const std::vector<DeltaExpr>& expressions) { return tensor_product(absl::MakeConstSpan(expressions)); });
   m.def("to_lyndon_basis", &to_lyndon_basis<DeltaExpr>, kLyndonDescription);
-  m.def("coproduct_vec", &coproduct_vec<DeltaExpr>);
+  m.def("icoproduct_vec", &icoproduct_vec<DeltaExpr>);
   m.def("ncoproduct_vec", &ncoproduct_vec<DeltaExpr>);
-  m.def("comultiply", &comultiply<DeltaExpr>);
+  m.def("icomultiply", &icomultiply<DeltaExpr>);
   m.def("ncomultiply", &ncomultiply<DeltaExpr>, "expr"_a, "form"_a = std::vector<int>{});
   m.def("ncomultiply", &ncomultiply<DeltaNCoExpr>, "expr"_a, "form"_a = std::vector<int>{});
 

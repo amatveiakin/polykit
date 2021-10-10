@@ -21,14 +21,14 @@ ThetaExpr LiraVec(const LiraParam& param) {
   ).annotate(to_string(param));
 }
 
-ThetaCoExpr CoLiraVec(
+ThetaICoExpr CoLiraVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<CompoundRatio>& ratios) {
   return CoLiraVec(LiraParam(foreweight, weights, ratios));
 }
 
-ThetaCoExpr CoLiraVec(const LiraParam& param) {
+ThetaICoExpr CoLiraVec(const LiraParam& param) {
   std::vector<std::vector<int>> points;
   for (int i : range_incl(1, param.ratios().size())) {
     points.push_back({i});
@@ -56,14 +56,14 @@ ThetaExpr eval_formal_symbols(const ThetaExpr& expr) {
   });
 }
 
-ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr) {
+ThetaICoExpr eval_formal_symbols(const ThetaICoExpr& expr) {
   return expr.mapped_expanding([&](const std::array<ThetaPack, kThetaCoExprParts>& term) {
     const std::array multipliers =
       mapped_array(term, [&](const ThetaPack& pack) {
         return eval_formal_symbols(ThetaExpr::single(pack));
       });
     static_assert(kThetaCoExprParts == 2);
-    return outer_product<ThetaCoExpr>(
+    return outer_product<ThetaICoExpr>(
       multipliers[0],
       multipliers[1],
       [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {

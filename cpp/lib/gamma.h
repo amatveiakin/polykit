@@ -70,7 +70,7 @@ struct GammaExprParam {
   }
 };
 
-struct GammaCoExprParam {
+struct GammaICoExprParam {
   using PartExprParam = GammaExprParam;
   using ObjectT = std::vector<std::vector<Gamma>>;
   using PartStorageT = GammaExprParam::StorageT;
@@ -93,7 +93,7 @@ struct GammaCoExprParam {
   static constexpr bool coproduct_is_iterated = true;
 };
 
-struct GammaNCoExprParam : GammaCoExprParam {
+struct GammaNCoExprParam : GammaICoExprParam {
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_normal(), GammaExprParam::object_to_string);
   }
@@ -103,9 +103,9 @@ struct GammaNCoExprParam : GammaCoExprParam {
 
 
 using GammaExpr = Linear<internal::GammaExprParam>;
-using GammaCoExpr = Linear<internal::GammaCoExprParam>;
+using GammaICoExpr = Linear<internal::GammaICoExprParam>;
 using GammaNCoExpr = Linear<internal::GammaNCoExprParam>;
-template<> struct CoExprForExpr<GammaExpr> { using type = GammaCoExpr; };
+template<> struct ICoExprForExpr<GammaExpr> { using type = GammaICoExpr; };
 template<> struct NCoExprForExpr<GammaExpr> { using type = GammaNCoExpr; };
 
 inline GammaExpr G(const std::vector<int>& vars) {

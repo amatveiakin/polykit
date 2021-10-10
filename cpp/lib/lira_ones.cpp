@@ -138,9 +138,9 @@ LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr) {
   });
 }
 
-DeltaCoExpr lira_expr_comultiply(const LiraExpr& expr) {
+DeltaICoExpr lira_expr_comultiply(const LiraExpr& expr) {
   return expr.mapped_expanding([](const LiraParamOnes& formal_symbol) {
-    return coproduct_vec(
+    return icoproduct_vec(
       mapped(formal_symbol.ratios(), [](const auto& ratio_or_unity) {
         CHECK(!ratio_or_unity.is_unity());
         return QLiVec(2, ratio_or_unity.as_ratio().indices());

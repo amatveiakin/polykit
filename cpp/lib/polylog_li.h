@@ -35,11 +35,11 @@ EpsilonExpr LiVec(
     const std::vector<std::vector<int>>& points);
 EpsilonExpr LiVec(const LiParam& param);
 
-EpsilonCoExpr CoLiVec(
+EpsilonICoExpr CoLiVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points);
-EpsilonCoExpr CoLiVec(const LiParam& param);
+EpsilonICoExpr CoLiVec(const LiParam& param);
 
 
 namespace internal {
@@ -61,7 +61,7 @@ public:
   CoLiFixedWeights(int foreweight, std::vector<int> weights)
     : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
-  EpsilonCoExpr operator()(std::initializer_list<Args>... args) const {
+  EpsilonICoExpr operator()(std::initializer_list<Args>... args) const {
     return CoLiVec(foreweight_, weights_, std::vector({std::vector(args)...}));
   }
 private:

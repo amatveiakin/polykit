@@ -11,9 +11,9 @@ EpsilonExpr mystic_product(
 EpsilonExpr mystic_product(
     const absl::Span<const EpsilonExpr>& expressions);
 
-EpsilonCoExpr mystic_product(
-    const EpsilonCoExpr& lhs,
-    const EpsilonCoExpr& rhs);
+EpsilonICoExpr mystic_product(
+    const EpsilonICoExpr& lhs,
+    const EpsilonICoExpr& rhs);
 
 
 ThetaExpr quasi_shuffle_product_expr(

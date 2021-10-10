@@ -83,12 +83,12 @@ EpsilonExpr keep_monsters(const EpsilonExpr& expr) {
     return is_monster(term);
   });
 }
-EpsilonCoExpr without_monsters(const EpsilonCoExpr& expr) {
+EpsilonICoExpr without_monsters(const EpsilonICoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return !absl::c_any_of(term, is_monster);
   });
 }
-EpsilonCoExpr keep_monsters(const EpsilonCoExpr& expr) {
+EpsilonICoExpr keep_monsters(const EpsilonICoExpr& expr) {
   return expr.filtered([](const auto& term) {
     return absl::c_any_of(term, is_monster);
   });

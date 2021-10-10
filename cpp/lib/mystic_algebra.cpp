@@ -94,22 +94,22 @@ EpsilonExpr mystic_product(
     AnnFunctionOp("mystic"));
 }
 
-EpsilonCoExpr mystic_product(
-    const EpsilonCoExpr& lhs,
-    const EpsilonCoExpr& rhs) {
+EpsilonICoExpr mystic_product(
+    const EpsilonICoExpr& lhs,
+    const EpsilonICoExpr& rhs) {
   return outer_product_expanding(
     lhs, rhs,
-    [](const EpsilonCoExpr::StorageT& lhs_key,
-       const EpsilonCoExpr::StorageT& rhs_key) -> EpsilonCoExpr {
+    [](const EpsilonICoExpr::StorageT& lhs_key,
+       const EpsilonICoExpr::StorageT& rhs_key) -> EpsilonICoExpr {
       // Optimization potential: do everything in key space without converting to object space.
       const std::vector<EpsilonPack> lhs_term =
-          EpsilonCoExpr::Param::key_to_object(lhs_key);
+          EpsilonICoExpr::Param::key_to_object(lhs_key);
       const std::vector<EpsilonPack> rhs_term =
-          EpsilonCoExpr::Param::key_to_object(rhs_key);
+          EpsilonICoExpr::Param::key_to_object(rhs_key);
       CHECK_EQ(lhs_term.size(), rhs_term.size());
       // Seems like there is no reason for this limitation anymore. TODO: Consider if this can be removed.
       CHECK_EQ(lhs_term.size(), 2) << "more coproduct parts are not supported yet";
-      return coproduct(
+      return icoproduct(
         monom_mystic_product(lhs_term[0], rhs_term[0]),
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );

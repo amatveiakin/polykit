@@ -15,14 +15,14 @@ inline ProjectionExpr Pr(std::initializer_list<X> data) {
 
 
 // Reference A2 comultiplication from https://arxiv.org/pdf/1401.6446.pdf, eq. (3.3)
-DeltaCoExpr A2_comult_2_2(const XArgs& args) {
+DeltaICoExpr A2_comult_2_2(const XArgs& args) {
   const auto args_i = [&](int i) {
     return slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4);
   };
-  DeltaCoExpr ret;
+  DeltaICoExpr ret;
   for (int i : range_incl(1, 5)) {
     for (int j : range_incl(1, 5)) {
-      ret += j * coproduct(
+      ret += j * icoproduct(
         QLi2(args_i(i)),
         QLi2(args_i(i+j))
       );
@@ -30,15 +30,15 @@ DeltaCoExpr A2_comult_2_2(const XArgs& args) {
   }
   return ret;
 }
-DeltaCoExpr A2_comult_1_3(const XArgs& args) {
+DeltaICoExpr A2_comult_1_3(const XArgs& args) {
   const auto args_i = [&](int i) {
     return slice(rotated_vector(args.as_x(), 2 * (i-1)), 0, 4);
   };
-  DeltaCoExpr ret;
+  DeltaICoExpr ret;
   for (int i : range_incl(1, 5)) {
     ret +=
-      + coproduct(cross_ratio(args_i(i)), QLi3(args_i(i+1)))
-      - coproduct(cross_ratio(args_i(i+1)), QLi3(args_i(i)))
+      + icoproduct(cross_ratio(args_i(i)), QLi3(args_i(i+1)))
+      - icoproduct(cross_ratio(args_i(i+1)), QLi3(args_i(i)))
     ;
   }
   ret *= 5;
@@ -305,10 +305,10 @@ TEST(QLiTest, QLi4_InvolutionEquation) {
 TEST(QLiTest, QLi4_Arg4_InvolutionComultiplication) {
   EXPECT_EXPR_EQ(
     filter_coexpr(
-      comultiply(QLi4(x1,x3,-x1,-x3), {1,3}),
+      icomultiply(QLi4(x1,x3,-x1,-x3), {1,3}),
       0, {Delta(x1,x3)}
     ),
-    2 * coproduct(
+    2 * icoproduct(
       DeltaExpr::single({Delta(x1,x3)}),
       + QLi3(x1,x3,-x1,-x3)
     )
@@ -318,10 +318,10 @@ TEST(QLiTest, QLi4_Arg4_InvolutionComultiplication) {
 TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_1_3) {
   EXPECT_EXPR_EQ(
     filter_coexpr(
-      comultiply(QLi4(x1,-x3,x1,-x2,x3,x2), {1,3}),
+      icomultiply(QLi4(x1,-x3,x1,-x2,x3,x2), {1,3}),
       0, {Delta(x1,x3)}
     ),
-    coproduct(
+    icoproduct(
       DeltaExpr::single({Delta(x1,x3)})
       ,
       + QLi3(-x3,x1,-x2,x3)
@@ -332,7 +332,7 @@ TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_1_3) {
 
 TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
   EXPECT_EXPR_ZERO(
-    comultiply(
+    icomultiply(
       + QLi4(-x1,x3,x1,x2,-x1,Inf)
       - QLi4(x1,x3,-x1,x2,x1,Inf)
       ,
@@ -355,14 +355,14 @@ TEST(QLiTest, A2_DihedralSymmetry) {
 
 TEST(QLiTest, A2_Comultiplication_2_2) {
   EXPECT_EXPR_EQ(
-    comultiply(A2(1,2,3,4,5), {2,2}),
+    icomultiply(A2(1,2,3,4,5), {2,2}),
     A2_comult_2_2({1,2,3,4,5}).dived_int(5) * 4
   );
 }
 
 TEST(QLiTest, A2_Comultiplication_1_3) {
   EXPECT_EXPR_EQ(
-    comultiply(A2(1,2,3,4,5), {1,3}),
+    icomultiply(A2(1,2,3,4,5), {1,3}),
     A2_comult_1_3({1,2,3,4,5}).dived_int(5) * 4
   );
 }

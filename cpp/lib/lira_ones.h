@@ -82,4 +82,4 @@ LiraExpr fully_normalize_ratios(const LiraExpr& expr);
 
 LiraExpr theta_expr_to_lira_expr_without_products(const ThetaExpr& expr);
 
-DeltaCoExpr lira_expr_comultiply(const LiraExpr& expr);
+DeltaICoExpr lira_expr_comultiply(const LiraExpr& expr);
