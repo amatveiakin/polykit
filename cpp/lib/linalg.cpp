@@ -124,6 +124,7 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   // TODO: Try adding IntegerTag
   // TODO: Try other methods, esp. LinBox::Method::Wiedemann
   // TODO: Try LinBox::Method::SparseElimination options
+  // TODO: Try (optionally) computing rank modulo prime
   LinBox::rank(rank, linbox_matrix, LinBox::Method::SparseElimination());
   return rank;
 }
