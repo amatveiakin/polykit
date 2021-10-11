@@ -203,6 +203,8 @@ ThetaICoExpr substitute_ratios(
     const EpsilonICoExpr& expr,
     const std::vector<CompoundRatio>& ratios);
 
+// Requires that each term is a simple variable difference, i.e. terms like (x_i + x_j)
+// or (x_i + 0) are not allowed.
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr);
 
 // Requires that each term is a product of Delta-s. Will fail if any term contains

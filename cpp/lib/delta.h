@@ -40,6 +40,7 @@ public:
   X b() const { return b_; }
 
   bool is_nil() const { return a_ == b_; }
+  bool is_var_diff() const { return a_.is(XForm::var) && b_.is(XForm::var); }
 
   bool operator==(const Delta& other) const { return as_pair() == other.as_pair(); }
   bool operator!=(const Delta& other) const { return as_pair() != other.as_pair(); }

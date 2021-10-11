@@ -97,6 +97,7 @@ ThetaICoExpr substitute_ratios(
 ThetaExpr delta_expr_to_theta_expr(const DeltaExpr& expr) {
   return expr.mapped<ThetaExpr>([](const std::vector<Delta>& term) -> ThetaPack {
     return mapped(term, [](const Delta& d) -> Theta {
+      CHECK(d.is_var_diff()) << to_string(d);
       return d;
     });
   });
