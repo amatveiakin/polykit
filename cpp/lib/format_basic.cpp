@@ -232,6 +232,8 @@ class AsciiEncoder : public AbstractEncoder {
   std::string coprod_iterated() override { return "  @  "; }
   std::string coprod_hopf() override { return "  %  "; }
   std::string comult() override { return is_html() ? "&amp;" : "&"; }
+  std::string set_union() override { return "|"; }
+  std::string set_intersection() override { return is_html() ? "&amp;" : "&"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
@@ -344,6 +346,8 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string coprod_iterated() override { return is_full_unicode() ? hspace("⦻") : hspace(tensor_prod()); }
   std::string coprod_hopf() override { return hspace("☒"); }
   std::string comult() override { return "△"; }
+  std::string set_union() override { return "⋃"; }
+  std::string set_intersection() override { return "⋂"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
@@ -477,6 +481,8 @@ class LatexEncoder : public AbstractEncoder {
   std::string coprod_iterated() override { return hspace("\\bigotimes"); }
   std::string coprod_hopf() override { return hspace("\\boxtimes"); }
   std::string comult() override { return " \\triangle "; }
+  std::string set_union() override { return "\\bigcup"; }
+  std::string set_intersection() override { return "\\bigcap"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) override {
     return absl::StrCat(lhs, "+", rhs);

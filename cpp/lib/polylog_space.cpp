@@ -387,8 +387,10 @@ PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs) {
 }
 
 std::string to_string(const SpaceVennRanks& ranks) {
-  // TODO: Use `fmt` for special characters.
-  return absl::StrCat("(", ranks.a(), ", ", ranks.b(), "), ∩ = ", ranks.intersected());
+  return absl::StrCat(
+    fmt::parens(absl::StrCat(ranks.a(), ", ", ranks.b())),
+    fmt::set_intersection(), " = ", ranks.intersected()
+  );
 }
 
 std::string to_string(const SpaceMappingRanks& ranks) {

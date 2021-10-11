@@ -150,6 +150,8 @@ public:
   virtual std::string coprod_iterated() = 0;
   virtual std::string coprod_hopf() = 0;
   virtual std::string comult() = 0;
+  virtual std::string set_union() = 0;
+  virtual std::string set_intersection() = 0;
 
   virtual std::string sum(
       const std::string& lhs,
@@ -222,6 +224,8 @@ inline std::string coprod_normal() { return current_encoder()->coprod_normal(); 
 inline std::string coprod_iterated() { return current_encoder()->coprod_iterated(); }
 inline std::string coprod_hopf() { return current_encoder()->coprod_hopf(); }
 inline std::string comult() { return current_encoder()->comult(); }
+inline std::string set_union() { return current_encoder()->set_union(); }
+inline std::string set_intersection() { return current_encoder()->set_intersection(); }
 
 inline std::string sum(
     const std::string& lhs,
