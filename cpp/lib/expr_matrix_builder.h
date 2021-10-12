@@ -8,7 +8,6 @@
 #include "util.h"
 
 
-// TODO: Test, for distinct and duplicate types.
 template<typename... ExprTs>
 class ExprMatrixBuilder {
 public:
