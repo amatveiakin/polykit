@@ -18,9 +18,9 @@
 // Constructing expressions:
 //   * `single(x)` constructs a linear expression 1*x from monom x.
 //   * `from_collection(container)` counts elements in a container, e.g.
-//     turns {a, a, b, c, a, c, c} into 3*x + b + 3*c.
+//     turns {a, a, b, c, a, c, c} into 3*a + b + 3*c.
 //
-// Manipulating expressions:
+// Manipulating entire expressions:
 //   * Arithmetics: addition (+, +=), subtraction(-, -=), multiplication by scalar (*, *=),
 //     division by scalar (dived_int, div_int). In case of division each coefficient must
 //     by divisible without a remainder or an IntegerDivisionError is thrown.
@@ -28,6 +28,14 @@
 //   * `mapped_expanding(f)` does the same, but f returns an expression rather than a monom.
 //   * `filtered(f)` keeps only terms a*x where f(x) is true.
 //   * `foreach(f)` iterates over the expression calling f(x, a) for every term a*x.
+//   * `contains(f)` tells whether the expressions contains a term a*x such that f(x) is true.
+//
+// Manipulating terms:
+//   * `operator[](x)` returns a if the expression has term a*x or 0 otherwise.
+//   * `add_to(x, v)` adds v to the coefficient at x.
+//      Equivalent to `expr += v * ExprType::single(x)`, but faster.
+//   * `element()` returns some {term, coeff} pair assuming the expression is not zero.
+//   * `pop()` removes the term returned by `element`.
 //
 //
 // # Object space vs key space
