@@ -5,6 +5,8 @@
 #include "shuffle.h"
 #include "util.h"
 
+#include "absl/container/btree_map.h"
+
 
 std::vector<std::vector<int>> get_lyndon_words(int alphabet_size, int length);
 
@@ -81,15 +83,18 @@ template<typename LinearT>
 LinearT to_lyndon_basis(const LinearT& expression) {
   auto expr = to_vector_expression(expression.without_annotations());
   using VectorLinearT = decltype(expr);
-  // Optimization potential:
-  //   * Replace std::map with absl::btree_map.
-  //   * Replace std::map with a heap.
-  //     Note: std::make_heap and std::pop_heap can be used as-is, but std::push_heap
-  //     needs to be replaced with a custom implementation that supports data merges.
-  std::map terms_to_convert{
+  using VectorT = typename VectorLinearT::Param::StorageT;
+  // Optimization potential: Replace the map with a heap.
+  //   Note: std::make_heap and std::pop_heap can be used as-is, but std::push_heap
+  //   needs to be replaced with a custom implementation that supports data merges.
+  struct MapCompare {
+    bool operator()(const VectorT& lhs, const VectorT& rhs) const {
+      return absl::c_lexicographical_compare(lhs, rhs, cmp::greater_from_less(&LinearT::Param::lyndon_compare));
+    }
+  };
+  absl::btree_map<VectorT, int, MapCompare> terms_to_convert{
     expr.main().data().begin(),
     expr.main().data().end(),
-    cmp::lexicographical(cmp::greater_from_less(&LinearT::Param::lyndon_compare))
   };
   VectorLinearT terms_converted;
 

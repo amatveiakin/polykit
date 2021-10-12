@@ -115,6 +115,7 @@ cc_library(
     ],
     deps = [
         "@absl//absl/strings:strings",
+        "@absl//absl/container:btree",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
         ":base",
