@@ -772,18 +772,21 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
 template<typename ParamT>
 class LinearKeyView {
 public:
-  explicit LinearKeyView(const Linear<ParamT>* linear) : linear_(linear) {}
+  explicit LinearKeyView(const Linear<ParamT>& linear) : linear_(linear) {}
+  explicit LinearKeyView(const Linear<ParamT>&& linear) = delete;
   using const_iterator = typename Linear<ParamT>::const_key_iterator;
-  const_iterator begin() const { return linear_->begin_key(); };
-  const_iterator end() const { return linear_->end_key(); };
+  const_iterator begin() const { return linear_.begin_key(); };
+  const_iterator end() const { return linear_.end_key(); };
 private:
-  const Linear<ParamT>* linear_;
+  const Linear<ParamT>& linear_;
 };
 
 template<typename ParamT>
-LinearKeyView<ParamT> key_view(const Linear<ParamT>* linear) {  // take pointer: avoid binding to temporary
+LinearKeyView<ParamT> key_view(const Linear<ParamT>& linear) {
   return LinearKeyView<ParamT>(linear);
 }
+template<typename ParamT>
+LinearKeyView<ParamT> key_view(const Linear<ParamT>&& linear) = delete;
 
 template<typename ParamT, typename CompareF, typename ContextT>
 std::ostream& to_ostream(
