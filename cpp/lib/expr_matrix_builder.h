@@ -11,14 +11,14 @@
 template<typename... ExprTs>
 class ExprMatrixBuilder {
 public:
-  // TODO: Don't create an intermediate tuple. Implement tuple version via non-tuple instead.
   void add_expr(const std::tuple<ExprTs...>& expressions) {
-    std::vector<SparseElement> row;
-    add_columns(row, expressions);
-    sparse_rows_.insert(row);
+    return std::apply(
+      [this](const auto&... args) { return add_expr_impl(args...); },
+      expressions
+    );
   }
   void add_expr(const ExprTs&... expressions) {
-    return add_expr(std::tie(expressions...));
+    return add_expr_impl(expressions...);
   }
 
   Matrix make_matrix() const {
@@ -36,29 +36,23 @@ public:
 
 private:
   using SparseElement = std::pair<int, int>;  // (row/col, value)
+  using KeyT = CompactVariant<typename ExprTs::ObjectT...>;
 
-  template<typename E>
-  struct ExprObjectType {
-    using type = typename E::ObjectT;
-  };
-  template<typename E>
-  using ExprObjectType_t = typename ExprObjectType<E>::type;
+  void add_expr_impl(const ExprTs&... expressions) {
+    std::vector<SparseElement> row;
+    add_columns<0>(row, expressions...);
+    sparse_rows_.insert(row);
+  }
 
-  // TODO: Make this work and remove `ExprObjectType_t`:
-  //   CompactVariant<typename ExprTs::ObjectT...>
-  using KeyT = CompactVariant<ExprObjectType_t<ExprTs>...>;
-
-  template<std::size_t Idx = 0>
-  typename std::enable_if<(Idx < sizeof...(ExprTs)), void>::type
-  add_columns(std::vector<SparseElement>& row, const std::tuple<ExprTs...>& expressions) {
-    for (const auto& [term, coeff] : std::get<Idx>(expressions)) {
+  template<std::size_t Idx, typename Head, typename... Tail>
+  void add_columns(std::vector<SparseElement>& row, const Head& head, const Tail&... tail) {
+    for (const auto& [term, coeff] : head) {
       row.push_back({monoms_.index(KeyT{std::in_place_index<Idx>, term}), coeff});
     }
-    add_columns<Idx + 1>(row, expressions);
+    add_columns<Idx + 1>(row, tail...);
   }
   template<std::size_t Idx>
-  typename std::enable_if<Idx == sizeof...(ExprTs), void>::type
-  add_columns(std::vector<SparseElement>&, const std::tuple<ExprTs...>&) {}
+  void add_columns(std::vector<SparseElement>&) {}
 
   absl::flat_hash_set<std::vector<SparseElement>> unique_sparse_columns() const {
     const int num_cols = monoms_.size();
