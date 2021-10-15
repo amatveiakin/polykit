@@ -26,14 +26,25 @@ int simple_space_rank(const SpaceF& space, int num_points) {
   ));
 }
 
-struct ClusterCoLRanks {
+struct ClusterCoRanks {
   int space = 0;
   int kernel = 0;
-  bool operator==(const ClusterCoLRanks& other) const { return space == other.space && kernel == other.kernel; }
+  bool operator==(const ClusterCoRanks& other) const { return space == other.space && kernel == other.kernel; }
 };
 
-ClusterCoLRanks cluster_co_l_ranks(int weight, int num_coparts, int num_points) {
+ClusterCoRanks cluster_co_l_ranks(int weight, int num_coparts, int num_points) {
   const auto space = simple_co_L(weight, num_coparts, num_points);
+  const int space_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    return keep_non_weakly_separated(expr);
+  }).kernel();
+  const int kernel_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+    return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
+  }).kernel();
+  return {space_rank, kernel_rank};
+}
+
+ClusterCoRanks cluster_co_grl_ranks(int weight, int num_coparts, int dimension, int num_points) {
+  const auto space = simple_co_GrL(weight, num_coparts, dimension, num_points);
   const int space_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
     return keep_non_weakly_separated(expr);
   }).kernel();
@@ -178,32 +189,51 @@ TEST(PolylogSpaceTest, LARGE_CLIsClusterL) {
 }
 
 // Comparing against results previously computed by the app.
-TEST(PolylogSpaceTest, LARGE_ClusterCoL_Dim2_Weight3) {
-  EXPECT_EQ(cluster_co_l_ranks(3, 2, 5), (ClusterCoLRanks{5, 5}));
-  EXPECT_EQ(cluster_co_l_ranks(3, 3, 5), (ClusterCoLRanks{0, 0}));
-  EXPECT_EQ(cluster_co_l_ranks(3, 2, 6), (ClusterCoLRanks{30, 15}));
-  EXPECT_EQ(cluster_co_l_ranks(3, 3, 6), (ClusterCoLRanks{16, 16}));
-  EXPECT_EQ(cluster_co_l_ranks(3, 2, 7), (ClusterCoLRanks{105, 35}));
-  EXPECT_EQ(cluster_co_l_ranks(3, 3, 7), (ClusterCoLRanks{84, 84}));
+TEST(PolylogSpaceTest, LARGE_ClusterCoL_Weight3) {
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 5), (ClusterCoRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 5), (ClusterCoRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 6), (ClusterCoRanks{30, 15}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 6), (ClusterCoRanks{16, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 2, 7), (ClusterCoRanks{105, 35}));
+  EXPECT_EQ(cluster_co_l_ranks(3, 3, 7), (ClusterCoRanks{84, 84}));
 }
 
 // Comparing against results previously computed by the app.
-TEST(PolylogSpaceTest, LARGE_ClusterCoL_Dim2_Weight4) {
-  EXPECT_EQ(cluster_co_l_ranks(4, 2, 5), (ClusterCoLRanks{5, 5}));
-  EXPECT_EQ(cluster_co_l_ranks(4, 3, 5), (ClusterCoLRanks{0, 0}));
-  EXPECT_EQ(cluster_co_l_ranks(4, 2, 6), (ClusterCoLRanks{39, 16}));
-  EXPECT_EQ(cluster_co_l_ranks(4, 3, 6), (ClusterCoLRanks{26, 23}));
-  EXPECT_EQ(cluster_co_l_ranks(4, 4, 6), (ClusterCoLRanks{3, 3}));
+TEST(PolylogSpaceTest, LARGE_ClusterCoL_Weight4) {
+  EXPECT_EQ(cluster_co_l_ranks(4, 2, 5), (ClusterCoRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 3, 5), (ClusterCoRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 2, 6), (ClusterCoRanks{39, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 3, 6), (ClusterCoRanks{26, 23}));
+  EXPECT_EQ(cluster_co_l_ranks(4, 4, 6), (ClusterCoRanks{3, 3}));
 }
 
 // Comparing against results previously computed by the app.
-TEST(PolylogSpaceTest, HUGE_ClusterCoL_Dim2_Weight5) {
-  EXPECT_EQ(cluster_co_l_ranks(5, 2, 5), (ClusterCoLRanks{5, 5}));
-  EXPECT_EQ(cluster_co_l_ranks(5, 3, 5), (ClusterCoLRanks{0, 0}));
-  EXPECT_EQ(cluster_co_l_ranks(5, 2, 6), (ClusterCoLRanks{43, 16}));
-  EXPECT_EQ(cluster_co_l_ranks(5, 3, 6), (ClusterCoLRanks{33, 27}));
-  EXPECT_EQ(cluster_co_l_ranks(5, 4, 6), (ClusterCoLRanks{6, 6}));
-  EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoLRanks{0, 0}));
+TEST(PolylogSpaceTest, HUGE_ClusterCoL_Weight5) {
+  EXPECT_EQ(cluster_co_l_ranks(5, 2, 5), (ClusterCoRanks{5, 5}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 3, 5), (ClusterCoRanks{0, 0}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 2, 6), (ClusterCoRanks{43, 16}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 3, 6), (ClusterCoRanks{33, 27}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 4, 6), (ClusterCoRanks{6, 6}));
+  EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoRanks{0, 0}));
+}
+
+// Comparing against results previously computed by the app.
+TEST(PolylogSpaceTest, LARGE_ClusterCoGrL_Dim3_Weight3) {
+  EXPECT_EQ(cluster_co_grl_ranks(3, 2, 3, 5), (ClusterCoRanks{5, 5}));
+  EXPECT_EQ(cluster_co_grl_ranks(3, 3, 3, 5), (ClusterCoRanks{0, 0}));
+  EXPECT_EQ(cluster_co_grl_ranks(3, 2, 3, 6), (ClusterCoRanks{90, 31}));
+  EXPECT_EQ(cluster_co_grl_ranks(3, 3, 3, 6), (ClusterCoRanks{85, 85}));
+}
+TEST(PolylogSpaceTest, HUGE_ClusterCoGrL_Dim3_Weight3) {
+  EXPECT_EQ(cluster_co_grl_ranks(3, 2, 3, 7), (ClusterCoRanks{539, 111}));
+  EXPECT_EQ(cluster_co_grl_ranks(3, 3, 3, 7), (ClusterCoRanks{756, 756}));
+}
+
+// Comparing against results previously computed by the app.
+TEST(PolylogSpaceTest, HUGE_ClusterCoGrL_Dim3_Weight4) {
+  EXPECT_EQ(cluster_co_grl_ranks(4, 2, 3, 6), (ClusterCoRanks{128, 33}));
+  EXPECT_EQ(cluster_co_grl_ranks(4, 3, 3, 6), (ClusterCoRanks{153, 95}));
+  EXPECT_EQ(cluster_co_grl_ranks(4, 4, 3, 6), (ClusterCoRanks{61, 61}));
 }
 
 TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
