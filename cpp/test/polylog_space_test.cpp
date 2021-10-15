@@ -236,6 +236,38 @@ TEST(PolylogSpaceTest, HUGE_ClusterCoGrL_Dim3_Weight4) {
   EXPECT_EQ(cluster_co_grl_ranks(4, 4, 3, 6), (ClusterCoRanks{61, 61}));
 }
 
+TEST(PolylogSpaceTest, LARGE_GrL1IndependentOfFixedPoints) {
+  static const auto GrL1_zero_fixed_points = [](int dimension, const std::vector<int>& args) {
+    return GrL_core(1, dimension, args, true, 0);
+  };
+  for (const int dimension : range_incl(2, 4)) {
+    for (const int num_points : range_incl(5, 7)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      EXPECT_POLYLOG_SPACE_EQ(
+        GrL1(dimension, points),
+        GrL1_zero_fixed_points(dimension, points),
+        DISAMBIGUATE(to_lyndon_basis)
+      );
+    }
+  }
+}
+
+TEST(PolylogSpaceTest, LARGE_GrL2IndependentOfFixedPoints) {
+  static const auto GrL2_zero_fixed_points = [](int dimension, const std::vector<int>& args) {
+    return GrL_core(2, dimension, args, true, 0);
+  };
+  for (const int dimension : range_incl(2, 4)) {
+    for (const int num_points : range_incl(5, 7)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      EXPECT_POLYLOG_SPACE_EQ(
+        GrL2(dimension, points),
+        GrL2_zero_fixed_points(dimension, points),
+        DISAMBIGUATE(to_lyndon_basis)
+      );
+    }
+  }
+}
+
 TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
   const int num_points = 5;
   const int dimension = 3;

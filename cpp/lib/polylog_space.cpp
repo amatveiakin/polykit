@@ -254,25 +254,11 @@ GrPolylogSpace GrFx(int dimension, const std::vector<int>& args) {
   return mapped(combinations(args, dimension), DISAMBIGUATE(G));
 }
 
-GrPolylogSpace GrLBasic(int weight, const std::vector<int>& args) {
-  CHECK_LE(5, args.size());
-  GrPolylogSpace ret;
-  for (const int i : range(args.size())) {
-    append_vector(
-      ret,
-      mapped(combinations(removed_index(args, i), 4), [&](const auto& p) {
-        return GrQLiVec(weight, {args[i]}, p);
-      })
-    );
-  }
-  return ret;
-}
-
-// TODO: Test against zero fixed points
-GrPolylogSpace GrL1(int dimension, const std::vector<int>& args) {
-  const int weight = 1;
+GrPolylogSpace GrL_core(
+  int weight, int dimension, const std::vector<int>& args,
+  bool include_one_minus_cross_ratio, int num_fixed_points
+) {
   CHECK_LE(2, dimension);
-  const int num_fixed_points = 2;  // should be equivalent to zero fixed points
   CHECK_LE(5, args.size());
   const auto fixed_points = slice(args, args.size() - num_fixed_points);
   const auto main_args = slice(args, 0, args.size() - num_fixed_points);
@@ -283,57 +269,29 @@ GrPolylogSpace GrL1(int dimension, const std::vector<int>& args) {
     append_vector(
       ret,
       mapped_expanding(combinations(qli_points, 4 - num_fixed_points), [&](auto p) {
-        return std::array{
-          GrQLiVec(weight, bonus_points, concat(p, fixed_points)),
-          GrQLiVec(weight, bonus_points, one_minus_cross_ratio(concat(p, fixed_points)))
-        };
+        const auto qli_args = concat(p, fixed_points);
+        std::vector ret = {GrQLiVec(weight, bonus_points, qli_args)};
+        if (include_one_minus_cross_ratio) {
+          ret.push_back(GrQLiVec(weight, bonus_points, one_minus_cross_ratio(qli_args)));
+        }
+        return ret;
       })
     );
   }
   return ret;
 }
 
-// TODO: Test against zero fixed points
-// TODO: Test against naive: `GrLBasic(2, xargs)`
+GrPolylogSpace GrL1(int dimension, const std::vector<int>& args) {
+  return GrL_core(1, dimension, args, true, 2);  // equivalent to zero fixed points
+}
+
 GrPolylogSpace GrL2(int dimension, const std::vector<int>& args) {
-  const int weight = 2;
-  CHECK_LE(2, dimension);
-  const int num_fixed_points = 1;  // should be equivalent to zero fixed points
-  CHECK_LE(5, args.size());
-  const auto fixed_points = slice(args, args.size() - num_fixed_points);
-  const auto main_args = slice(args, 0, args.size() - num_fixed_points);
-  GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(to_vector(range(main_args.size())), dimension - 2)) {
-    const auto bonus_points = choose_indices(main_args, bonus_point_indices);
-    const auto qli_points = removed_indices(main_args, bonus_point_indices);
-    append_vector(
-      ret,
-      mapped(combinations(qli_points, 4 - num_fixed_points), [&](const auto& p) {
-        return GrQLiVec(weight, bonus_points, concat(p, fixed_points));
-      })
-    );
-  }
-  return ret;
+  return GrL_core(2, dimension, args, false, 1);  // equivalent to zero fixed points
 }
 
 GrPolylogSpace GrL3(int dimension, const std::vector<int>& args) {
   const int weight = 3;
-  CHECK_LE(2, dimension);
-  CHECK_LE(5, args.size());
-  GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - 2)) {
-    const auto bonus_points = choose_indices(args, bonus_point_indices);
-    const auto qli_points = removed_indices(args, bonus_point_indices);
-    append_vector(
-      ret,
-      mapped_expanding(combinations(qli_points, 4), [&](auto p) {
-        return std::array{
-          GrQLiVec(weight, bonus_points, p),
-          GrQLiVec(weight, bonus_points, one_minus_cross_ratio(p)),
-        };
-      })
-    );
-  }
+  GrPolylogSpace ret = GrL_core(weight, dimension, args, true, 0);
   if (dimension >= weight) {
     for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - weight)) {
       const auto bonus_points = choose_indices(args, bonus_point_indices);

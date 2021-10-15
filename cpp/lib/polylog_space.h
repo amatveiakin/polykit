@@ -66,7 +66,9 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
 GrPolylogSpace GrFx(int dimension, const std::vector<int>& args);
 
-GrPolylogSpace GrLBasic(int weight, const std::vector<int>& args);  // dimension = 3
+GrPolylogSpace GrL_core(
+  int weight, int dimension, const std::vector<int>& args,
+  bool include_one_minus_cross_ratio, int num_fixed_points);
 GrPolylogSpace GrL1(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL2(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL3(int dimension, const std::vector<int>& args);
