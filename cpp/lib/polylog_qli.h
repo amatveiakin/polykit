@@ -39,6 +39,7 @@ DeltaExpr A2Vec(const XArgs& args);
 // Reduce QLi expr, weight and points must be the same as in QLi.
 // Incompatible with substituting infinity.
 // Can be used as a projector.
+// TODO: Dedup against `normalize_remove_consecutive`.
 DeltaExpr normalized_delta(const DeltaExpr& expr, int weight, const XArgs& points);
 
 

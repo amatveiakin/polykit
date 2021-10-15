@@ -252,7 +252,7 @@ Matrix diagonalize_matrix(const Matrix& src) {
     }
     const auto sorted_lines = sorted_by_projection(lines, [](const auto& line) {
       // Note. Also tried sorting by average coord, but performance was worse.
-      //   Worse than the original even in manby cases.
+      //   Worse than the original even in many cases.
       const auto [min, max] = minmax_value(line);
       return (max.first - min.first);
     });

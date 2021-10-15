@@ -1,12 +1,18 @@
-// TODO: Be consistent about converting space to Lyndon basis on construction.
-//   Pro: less error-prone, can have defaulted version of "space dim" function.
-//   Con: would be slower if, in fact, only comultiplication is required.
 // TODO: Be consistent about parallelisation.
-
-// Note. It might be reasonable to store polylog spaces as a collection of
-// `std::shared_ptr<const Expr>` instead of raw `Expr`.
+//
+// Optimization potential: Convert spaces to Lyndon basis on construction.
 // Pros:
-//   - Less copying, especially in expressions like `cartesian_product(space_a, space_b)`.
+//   + Less verbose, don't have to pass to_lyndon_basis to each rank computations.
+//   + Could be faster if Lyndon basis is required multiple times, e.g. when spaces
+//     are used to construct larger co-spaces via coproduct.
+// Cons:
+//   - What if there are Hopf algebra use-cases?
+//   - Could be slower if, in fact, only comultiplication of a space is required.
+//
+// Optimization potential: Store spaces as a collection of `std::shared_ptr<const Expr>`
+//   instead of raw `Expr`.
+// Pros:
+//   + Less copying, especially in expressions like `cartesian_product(space_a, space_b)`.
 // Cons:
 //   - More verbose interface due to having to pack/update shared_ptr.
 //   - Might slow down parallel code if all threads are reading from the same place
