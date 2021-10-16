@@ -3,6 +3,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using testing::Eq;
+using testing::Pointee;
+
+
+TEST(AppendVectorTest, MoveOnly) {
+  std::vector<std::unique_ptr<int>> a;
+  a.push_back(std::make_unique<int>(1));
+  std::vector<std::unique_ptr<int>> b;
+  b.push_back(std::make_unique<int>(2));
+  append_vector(a, std::move(b));  // should not compile without `std::move`
+  EXPECT_THAT(a, testing::ElementsAre(Pointee(Eq(1)), Pointee(Eq(2))));
+}
 
 TEST(GroupByTest, GroupEqual) {
   EXPECT_EQ(

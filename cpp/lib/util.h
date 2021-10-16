@@ -238,10 +238,10 @@ std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& in
 
 // Optimization potential: Replace instances of `append_vector(out, mapped(in))`
 //   with `absl::transform(in, std::back_inserter(out))`.
+// Optimization potential: Split into versions with `src` passed by l-value reference
+//   vs r-value reference.
 template<typename T, typename SrcContainerT>
-void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
-  const size_t old_size = dst.size();
-  dst.reserve(old_size + src.size());
+void append_vector(std::vector<T>& dst, SrcContainerT src) {
   absl::c_move(src, std::back_inserter(dst));
 }
 
