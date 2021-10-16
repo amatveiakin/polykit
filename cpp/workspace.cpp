@@ -49,52 +49,6 @@
 #include "lib/zip.h"
 
 
-auto annotated_co_space_summands(int weight, int num_coparts, int dimension, int num_points) {
-  CHECK_LE(num_coparts, weight);
-  const auto points = to_vector(range_incl(1, num_points));
-  const auto weights_per_summand = get_partitions(weight, num_coparts);
-  const int max_atom_weight = max_value(flatten(weights_per_summand));
-  const auto atom_spaces = mapped(range_incl(1, max_atom_weight), [&](const int w) {
-    return mapped(GrL(w, dimension, points), [&](const auto& expr) {
-      return to_lyndon_basis(normalize_remove_consecutive(expr));
-    });
-  });
-  using ExprT = typename decltype(atom_spaces)::value_type::value_type;
-  std::vector<std::pair<std::string, std::vector<NCoExprForExpr_t<ExprT>>>> ret;
-  for (const auto& summand_weights : weights_per_summand) {
-    const auto weights_with_counts = mapped(
-      group_equal(summand_weights),
-      [&](const auto& equal_weight_group) {
-        return std::pair{equal_weight_group.front(), static_cast<int>(equal_weight_group.size())};
-      }
-    );
-    const std::string annotation = str_join(
-      weights_with_counts,
-      fmt::tensor_prod(),
-      [](const auto& weight_and_count) {
-        const auto& [weight, count] = weight_and_count;
-        return absl::StrCat(
-          count > 1 ? fmt::super_num("Λ", {count}) : "",
-          fmt::sub_num(fmt::mathcal("L"), {weight})
-        );
-      }
-    );
-    const auto summand_components = cartesian_combinations(
-      // TODO: Introduce `mapped_apply`, use it here and in other places.
-      mapped(weights_with_counts, [&](const auto& weight_and_count) {
-        const auto& [weight, count] = weight_and_count;
-        return std::pair{atom_spaces.at(weight - 1), count};
-      })
-    );
-    ret.push_back({
-      annotation,
-      mapped(summand_components, DISAMBIGUATE(ncoproduct_vec))
-    });
-  }
-  return ret;
-}
-
-
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -112,41 +66,38 @@ int main(int /*argc*/, char *argv[]) {
   );
 
 
-  const int dimension = 3;
+  // This should be equal to the first column in corank table. TODO: Test.
   const int weight = 3;
-  for (const int num_points : range_incl(5, 10)) {
-    for (const int num_coparts : range_incl(2, weight)) {
-      Profiler profiler;
-      const auto summands = annotated_co_space_summands(weight, num_coparts, dimension, num_points);
-      profiler.finish("spaces");
-      const bool compute_kernel = num_coparts < weight;
-      std::vector<std::string> annotations;
-      std::vector<int> space_ranks;
-      GrPolylogNCoSpace united_space;
-      for (const auto& [annotation, space] : summands) {
-        annotations.push_back(annotation);
-        space_ranks.push_back(space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
-          return keep_non_weakly_separated(expr);
-        }).kernel());
-        if (compute_kernel) {
-          append_vector(united_space, space);
+  const int dimension = 3;
+  for (const int num_points : range_incl(5, 9)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto coords = combinations(points, 3);
+    Profiler profiler;
+    const auto lyndon_space = mapped_expanding(
+      get_lyndon_words(coords, weight),
+      [](const auto& word) -> std::vector<GammaACoExpr> {
+        const auto term = mapped(word, convert_to<Gamma>);
+        if (is_weakly_separated(term)) {
+          return {expand_into_glued_pairs(GammaExpr::single(term))};
         }
+        return {};
       }
-      int kernel_rank = 0;
-      profiler.finish("space ranks");
-      if (compute_kernel) {
-        kernel_rank = space_mapping_ranks(united_space, DISAMBIGUATE(identity_function), [](const auto& expr) {
-          return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
-        }).kernel();
-        profiler.finish("kernel rank");
+    );
+    profiler.finish("space Lyndon");
+    const auto l1 = GrL1(dimension, points);
+    const auto l2 = GrL2(dimension, points);
+    const auto l2_times_l1_power = mapped(
+      cartesian_product(l2, cartesian_power(l1, weight - 2)),
+      [&](const auto& args) {
+        const auto& [l2_arg, l1_args] = args;
+        std::vector<GammaExpr> v = concat({l2_arg}, to_vector(l1_args));
+        return abstract_coproduct_vec<GammaACoExpr>(v);
       }
-      std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ", co=" << num_coparts << ": ";
-      std::cout << str_join(annotations, " ⊕ ") << "\n";
-      std::cout << sum(space_ranks) << "=" << str_join(space_ranks, "+");
-      if (compute_kernel) {
-        std::cout << " -> " << kernel_rank;
-      }
-      std::cout << "\n\n";
-    }
+    );
+    profiler.finish("space L2*L1^n");
+    const auto ranks = space_venn_ranks(lyndon_space, l2_times_l1_power, DISAMBIGUATE(identity_function));
+    profiler.finish("ranks");
+    std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+    std::cout << to_string(ranks) << "\n";
   }
 }

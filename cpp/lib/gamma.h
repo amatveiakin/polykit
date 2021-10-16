@@ -99,12 +99,24 @@ struct GammaNCoExprParam : GammaICoExprParam {
   }
   static constexpr bool coproduct_is_iterated = false;
 };
+
+struct GammaACoExprParam : GammaICoExprParam {
+  static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
+    // TODO: Consider whether this could be made the default order for co-expressions.
+    //   If so, remove this additional co-expression type.
+    using namespace cmp;
+    return projected(lhs, rhs, [](const auto& v) {
+      return std::tuple{desc_val(v.size()), asc_ref(v)};
+    });
+  };
+};
 }  // namespace internal
 
 
 using GammaExpr = Linear<internal::GammaExprParam>;
 using GammaICoExpr = Linear<internal::GammaICoExprParam>;
 using GammaNCoExpr = Linear<internal::GammaNCoExprParam>;
+using GammaACoExpr = Linear<internal::GammaACoExprParam>;
 template<> struct ICoExprForExpr<GammaExpr> { using type = GammaICoExpr; };
 template<> struct NCoExprForExpr<GammaExpr> { using type = GammaNCoExpr; };
 
@@ -124,3 +136,17 @@ GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);
 
 bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term);
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr);
+
+// Converts each term
+//     x1 * x2 * ... * xn
+// into a sum
+//   + (x1*x2) @ x3 @ ... @ xn
+//   + x1 @ (x2*x3) @ ... @ xn
+//     ...
+//   + x1 @ x2 @ ... @ (x{n-1}*xn)
+//
+// Note: In principle this is a generic coalgebra operation that could be applied to
+//   any expression type. However need to decide whether ACoExpr is a thing before
+//   promoting this to coalgebra module.
+//
+GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr);

@@ -17,11 +17,13 @@ using PolylogSpace = std::vector<DeltaExpr>;
 using PolylogNCoSpace = std::vector<DeltaNCoExpr>;
 using GrPolylogSpace = std::vector<GammaExpr>;
 using GrPolylogNCoSpace = std::vector<GammaNCoExpr>;
+using GrPolylogACoSpace = std::vector<GammaACoExpr>;
 
 std::string dump_to_string_impl(const PolylogSpace& space);
 std::string dump_to_string_impl(const PolylogNCoSpace& space);
 std::string dump_to_string_impl(const GrPolylogSpace& space);
 std::string dump_to_string_impl(const GrPolylogNCoSpace& space);
+std::string dump_to_string_impl(const GrPolylogACoSpace& space);
 
 PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs);
 PolylogSpace CB(int weight, const XArgs& xargs);

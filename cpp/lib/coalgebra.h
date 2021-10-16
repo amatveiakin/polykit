@@ -96,6 +96,8 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
     });
   }
 }
+}  // namespace internal
+
 
 template<typename CoExprT, typename ExprT>
 auto abstract_coproduct_vec(const std::vector<ExprT>& expr) {
@@ -119,17 +121,15 @@ auto abstract_coproduct_vec(const std::vector<ExprT>& expr) {
     return ret;  // `normalize_coproduct` might not compile here, thus `if constexpr`
   }
 }
-}  // namespace internal
-
 
 template<typename ExprT>
 auto ncoproduct_vec(const std::vector<ExprT>& expr) {
-  return internal::abstract_coproduct_vec<NCoExprForExpr_t<ExprT>>(expr);
+  return abstract_coproduct_vec<NCoExprForExpr_t<ExprT>>(expr);
 }
 
 template<typename ExprT>
 auto icoproduct_vec(const std::vector<ExprT>& expr) {
-  return internal::abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
+  return abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
 }
 
 template<typename... Args>
