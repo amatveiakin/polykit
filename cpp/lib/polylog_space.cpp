@@ -352,7 +352,7 @@ PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs) {
 
 std::string to_string(const SpaceVennRanks& ranks) {
   return absl::StrCat(
-    fmt::parens(absl::StrCat(ranks.a(), ", ", ranks.b())),
+    fmt::parens(absl::StrCat(ranks.a(), ", ", ranks.b())), ", ",
     fmt::set_intersection(), " = ", ranks.intersected()
   );
 }
