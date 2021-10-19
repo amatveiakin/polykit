@@ -305,6 +305,7 @@ public:
     }
   }
 
+  // TODO: Consider renaming to `any_of`
   template<typename F>
   bool contains(F func) const {
     for (const auto& [term, coeff] : *this) {

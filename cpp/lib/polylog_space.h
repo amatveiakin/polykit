@@ -142,6 +142,7 @@ struct SpaceCharacteristics {
 
 std::string to_string(const SpaceCharacteristics& characteristics);
 
+// TODO: Also check that space characteristics match in functions like `space_venn_ranks`.
 // Verifies that each element has the same weight and dimension. Feel free to disable if not required.
 template<typename SpaceT>
 void check_space(const SpaceT& space) {
