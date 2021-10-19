@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/itertools.h"
+#include "lib/polylog_cgrli.h"
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_qli.h"
 #include "lib/summation.h"
@@ -304,4 +305,21 @@ TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
   };
   const auto expr = sum_looped_vec(R_4_3, 5, {1,2,3,4});
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
+}
+
+TEST(PolylogSpaceTest, GrL_contains_CGrLi) {
+  const std::vector points = {1,2,3,4,5,6};
+  // Should be inside for any weight.
+  for (const int weight : range_incl(2, 3)) {
+    const auto expr = CGrLiDim3(weight, points);
+    const auto space = GrL(weight, 3, points);
+    EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
+  }
+}
+
+TEST(PolylogSpaceTest, GrL3Dim4_contains_QLiVec3PluckerDual) {
+  const std::vector points = {1,2,3,4,5,6};
+  const auto expr = plucker_dual(QLiVec(3, points), points);
+  const auto space = GrL3(4, points);
+  EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
 }

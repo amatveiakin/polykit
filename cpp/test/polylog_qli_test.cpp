@@ -432,3 +432,13 @@ TEST(QLiTest, HUGE_QLiSymm6_Arg8_AsCyclicSums) {
 }
 
 // TODO:  `TEST(QLiTest, LARGE_QLiSymm8_Arg10_AsCyclicSums)`
+
+TEST(QLiTest, WeaklySeparated) {
+  // Should be true for any weight and number of points
+  for (const int weight : range_incl(3, 4)) {
+    for (const int num_points : {4, 6, 8}) {
+      const auto points = to_vector(range_incl(1, num_points));
+      EXPECT_TRUE(is_totally_weakly_separated(QLiVec(weight, points)));
+    }
+  }
+}
