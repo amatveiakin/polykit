@@ -1,9 +1,11 @@
 // Functions that compute symbol for QLi and its variations.
 //
-// Contains three functions:
+// Contains functions:
+//   * `Log` gives a simple cross-ratio
 //   * `QLi` corresponds to QLi+
 //   * `QLiNeg` corresponds to QLi-
 //   * `QLiSymm` is a symmetrized version of QLi (except weight 1 where it's just QLi)
+//   * `A2` is defined in https://arxiv.org/pdf/1401.6446.pdf
 //
 // Each function comes in three forms (examples use QLi, but the same is true for QLiNeg
 // and QLiSymm):
