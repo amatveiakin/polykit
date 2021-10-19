@@ -182,6 +182,8 @@ static bool is_full_unicode() {
   return *current_formatting_config().unicode_version == UnicodeVersion::full;
 }
 
+// TODO: Consider wrapping all calls to Ascii and Unicode encoders with `html_escape`
+//   instead of manually checking `is_html` everywhere.
 static bool is_html() {
   return *current_formatting_config().rich_text_format == RichTextFormat::html;
 }
@@ -234,6 +236,7 @@ class AsciiEncoder : public AbstractEncoder {
   std::string comult() override { return is_html() ? "&amp;" : "&"; }
   std::string set_union() override { return "|"; }
   std::string set_intersection() override { return is_html() ? "&amp;" : "&"; }
+  std::string set_complement() override { return "~"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
@@ -348,6 +351,7 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string comult() override { return "△"; }
   std::string set_union() override { return "⋃"; }
   std::string set_intersection() override { return "⋂"; }
+  std::string set_complement() override { return "¬"; }  // TODO: Is this the best symbol? (same for LaTeX)
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
@@ -483,6 +487,7 @@ class LatexEncoder : public AbstractEncoder {
   std::string comult() override { return " \\triangle "; }
   std::string set_union() override { return "\\bigcup"; }
   std::string set_intersection() override { return "\\bigcap"; }
+  std::string set_complement() override { return "\\neg"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) override {
     return absl::StrCat(lhs, "+", rhs);

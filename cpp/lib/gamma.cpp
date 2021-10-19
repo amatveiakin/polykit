@@ -1,5 +1,7 @@
 #include "gamma.h"
 
+#include "set_util.h"
+
 
 std::string to_string(const Gamma& g) {
   return fmt::parens(str_join(g.index_vector(), ","));
@@ -81,6 +83,65 @@ GammaExpr normalize_remove_consecutive(const GammaExpr& expr) {
   return expr.filtered([](const auto& term) {
     return passes_normalize_remove_consecutive(term);
   });
+}
+
+GammaExpr delta_expr_to_gamma_expr(const DeltaExpr& expr) {
+  return expr.mapped<GammaExpr>([](const std::vector<Delta>& term) {
+    return mapped(term, [](const Delta& d) {
+      return Gamma({d.a().as_simple_var(), d.b().as_simple_var()});
+    });
+  });
+}
+
+DeltaExpr gamma_expr_to_delta_expr(const GammaExpr& expr) {
+  return expr.mapped<DeltaExpr>([&](const std::vector<Gamma>& term) {
+    return mapped(term, [](const Gamma& g) {
+      const auto vars = g.index_vector();
+      CHECK_EQ(vars.size(), 2);
+      return Delta(vars[0], vars[1]);
+    });
+  });
+}
+
+GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) {
+  if (bonus_points.empty()) {
+    return expr;
+  }
+  const auto bonus_bitset = vector_to_bitset<Gamma::BitsetT>(bonus_points, Gamma::kBitsetOffset);
+  return expr.mapped([&](const auto& term) {
+    return mapped(term, [&](const Gamma& g) {
+      CHECK((g.index_bitset() & bonus_bitset).none())
+        << to_string(g) << " vs " << dump_to_string(bonus_points);
+      return Gamma(g.index_bitset() | bonus_bitset);
+    });
+  }).annotations_map([&](const std::string& annotation) {
+    // TODO: Find a proper pullback notation
+    return fmt::function(
+      fmt::opname("pb"),
+      {annotation, str_join(bonus_points, ",")},
+      HSpacing::sparse
+    );
+  });
+}
+
+GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points) {
+  return pullback(delta_expr_to_gamma_expr(expr), bonus_points);
+}
+
+GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe) {
+  const auto universe_bitset = vector_to_bitset<Gamma::BitsetT>(point_universe, Gamma::kBitsetOffset);
+  return expr.mapped([&](const auto& term) {
+    return mapped(term, [&](const Gamma& g) {
+      CHECK(bitset_contains(universe_bitset, g.index_bitset()));
+      return Gamma(bitset_difference(universe_bitset, g.index_bitset()));
+    });
+  }).annotations_map([](const std::string& annotation) {
+    return fmt::set_complement() + annotation;
+  });
+}
+
+GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe) {
+  return plucker_dual(delta_expr_to_gamma_expr(expr), point_universe);
 }
 
 GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr) {

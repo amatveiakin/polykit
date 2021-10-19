@@ -678,6 +678,11 @@ public:
     add_annotations(other, 1, func);
     return *this;
   }
+  template<typename F>
+  Linear& annotations_map(F func) {
+    annotations_.expression = annotations_.expression.mapped(func);
+    return *this;
+  }
   Linear without_annotations() const {
     return Linear(main_, {});
   }

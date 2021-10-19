@@ -7,6 +7,11 @@
 
 
 template<size_t N>
+bool bitset_contains(const std::bitset<N>& haystack, const std::bitset<N>& needle) {
+  return (haystack | needle) == haystack;
+}
+
+template<size_t N>
 std::bitset<N> bitset_difference(const std::bitset<N>& a, const std::bitset<N>& b) {
   return a & ~b;
 }

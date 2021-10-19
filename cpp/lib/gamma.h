@@ -8,6 +8,7 @@
 #include "bitset_util.h"
 #include "check.h"
 #include "coalgebra.h"
+#include "delta.h"
 #include "pvector.h"
 
 
@@ -22,15 +23,16 @@ static_assert(kMaxGammaVariables <= sizeof(unsigned long) * CHAR_BIT);  // for s
 class Gamma {
 public:
   using BitsetT = std::bitset<kMaxGammaVariables>;
+  static constexpr int kBitsetOffset = 1;
 
   Gamma() {}
   explicit Gamma(BitsetT indices) : indices_(std::move(indices)) {}
-  explicit Gamma(const std::vector<int>& vars) : indices_(vector_to_bitset<BitsetT>(vars, 1)) {}
+  explicit Gamma(const std::vector<int>& vars) : indices_(vector_to_bitset<BitsetT>(vars, kBitsetOffset)) {}
 
   bool is_nil() const { return indices_.none(); }
 
   const BitsetT& index_bitset() const { return indices_; }
-  std::vector<int> index_vector() const { return bitset_to_vector(indices_, 1); }
+  std::vector<int> index_vector() const { return bitset_to_vector(indices_, kBitsetOffset); }
 
   bool operator==(const Gamma& other) const { return indices_ == other.indices_; }
   bool operator< (const Gamma& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
@@ -148,6 +150,19 @@ GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);
 
 bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term);
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr);
+
+// Requires that each term is a simple variable difference, i.e. terms like (x_i + x_j)
+// or (x_i + 0) are not allowed.
+GammaExpr delta_expr_to_gamma_expr(const DeltaExpr& expr);
+
+// Requires that expression is dimension 2.
+DeltaExpr gamma_expr_to_delta_expr(const GammaExpr& expr);
+
+GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points);
+GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points);
+
+GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
+GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe);
 
 // Converts each term
 //     x1 * x2 * ... * xn

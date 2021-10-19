@@ -4,6 +4,7 @@
 
 #include "lib/bitset_util.h"
 #include "lib/itertools.h"
+#include "lib/set_util.h"
 
 
 static bool between(int point, std::pair<int, int> segment) {
@@ -27,6 +28,22 @@ static bool are_weakly_separated_naive(const Gamma& g1, const Gamma& g2) {
     }
   }
   return true;
+}
+
+static GammaExpr pullback_naive(const GammaExpr& expr, const std::vector<int>& bonus_points) {
+  return expr.mapped([&](const auto& term) {
+    return mapped(term, [&](const Gamma& g_src) {
+      return Gamma(concat(bonus_points, g_src.index_vector()));
+    });
+  });
+}
+
+static GammaExpr plucker_dual_naive(const GammaExpr& expr, const std::vector<int>& point_universe) {
+  return expr.mapped([&](const auto& term) {
+    return mapped(term, [&](const Gamma& g_src) {
+      return Gamma(set_difference(point_universe, g_src.index_vector()));
+    });
+  });
 }
 
 
@@ -53,4 +70,16 @@ TEST(GammaTest, WeaklySeparatedAgainstNaive) {
           << to_string(g1) << " vs " << to_string(g2);
     }
   }
+}
+
+TEST(GammaTest, PullbackAgainstNaive) {
+  const std::vector bonus_points = {2};
+  const auto expr = tensor_product(G({1,3,4}), G({3,4,5}));
+  ASSERT_EQ(pullback(expr, bonus_points), pullback_naive(expr, bonus_points));
+}
+
+TEST(GammaTest, PluckerDualAgainstNaive) {
+  const std::vector points = {1,2,3,4,5,6};
+  const auto expr = tensor_product(G({1,2,3}), G({1,3,5}));
+  ASSERT_EQ(plucker_dual(expr, points), plucker_dual_naive(expr, points));
 }
