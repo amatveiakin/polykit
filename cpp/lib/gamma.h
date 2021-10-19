@@ -68,6 +68,12 @@ struct GammaExprParam {
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();
   }
+  static int object_to_dimension(const ObjectT& obj) {
+    CHECK(!obj.empty());
+    const auto dimensions = mapped(obj, [](const Gamma& g) { return g.index_vector().size(); });
+    CHECK(all_equal(dimensions));
+    return dimensions.front();
+  }
 };
 
 struct GammaICoExprParam {
@@ -88,6 +94,12 @@ struct GammaICoExprParam {
   }
   static int object_to_weight(const ObjectT& obj) {
     return sum(mapped(obj, [](const auto& part) { return part.size(); }));
+  }
+  static int object_to_dimension(const ObjectT& obj) {
+    CHECK(!obj.empty());
+    const auto part_dimensions = mapped(obj, &GammaExprParam::object_to_dimension);
+    CHECK(all_equal(part_dimensions));
+    return part_dimensions.front();
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

@@ -109,6 +109,47 @@ GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int 
 PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs);
 
 
+template<typename SpaceT, typename F>
+void check_space_is_homogeneous(const SpaceT& space, const F& func) {
+  std::optional<std::invoke_result_t<F, typename SpaceT::value_type>> exemplar;
+  const typename SpaceT::value_type* exemplar_ptr = nullptr;
+  for (const auto& expr : space) {
+    // TODO: Benchmark if checking each term of an expression is too slow.
+    if (!expr.is_zero()) {
+      const auto new_value = func(expr);
+      if (exemplar.has_value()) {
+        CHECK(exemplar == new_value)
+          << "  space not homogeneous:\n"
+          << dump_to_string(exemplar.value()) << " vs " << dump_to_string(new_value) << "\n"
+          << "  for\n"
+          << annotations_one_liner(exemplar_ptr->annotations())
+          << " vs " << annotations_one_liner(expr.annotations());
+      } else {
+        exemplar = new_value;
+        exemplar_ptr = &expr;
+      }
+    }
+  }
+}
+
+struct SpaceCharacteristics {
+  int weight = 0;
+  int dimension = 0;
+  bool operator==(const SpaceCharacteristics& other) const {
+    return weight == other.weight && dimension == other.dimension;
+  }
+};
+
+std::string to_string(const SpaceCharacteristics& characteristics);
+
+// Verifies that each element has the same weight and dimension. Feel free to disable if not required.
+template<typename SpaceT>
+void check_space(const SpaceT& space) {
+  check_space_is_homogeneous(space, [](const auto& expr) {
+    return SpaceCharacteristics{expr.weight(), expr.dimension()};
+  });
+}
+
 template<typename SpaceT>
 void check_space_weight_eq(const SpaceT& space, int weight) {
   for (const auto& expr : space) {
@@ -159,6 +200,7 @@ SpaceT normalize_space_remove_consecutive(const SpaceT& space) {
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
 void add_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
+  check_space(space);
   const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
     return prepare(s);
   });

@@ -214,6 +214,10 @@ struct DeltaExprParam {
   static int object_to_weight(const ObjectT& obj) {
     return obj.size();
   }
+  static int object_to_dimension(const ObjectT& obj) {
+    CHECK(absl::c_all_of(obj, [](const Delta& d) { return d.is_var_diff(); }));
+    return 2;
+  }
 };
 
 struct DeltaICoExprParam {
@@ -238,6 +242,12 @@ struct DeltaICoExprParam {
   }
   static int object_to_weight(const ObjectT& obj) {
     return sum(mapped(obj, [](const auto& part) { return part.size(); }));
+  }
+  static int object_to_dimension(const ObjectT& obj) {
+    absl::c_for_each(obj, [](const auto& part) {
+      CHECK(absl::c_all_of(part, [](const Delta& d) { return d.is_var_diff(); }));
+    });
+    return 2;
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

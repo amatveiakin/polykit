@@ -108,6 +108,7 @@ struct SimpleLinearParam {
   // === left to define (optional; if missing the corresponding functionality will be unavailable):
 
   // static int object_to_weight(const ObjectT& obj);
+  // static int object_to_dimension(const ObjectT& obj);
   // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
 
   // using VectorT = ...;
@@ -239,6 +240,10 @@ public:
   int weight() const {
     CHECK(!is_zero());
     return ParamT::object_to_weight(element().first);  // must be the same for each term
+  }
+  int dimension() const {  // Grassmannian dimension
+    CHECK(!is_zero());
+    return ParamT::object_to_dimension(element().first);  // must be the same for each term
   }
 
   const_key_iterator begin_key() const { return data_.begin(); }
@@ -562,6 +567,7 @@ public:
   int l0_norm() const { return main_.l0_norm(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
+  int dimension() const { return main_.dimension(); }
 
   const_key_iterator begin_key() const { return main_.begin_key(); }
   const_key_iterator end_key() const { return main_.end_key(); }
