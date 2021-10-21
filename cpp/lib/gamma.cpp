@@ -68,21 +68,39 @@ GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr) {
   return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
 }
 
-bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term) {
-  return absl::c_all_of(term, [](const Gamma& g) {
-    // Optimization potential: check this on bitset level.
-    const auto& v = g.index_vector();
-    const auto it = absl::c_adjacent_find(v, [](int a, int b) {
-      return b != a + 1;
+bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dimension, int num_points) {
+  if (dimension > 0 && std::gcd(dimension, num_points) == 1) {
+    // TODO: Move out to normalize_remove_consecutive OR otherwise optimize.
+    absl::flat_hash_set<Gamma> discard;
+    for (const int start : range(0, num_points)) {
+      discard.insert(Gamma(mapped(range(start, start + dimension), [&](const int idx) {
+        return idx % num_points + 1;
+      })));
+    }
+    return absl::c_all_of(term, [&](const Gamma& g) {
+      return !discard.contains(g);
     });
-    return it != v.end();
+  } else {
+    return absl::c_all_of(term, [](const Gamma& g) {
+      // Optimization potential: check this on bitset level.
+      const auto& v = g.index_vector();
+      const auto it = absl::c_adjacent_find(v, [](int a, int b) {
+        return b != a + 1;
+      });
+      return it != v.end();
+    });
+  }
+}
+
+GammaExpr normalize_remove_consecutive(const GammaExpr& expr, int dimension, int num_points) {
+  return expr.filtered([&](const auto& term) {
+    return passes_normalize_remove_consecutive(term, dimension, num_points);
   });
 }
 
+// TODO: Consider whether this overload should exist.
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr) {
-  return expr.filtered([](const auto& term) {
-    return passes_normalize_remove_consecutive(term);
-  });
+  return normalize_remove_consecutive(expr, 0, 0);
 }
 
 GammaExpr delta_expr_to_gamma_expr(const DeltaExpr& expr) {

@@ -148,7 +148,8 @@ bool is_totally_weakly_separated(const GammaNCoExpr& expr);
 GammaExpr keep_non_weakly_separated(const GammaExpr& expr);
 GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);
 
-bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term);
+bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dimension, int num_points);
+GammaExpr normalize_remove_consecutive(const GammaExpr& expr, int dimension, int num_points);
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr);
 
 // Requires that each term is a simple variable difference, i.e. terms like (x_i + x_j)

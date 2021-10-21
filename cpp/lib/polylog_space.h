@@ -195,8 +195,10 @@ std::string to_string(const SpaceMappingRanks& ranks);
 
 
 template<typename SpaceT>
-SpaceT normalize_space_remove_consecutive(const SpaceT& space) {
-  return mapped(space, DISAMBIGUATE(normalize_remove_consecutive));
+SpaceT normalize_space_remove_consecutive(const SpaceT& space, int dimension, int num_points) {
+  return mapped(space, [&](const auto& expr) {
+    return normalize_remove_consecutive(expr, dimension, num_points);
+  });
 }
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
