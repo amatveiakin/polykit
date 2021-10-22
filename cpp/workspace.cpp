@@ -50,8 +50,8 @@
 #include "lib/zip.h"
 
 
-// TODO: Add `Split by index` \ `split by slice` and use !!!
-// TODO: Helper for fixed points? !!!
+// TODO: Add `split by index` \ `split by slice` and use
+// TODO: Helper for fixed points?  (itertools: `iterate_splits`)
 
 GrPolylogSpace test_space_dim_3_naive(const int weight, const std::vector<int>& points) {
   GrPolylogSpace space;
@@ -104,6 +104,65 @@ GrPolylogSpace test_space_dim_4_naive(const int weight, const std::vector<int>& 
     space.push_back(plucker_dual(QLiVec(weight, args), args));
   }
   return space;
+}
+
+GrPolylogNCoSpace test_co_space_dim_3(const int weight, int num_points) {
+  static constexpr int dimension = 3;
+  const auto points = to_vector(range_incl(1, num_points));
+  return co_space(weight, 2, [&](const int weight) {
+    return normalize_space_remove_consecutive([&]() {
+      switch (weight) {
+        case 1: return GrFx(dimension, points);
+        case 2: return GrL2(dimension, points);
+        case 3: return test_space_d3_w3(points);
+        case 4: return test_space_dim_3_naive(4, points);
+        default: FATAL("Unsupported weight");
+      }
+    }(), dimension, num_points);
+  });
+}
+
+std::vector<int> apply_permutation(
+  const std::vector<int>& order_before,
+  const std::vector<int>& order_after,
+  const std::vector<int>& points
+) {
+  absl::flat_hash_map<int, int> replacements;
+  for (const auto& [before, after] : zip(order_before, order_after)) {
+    replacements[before] = after;
+  }
+  return mapped(points, [&](const auto& p) {
+    return value_or(replacements, p, p);
+  });
+}
+
+template<typename F>
+auto sum_alternating(const F& f, const std::vector<int>& points, const std::vector<int>& alternating) {
+  decltype(f(points)) ret;
+  for (const auto& [p, sign] : permutations_with_sign(alternating)) {
+    ret += sign * f(apply_permutation(alternating, p, points));
+  }
+  return ret;
+}
+
+// Grassmannian polylogarithm on Gr(4, 8).
+GammaExpr test_func_d4_p8_w3(const std::vector<int>& points) {
+  CHECK_EQ(points.size(), 8);
+  const auto f = [](const std::vector<int>& arguments) {
+    CHECK_EQ(arguments.size(), 8);
+    const auto args = [&](const std::vector<int>& indices) {
+      return choose_indices_one_based(arguments, indices);
+    };
+    return tensor_product(absl::MakeConstSpan({
+      GrQLiVec(1, args({2,3}), args({1,4,7,8})),
+      GrQLiVec(1, args({3,7}), args({2,4,5,8})),
+      GrQLiVec(1, args({5,7}), args({3,4,6,8})),
+    }));
+  };
+  const auto f1 = [&](const std::vector<int>& arguments) {
+    return sum_alternating(f, arguments, choose_indices_one_based(arguments, {1,2,3}));
+  };
+  return sum_alternating(f1, points, choose_indices_one_based(points, {5,6,7}));
 }
 
 
@@ -181,12 +240,13 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << to_string(ranks) << "\n";
   // }
 
-  // const int weight = 3;
+  // const int weight = 5;
   // const int dimension = 3;
   // for (const int num_points : range_incl(5, 10)) {
   //   const auto points = to_vector(range_incl(1, num_points));
   //   Profiler profiler;
-  //   const auto space = test_space_d3_w3(points);
+  //   // const auto space = test_space_d3_w3(points);
+  //   const auto space = test_space_dim_3_naive(weight, num_points);
   //   profiler.finish("space");
   //   const auto ranks = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
   //   profiler.finish("ranks");
@@ -195,23 +255,49 @@ int main(int /*argc*/, char *argv[]) {
   //   // std::cout << to_string(ranks) << "\n";
   // }
 
-  const int weight = 4;
+  // const int weight = 4;
+  // const int dimension = 3;
+  // for (const int num_points : range_incl(5, 10)) {
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   Profiler profiler;
+  //   const auto space = test_co_space_dim_3(weight, num_points);
+  //   profiler.finish("space");
+  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   });
+  //   profiler.finish("ranks");
+  //   std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+  //   std::cout << to_string(ranks) << "\n";
+  // }
+
+  // const int dimension = 4;
+  // const std::vector points = {1,2,3,4,5,6,7,8};
+  // const auto expr = test_func_d4_p8_w3(points);
+  // std::cout << expr;
+  // std::cout << to_lyndon_basis(expr);
+  // std::cout << is_totally_weakly_separated(expr) << "\n";
+  // std::cout << to_string(space_venn_ranks(
+  //   mapped(cartesian_product(GrL2(dimension, points), GrFx(dimension, points)), APPLY(DISAMBIGUATE(ncoproduct))),
+  //   {ncomultiply(expr)},
+  //   DISAMBIGUATE(identity_function)
+  // )) << "\n";
+
+  const int weight = 5;
   const int dimension = 3;
   for (const int num_points : range_incl(5, 10)) {
     const auto points = to_vector(range_incl(1, num_points));
     Profiler profiler;
-    const auto space = co_space(weight, 2, [&](const int weight) {
-      switch (weight) {
-        case 1: return normalize_space_remove_consecutive(GrFx(dimension, points));
-        case 2: return normalize_space_remove_consecutive(GrL2(dimension, points));
-        case 3: return normalize_space_remove_consecutive(test_space_d3_w3(points));
-        default: FATAL("Unsupported weight");
+    GrPolylogNCoSpace space_lyndon;
+    const auto coords = combinations(points, dimension);
+    for (const auto& word : get_lyndon_words(coords, weight)) {
+      const auto term = mapped(word, convert_to<Gamma>);
+      if (is_weakly_separated(term) && passes_normalize_remove_consecutive(term, dimension, num_points)) {
+        space_lyndon.push_back(ncomultiply(GammaExpr::single(term)));
       }
-    });
+    }
+    const auto space_product = test_co_space_dim_3(weight, num_points);
     profiler.finish("space");
-    const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
-      return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
-    });
+    const auto ranks = space_venn_ranks(space_lyndon, space_product, DISAMBIGUATE(identity_function));
     profiler.finish("ranks");
     std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
     std::cout << to_string(ranks) << "\n";
