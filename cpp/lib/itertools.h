@@ -8,8 +8,11 @@
 //   Equivalent of `itertools.product(p...)` without `repeat`.
 //
 // * permutations(p, [r])
-//   r-length tuples, all possible orderings, no repeated elements
-//   Note: the order may be different from the one `itertools` produces!
+//   r-length tuples, all possible orderings, no repeated elements,
+//   Note: the order is unspecified and may be different from the one `itertools` produces!
+//
+// * permutations_with_sign(p)
+//   pairs (<permutaion of p>, <permutation sign>)
 //
 // * combinations(p, r)
 //   r-length tuples, in sorted order[*], no repeated elements
@@ -34,63 +37,47 @@
 
 #include "check.h"
 #include "range.h"
+#include "sorting.h"
 #include "util.h"
 
 
-template<typename T>
-class Permutations {
-public:
-  class EndIterator {};
-
-  class Iterator {
-  public:
-    explicit Iterator(std::vector<T> current_permutation)
-        : current_permutation_(std::move(current_permutation)) {}
-
-    // Avoid accidental (expensive) copying.
-    Iterator(const Iterator&) = delete;
-    Iterator& operator=(const Iterator&) = delete;
-
-    const std::vector<T>& operator*() const {
-      return current_permutation_;
-    }
-    void operator++() {
-      CHECK(!done_);
-      done_ = !absl::c_next_permutation(current_permutation_);
-    }
-    bool operator==(const EndIterator&) const { return done_; }
-    bool operator!=(const EndIterator&) const { return !done_; }
-
-  private:
-    std::vector<T> current_permutation_;
-    bool done_ = false;
-  };
-
-  Permutations(std::vector<T> elements)
-      : current_permutation_(std::move(elements)) {
-    absl::c_sort(current_permutation_);
-  }
-
-  Iterator begin() const { return Iterator(current_permutation_); }
-  EndIterator end() const { return EndIterator(); }
-
-private:
-  std::vector<T> current_permutation_;
-};
-
-
-template<typename T>
-Permutations<T> permutations(std::vector<T> elements) {
-  return {std::move(elements)};
-}
-
-template<typename T>
-Permutations<T> permutations(std::initializer_list<T> elements) {
-  return {std::vector(elements)};
-}
-
-
 namespace internal {
+
+// The sign of permutation [1, 2, ..., length] -> [length, ..., 2, 1]
+inline int reverse_permutation_sign(size_t length) {
+  return neg_one_pow(length / 2);
+}
+
+// Note: based on std::next_permutation reference implementation from
+//   https://en.cppreference.com/w/cpp/algorithm/next_permutation.
+template<class BidirIt>
+std::pair<bool, int> next_permutation_with_sign(BidirIt first, BidirIt last) {
+  if (first == last) {
+    return {false, 1};
+  }
+  BidirIt i = last;
+  if (first == --i) {
+    return {false, 1};
+  }
+  while (true) {
+    BidirIt i1, i2;
+    i1 = i;
+    if (*--i < *i1) {
+      i2 = last;
+      while (!(*i < *--i2))
+        ;
+      std::iter_swap(i, i2);
+      std::reverse(i1, last);
+      // TODO: Optimize: compute the sign via formula from this branch.
+      //   The sign depends only on permutation index modulo 4.
+      return {true, -reverse_permutation_sign(std::distance(i1, last))};
+    }
+    if (i == first) {
+      std::reverse(first, last);
+      return {false, reverse_permutation_sign(std::distance(first, last))};
+    }
+  }
+}
 
 template<typename T>
 void fill_cartesian_product(
@@ -172,6 +159,92 @@ void fill_cartesian_combinations(
 
 
 template<typename T>
+class Permutations {
+public:
+  class EndIterator {};
+
+  class Iterator {
+  public:
+    explicit Iterator(std::vector<T> current_permutation)
+        : current_permutation_(std::move(current_permutation)) {}
+
+    // Avoid accidental (expensive) copying.
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+
+    const std::vector<T>& operator*() const {
+      return current_permutation_;
+    }
+    void operator++() {
+      CHECK(!done_);
+      done_ = !absl::c_next_permutation(current_permutation_);
+    }
+    bool operator==(const EndIterator&) const { return done_; }
+    bool operator!=(const EndIterator&) const { return !done_; }
+
+  private:
+    std::vector<T> current_permutation_;
+    bool done_ = false;
+  };
+
+  Permutations(std::vector<T> elements) : starting_permutation_(std::move(elements)) {
+    absl::c_sort(starting_permutation_);
+  }
+
+  Iterator begin() const { return Iterator(starting_permutation_); }
+  EndIterator end() const { return EndIterator(); }
+
+private:
+  std::vector<T> starting_permutation_;
+};
+
+template<typename T>
+class PermutationsWithSign {
+public:
+  class EndIterator {};
+
+  class Iterator {
+  public:
+    explicit Iterator(std::pair<std::vector<T>, int> current_permutation_with_sign)
+        : current_permutation_with_sign_(std::move(current_permutation_with_sign)) {}
+
+    // Avoid accidental (expensive) copying.
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+
+    const std::pair<std::vector<T>, int>& operator*() const {
+      return current_permutation_with_sign_;
+    }
+    void operator++() {
+      CHECK(!done_);
+      const auto [new_done, sign_change] = internal::next_permutation_with_sign(
+        current_permutation_with_sign_.first.begin(), current_permutation_with_sign_.first.end()
+      );
+      done_ = !new_done;
+      current_permutation_with_sign_.second *= sign_change;
+    }
+    bool operator==(const EndIterator&) const { return done_; }
+    bool operator!=(const EndIterator&) const { return !done_; }
+
+  private:
+    std::pair<std::vector<T>, int> current_permutation_with_sign_;
+    bool done_ = false;
+  };
+
+  PermutationsWithSign(std::vector<T> elements) {
+    const int sign = sort_with_sign(elements);
+    starting_permutation_with_sign_ = {std::move(elements), sign};
+  }
+
+  Iterator begin() const { return Iterator(starting_permutation_with_sign_); }
+  EndIterator end() const { return EndIterator(); }
+
+private:
+  std::pair<std::vector<T>, int> starting_permutation_with_sign_;
+};
+
+
+template<typename T>
 std::vector<std::tuple<T>> cartesian_product(const std::vector<T>& elements) {
   return mapped(elements, [](const T& x) { return std::tuple{x}; });
 }
@@ -237,6 +310,16 @@ std::vector<std::vector<T>> combinations_with_replacement(std::initializer_list<
 
 
 template<typename T>
+Permutations<T> permutations(std::vector<T> elements) {
+  return {std::move(elements)};
+}
+
+template<typename T>
+Permutations<T> permutations(std::initializer_list<T> elements) {
+  return {std::vector(elements)};
+}
+
+template<typename T>
 std::vector<std::vector<T>> permutations(const std::vector<T>& elements, int size) {
   CHECK_LE(0, size);
   std::vector<std::vector<T>> ret;
@@ -251,6 +334,16 @@ std::vector<std::vector<T>> permutations(const std::vector<T>& elements, int siz
 template<typename T>
 std::vector<std::vector<T>> permutations(std::initializer_list<T> elements, int size) {
   return permutations(std::vector(elements), size);
+}
+
+template<typename T>
+PermutationsWithSign<T> permutations_with_sign(std::vector<T> elements) {
+  return {std::move(elements)};
+}
+
+template<typename T>
+PermutationsWithSign<T> permutations_with_sign(std::initializer_list<T> elements) {
+  return {std::vector(elements)};
 }
 
 

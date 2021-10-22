@@ -3,7 +3,25 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "lib/sorting.h"
 #include "lib/string.h"
+#include "lib/zip.h"
+
+
+template<typename Container>
+int permutation_sign(Container c) {
+  return sort_with_sign(c);
+}
+
+// TODO: Replace with `to_vector` when it works with itertools iterators.
+template<typename Container>
+auto dump_to_vector(const Container& c) {
+  std::vector<std::decay_t<decltype(*c.begin())>> vector;
+  for (const auto& value : c) {
+    vector.push_back(value);
+  }
+  return vector;
+}
 
 
 using namespace std::literals::string_literals;
@@ -96,4 +114,31 @@ TEST(ItertoolsTest, CombinationsWithReplacement_Elements4_Size2) {
   EXPECT_THAT(result, testing::ElementsAre(
     "AA", "AB", "AC", "AD", "BB", "BC", "BD", "CC", "CD", "DD"
   ));
+}
+
+TEST(ItertoolsTest, PermutationsWithSign_SyncedWithNormal) {
+  std::vector values = {1, 3, 5, 2, 4};
+  for (const auto& [a, b] : zip(
+    dump_to_vector(permutations_with_sign(values)),
+    dump_to_vector(permutations(values))
+  )) {
+    EXPECT_EQ(a.first, b);
+  }
+}
+
+TEST(ItertoolsTest, PermutationsWithSign_PositiveStart) {
+  for (const int num_values : range_incl(0, 6)) {
+    const auto values = to_vector(range_incl(1, num_values));
+    for (const auto& [p, sign] : permutations_with_sign(values)) {
+      EXPECT_EQ(sign, permutation_sign(p));
+    }
+  }
+}
+
+TEST(ItertoolsTest, PermutationsWithSign_NegativeStart) {
+  std::vector values = {1, 3, 4, 2, 7, 6, 5};
+  ASSERT_EQ(permutation_sign(values), -1);  // check that the test is meaningful
+  for (const auto& [p, sign] : permutations_with_sign(values)) {
+    EXPECT_EQ(sign, permutation_sign(values) * permutation_sign(p));
+  }
 }
