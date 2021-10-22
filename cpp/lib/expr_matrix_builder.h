@@ -41,6 +41,10 @@ private:
   void add_expr_impl(const ExprTs&... expressions) {
     std::vector<SparseElement> row;
     add_columns<0>(row, expressions...);
+    // TODO: Is sorting required? (col, value) pairs should be sorted in order for row
+    //   deduplication to work. However chances are they are already oredered the same
+    //   way: absl::hash_map iteration is likely deterministic within one launch.
+    absl::c_sort(row);
     sparse_rows_.insert(row);
   }
 
@@ -64,6 +68,8 @@ private:
       }
       ++i_row;
     }
+    // Note: Elements are sorted within each column since we iterate rows sequentially.
+    //   Hence decuplication works.
     return to_set(sparse_columns);
   }
 
