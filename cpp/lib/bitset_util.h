@@ -33,6 +33,7 @@ T vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
     idx -= offset;
     CHECK_LE(0, idx);
     CHECK_LT(idx, bitset.size());
+    CHECK(!bitset[idx]);
     bitset[idx] = true;
   }
   return bitset;

@@ -27,7 +27,7 @@ public:
 
   Gamma() {}
   explicit Gamma(BitsetT indices) : indices_(std::move(indices)) {}
-  explicit Gamma(const std::vector<int>& vars) : indices_(vector_to_bitset<BitsetT>(vars, kBitsetOffset)) {}
+  explicit Gamma(const std::vector<int>& vars);
 
   bool is_nil() const { return indices_.none(); }
 
@@ -45,6 +45,19 @@ public:
 private:
   BitsetT indices_;  // 0-based
 };
+
+inline Gamma::Gamma(const std::vector<int>& vars) {
+  for (int idx : vars) {
+    idx -= kBitsetOffset;
+    CHECK_LE(0, idx);
+    CHECK_LT(idx, indices_.size());
+    if (indices_[idx]) {
+      indices_.reset();
+      return;
+    }
+    indices_[idx] = true;
+  }
+}
 
 std::string to_string(const Gamma& g);
 

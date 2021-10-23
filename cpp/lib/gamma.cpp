@@ -130,12 +130,15 @@ GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) 
     return expr;
   }
   const auto bonus_bitset = vector_to_bitset<Gamma::BitsetT>(bonus_points, Gamma::kBitsetOffset);
-  return expr.mapped([&](const auto& term) {
-    return mapped(term, [&](const Gamma& g) {
-      CHECK((g.index_bitset() & bonus_bitset).none())
-        << to_string(g) << " vs " << dump_to_string(bonus_points);
+  return expr.mapped_expanding([&](const auto& term) {
+    bool is_zero = false;
+    const auto new_term = mapped(term, [&](const Gamma& g) {
+      if ((g.index_bitset() & bonus_bitset).any()) {
+        is_zero = true;
+      }
       return Gamma(g.index_bitset() | bonus_bitset);
     });
+    return is_zero ? GammaExpr{} : GammaExpr::single(new_term);
   }).annotations_map([&](const std::string& annotation) {
     // TODO: Find a proper pullback notation
     return fmt::function(
