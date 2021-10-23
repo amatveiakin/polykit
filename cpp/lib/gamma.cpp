@@ -69,8 +69,12 @@ GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr) {
 }
 
 bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dimension, int num_points) {
+  // TODO: Do we even need to pass the dimension, given that it can be deduced?
+  if (dimension != 0) {
+    CHECK_EQ(GammaExpr::Param::object_to_dimension(term), dimension);
+  }
   if (dimension > 0 && std::gcd(dimension, num_points) == 1) {
-    // TODO: Move out to normalize_remove_consecutive OR otherwise optimize.
+    // Optimization potential: Move out to normalize_remove_consecutive OR otherwise optimize.
     absl::flat_hash_set<Gamma> discard;
     for (const int start : range(0, num_points)) {
       discard.insert(Gamma(mapped(range(start, start + dimension), [&](const int idx) {
@@ -82,7 +86,7 @@ bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dim
     });
   } else {
     return absl::c_all_of(term, [](const Gamma& g) {
-      // Optimization potential: check this on bitset level.
+      // Optimization potential: check this on bitset level OR use discard set as above.
       const auto& v = g.index_vector();
       const auto it = absl::c_adjacent_find(v, [](int a, int b) {
         return b != a + 1;

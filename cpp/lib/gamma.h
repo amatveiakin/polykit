@@ -73,7 +73,7 @@ struct GammaExprParam {
   static int object_to_dimension(const ObjectT& obj) {
     CHECK(!obj.empty());
     const auto dimensions = mapped(obj, [](const Gamma& g) { return g.index_vector().size(); });
-    CHECK(all_equal(dimensions));
+    CHECK(all_equal(dimensions)) << dump_to_string(obj);
     return dimensions.front();
   }
 };

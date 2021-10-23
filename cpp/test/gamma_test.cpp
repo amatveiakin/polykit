@@ -83,3 +83,17 @@ TEST(GammaTest, PluckerDualAgainstNaive) {
   const auto expr = tensor_product(G({1,2,3}), G({1,3,5}));
   ASSERT_EQ(plucker_dual(expr, points), plucker_dual_naive(expr, points));
 }
+
+TEST(GammaTest, NormalizeRemoveConsecutive_Linear) {
+  // When GCD(dimension, number_of_points) > 1, the normalization cannot wrap.
+  EXPECT_TRUE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({2,4})}, 2, 4));
+  EXPECT_FALSE(passes_normalize_remove_consecutive(std::vector{Gamma({1,2}), Gamma({2,4})}, 2, 4));
+  EXPECT_TRUE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({4,1})}, 2, 4));
+}
+
+TEST(GammaTest, NormalizeRemoveConsecutive_Circular) {
+  // When GCD(dimension, number_of_points) == 1, the normalization can wrap.
+  EXPECT_TRUE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({2,5})}, 2, 5));
+  EXPECT_FALSE(passes_normalize_remove_consecutive(std::vector{Gamma({1,2}), Gamma({2,5})}, 2, 5));
+  EXPECT_FALSE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({5,1})}, 2, 5));
+}
