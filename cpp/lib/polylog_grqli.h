@@ -3,10 +3,25 @@
 #include "gamma.h"
 
 
+GammaExpr GrLogVec(const std::vector<int>& bonus_points, const std::vector<int>& log_points);
+GammaExpr GrLogVec(const std::pair<std::vector<int>, std::vector<int>>& points);
+
 GammaExpr GrQLiVec(int weight, const std::vector<int>& bonus_points, const std::vector<int>& qli_points);
+GammaExpr GrQLiVec(int weight, const std::pair<std::vector<int>, std::vector<int>>& points);
 
 
 namespace internal {
+class GrLogFixedBonusPoints {
+public:
+  GrLogFixedBonusPoints(std::vector<int> bonus_points)
+    : bonus_points_(std::move(bonus_points)) {}
+  template<typename... Args>
+  GammaExpr operator()(Args... qli_points) const {
+    return GrLogVec(bonus_points_, {qli_points...});
+  }
+private:
+  std::vector<int> bonus_points_;
+};
 class GrQLiFixedBonusPoints {
 public:
   GrQLiFixedBonusPoints(int weight, std::vector<int> bonus_points)
@@ -21,6 +36,8 @@ private:
 };
 }  // namespace internal
 
+
+template<typename... Args> internal::GrLogFixedBonusPoints GrLog(Args... args) { return {{args...}}; }
 
 // Usage:
 //   GrQLi_w(q_1, ..., q_m)(p_1, ..., p_n)

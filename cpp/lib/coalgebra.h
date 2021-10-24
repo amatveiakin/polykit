@@ -132,6 +132,11 @@ auto icoproduct_vec(const std::vector<ExprT>& expr) {
   return abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
 }
 
+template<typename CoExprT, typename... Args>
+auto abstract_coproduct(Args&&... args) {
+  return abstract_coproduct_vec<CoExprT>(std::vector{std::forward<Args>(args)...});
+}
+
 template<typename... Args>
 auto ncoproduct(Args&&... args) {
   return ncoproduct_vec(std::vector{std::forward<Args>(args)...});
