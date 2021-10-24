@@ -267,12 +267,11 @@ GrPolylogSpace GrL_core(
 ) {
   CHECK_LE(2, dimension);
   CHECK_LE(5, args.size());
-  const auto fixed_points = slice(args, args.size() - num_fixed_points);
-  const auto main_args = slice(args, 0, args.size() - num_fixed_points);
+  const auto& [main_args, fixed_p] = split_slice(args, args.size() - num_fixed_points);
+  const auto& fixed_points = fixed_p;  // workaround: lambdas cannot capture structured bindings
   GrPolylogSpace ret;
-  for (const auto& bonus_point_indices : combinations(to_vector(range(main_args.size())), dimension - 2)) {
-    const auto bonus_points = choose_indices(main_args, bonus_point_indices);
-    const auto qli_points = removed_indices(main_args, bonus_point_indices);
+  for (const auto& [bonus_p, qli_points] : index_splits(main_args, dimension - 2)) {
+    const auto& bonus_points = bonus_p;  // workaround: lambdas cannot capture structured bindings
     append_vector(
       ret,
       mapped_expanding(combinations(qli_points, 4 - num_fixed_points), [&](auto p) {
@@ -300,9 +299,8 @@ GrPolylogSpace GrL3(int dimension, const std::vector<int>& args) {
   const int weight = 3;
   GrPolylogSpace ret = GrL_core(weight, dimension, args, true, 0);
   if (dimension >= weight) {
-    for (const auto& bonus_point_indices : combinations(to_vector(range(args.size())), dimension - weight)) {
-      const auto bonus_points = choose_indices(args, bonus_point_indices);
-      const auto qli_points = removed_indices(args, bonus_point_indices);
+    for (const auto& [bonus_p, qli_points] : index_splits(args, dimension - weight)) {
+      const auto& bonus_points = bonus_p;  // workaround: lambdas cannot capture structured bindings
       append_vector(
         ret,
         mapped(combinations(qli_points, 6), [&](auto p) {

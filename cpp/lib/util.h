@@ -231,6 +231,16 @@ std::vector<T> choose_by_mask(const std::vector<T>& v, const std::vector<MaskT>&
   return ret;
 }
 
+template<typename T>
+std::pair<std::vector<T>, std::vector<T>> split_slice(const std::vector<T>& v, int pos) {
+  return {slice(v, 0, pos), slice(v, pos)};
+}
+
+template<typename T>
+std::pair<std::vector<T>, std::vector<T>> split_indices(const std::vector<T>& v, const std::vector<int>& indices) {
+  return {choose_indices(v, indices), removed_indices(v, indices)};
+}
+
 template<typename T, size_t N>
 std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& indices) {
   return choose_indices(v, indices);

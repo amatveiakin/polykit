@@ -50,8 +50,7 @@
 #include "lib/zip.h"
 
 
-// TODO: Add `split by index` \ `split by slice` and use
-// TODO: Helper for fixed points?  (itertools: `iterate_splits`)
+// TODO: Use `index_splits` where applicable !!!
 
 GrPolylogSpace test_space_dim_3_naive(const int weight, const std::vector<int>& points) {
   GrPolylogSpace space;

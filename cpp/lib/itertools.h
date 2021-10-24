@@ -20,6 +20,13 @@
 // * combinations_with_replacement(p, r)
 //   r-length tuples, in sorted order[*], with repeated elements
 //
+// * cartesian_combinations(p),  where `p` is a list of pairs p_i = (s_1, r_i).
+//   Akin to `cartesian_product(combinations(s_1, r_1), ..., combinations(s_n, r_n))`,
+//   but the result is not nested.
+//
+// * index_splits(p, r)
+//   All ways of splitting p into non-overlapping sets of (r) and (p.size() - r) elements.
+//
 // [*] Here "sorted order" means the order in argument list, not the order of
 //   how elements compare with operator<.
 //
@@ -347,7 +354,6 @@ PermutationsWithSign<T> permutations_with_sign(std::initializer_list<T> elements
 }
 
 
-// Like `cartesian_product(combinations(...), ..., combinations(...))`, but the result is not nested.
 // TODO: Find a more adequate solution for this.
 template<typename T>
 std::vector<std::vector<T>> cartesian_combinations(const std::vector<std::pair<std::vector<T>, int>>& elements_and_powers) {
@@ -355,5 +361,15 @@ std::vector<std::vector<T>> cartesian_combinations(const std::vector<std::pair<s
   std::vector<T> buffer;
   internal::fill_cartesian_combinations(elements_and_powers, 0, buffer, ret);
   CHECK(buffer.empty());
+  return ret;
+}
+
+
+template<typename T>
+std::vector<std::pair<std::vector<T>, std::vector<T>>> index_splits(const std::vector<T>& elements, int first_part_size) {
+  std::vector<std::pair<std::vector<T>, std::vector<T>>> ret;
+  for (const auto& indices : combinations(to_vector(range(elements.size())), first_part_size)) {
+    ret.push_back(split_indices(elements, indices));
+  }
   return ret;
 }
