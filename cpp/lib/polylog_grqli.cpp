@@ -12,7 +12,7 @@ GammaExpr GrLogVec(const std::vector<int>& bonus_points, const std::vector<int>&
       fmt::opname("GrLog"),
       fmt::parens(str_join_skip_empty(
         std::array{
-          str_join(bonus_points, ","),
+          str_join(sorted(bonus_points), ","),
           str_join(log_points, ",")
         },
         " / "
@@ -34,7 +34,7 @@ GammaExpr GrQLiVec(int weight, const std::vector<int>& bonus_points, const std::
       fmt::sub_num(fmt::opname("GrQLi"), {weight}),
       fmt::parens(str_join_skip_empty(
         std::array{
-          str_join(bonus_points, ","),
+          str_join(sorted(bonus_points), ","),
           str_join(qli_points, ",")
         },
         " / "

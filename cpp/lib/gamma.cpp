@@ -143,7 +143,7 @@ GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) 
     // TODO: Find a proper pullback notation
     return fmt::function(
       fmt::opname("pb"),
-      {annotation, str_join(bonus_points, ",")},
+      {annotation, str_join(sorted(bonus_points), ",")},
       HSpacing::sparse
     );
   });
