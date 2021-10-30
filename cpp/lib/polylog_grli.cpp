@@ -14,15 +14,15 @@ GammaExpr GrLiVec(const std::vector<int>& bonus_points, const std::vector<int>& 
     }), sign);
   }
   return ret.annotate(
-    absl::StrCat(
+    fmt::function(
       fmt::opname("GrLi"),
-      fmt::parens(str_join_skip_empty(
+      {str_join_skip_empty(
         std::array{
           str_join(sorted(bonus_points), ","),
           str_join(main_points, ",")
         },
         " / "
-      ))
+      )}
     )
   );
 }

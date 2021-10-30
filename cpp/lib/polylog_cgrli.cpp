@@ -104,5 +104,10 @@ GammaExpr CGrLi(int weight, const std::vector<int>& points) {
   const auto f1 = [&](const std::vector<int>& arguments) {
     return sum_alternating(f, arguments, slice(arguments, 0, n-1));
   };
-  return sum_alternating(f1, points, slice(points, n, 2*n-1));
+  return sum_alternating(f1, points, slice(points, n, 2*n-1)).without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("CGrLi"), {weight}),
+      points
+    )
+  );
 }
