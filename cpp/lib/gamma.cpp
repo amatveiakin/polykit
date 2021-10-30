@@ -158,7 +158,11 @@ GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points) 
 }
 
 GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe) {
-  const auto universe_bitset = vector_to_bitset<Gamma::BitsetT>(point_universe, Gamma::kBitsetOffset);
+  const auto universe_bitset_or = vector_to_bitset_or<Gamma::BitsetT>(point_universe, Gamma::kBitsetOffset);
+  if (!universe_bitset_or.has_value()) {
+    return GammaExpr{};
+  }
+  const auto& universe_bitset = universe_bitset_or.value();
   return expr.mapped([&](const auto& term) {
     return mapped(term, [&](const Gamma& g) {
       CHECK(bitset_contains(universe_bitset, g.index_bitset()));

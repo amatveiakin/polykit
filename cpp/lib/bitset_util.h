@@ -42,15 +42,9 @@ std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset 
   return bitset;
 }
 
-// Crashes if `vector` contains duplicate elements.
-template<typename T>
-T vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
-  return vector_to_bitset_or<T>(vector, offset).value();
-}
-
 template<size_t N>
-std::bitset<N> vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
-  return vector_to_bitset<std::bitset<N>>(vector, offset);
+std::bitset<N> vector_to_bitset_or(const std::vector<int>& vector, int offset = 0) {
+  return vector_to_bitset_or<std::bitset<N>>(vector, offset);
 }
 
 template<size_t N>
