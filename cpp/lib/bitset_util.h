@@ -28,7 +28,7 @@ std::bitset<DstN> convert_bitset(const std::bitset<SrcN>& src) {
 
 // Returns nullopt if `vector` contains duplicate elements.
 template<typename T>
-std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset = 0) {
+std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset) {
   T bitset;
   for (int idx : vector) {
     idx -= offset;
@@ -43,7 +43,7 @@ std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset 
 }
 
 template<size_t N>
-std::bitset<N> vector_to_bitset_or(const std::vector<int>& vector, int offset = 0) {
+std::bitset<N> vector_to_bitset_or(const std::vector<int>& vector, int offset) {
   return vector_to_bitset_or<std::bitset<N>>(vector, offset);
 }
 

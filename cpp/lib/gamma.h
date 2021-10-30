@@ -47,7 +47,7 @@ private:
 };
 
 inline Gamma::Gamma(const std::vector<int>& vars) {
-  const auto indices_or = vector_to_bitset_or<BitsetT>(vars);
+  const auto indices_or = vector_to_bitset_or<BitsetT>(vars, kBitsetOffset);
   if (indices_or.has_value()) {
     indices_ = indices_or.value();
   } else {
