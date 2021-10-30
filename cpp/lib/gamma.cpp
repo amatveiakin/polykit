@@ -129,7 +129,11 @@ GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) 
   if (bonus_points.empty()) {
     return expr;
   }
-  const auto bonus_bitset = vector_to_bitset<Gamma::BitsetT>(bonus_points, Gamma::kBitsetOffset);
+  const auto bonus_bitset_or = vector_to_bitset_or<Gamma::BitsetT>(bonus_points, Gamma::kBitsetOffset);
+  if (!bonus_bitset_or.has_value()) {
+    return GammaExpr{};
+  }
+  const auto& bonus_bitset = bonus_bitset_or.value();
   return expr.mapped_expanding([&](const auto& term) {
     bool is_zero = false;
     const auto new_term = mapped(term, [&](const Gamma& g) {

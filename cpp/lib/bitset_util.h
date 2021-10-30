@@ -26,17 +26,26 @@ std::bitset<DstN> convert_bitset(const std::bitset<SrcN>& src) {
   }
 }
 
+// Returns nullopt if `vector` contains duplicate elements.
 template<typename T>
-T vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
+std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset = 0) {
   T bitset;
   for (int idx : vector) {
     idx -= offset;
     CHECK_LE(0, idx);
     CHECK_LT(idx, bitset.size());
-    CHECK(!bitset[idx]);
+    if (bitset[idx]) {
+      return std::nullopt;
+    }
     bitset[idx] = true;
   }
   return bitset;
+}
+
+// Crashes if `vector` contains duplicate elements.
+template<typename T>
+T vector_to_bitset(const std::vector<int>& vector, int offset = 0) {
+  return vector_to_bitset_or<T>(vector, offset).value();
 }
 
 template<size_t N>

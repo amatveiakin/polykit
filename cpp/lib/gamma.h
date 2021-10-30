@@ -47,15 +47,11 @@ private:
 };
 
 inline Gamma::Gamma(const std::vector<int>& vars) {
-  for (int idx : vars) {
-    idx -= kBitsetOffset;
-    CHECK_LE(0, idx);
-    CHECK_LT(idx, indices_.size());
-    if (indices_[idx]) {
-      indices_.reset();
-      return;
-    }
-    indices_[idx] = true;
+  const auto indices_or = vector_to_bitset_or<BitsetT>(vars);
+  if (indices_or.has_value()) {
+    indices_ = indices_or.value();
+  } else {
+    // Keep empty: this means Gamma is nil.
   }
 }
 
