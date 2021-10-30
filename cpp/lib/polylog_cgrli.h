@@ -1,9 +1,5 @@
 #include "gamma.h"
 
 
-// Only for 6 points for now.
-GammaExpr CasimirDim3(const std::vector<int>& points);
-
-// Only for 6 points for now.
-// TODO: proper name
-GammaExpr CGrLiDim3(int weight, const std::vector<int>& points);
+// Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
+GammaExpr CGrLi(int weight, const std::vector<int>& points);

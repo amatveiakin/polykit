@@ -311,7 +311,7 @@ TEST(PolylogSpaceTest, GrL_contains_CGrLi) {
   const std::vector points = {1,2,3,4,5,6};
   // Should be inside for any weight.
   for (const int weight : range_incl(2, 3)) {
-    const auto expr = CGrLiDim3(weight, points);
+    const auto expr = CGrLi(weight, points);
     const auto space = GrL(weight, 3, points);
     EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
   }
