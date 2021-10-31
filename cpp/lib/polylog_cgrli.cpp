@@ -61,6 +61,11 @@ GammaExpr test_func_component(
 
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
 GammaExpr CGrLi(int weight, const std::vector<int>& points) {
+  // TODO: Define via CGrLi(ascending points) + substitute variables.
+  //   Directly substituting duplicate points is not equivalent (why?)
+  // TODO: What does this mean for operations on GammaExpr in general?
+  //   Should other functions (like GrQLi) do the same?
+  CHECK(all_unique_unsorted(points)) << "Unimplemented: duplicate CGrLi points";
   CHECK(points.size() % 2 == 0);
   const int n = points.size() / 2;
   CHECK_GE(weight, n - 1);
