@@ -23,6 +23,7 @@ cc_library(
         "lib/compression.h",
         "lib/enumerator.h",
         "lib/file_util.h",
+        "lib/functional.h",
         "lib/format_basic.h",
         "lib/itertools.h",
         "lib/lexicographical.h",

@@ -214,7 +214,7 @@ int main(int /*argc*/, char *argv[]) {
   //       normalize_space_remove_consecutive(GrL2(dimension, points)),
   //       normalize_space_remove_consecutive(GrFx(dimension, points))
   //     ),
-  //     APPLY(DISAMBIGUATE(ncoproduct))
+  //     applied(DISAMBIGUATE(ncoproduct))
   //   );
   //   profiler.finish("space");
   //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
@@ -285,7 +285,7 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_lyndon_basis(expr);
   // std::cout << is_totally_weakly_separated(expr) << "\n";
   // std::cout << to_string(space_venn_ranks(
-  //   mapped(cartesian_product(GrL2(dimension, points), GrFx(dimension, points)), APPLY(DISAMBIGUATE(ncoproduct))),
+  //   mapped(cartesian_product(GrL2(dimension, points), GrFx(dimension, points)), applied(DISAMBIGUATE(ncoproduct))),
   //   {ncomultiply(expr)},
   //   DISAMBIGUATE(identity_function)
   // )) << "\n";
@@ -376,7 +376,7 @@ int main(int /*argc*/, char *argv[]) {
   const int dimension = 4;
   const std::vector points = {1,2,3,4,5,6,7,8};
   std::cout << to_string(space_venn_ranks(
-    mapped(cartesian_product(test_space_dim_4_naive(4, points), GrL1(dimension, points)), APPLY(DISAMBIGUATE(ncoproduct))),
+    mapped(cartesian_product(test_space_dim_4_naive(4, points), GrL1(dimension, points)), applied(DISAMBIGUATE(ncoproduct))),
     {ncomultiply(CGrLi(5, points))},
     DISAMBIGUATE(identity_function)
   )) << "\n";

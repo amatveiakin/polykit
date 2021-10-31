@@ -277,7 +277,7 @@ TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
   const GrPolylogSpace l2 = GrL2(dimension, points);
   const GrPolylogNCoSpace space = mapped(
     cartesian_product(l2, fx),
-    APPLY(DISAMBIGUATE(ncoproduct))
+    applied(DISAMBIGUATE(ncoproduct))
   );
   const GrPolylogNCoSpace grqli3_space = mapped(
     range(num_points),

@@ -8,6 +8,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
+#include "functional.h"
 #include "range.h"
 
 
