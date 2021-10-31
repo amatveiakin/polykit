@@ -100,6 +100,11 @@ GrPolylogSpace test_space_dim_4_naive(const int weight, const std::vector<int>& 
   for (const auto& args : combinations(points, 6)) {
     space.push_back(plucker_dual(QLiVec(weight, args), args));
   }
+  for (const auto& args : combinations(points, 8)) {
+    for (const int shift : range(args.size() / 2)) {
+      space.push_back(CGrLi(weight, rotated_vector(args, shift)));
+    }
+  }
   return space;
 }
 
@@ -117,6 +122,31 @@ GrPolylogNCoSpace test_co_space_dim_3(const int weight, int num_points) {
         default: FATAL("Unsupported weight");
       }
     }(), dimension, num_points);
+  });
+}
+
+// TODO: Generalize and factor out
+GammaExpr gamma_substitute(const GammaExpr& expr, int from, int to) {
+  from -= Gamma::kBitsetOffset;
+  to -= Gamma::kBitsetOffset;
+  return expr.mapped_expanding([&](const auto& term) {
+    bool is_zero = false;
+    const auto new_term = mapped(term, [&](const Gamma& g) {
+      auto bitset = g.index_bitset();
+      if (bitset.test(from)) {
+        bitset.reset(from);
+        if (bitset.test(to)) {
+          is_zero = true;
+          return Gamma{};
+        } else {
+          bitset.set(to);
+          return Gamma(bitset);
+        }
+      } else {
+        return g;
+      }
+    });
+    return is_zero ? GammaExpr{} : GammaExpr::single(new_term);
   });
 }
 
@@ -312,12 +342,42 @@ int main(int /*argc*/, char *argv[]) {
   // )) << "\n";
 
 
-  const int weight = 4;
+  // const int weight = 4;
+  // const std::vector points = {1,2,3,4,5,6,7,8};
+  // auto space = test_space_dim_4_naive(weight, points);
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // for (const int shift : range(points.size() / 2)) {
+  //   space.push_back(CGrLi(weight, rotated_vector(points, shift)));
+  // }
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  // std::cout << is_totally_weakly_separated(gamma_substitute(CGrLi(4, {1,2,3,4,5,6,7,8}), 7,1)) << "\n";
+  // std::cout << gamma_substitute(CGrLi(5, {1,2,3,4,5,6,7,8}), 4,3) << "\n";
+
+  // const int weight = 4;
+  // auto space = test_space_dim_4_naive(weight, {1,2,3,4,5,6,7,8});
+  // std::cout << to_string(space_venn_ranks(
+  //   space,
+  //   // {CGrLi(weight, {1,1,3,4,5,6,7,8})},
+  //   {gamma_substitute(CGrLi(weight, {1,2,3,4,5,6,7,8}), 7,1)},
+  //   DISAMBIGUATE(to_lyndon_basis)
+  // )) << "\n";
+
+  // const auto expr = CGrLi(4, {1,1,3,4,5,6,7,8});
+  // const auto expr_alt = gamma_substitute(CGrLi(4, {1,2,3,4,5,6,7,8}), 2, 1);
+  // std::cout << (expr == expr_alt) << "\n";
+
+  // const int weight = 5;
+  // const std::vector points = {1,2,3,4,5,6,7,8,9};
+  // std::cout << "w=" << weight << "\n";
+  // auto space = test_space_dim_4_naive(weight, points);
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  const int dimension = 4;
   const std::vector points = {1,2,3,4,5,6,7,8};
-  auto space = test_space_dim_4_naive(weight, points);
-  std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-  for (const int shift : range(points.size() / 2)) {
-    space.push_back(CGrLi(weight, rotated_vector(points, shift)));
-  }
-  std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  std::cout << to_string(space_venn_ranks(
+    mapped(cartesian_product(test_space_dim_4_naive(4, points), GrL1(dimension, points)), APPLY(DISAMBIGUATE(ncoproduct))),
+    {ncomultiply(CGrLi(5, points))},
+    DISAMBIGUATE(identity_function)
+  )) << "\n";
 }
