@@ -149,6 +149,8 @@ inline GammaExpr G(const std::vector<int>& vars) {
 }
 
 
+GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points);
+
 bool are_weakly_separated(const Gamma& g1, const Gamma& g2);
 bool is_weakly_separated(const GammaExpr::ObjectT& term);
 bool is_weakly_separated(const GammaNCoExpr::ObjectT& term);

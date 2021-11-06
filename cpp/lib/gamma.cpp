@@ -7,9 +7,26 @@ std::string to_string(const Gamma& g) {
   return fmt::parens(str_join(g.index_vector(), ","));
 }
 
-// Checks that points in `g1` and `g2` are weakly separated, e.g. that there is no such
-// points {xa, ya} in (A = g1 \ g2) and points {xb, yb} in (B = g2 \ g1) that segment x1-y1
-// intersects segment x2-y2 if all drawn as vertices of a polygon.
+GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
+  // Optimization potential: do things on bitset level.
+  return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
+    std::vector<Gamma> term_new;
+    for (const Gamma& g_old : term_old) {
+      Gamma g_new(mapped(g_old.index_vector(), [&](const int idx) {
+        return new_points.at(idx - 1);
+      }));
+      if (g_new.is_nil()) {
+        return {};
+      }
+      term_new.push_back(g_new);
+    }
+    return GammaExpr::single(term_new);
+  }).without_annotations();
+}
+
+// Checks that points in `g1` and `g2` are weakly separated, i.e. that there are no such
+// points {xa, ya} in (A = g1 \ g2) and points {xb, yb} in (B = g2 \ g1) that segment x1--y1
+// intersects segment x2--y2 if all drawn as vertices of a polygon.
 //
 // Algoritm. Go around the polygon. Ignore vertices that don't belong to either A or B.
 // Count the number of times that we "change color", e.g. see a point from A after we've

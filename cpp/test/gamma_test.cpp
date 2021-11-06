@@ -5,6 +5,7 @@
 #include "lib/bitset_util.h"
 #include "lib/itertools.h"
 #include "lib/set_util.h"
+#include "test_util/matchers.h"
 
 
 static bool between(int point, std::pair<int, int> segment) {
@@ -46,6 +47,19 @@ static GammaExpr plucker_dual_naive(const GammaExpr& expr, const std::vector<int
   });
 }
 
+
+TEST(GammaTest, SubstituteVariables) {
+  EXPECT_EXPR_EQ(
+    substitute_variables(
+      + G({1,2,3})
+      + G({2,3,4})
+      - G({1,3,5}),
+      {2,1,4,4,5}
+    ),
+    + G({1,2,4})
+    - G({2,4,5})
+  );
+}
 
 TEST(GammaTest, WeaklySeparatedGolden) {
   using v = std::vector<int>;
