@@ -28,12 +28,31 @@ auto sum_alternating(const F& f, const std::vector<int>& points, const std::vect
   return ret;
 }
 
-// TODO: Comment (include the table)
-// In dimension == 3:
-//   qli_components: (1-A), (1-B), (1-C)
-//   casimir_components: C, BC, ABC
+// Example for dimension == 4.
+// Input:
+//   qli_components:            (1-A), (1-B), (1-C)
+//   qli_components (reversed): (1-C), (1-B), (1-A)
+//   casimir_components:            ABC, BC, C
+//   casimir_components (reversed): C, BC, ABC
+//
+// Table, non-recursive part:
+//     (1-C)           (1-B)             (1-A)      }  q
+//       C              BC                ABC       }  r
+// ------------------------------------------------
+//     (1-C)        (1-B)*(1-C)    (1-A)*(1-B)*(1-C)
+//    C*(1-C)         ... [#]             ...
+//   C*C*(1-C)          ...
+//      ...
+//
+// For each cell where row>0, col>0:
+//   t[row, col] = r[col] * t[row-1, col] + q[col] * t[row, col-1]
+// e.g. for cell [#]:
+//   BC * ((1-B)*(1-C)) + (1-B) * (C*(1-C)) = BC*(1-B)*(1-C) + (1-B)*C*(1-C)
+//
+// The answer is in the right-most column, the row depends on the weight.
+//
 // TODO: Cache intermediate results !!! (probably just compute row by row)
-GammaExpr test_func_component(
+GammaExpr CGrLi_component(
   int row,
   int col,
   absl::Span<const GammaExpr> qli_components,
@@ -44,17 +63,17 @@ GammaExpr test_func_component(
   }
   if (col == 0) {
     return tensor_product(absl::MakeConstSpan(
-      concat(std::vector(row, casimir_components.front()), {qli_components.back()})
+      concat(std::vector(row, casimir_components.back()), {qli_components.back()})
     ));
   }
   return (
     + tensor_product(
-      casimir_components.at(col),
-      test_func_component(row-1, col, qli_components, casimir_components)
+      casimir_components.at(casimir_components.size() - col - 1),
+      CGrLi_component(row-1, col, qli_components, casimir_components)
     )
     + tensor_product(
       qli_components.at(qli_components.size() - col - 1),
-      test_func_component(row, col-1, qli_components, casimir_components)
+      CGrLi_component(row, col-1, qli_components, casimir_components)
     )
   );
 }
@@ -100,11 +119,10 @@ GammaExpr CGrLi(int weight, const std::vector<int>& points) {
     const std::vector<GammaExpr> log_components = mapped(sub_arguments, [](const auto& args) {
       return GrLogVec(args);
     });
-    // TODO: Which order makes more sense: direct or reversed?
-    const std::vector<GammaExpr> casimir_components = reversed(mapped(range(n - 1), [&](const int k) {
+    const std::vector<GammaExpr> casimir_components = mapped(range(n - 1), [&](const int k) {
       return sum(slice(log_components, k));
-    }));
-    return test_func_component(weight-n+1, n-2, qli_components, casimir_components);
+    });
+    return CGrLi_component(weight-n+1, n-2, qli_components, casimir_components);
   };
   const auto f1 = [&](const std::vector<int>& arguments) {
     return sum_alternating(f, arguments, slice(arguments, 0, n-1));
