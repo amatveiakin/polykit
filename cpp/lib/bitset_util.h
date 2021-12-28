@@ -43,7 +43,7 @@ std::optional<T> vector_to_bitset_or(const std::vector<int>& vector, int offset)
 }
 
 template<size_t N>
-std::bitset<N> vector_to_bitset_or(const std::vector<int>& vector, int offset) {
+auto vector_to_bitset_or(const std::vector<int>& vector, int offset) {
   return vector_to_bitset_or<std::bitset<N>>(vector, offset);
 }
 
