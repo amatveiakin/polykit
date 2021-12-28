@@ -50,7 +50,7 @@
 #include "lib/zip.h"
 
 
-GrPolylogSpace test_space_dim_3_naive(const int weight, const std::vector<int>& points) {
+GrPolylogSpace CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points) {
   GrPolylogSpace space;
   for (const int bonus_point_idx : range(points.size())) {
     const auto bonus_args = choose_indices(points, {bonus_point_idx});
@@ -67,7 +67,7 @@ GrPolylogSpace test_space_dim_3_naive(const int weight, const std::vector<int>& 
   return space;
 }
 
-GrPolylogSpace test_space_d3_w3(const std::vector<int>& points) {
+GrPolylogSpace CGrL3_Dim3_test_space(const std::vector<int>& points) {
   const int weight = 3;
   GrPolylogSpace space;
   for (const int bonus_point_idx : range(points.size())) {
@@ -88,12 +88,12 @@ GrPolylogSpace test_space_d3_w3(const std::vector<int>& points) {
   return space;
 }
 
-GrPolylogSpace test_space_dim_4_naive(const int weight, const std::vector<int>& points) {
+GrPolylogSpace CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) {
   GrPolylogSpace space;
   for (const int bonus_point_idx : range(points.size())) {
     const auto bonus_args = choose_indices(points, {bonus_point_idx});
     const auto main_args = removed_index(points, bonus_point_idx);
-    append_vector(space, mapped(test_space_dim_3_naive(weight, main_args), [&](const auto& expr) {
+    append_vector(space, mapped(CGrL_Dim3_naive_test_space(weight, main_args), [&](const auto& expr) {
       return pullback(expr, bonus_args);
     }));
   }
@@ -122,8 +122,8 @@ GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>
   }
   switch (dimension) {
     case 2: return mapped(CL(weight, points), DISAMBIGUATE(delta_expr_to_gamma_expr));
-    case 3: return weight == 3 ? test_space_d3_w3(points) : test_space_dim_3_naive(weight, points);
-    case 4: return test_space_dim_4_naive(weight, points);
+    case 3: return weight == 3 ? CGrL3_Dim3_test_space(points) : CGrL_Dim3_naive_test_space(weight, points);
+    case 4: return CGrL_Dim4_naive_test_space(weight, points);
   }
   if (dimension * 2 > points.size()) {
     const int dual_dim = points.size() - dimension;
@@ -132,22 +132,17 @@ GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>
       return plucker_dual(expr, points);
     });
   }
-  FATAL(absl::StrCat("Unsupported dimension for CGrL: ", dimension));
+  FATAL(absl::StrCat("Unsupported weight&dimension for CGrL: ", weight, "&", dimension));
 }
 
-GrPolylogNCoSpace test_co_space_dim_3(const int weight, int num_points) {
-  static constexpr int dimension = 3;
+GrPolylogNCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points) {
   const auto points = to_vector(range_incl(1, num_points));
-  return co_space(weight, 2, [&](const int weight) {
+  return co_space(weight, 2, [&](int part_weight) {
     return normalize_space_remove_consecutive([&]() {
-      switch (weight) {
-        // case 1: return GrFx(dimension, points);
-        case 1: return GrL1(dimension, points);
-        case 2: return GrL2(dimension, points);
-        case 3: return test_space_d3_w3(points);
-        case 4: return test_space_dim_3_naive(4, points);
-        default: FATAL("Unsupported weight");
-      }
+      // if (part_weight == 1) {
+      //   return GrFx(dimension, points);
+      // }
+      return CGrL_test_space(part_weight, dimension, points);
     }(), dimension, num_points);
   });
 }
@@ -424,8 +419,8 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int num_points : range_incl(5, 10)) {
   //   const auto points = to_vector(range_incl(1, num_points));
   //   Profiler profiler;
-  //   // const auto space = test_space_d3_w3(points);
-  //   const auto space = test_space_dim_3_naive(weight, num_points);
+  //   // const auto space = CGrL3_Dim3_test_space(points);
+  //   const auto space = CGrL_Dim3_naive_test_space(weight, num_points);
   //   profiler.finish("space");
   //   const auto ranks = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
   //   profiler.finish("ranks");
@@ -439,7 +434,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int num_points : range_incl(5, 10)) {
   //   const auto points = to_vector(range_incl(1, num_points));
   //   Profiler profiler;
-  //   const auto space = test_co_space_dim_3(weight, num_points);
+  //   const auto space = simple_co_CGrL_test_space(weight, dimension, num_points);
   //   profiler.finish("space");
   //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
   //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
@@ -462,7 +457,7 @@ int main(int /*argc*/, char *argv[]) {
   //       space_lyndon.push_back(ncomultiply(GammaExpr::single(term)));
   //     }
   //   }
-  //   const auto space_product = test_co_space_dim_3(weight, num_points);
+  //   const auto space_product = simple_co_CGrL_test_space(weight, dimension, num_points);
   //   profiler.finish("space");
   //   const auto ranks = space_venn_ranks(space_lyndon, space_product, DISAMBIGUATE(identity_function));
   //   profiler.finish("ranks");
@@ -528,7 +523,7 @@ int main(int /*argc*/, char *argv[]) {
 
   // TODO: Test:
   // const int weight = 4;
-  // const auto space = test_co_space_dim_3(weight, 6);
+  // const auto space = simple_co_CGrL_test_space(weight, 3, 6);
   // std::cout << to_string(space_venn_ranks(
   //   space,
   //   {ncomultiply(normalize_remove_consecutive(test_func(weight, {1,2,3,4,5,6})))},
@@ -538,7 +533,7 @@ int main(int /*argc*/, char *argv[]) {
 
   // const int weight = 4;
   // const std::vector points = {1,2,3,4,5,6,7,8};
-  // auto space = test_space_dim_4_naive(weight, points);
+  // auto space = CGrL_Dim4_naive_test_space(weight, points);
   // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
   // for (const int shift : range(points.size() / 2)) {
   //   space.push_back(CGrLi(weight, rotated_vector(points, shift)));
@@ -549,7 +544,7 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << gamma_substitute(CGrLi(5, {1,2,3,4,5,6,7,8}), 4,3) << "\n";
 
   // const int weight = 4;
-  // auto space = test_space_dim_4_naive(weight, {1,2,3,4,5,6,7,8});
+  // auto space = CGrL_Dim4_naive_test_space(weight, {1,2,3,4,5,6,7,8});
   // std::cout << to_string(space_venn_ranks(
   //   space,
   //   // {CGrLi(weight, {1,1,3,4,5,6,7,8})},
@@ -564,13 +559,13 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 5;
   // const std::vector points = {1,2,3,4,5,6,7,8,9};
   // std::cout << "w=" << weight << "\n";
-  // auto space = test_space_dim_4_naive(weight, points);
+  // auto space = CGrL_Dim4_naive_test_space(weight, points);
   // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
 
   // const int dimension = 4;
   // const std::vector points = {1,2,3,4,5,6,7,8};
   // std::cout << to_string(space_venn_ranks(
-  //   mapped(cartesian_product(test_space_dim_4_naive(4, points), GrL1(dimension, points)), applied(DISAMBIGUATE(ncoproduct))),
+  //   mapped(cartesian_product(CGrL_Dim4_naive_test_space(4, points), GrL1(dimension, points)), applied(DISAMBIGUATE(ncoproduct))),
   //   {ncomultiply(CGrLi(5, points))},
   //   DISAMBIGUATE(identity_function)
   // )) << "\n";
@@ -874,8 +869,8 @@ int main(int /*argc*/, char *argv[]) {
 
 
   // std::cout << to_string(space_mapping_ranks(
-  //   test_space_d3_w3({1,2,3,4,5,6}),
-  //   // test_space_dim_3_naive(4, {1,2,3,4,5,6}),
+  //   CGrL3_Dim3_test_space({1,2,3,4,5,6}),
+  //   // CGrL_Dim3_naive_test_space(4, {1,2,3,4,5,6}),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
   //     return std::tuple{
@@ -904,8 +899,8 @@ int main(int /*argc*/, char *argv[]) {
   // )) << "\n";
 
   // std::cout << to_string(space_mapping_ranks(
-  //   test_space_d3_w3({1,2,3,4,5}),
-  //   // test_space_dim_3_naive(4, {1,2,3,4,5}),
+  //   CGrL3_Dim3_test_space({1,2,3,4,5}),
+  //   // CGrL_Dim3_naive_test_space(4, {1,2,3,4,5}),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
   //     // const auto subsum =
@@ -930,7 +925,7 @@ int main(int /*argc*/, char *argv[]) {
 
 
   // std::cout << to_string(space_mapping_ranks(
-  //   test_space_dim_4_naive(4, {1,2,3,4,5,6,7,8}),
+  //   CGrL_Dim4_naive_test_space(4, {1,2,3,4,5,6,7,8}),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
   //     return std::tuple{
@@ -963,7 +958,7 @@ int main(int /*argc*/, char *argv[]) {
   // )) << "\n";
 
   // std::cout << to_string(space_mapping_ranks(
-  //   test_space_dim_4_naive(4, {1,2,3,4,5,6,7}),
+  //   CGrL_Dim4_naive_test_space(4, {1,2,3,4,5,6,7}),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
   //     const auto subsum =
@@ -1023,7 +1018,7 @@ int main(int /*argc*/, char *argv[]) {
   // )) << "\n";
 
   // std::cout << to_string(space_mapping_ranks(
-  //   test_space_dim_3_naive(4, {1,2,3,4,5,6,7}),
+  //   CGrL_Dim3_naive_test_space(4, {1,2,3,4,5,6,7}),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
   //     const auto subsum =
@@ -1072,10 +1067,10 @@ int main(int /*argc*/, char *argv[]) {
   // )) << "\n";
 
   // std::cout << to_string(space_mapping_ranks(
-  //   // test_space_dim_4_naive(4, {1,2,3,4,5,6,7}),
+  //   // CGrL_Dim4_naive_test_space(4, {1,2,3,4,5,6,7}),
   //   concat(
-  //     test_space_dim_4_naive(4, {1,2,3,4,5,6,7}),
-  //     test_space_dim_3_naive(4, {1,2,3,4,5,6,7})
+  //     CGrL_Dim4_naive_test_space(4, {1,2,3,4,5,6,7}),
+  //     CGrL_Dim3_naive_test_space(4, {1,2,3,4,5,6,7})
   //   ),
   //   DISAMBIGUATE(to_lyndon_basis),
   //   [](const auto& expr) {
