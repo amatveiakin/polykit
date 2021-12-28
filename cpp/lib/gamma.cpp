@@ -9,6 +9,7 @@ std::string to_string(const Gamma& g) {
 
 GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
   // Optimization potential: do things on bitset level.
+  // Optimization potential: can substitution result to a flat hash map.
   return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
     std::vector<Gamma> term_new;
     for (const Gamma& g_old : term_old) {
@@ -22,6 +23,21 @@ GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& ne
     }
     return GammaExpr::single(term_new);
   }).without_annotations();
+}
+
+GammaExpr project_on(int axis, const GammaExpr& expr) {
+  return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
+    std::vector<Gamma> term_new;
+    for (const Gamma& g : term_old) {
+      auto bitset = g.index_bitset();
+      if (!bitset.test(axis - Gamma::kBitsetOffset)) {
+        return {};
+      }
+      bitset.reset(axis - Gamma::kBitsetOffset);
+      term_new.push_back(Gamma(bitset));
+    }
+    return GammaExpr::single(term_new);
+  });
 }
 
 // Checks that points in `g1` and `g2` are weakly separated, i.e. that there are no such
