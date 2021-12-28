@@ -74,6 +74,7 @@ GrPolylogSpace GrL_core(
 GrPolylogSpace GrL1(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL2(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL3(int dimension, const std::vector<int>& args);
+GrPolylogSpace GrL4_Dim3(const std::vector<int>& args);
 GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args);
 
 // Computes a co-space of a given structure from spaces provided by `get_space`.

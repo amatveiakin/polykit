@@ -22,6 +22,7 @@
 
 #include "expr_matrix_builder.h"
 #include "iterated_integral.h"
+#include "polylog_cgrli.h"
 #include "polylog_grli.h"
 #include "polylog_grqli.h"
 #include "polylog_lira.h"
@@ -312,13 +313,36 @@ GrPolylogSpace GrL3(int dimension, const std::vector<int>& args) {
   return ret;
 }
 
+GrPolylogSpace GrL4_Dim3(const std::vector<int>& args) {
+  GrPolylogSpace ret;
+  for (const auto& [bonus_p, lower_dim_points] : index_splits(args, 1)) {
+    const auto& bonus_points = bonus_p;  // workaround: lambdas cannot capture structured bindings
+    append_vector(ret, mapped(L4(lower_dim_points), [&](const auto& expr) {
+      return pullback(expr, bonus_points);
+    }));
+  }
+  append_vector(
+    ret,
+    mapped(permutations(args, 6), [&](auto p) {
+      return CGrLi(4, p);
+    })
+  );
+  return ret;
+}
+
 GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args) {
   switch (weight) {
     case 1: return GrL1(dimension, args);
     case 2: return GrL2(dimension, args);
     case 3: return GrL3(dimension, args);
+    case 4: {
+      if (dimension == 3) {
+        return GrL4_Dim3(args);
+      }
+      break;
+    }
   }
-  FATAL(absl::StrCat("Unsupported weight for GrL: ", weight));
+  FATAL(absl::StrCat("Unsupported weight&dimension for GrL: ", weight, "&", dimension));
 }
 
 PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
