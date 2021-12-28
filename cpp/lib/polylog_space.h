@@ -66,6 +66,8 @@ PolylogSpace XCoords(int weight, const XArgs& args);
 PolylogSpace ACoords(int weight, const XArgs& args);
 PolylogSpace ACoordsHopf(int weight, const XArgs& args);
 
+GrPolylogSpace gr_free_lie_coalgebra(int weight, int dimension, const std::vector<int>& args);
+
 GrPolylogSpace GrFx(int dimension, const std::vector<int>& args);
 
 GrPolylogSpace GrL_core(

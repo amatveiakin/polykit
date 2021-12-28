@@ -258,6 +258,13 @@ PolylogSpace ACoordsHopf(int weight, const XArgs& xargs) {
   return ret;
 }
 
+GrPolylogSpace gr_free_lie_coalgebra(int weight, int dimension, const std::vector<int>& args) {
+  const auto coords = combinations(args, dimension);
+  return mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+    return GammaExpr::single(mapped(word, convert_to<Gamma>));
+  });
+}
+
 GrPolylogSpace GrFx(int dimension, const std::vector<int>& args) {
   return mapped(combinations(args, dimension), DISAMBIGUATE(G));
 }

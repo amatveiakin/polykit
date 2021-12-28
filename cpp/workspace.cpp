@@ -1202,15 +1202,10 @@ int main(int /*argc*/, char *argv[]) {
   // const int dimension = 3;
   // const std::vector points = {1,2,3,4,5,6};
   // const auto coords = combinations(slice(points, 1), dimension - 1);
-  // GrPolylogACoSpace space_words;
-  // // TODO: factor out as `gr_free_lie_coalgebra(weight, dimension, points)`
-  // for (const auto& word : get_lyndon_words(coords, weight)) {
-  //   const auto expr = GammaExpr::single(mapped(word, convert_to<Gamma>));
-  //   // if (is_totally_weakly_separated(expr)) {
-  //   //   space_words.push_back(expand_into_glued_pairs(expr));
-  //   // }
-  //   space_words.push_back(expand_into_glued_pairs(expr));
-  // }
+  // GrPolylogACoSpace space_words = mapped(
+  //   gr_free_lie_coalgebra(weight, dimension, points),
+  //   DISAMBIGUATE(expand_into_glued_pairs)
+  // );
   // const auto space_l = mapped(
   //   cartesian_combinations(std::vector{
   //     std::pair{GrL2(dimension, points), 1},
