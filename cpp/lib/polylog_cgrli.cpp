@@ -51,7 +51,7 @@ auto sum_alternating(const F& f, const std::vector<int>& points, const std::vect
 //
 // The answer is in the right-most column, the row depends on the weight.
 //
-// TODO: Cache intermediate results !!! (probably just compute row by row)
+// TODO: Cache intermediate results! (probably just compute row by row)
 GammaExpr CGrLi_component(
   int row,
   int col,
