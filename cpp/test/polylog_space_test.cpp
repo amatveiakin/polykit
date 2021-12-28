@@ -323,3 +323,20 @@ TEST(PolylogSpaceTest, GrL3Dim4_contains_QLiVec3PluckerDual) {
   const auto space = GrL3(4, points);
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
 }
+
+// TODO: Tests for CGrL ranks (check which ranks are knows for sure)
+
+TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
+  const int weight = 3;
+  const int dimension = 3;
+  // Checked up to 10 points.
+  for (const int num_points : range_incl(5, 8)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto co_space = simple_co_CGrL_test_space(weight, dimension, num_points);
+    const auto mapping_ranks = space_mapping_ranks(co_space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+      return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+    });
+    const int cgrl_rank = space_rank(CGrL_test_space(weight, dimension, points), DISAMBIGUATE(to_lyndon_basis));
+    EXPECT_EQ(mapping_ranks.kernel(), cgrl_rank);
+  }
+}
