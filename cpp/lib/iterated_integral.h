@@ -22,8 +22,14 @@
 DeltaExpr IVec(const XArgs& points);
 ProjectionExpr IVecPr(const XArgs& points, DeltaProjector projector);
 
+DeltaExpr IAltVec(const XArgs& points);
+ProjectionExpr IAltVecPr(const XArgs& points, DeltaProjector projector);
+
 DeltaExpr CorrVec(const XArgs& points);
 ProjectionExpr CorrVecPr(const XArgs& points, DeltaProjector projector);
+
+DeltaExpr CorrAltVec(const XArgs& points);
+ProjectionExpr CorrAltVecPr(const XArgs& points, DeltaProjector projector);
 
 DeltaExpr eval_formal_symbols(const CorrExpr& expr);
 
@@ -34,6 +40,16 @@ DeltaExpr I(Args... args) {
 }
 
 template<typename... Args>
+DeltaExpr IAlt(Args... args) {
+  return IAltVec({args...});
+}
+
+template<typename... Args>
 DeltaExpr Corr(Args... args) {
   return CorrVec({args...});
+}
+
+template<typename... Args>
+DeltaExpr CorrAlt(Args... args) {
+  return CorrAltVec({args...});
 }

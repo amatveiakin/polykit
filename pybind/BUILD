@@ -21,9 +21,10 @@ pybind_extension(
         "cpp_lib/py_bindings.cpp",
         "cpp_lib/ratio.cpp",
         "cpp_lib/x.cpp",
-    ],    
+    ],
     deps = [
         "//cpp:polylog",
+        "//cpp:polylog_linalg",
         ":cpp_py_util",
     ],
 )
@@ -34,6 +35,7 @@ py_library(
     srcs = ["delta_matrix.py"],
     deps = [
         requirement("numpy"),
+        requirement("scipy"),
         ":polykit",
     ],
 )
@@ -51,6 +53,7 @@ py_binary(
     srcs = ["workspace.py"],
     deps = [
         requirement("numpy"),
+        requirement("scipy"),
         requirement("progress"),
         ":delta_matrix",
         ":polykit",

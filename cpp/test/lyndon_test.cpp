@@ -20,6 +20,52 @@ inline InversedVectorExpr IV(std::vector<int> data) {
 }
 
 
+TEST(LyndonWordsTest, Binary) {
+  EXPECT_THAT(
+    mapped(range(0, 10), [](int length) {
+      return get_lyndon_words(2, length).size();
+    }),
+    // https://oeis.org/A001037
+    testing::ElementsAre(1, 2, 1, 2, 3, 6, 9, 18, 30, 56)
+  );
+}
+
+TEST(LyndonWordsTest, Alphabet3_Length3) {
+  EXPECT_THAT(
+    get_lyndon_words(3, 3),
+    testing::ElementsAre(
+      std::vector{0, 0, 1},
+      std::vector{0, 0, 2},
+      std::vector{0, 1, 1},
+      std::vector{0, 1, 2},
+      std::vector{0, 2, 1},
+      std::vector{0, 2, 2},
+      std::vector{1, 1, 2},
+      std::vector{1, 2, 2}
+    )
+  );
+}
+
+TEST(LyndonWordsTest, CustomAlphabet) {
+  EXPECT_THAT(
+    get_lyndon_words(std::vector{"b", "a"}, 3),
+    testing::ElementsAre(
+      std::vector{"b", "b", "a"},
+      std::vector{"b", "a", "a"}
+    )
+  );
+}
+
+TEST(LyndonWordsTest, DoesNotFactorize) {
+  for (const int alphabet_size : range_incl(2, 3)) {
+    for (const int length : range_incl(2, 8)) {
+      for (const auto& word: get_lyndon_words(alphabet_size, length)) {
+        EXPECT_EQ(lyndon_factorize(word).size(), 1);
+      }
+    }
+  }
+}
+
 TEST(LyndonBasisTest, Empty) {
   EXPECT_EXPR_EQ(
     to_lyndon_basis(SimpleVectorExpr{}),

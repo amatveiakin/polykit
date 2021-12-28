@@ -98,15 +98,15 @@ TEST(CoLiTest, CoLiShuffle_Arg2_Weight2) {
     + CoLiVec(li_b)
     + CoLiVec(li_c)
     ,
-    + coproduct(EFormalSymbolPositive(LiParam(0, {1}, {{1}})),
-                EFormalSymbolPositive(LiParam(0, {1}, {{2}})))
-    + coproduct(EFormalSymbolPositive(LiParam(0, {1}, {{2}})),
-                EFormalSymbolPositive(LiParam(0, {1}, {{1}})))
-    + coproduct(EUnity(), EFormalSymbolPositive(li_a))
-    + coproduct(EUnity(), EFormalSymbolPositive(li_b))
-    + coproduct(EUnity(), EFormalSymbolPositive(li_c))
-    + coproduct(EFormalSymbolPositive(li_a), EUnity())
-    + coproduct(EFormalSymbolPositive(li_b), EUnity())
-    + coproduct(EFormalSymbolPositive(li_c), EUnity())
+    + icoproduct(EFormalSymbolPositive(LiParam(0, {1}, {{1}})),
+                 EFormalSymbolPositive(LiParam(0, {1}, {{2}})))
+    + icoproduct(EFormalSymbolPositive(LiParam(0, {1}, {{2}})),
+                 EFormalSymbolPositive(LiParam(0, {1}, {{1}})))
+    + icoproduct(EUnity(), EFormalSymbolPositive(li_a))
+    + icoproduct(EUnity(), EFormalSymbolPositive(li_b))
+    + icoproduct(EUnity(), EFormalSymbolPositive(li_c))
+    + icoproduct(EFormalSymbolPositive(li_a), EUnity())
+    + icoproduct(EFormalSymbolPositive(li_b), EUnity())
+    + icoproduct(EFormalSymbolPositive(li_c), EUnity())
   );
 }

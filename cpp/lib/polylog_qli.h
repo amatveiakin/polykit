@@ -1,9 +1,11 @@
 // Functions that compute symbol for QLi and its variations.
 //
-// Contains three functions:
+// Contains functions:
+//   * `Log` gives a simple cross-ratio
 //   * `QLi` corresponds to QLi+
 //   * `QLiNeg` corresponds to QLi-
 //   * `QLiSymm` is a symmetrized version of QLi (except weight 1 where it's just QLi)
+//   * `A2` is defined in https://arxiv.org/pdf/1401.6446.pdf
 //
 // Each function comes in three forms (examples use QLi, but the same is true for QLiNeg
 // and QLiSymm):
@@ -23,6 +25,8 @@
 #include "projection.h"
 
 
+DeltaExpr LogVec(const XArgs& args);
+
 DeltaExpr QLiVec(int weight, const XArgs& points);
 ProjectionExpr QLiVecPr(int weight, const XArgs& points, DeltaProjector projector);
 
@@ -31,6 +35,14 @@ ProjectionExpr QLiNegVecPr(int weight, const XArgs& points, DeltaProjector proje
 
 DeltaExpr QLiSymmVec(int weight, const XArgs& points);
 ProjectionExpr QLiSymmVecPr(int weight, const XArgs& points, DeltaProjector projector);
+
+DeltaExpr A2Vec(const XArgs& args);
+
+// Reduce QLi expr, weight and points must be the same as in QLi.
+// Incompatible with substituting infinity.
+// Can be used as a projector.
+// TODO: Dedup against `normalize_remove_consecutive`.
+DeltaExpr normalized_delta(const DeltaExpr& expr, int weight, const XArgs& points);
 
 
 namespace internal {
@@ -48,6 +60,8 @@ DeltaExpr QLiSymm_dispatch(int weight, Args... args) {
 }
 }  // namespace internal
 
+
+template<typename... Args> DeltaExpr Log(Args... args) { return LogVec(std::vector<X>{args...}); }
 
 template<typename... Args> DeltaExpr QLi1(Args... args) { return internal::QLi_dispatch(1, args...); }
 template<typename... Args> DeltaExpr QLi2(Args... args) { return internal::QLi_dispatch(2, args...); }
@@ -75,3 +89,5 @@ template<typename... Args> DeltaExpr QLiSymm5(Args... args) { return internal::Q
 template<typename... Args> DeltaExpr QLiSymm6(Args... args) { return internal::QLiSymm_dispatch(6, args...); }
 template<typename... Args> DeltaExpr QLiSymm7(Args... args) { return internal::QLiSymm_dispatch(7, args...); }
 template<typename... Args> DeltaExpr QLiSymm8(Args... args) { return internal::QLiSymm_dispatch(8, args...); }
+
+template<typename... Args> DeltaExpr A2(Args... args) { return A2Vec(std::vector<X>{args...}); }

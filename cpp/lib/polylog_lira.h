@@ -20,15 +20,15 @@ ThetaExpr LiraVec(
     const std::vector<CompoundRatio>& ratios);
 ThetaExpr LiraVec(const LiraParam& param);
 
-ThetaCoExpr CoLiraVec(
+ThetaICoExpr CoLiraVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<CompoundRatio>& ratios);
-ThetaCoExpr CoLiraVec(const LiraParam& param);
+ThetaICoExpr CoLiraVec(const LiraParam& param);
 
 
 ThetaExpr eval_formal_symbols(const ThetaExpr& expr);
-ThetaCoExpr eval_formal_symbols(const ThetaCoExpr& expr);
+ThetaICoExpr eval_formal_symbols(const ThetaICoExpr& expr);
 
 
 namespace internal {
@@ -50,7 +50,7 @@ public:
   CoLiraFixedWeights(int foreweight, std::vector<int> weights)
     : foreweight_(foreweight), weights_(std::move(weights)) {}
   template<typename... Args>
-  ThetaCoExpr operator()(Args&&... args) const {
+  ThetaICoExpr operator()(Args&&... args) const {
     return CoLiraVec(foreweight_, weights_, std::vector<CompoundRatio>{std::forward<Args>(args)...});
   }
 private:

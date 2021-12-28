@@ -14,7 +14,7 @@ TEST(LiQuadTest, EvaluatedExorHasNoMonsters_Arg6_Weight3) {
     ))
   );
 }
-TEST(LiQuadTest, EvaluatedExorHasNoMonsters_Arg6_Weight4) {
+TEST(LiQuadTest, LARGE_EvaluatedExorHasNoMonsters_Arg6_Weight4) {
   EXPECT_EXPR_ZERO(
     keep_monsters(eval_formal_symbols(
       LiQuad(2, {1,2,3,4,5,6}, LiFirstPoint::odd)
@@ -55,7 +55,7 @@ TEST(LiQuadTest, CompareToLegacy_Even_Arg6_Weight3) {
     QLiNeg3(1,2,3,4,5,6)
   );
 }
-TEST(LiQuadTest, CompareToLegacy_Even_Arg6_Weight4) {
+TEST(LiQuadTest, LARGE_CompareToLegacy_Even_Arg6_Weight4) {
   EXPECT_EXPR_EQ(
     theta_expr_to_delta_expr(eval_formal_symbols(
       LiQuad(2, {1,2,3,4,5,6}, LiFirstPoint::even))

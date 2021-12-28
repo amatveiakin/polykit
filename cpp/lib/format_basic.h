@@ -23,13 +23,21 @@ enum class Encoder {
 // ----------+------------------------------------------
 //   ASCII   |      no        no         YES       YES
 //  Unicode  |      no        no         YES       YES
-//   LaTeX   |      no        TBD        no        no
+//   LaTeX   |      no        YES        no        no
 //
 enum class RichTextFormat {
   native,
   plain_text,
   console,
   html,
+};
+
+// For now the criteria are:
+//   - `simple` means it is rendered by Windows 10 terminal with "DejaVu Sans Mono" font.
+//   - `full` is everything else; but still trying to stay within things supported by modern browsers.
+enum class UnicodeVersion {
+  simple,
+  full,
 };
 
 enum class AnnotationSorting {
@@ -45,20 +53,24 @@ struct FormattingConfig {
 
   std::optional<Encoder> encoder;
   std::optional<RichTextFormat> rich_text_format;
+  std::optional<UnicodeVersion> unicode_version;
   std::optional<AnnotationSorting> annotation_sorting;
   std::optional<int> expression_line_limit;
   std::optional<bool> expression_include_annotations;
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
+  std::optional<bool> compact_x;
   std::optional<bool> new_line_after_expression;
 
   FormattingConfig& set_encoder(Encoder v) { encoder = v; return *this; }
   FormattingConfig& set_rich_text_format(RichTextFormat v) { rich_text_format = v; return *this; }
+  FormattingConfig& set_unicode_version(UnicodeVersion v) { unicode_version = v; return *this; }
   FormattingConfig& set_annotation_sorting(AnnotationSorting v) { annotation_sorting = v; return *this; }
   FormattingConfig& set_expression_line_limit(int v) { expression_line_limit = v; return *this; }
   FormattingConfig& set_expression_include_annotations(bool v) { expression_include_annotations = v; return *this; }
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
   FormattingConfig& set_compact_expression(bool v) { compact_expression = v; return *this; }
+  FormattingConfig& set_compact_x(bool v) { compact_x = v; return *this; }
   FormattingConfig& set_new_line_after_expression(bool v) { new_line_after_expression = v; return *this; }
 
   void apply_overrides(const FormattingConfig& src);
@@ -134,9 +146,13 @@ public:
   virtual std::string minus();
   virtual std::string dot() = 0;
   virtual std::string tensor_prod() = 0;
-  virtual std::string coprod_lie() = 0;
+  virtual std::string coprod_normal() = 0;
+  virtual std::string coprod_iterated() = 0;
   virtual std::string coprod_hopf() = 0;
   virtual std::string comult() = 0;
+  virtual std::string set_union() = 0;
+  virtual std::string set_intersection() = 0;
+  virtual std::string set_complement() = 0;
 
   virtual std::string sum(
       const std::string& lhs,
@@ -158,6 +174,7 @@ public:
   virtual std::string chevrons(const std::string& expr) = 0;
   virtual std::string frac_parens(const std::string& expr) = 0;  // adds parens iff `fraq` is one-liner
 
+  virtual std::string num(int v) = 0;
   virtual std::string coeff(int v) = 0;
 
   virtual std::string sub(
@@ -170,6 +187,9 @@ public:
   virtual std::string super(
       const std::string& main,
       const std::vector<std::string>& indices) = 0;
+
+  virtual std::string mathcal(const std::string& str) = 0;
+  virtual std::string mathbb(const std::string& str) = 0;
 
   virtual std::string var(int idx) = 0;
   virtual std::string opname(const std::string& name);
@@ -201,9 +221,13 @@ inline std::string unity() { return current_encoder()->unity(); }
 inline std::string minus() { return current_encoder()->minus(); }
 inline std::string dot() { return current_encoder()->dot(); }
 inline std::string tensor_prod() { return current_encoder()->tensor_prod(); }
-inline std::string coprod_lie() { return current_encoder()->coprod_lie(); }
+inline std::string coprod_normal() { return current_encoder()->coprod_normal(); }
+inline std::string coprod_iterated() { return current_encoder()->coprod_iterated(); }
 inline std::string coprod_hopf() { return current_encoder()->coprod_hopf(); }
 inline std::string comult() { return current_encoder()->comult(); }
+inline std::string set_union() { return current_encoder()->set_union(); }
+inline std::string set_intersection() { return current_encoder()->set_intersection(); }
+inline std::string set_complement() { return current_encoder()->set_complement(); }
 
 inline std::string sum(
     const std::string& lhs,
@@ -239,6 +263,9 @@ inline std::string frac_parens(const std::string& expr) {
   return current_encoder()->frac_parens(expr);
 }
 
+inline std::string num(int v) {
+  return current_encoder()->num(v);
+}
 inline std::string coeff(int v) {
   return current_encoder()->coeff(v);
 }
@@ -274,6 +301,13 @@ inline std::string super_num(
     const std::string& main,
     absl::Span<const int> indices) {
   return super(main, mapped_to_string(indices));
+}
+
+inline std::string mathcal(const std::string& str) {
+  return current_encoder()->mathcal(str);
+}
+inline std::string mathbb(const std::string& str) {
+  return current_encoder()->mathbb(str);
 }
 
 inline std::string var(int idx) {

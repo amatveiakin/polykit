@@ -55,8 +55,29 @@ std::string str_join(const T& container, std::string separator) {
   });
 }
 
+template<typename T, typename F>
+std::string str_join_skip_empty(const T& container, std::string separator, F element_to_string) {
+  std::string ret;
+  for (const auto& value : container) {
+    auto str = element_to_string(value);
+    if (!str.empty()) {
+      if (!ret.empty()) {
+        ret += separator;
+      }
+      ret += std::move(str);
+    }
+  }
+  return ret;
+}
 
-namespace internal {
+template<typename T>
+std::string str_join_skip_empty(const T& container, std::string separator) {
+  return str_join_skip_empty(container, separator, [](const auto& value) {
+    return to_string(value);
+  });
+}
+
+
 // Returns type name, unmangled if possible. Unmangling is supported for clang, gcc and MSVC.
 // From https://stackoverflow.com/questions/281818/unmangling-the-result-of-stdtype-infoname
 template<typename T>
@@ -69,12 +90,13 @@ constexpr std::string_view get_type_name() {
   constexpr std::string_view prefix = "with T = ";
   constexpr std::string_view suffix = "; ";
   constexpr std::string_view function = __PRETTY_FUNCTION__;
-#elif defined(__MSC_VER)
+#elif defined(_MSC_VER)
   constexpr std::string_view prefix = "get_type_name<";
   constexpr std::string_view suffix = ">(void)";
   constexpr std::string_view function = __FUNCSIG__;
 #else
   return typeid(T).name();
+  constexpr std::string_view prefix, suffix, function;
 #endif
   const auto start = function.find(prefix) + prefix.size();
   const auto end = function.find(suffix);
@@ -85,6 +107,8 @@ constexpr std::string_view get_type_name() {
   return function.substr(start, size);
 }
 
+
+namespace internal {
 class DumpToStringHelper {
 private:
   template<typename Container>

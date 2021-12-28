@@ -5,15 +5,31 @@
 
 namespace internal {
 struct ProjectionExprParam {
-  using ObjectT = std::vector<int>;
-  using StorageT = PVector<unsigned char, 10>;
+  using ObjectT = std::vector<X>;
+  using StorageT = PVector<std::byte, 10>;
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  static constexpr int kFormBits = 4;
+  static constexpr int kIndexBits = CHAR_BIT - kFormBits;
+  static constexpr int kIndexMask = (1 << kIndexBits) - 1;
+  static std::byte x_to_key(X x) {
+    const int form = static_cast<int>(x.form());
+    const int index = x.is_constant() ? 0 : x.idx();
+    CHECK_LT(form, 1 << kFormBits);
+    CHECK_LT(index, 1 << kIndexBits);
+    return std::byte((form << kIndexBits) | index);
+  }
+  static X key_to_x(std::byte key) {
+    const int v = std::to_integer<int>(key);
+    const int form = v >> kIndexBits;
+    const int index = v & kIndexMask;
+    return X(static_cast<XForm>(form), index);
+  }
   static StorageT object_to_key(const ObjectT& obj) {
-    return to_pvector<StorageT>(obj);
+    return mapped_to_pvector<StorageT>(obj, x_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
-    return to_vector<int>(key);
+    return mapped(key, key_to_x);
   }
   static std::string object_to_string(const ObjectT& obj) {
     return fmt::parens(str_join(obj, ", "));
@@ -46,8 +62,6 @@ inline ProjectionExpr project_on_x12(const DeltaExpr& expr) { return project_on(
 inline ProjectionExpr project_on_x13(const DeltaExpr& expr) { return project_on(13, expr); }
 inline ProjectionExpr project_on_x14(const DeltaExpr& expr) { return project_on(14, expr); }
 inline ProjectionExpr project_on_x15(const DeltaExpr& expr) { return project_on(15, expr); }
-
-ProjectionExpr involute_projected(const DeltaExpr& expr, const std::vector<int>& involution, int axis);
 
 
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct);

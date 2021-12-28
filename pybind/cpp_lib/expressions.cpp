@@ -1,3 +1,5 @@
+// TODO: Split into a file per expression type in order to speed up parallel compilation
+
 #include "pybind11/operators.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -8,6 +10,7 @@
 
 
 namespace py = pybind11;
+using namespace py::literals;
 
 static constexpr char kLyndonDescription[] = "Converts an expression to Lyndon basis";
 
@@ -30,8 +33,6 @@ void pybind_delta(py::module_& m) {
     .def_property_readonly("a", &Delta::a)
     .def_property_readonly("b", &Delta::b)
     .def("is_nil", &Delta::is_nil)
-    .def("contains", &Delta::contains)
-    .def("other_point", &Delta::other_point)
     .def(py::self == py::self)
     .def(py::self != py::self)
     .def(py::self <  py::self)
@@ -44,12 +45,16 @@ void pybind_delta(py::module_& m) {
   ;
 
   py_register_linear<DeltaExpr>(m, "DeltaExpr");
-  py_register_linear<DeltaCoExpr>(m, "DeltaCoExpr");
+  py_register_linear<DeltaICoExpr>(m, "DeltaICoExpr");
+  py_register_linear<DeltaNCoExpr>(m, "DeltaNCoExpr");
 
   m.def("tensor_product_vec", [](const std::vector<DeltaExpr>& expressions) { return tensor_product(absl::MakeConstSpan(expressions)); });
   m.def("to_lyndon_basis", &to_lyndon_basis<DeltaExpr>, kLyndonDescription);
-  m.def("coproduct_vec", &coproduct_vec<DeltaExpr>);
-  m.def("comultiply", &comultiply<DeltaExpr>);
+  m.def("icoproduct_vec", &icoproduct_vec<DeltaExpr>);
+  m.def("ncoproduct_vec", &ncoproduct_vec<DeltaExpr>);
+  m.def("icomultiply", &icomultiply<DeltaExpr>);
+  m.def("ncomultiply", &ncomultiply<DeltaExpr>, "expr"_a, "form"_a = std::vector<int>{});
+  m.def("ncomultiply", &ncomultiply<DeltaNCoExpr>, "expr"_a, "form"_a = std::vector<int>{});
 
   m.def("substitute_variables", &substitute_variables, "Substitutes variable into a DeltaExpr; can substitute Inf");
   m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
@@ -69,7 +74,6 @@ void pybind_projection(py::module_& m) {
   m.def("to_lyndon_basis", &to_lyndon_basis<ProjectionExpr>, kLyndonDescription);
 
   m.def("project_on", &project_on, "Projects a DeltaExpr onto an axis");
-  m.def("involute_projected", &involute_projected);
 
   m.def("terms_with_num_distinct_variables", py::overload_cast<const ProjectionExpr&, int>(&terms_with_num_distinct_variables));
   m.def("terms_with_min_distinct_variables", py::overload_cast<const ProjectionExpr&, int>(&terms_with_min_distinct_variables));

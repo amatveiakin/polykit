@@ -12,6 +12,9 @@
 #include "lib/lexicographical.h"
 #include "lib/lyndon.h"
 #include "lib/mystic_algebra.h"
+#include "lib/polylog_cgrli.h"
+#include "lib/polylog_grli.h"
+#include "lib/polylog_grqli.h"
 #include "lib/polylog_li.h"
 #include "lib/polylog_liquad.h"
 #include "lib/polylog_lira.h"
@@ -100,7 +103,7 @@ void qli_symm_via_corr() {
 void qli_comultiplication() {
   auto expr = to_lyndon_basis(QLi3(1,2,3,4,5,6));
   std::cout << expr;
-  std::cout << comultiply(expr, {1,2});
+  std::cout << ncomultiply(expr, {1,2});
 }
 
 // Computes ₁Li₁₁₁(x1,x2,x3)
@@ -130,7 +133,7 @@ void li_quasisuffle_formula() {
 // Computes CoLi comultiplication with a formal symbol of the left side.
 void li_comultiplication() {
   std::cout << CoLi(1,1,1)({1},{2},{3});
-  // Note. `comultiply(Li(...))` wouldn't work because `comultiply` only supports Lie algebras.
+  // Note. `ncomultiply(Li(...))` wouldn't work because `ncomultiply` only supports Lie algebras.
 }
 
 // Computes a symbol for Li with cross-ratios substituted into it (a.k.a. "Lira").
@@ -161,13 +164,26 @@ void liquad_is_equivalent_to_li() {
   std::cout << to_lyndon_basis(liquad_expr_converted - li_expr);
 }
 
+void grqli_symbol() {
+  const auto expr = GrQLi2(5)(1,2,3,4);
+  const auto pullback_expr = pullback(QLi2(1,2,3,4), {5});
+  std::cout << expr;
+  std::cout << "Is a pullback of dim-2 QLi: " << (expr == pullback_expr) << "\n";
+}
+
+void cgrli_symbol() {
+  // Grassmannian polylogarithm of weight 2, dimension 3 on 6 points
+  std::cout << CGrLi(2, {1,2,3,4,5,6});
+}
+
 
 int main(int argc, char *argv[]) {
   init(argc, argv);
   ScopedFormatting sf(formatting_config());
 
-  std::cout << "Hey! You managed to set up PolyKit, congrats :)\n";
+  std::cout << "Hey! You have managed to set up PolyKit, congrats :)\n";
   std::cout << "Navigate to workspace.cpp to see some examples.\n";
+  std::cout << "See test/ folder for many more examples and equations.\n";
 
   // Examples. Uncomment to run.
 
@@ -193,4 +209,9 @@ int main(int argc, char *argv[]) {
   // lira_symbol();
   // liquad_symbol();
   // liquad_is_equivalent_to_li();
+
+  // | Polylogarithms on Grassmannians. Return a "GammaExpr" - a linear expression
+  // | where each term is a tensor product of Plucker coordinates.
+  // grqli_symbol();
+  // cgrli_symbol();
 }

@@ -40,7 +40,7 @@ TEST(CoLiraTest, DifferentSubstitutionsEquivalent) {
   EXPECT_EXPR_EQ(lira, multiply_first);
 }
 
-TEST(LiraTest, HandwrittenLiQuad_StartEven_HasNoMonsters) {
+TEST(LiraTest, LARGE_HandwrittenLiQuad_StartEven_HasNoMonsters) {
   const int foreweight = 2;  // Should be true for any foreweight
   EXPECT_EXPR_ZERO(
     keep_monsters(

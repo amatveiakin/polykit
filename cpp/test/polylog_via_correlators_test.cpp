@@ -96,11 +96,11 @@ TEST(CorrQLiSymmTest, GluingTwoArgsReducesWeight) {
   // Should be true for any weight and number of args.
   for (int weight = 1; weight <= 2; weight++) {
     for (int num_args = 4; num_args <= 8; num_args += 2) {
-      auto large_args = seq_incl(1, num_args);
+      auto large_args = to_vector(range_incl(1, num_args));
       --large_args.back();
       EXPECT_EXPR_EQ_AFTER_LYNDON(
         EvalCorrQLiSymm(weight, large_args),
-        -EvalCorrQLiSymm(weight, seq_incl(1, num_args - 2))
+        -EvalCorrQLiSymm(weight, to_vector(range_incl(1, num_args - 2)))
       );
     }
   }
@@ -225,3 +225,49 @@ TEST(CorrFSymbTest, LARGE_FormalSymbolCoEquation_Arg8_Form_2_3) {
     )
   );
 }
+
+
+
+// TODO: turn these into tests
+#if 0
+  for (int weight = 1; weight <= 5; weight++) {
+    for (int num_args = 4; num_args <= 10; num_args += 2) {
+      if (weight * 2 + 2 < num_args) {
+        continue;
+      }
+      std::cout << "weight " << weight << ", num_args " << num_args << ": ";
+      std::cout << prnt::header_only(
+        to_lyndon_basis(
+          - QLiVec(weight, to_vector(range_incl(1, num_args)))
+          + EvalCorrQLi(weight, num_args)
+        )
+      );
+    }
+  }
+  for (int weight = 1; weight <= 5; weight++) {
+    for (int num_args = 4; num_args <= 10; num_args += 2) {
+      if (weight * 2 + 2 < num_args) {
+        continue;
+      }
+      std::cout << "weight " << weight << ", num_args " << num_args << ": ";
+      std::cout << prnt::header_only(
+        to_lyndon_basis(
+          - QLiNegVec(weight, to_vector(range_incl(1, num_args)))
+          + EvalCorrQLiNeg(weight, num_args)
+        )
+      );
+    }
+  }
+#endif
+
+#if 0
+  for (int weight = 1; weight <= 5; weight++) {
+    for (int num_args = 4; num_args <= 10; num_args += 2) {
+      auto new_args = mapped(concat(to_vector(range_incl(2,num_args)), std::vector{1}), convert_to<X>);
+      auto lhs = to_lyndon_basis(substitute_variables(EvalCorrQLi(weight, num_args), new_args));
+      auto rhs = to_lyndon_basis(EvalCorrQLiNeg(weight, num_args));
+      auto diff = lhs + rhs;
+      std::cout << "weight = " << weight << ", num_args = " << num_args << ", sum = " << prnt::header_only(diff);
+    }
+  }
+#endif

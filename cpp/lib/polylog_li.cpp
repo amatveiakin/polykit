@@ -74,7 +74,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
     if (is_var(dot)) {
       ++cur_weight;
       weights.push_back(cur_weight);
-      points.push_back(seq_incl(common_vars+prev_vars+1, common_vars+dot));
+      points.push_back(to_vector(range_incl(common_vars+prev_vars+1, common_vars+dot)));
       CHECK_LT(prev_vars, dot) << dump_to_string(dots_orig);
       prev_vars = dot;
       cur_weight = 0;
@@ -223,21 +223,21 @@ EpsilonExpr LiVec(const LiParam& param) {
 }
 
 
-EpsilonCoExpr CoLiVec(
+EpsilonICoExpr CoLiVec(
     int foreweight,
     const std::vector<int>& weights,
     const std::vector<std::vector<int>>& points) {
   return CoLiVec(LiParam(foreweight, weights, points));
 }
 
-EpsilonCoExpr CoLiVec(const LiParam& param) {
+EpsilonICoExpr CoLiVec(const LiParam& param) {
   const std::vector<int> dots = weights_to_dots(param.foreweight(), param.weights());
   const int total_weight = dots.size() - 2;
   CHECK_EQ(total_weight, param.total_weight());
 
-  EpsilonCoExpr ret;
+  EpsilonICoExpr ret;
   auto add_term = [&](const EpsilonExpr& lhs, const EpsilonExpr& rhs) {
-    ret += coproduct(
+    ret += icoproduct(
       substitute_variables(lhs, param.points()),
       substitute_variables(rhs, param.points())
     );
@@ -292,7 +292,7 @@ EpsilonCoExpr CoLiVec(const LiParam& param) {
       }
     }
   }
-  ret += coproduct(EUnity(), EFormalSymbolSigned(param));
-  ret += coproduct(EFormalSymbolSigned(param), EUnity());
+  ret += icoproduct(EUnity(), EFormalSymbolSigned(param));
+  ret += icoproduct(EFormalSymbolSigned(param), EUnity());
   return (param.sign() * ret).annotate(fmt::comult() + to_string(param));
 }

@@ -76,22 +76,6 @@ inline ProductAnnotation AnnNone() {
 namespace internal {
 
 template<typename LinearT>
-static std::string short_linear_description(const LinearT& expr) {
-  const auto& annotations = expr.annotations();
-  if (annotations.empty() || annotations.has_errors()) {
-    return "<?>";
-  } else if (annotations.expression.num_terms() == 1) {
-    ScopedFormatting sf(FormattingConfig().set_compact_expression(true));
-    std::stringstream ss;
-    ss << annotations.expression;
-    return trimed(ss.str());
-  } else {
-    return absl::StrCat("<", annotations.expression.num_terms(), " ",
-        en_plural(annotations.expression.num_terms(), "term"), ">");
-  }
-}
-
-template<typename LinearT>
 static std::optional<std::string> product_annotation(
     const ProductAnnotation& annotation,
     const absl::Span<const LinearT>& expressions) {
@@ -106,13 +90,14 @@ static std::optional<std::string> product_annotation(
     return std::nullopt;
   }
   const std::vector<std::string> args = mapped(
-    expressions, &short_linear_description<LinearT>);
+    expressions, [](const auto& expr) { return annotations_one_liner(expr.annotations()); }
+  );
   return std::visit(overloaded{
     [](const ProductAnnotationNone&) -> std::string {
       FATAL("ProductAnnotationNone");
     },
     [&](const ProductAnnotationFunction& ann) {
-      return fmt::function(ann.name, args);
+      return fmt::function(ann.name, args, HSpacing::sparse);
     },
     [&](const ProductAnnotationOperator& ann) {
       return fmt::parens(str_join(args, ann.op));

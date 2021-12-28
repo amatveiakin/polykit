@@ -6,6 +6,11 @@
 2. Install a C++ compiler with C++17 support.
    I've tested with Clang 10.0.0 and MSVC 14.0 (C/C++ compiler version
    19.27.29112), but other modern compilers should work as well.
+3. Linux/MacOS: install TBB (in Ubuntu: `sudo apt-get install libtbb-dev`).
+   Alternative: set `PARALLELISM_IMPLEMENTATION` to 0 or 2, see
+   cpp/compilation-macros.md.
+4. Install LinBox library with headers and dependencies (in Ubuntu:
+   `sudo apt-get install liblinbox-dev libgmp-dev libntl-dev`).
 
 All other dependencies are managed by Bazel. An internet connection is required
 on first run.

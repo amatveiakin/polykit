@@ -6,6 +6,7 @@
 
 
 static ParserRegex x_re(R"(x)");
+static ParserRegex underscore_re(R"(_)");
 static ParserRegex br_open_re(R"([\[(])");
 static ParserRegex br_close_re(R"([\])])");
 static ParserRegex comma_re(R"(,)");
@@ -21,6 +22,7 @@ static ParserRegex tensor_prod_re(R"(\*)");
 
 static int consume_variable(ParserState& st) {
   consume(st, x_re);
+  try_consume(st, underscore_re);
   return consume_integer(st);
 }
 

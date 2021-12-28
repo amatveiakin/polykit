@@ -13,17 +13,34 @@ to_lyndon_basis = pb.to_lyndon_basis
 
 X = pb.X
 Inf = pb.Inf
+Zero = pb.Zero
+x1 = pb.x1
+x2 = pb.x2
+x3 = pb.x3
+x4 = pb.x4
+x5 = pb.x5
+x6 = pb.x6
+x7 = pb.x7
+x8 = pb.x8
+x1s = pb.x1s
+x2s = pb.x2s
+x3s = pb.x3s
+x4s = pb.x4s
+x5s = pb.x5s
+x6s = pb.x6s
+x7s = pb.x7s
+x8s = pb.x8s
 
 Delta = pb.Delta
 DeltaExpr = pb.DeltaExpr
-DeltaCoExpr = pb.DeltaCoExpr
+DeltaICoExpr = pb.DeltaICoExpr
 ProjectionExpr = pb.ProjectionExpr
 
 substitute_variables = pb.substitute_variables
-comultiply = pb.comultiply
+icomultiply = pb.icomultiply
+ncomultiply = pb.ncomultiply
 involute = pb.involute
 project_on = pb.project_on
-involute_projected = pb.involute_projected
 terms_with_num_distinct_variables = pb.terms_with_num_distinct_variables
 terms_with_min_distinct_variables = pb.terms_with_min_distinct_variables
 terms_containing_only_variables = pb.terms_containing_only_variables
@@ -46,7 +63,8 @@ Lira = pb.Lira
 def CR(*points): return CompoundRatio(CrossRatio(args_to_iterable(points)))
 
 def tensor_product(*parts): return pb.tensor_product_vec(args_to_iterable(parts))
-def coproduct(*parts): return pb.coproduct_vec(args_to_iterable(parts))
+def icoproduct(*parts): return pb.icoproduct_vec(args_to_iterable(parts))
+def ncoproduct(*parts): return pb.ncoproduct_vec(args_to_iterable(parts))
 
 def I(*points): return pb.IVec(args_to_iterable(points))
 def Corr(*points): return pb.CorrVec(args_to_iterable(points))
@@ -66,6 +84,8 @@ def project_on_x12(expr): return project_on(12, expr)
 def project_on_x13(expr): return project_on(13, expr)
 def project_on_x14(expr): return project_on(14, expr)
 def project_on_x15(expr): return project_on(15, expr)
+
+def Log(*points): return pb.Log(args_to_iterable(points))
 
 def QLi1(*points): return QLi(1, args_to_iterable(points))
 def QLi2(*points): return QLi(2, args_to_iterable(points))
@@ -93,6 +113,8 @@ def QLiSymm5(*points): return QLiSymm(5, args_to_iterable(points))
 def QLiSymm6(*points): return QLiSymm(6, args_to_iterable(points))
 def QLiSymm7(*points): return QLiSymm(7, args_to_iterable(points))
 def QLiSymm8(*points): return QLiSymm(8, args_to_iterable(points))
+
+def A2(*points): return pb.A2(args_to_iterable(points))
 
 def Lira0(*weights): return lambda *ratios: Lira(0, args_to_iterable(weights), args_to_iterable(ratios))
 def Lira1(*weights): return lambda *ratios: Lira(1, args_to_iterable(weights), args_to_iterable(ratios))

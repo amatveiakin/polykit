@@ -18,9 +18,9 @@
 // Constructing expressions:
 //   * `single(x)` constructs a linear expression 1*x from monom x.
 //   * `from_collection(container)` counts elements in a container, e.g.
-//     turns {a, a, b, c, a, c, c} into 3*x + b + 3*c.
+//     turns {a, a, b, c, a, c, c} into 3*a + b + 3*c.
 //
-// Manipulating expressions:
+// Manipulating entire expressions:
 //   * Arithmetics: addition (+, +=), subtraction(-, -=), multiplication by scalar (*, *=),
 //     division by scalar (dived_int, div_int). In case of division each coefficient must
 //     by divisible without a remainder or an IntegerDivisionError is thrown.
@@ -28,6 +28,14 @@
 //   * `mapped_expanding(f)` does the same, but f returns an expression rather than a monom.
 //   * `filtered(f)` keeps only terms a*x where f(x) is true.
 //   * `foreach(f)` iterates over the expression calling f(x, a) for every term a*x.
+//   * `contains(f)` tells whether the expressions contains a term a*x such that f(x) is true.
+//
+// Manipulating terms:
+//   * `operator[](x)` returns a if the expression has term a*x or 0 otherwise.
+//   * `add_to(x, v)` adds v to the coefficient at x.
+//      Equivalent to `expr += v * ExprType::single(x)`, but faster.
+//   * `element()` returns some {term, coeff} pair assuming the expression is not zero.
+//   * `pop()` removes the term returned by `element`.
 //
 //
 // # Object space vs key space
@@ -70,14 +78,14 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
-#include <iostream>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
 
+#include "compare.h"
 #include "format.h"
 #include "util.h"
 
@@ -100,6 +108,7 @@ struct SimpleLinearParam {
   // === left to define (optional; if missing the corresponding functionality will be unavailable):
 
   // static int object_to_weight(const ObjectT& obj);
+  // static int object_to_dimension(const ObjectT& obj);
   // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
 
   // using VectorT = ...;
@@ -110,7 +119,9 @@ struct SimpleLinearParam {
   //     It should be a compile-time error to have key_to_vector when VectorT == StorageT. This will
   //     allow to reliably omit conversion when it's not needed.
 
+  // TODO: Consider uniting these into one enum CoproductType (normal, iterative, hopf)
   // static constexpr bool coproduct_is_lie_algebra = ...;
+  // static constexpr bool coproduct_is_iterated = ...;
 };
 
 // TODO: Implement mixins without macros. Idea: make a template that's used like this:
@@ -133,9 +144,10 @@ struct SimpleLinearParam {
 
 template<typename T>
 bool compare_length_first(const T& lhs, const T& rhs) {
-  const auto lhs_size = lhs.size();
-  const auto rhs_size = rhs.size();
-  return std::tie(lhs_size, lhs) < std::tie(rhs_size, rhs);
+  using namespace cmp;
+  return projected(lhs, rhs, [](const auto& v) {
+    return std::tuple{asc_val(v.size()), asc_ref(v)};
+  });
 }
 
 #define LYNDON_COMPARE_DEFAULT                                                 \
@@ -229,6 +241,10 @@ public:
     CHECK(!is_zero());
     return ParamT::object_to_weight(element().first);  // must be the same for each term
   }
+  int dimension() const {  // Grassmannian dimension
+    CHECK(!is_zero());
+    return ParamT::object_to_dimension(element().first);  // must be the same for each term
+  }
 
   const_key_iterator begin_key() const { return data_.begin(); }
   const_key_iterator end_key() const { return data_.end(); }
@@ -287,6 +303,26 @@ public:
     for (const auto& [key, coeff]: data_) {
       func(key, coeff);
     }
+  }
+
+  // TODO: Consider renaming to `any_of`
+  template<typename F>
+  bool contains(F func) const {
+    for (const auto& [term, coeff] : *this) {
+      if (func(term)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  template<typename F>
+  bool contains_key(F func) const {
+    for (auto it = begin_key(); it != end_key(); ++it) {
+      if (func(it->second)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   template<typename NewBasicLinearT, typename F>
@@ -436,10 +472,8 @@ std::ostream& to_ostream(
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
-    // TODO: Support Unicode using "figure space" (U+2007); add separate option to disable if necessary
-    if (*current_formatting_config().encoder != Encoder::unicode) {
-      max_coeff_length = std::max<int>(max_coeff_length, fmt::coeff(coeff).length());
-    }
+    // TODO: Use "figure space" (U+2007) for Unicode.
+    max_coeff_length = std::max<int>(max_coeff_length, strlen_utf8(fmt::coeff(coeff)));
   });
   std::sort(dump.begin(), dump.end(), [&](const auto& a, const auto& b) {
     return sorting_cmp(a.first, b.first);
@@ -482,24 +516,8 @@ struct LinearAnnotation {
   bool has_errors() const { return !errors.empty(); }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) {
-  switch (*current_formatting_config().annotation_sorting) {
-    case AnnotationSorting::lexicographic:
-      to_ostream(os, annotations.expression, std::less<>{}, LinearNoContext{});
-      break;
-    case AnnotationSorting::length:
-      to_ostream(os, annotations.expression, [](const std::string& a, const std::string& b) {
-        const int a_length = -static_cast<int>(a.size());
-        const int b_length = -static_cast<int>(b.size());
-        return std::tie(a_length, a) < std::tie(b_length, b);
-      }, LinearNoContext{});
-      break;
-  }
-  for (const auto& err : annotations.errors) {
-    os << fmt::coeff(1) << "<?> " << err << fmt::newline();
-  }
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations);
+std::string annotations_one_liner(const LinearAnnotation& annotations);
 
 
 template<typename ParamT>
@@ -550,6 +568,7 @@ public:
   int l0_norm() const { return main_.l0_norm(); }
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
+  int dimension() const { return main_.dimension(); }
 
   const_key_iterator begin_key() const { return main_.begin_key(); }
   const_key_iterator end_key() const { return main_.end_key(); }
@@ -569,6 +588,11 @@ public:
   void foreach(F func) const { return main_.foreach(func); }
   template<typename F>
   void foreach_key(F func) const { return main_.foreach_key(func); }
+
+  template<typename F>
+  bool contains(F func) const { return main_.contains(func); }
+  template<typename F>
+  bool contains_key(F func) const { return main_.contains_key(func); }
 
   template<typename NewLinearT, typename F>
   NewLinearT mapped(F func) const {
@@ -653,6 +677,11 @@ public:
   template<typename SourceLinearT, typename F>
   Linear& copy_annotations_mapped(const SourceLinearT& other, F func) {
     add_annotations(other, 1, func);
+    return *this;
+  }
+  template<typename F>
+  Linear& annotations_map(F func) {
+    annotations_.expression = annotations_.expression.mapped(func);
     return *this;
   }
   Linear without_annotations() const {
@@ -743,7 +772,7 @@ private:
 
   BasicLinearMain main_;
   // Optimization potential: wrap this into a unique_ptr. Most expressions don't have annotations,
-  // so need need to carry this around.
+  // so no need to carry this around.
   LinearAnnotation annotations_;
 };
 
@@ -755,18 +784,21 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
 template<typename ParamT>
 class LinearKeyView {
 public:
-  explicit LinearKeyView(const Linear<ParamT>* linear) : linear_(linear) {}
+  explicit LinearKeyView(const Linear<ParamT>& linear) : linear_(linear) {}
+  explicit LinearKeyView(const Linear<ParamT>&& linear) = delete;
   using const_iterator = typename Linear<ParamT>::const_key_iterator;
-  const_iterator begin() const { return linear_->begin_key(); };
-  const_iterator end() const { return linear_->end_key(); };
+  const_iterator begin() const { return linear_.begin_key(); };
+  const_iterator end() const { return linear_.end_key(); };
 private:
-  const Linear<ParamT>* linear_;
+  const Linear<ParamT>& linear_;
 };
 
 template<typename ParamT>
-LinearKeyView<ParamT> key_view(const Linear<ParamT>* linear) {  // take pointer: avoid binding to temporary
+LinearKeyView<ParamT> key_view(const Linear<ParamT>& linear) {
   return LinearKeyView<ParamT>(linear);
 }
+template<typename ParamT>
+LinearKeyView<ParamT> key_view(const Linear<ParamT>&& linear) = delete;
 
 template<typename ParamT, typename CompareF, typename ContextT>
 std::ostream& to_ostream(

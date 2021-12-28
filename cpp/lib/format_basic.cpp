@@ -5,15 +5,31 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
 
+#include "unicode_alphabets.h"
+
+
+template<typename F>
+static auto string_mapper(const F& char_mapper) {
+  return [&](const std::string& s) {
+    std::string ret;
+    for (const char ch : s) {
+      ret += char_mapper(ch);
+    }
+    return ret;
+  };
+}
+
 
 static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_encoder(Encoder::ascii)
   .set_rich_text_format(RichTextFormat::native)
+  .set_unicode_version(UnicodeVersion::full)
   .set_annotation_sorting(AnnotationSorting::lexicographic)
   .set_expression_line_limit(100)
   .set_expression_include_annotations(true)
   .set_parsable_expression(false)
   .set_compact_expression(false)
+  .set_compact_x(false)
   .set_new_line_after_expression(true)
 ;
 
@@ -27,7 +43,7 @@ static thread_local FormattingConfig aggregated_formatting_config = default_form
 static thread_local std::vector<RichTextOptions> console_rich_text_options_stack;
 
 static int text_color_to_console_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return 0;   // normal
     case TextColor::red:            return 91;  // bright_red
     case TextColor::green:          return 92;  // bright_green
@@ -41,12 +57,11 @@ static int text_color_to_console_color(TextColor color) {
     case TextColor::pale_blue:      return 34;  // blue
     case TextColor::pale_magenta:   return 35;  // magenta
     case TextColor::pale_cyan:      return 36;  // cyan
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 static std::string text_color_to_html_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "Black";
     case TextColor::red:            return "Red";
     case TextColor::green:          return "LimeGreen";
@@ -60,8 +75,7 @@ static std::string text_color_to_html_color(TextColor color) {
     case TextColor::pale_blue:      return "DeepSkyBlue";
     case TextColor::pale_magenta:   return "Violet";
     case TextColor::pale_cyan:      return "MediumAquamarine";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 // Note. Color names are case-sensitive. Basic colors start with a small letter
@@ -69,7 +83,7 @@ static std::string text_color_to_html_color(TextColor color) {
 // letter. Colors that differ only in case can be very different, e.g. "Green"
 // is much darker than "green".
 static std::string text_color_to_latex_color(TextColor color) {
-  switch (color) {
+  SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "black";
     case TextColor::red:            return "red";
     case TextColor::green:          return "Green";
@@ -83,8 +97,7 @@ static std::string text_color_to_latex_color(TextColor color) {
     case TextColor::pale_blue:      return "SkyBlue";
     case TextColor::pale_magenta:   return "Lavender";
     case TextColor::pale_cyan:      return "Turquoise";
-  }
-  FATAL(absl::StrCat("Unknown color: ", color));
+  });
 }
 
 static std::string get_command_for_console_rich_text_options() {
@@ -116,11 +129,13 @@ static void apply_field_override(
 void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(encoder, src.encoder);
   apply_field_override(rich_text_format, src.rich_text_format);
+  apply_field_override(unicode_version, src.unicode_version);
   apply_field_override(annotation_sorting, src.annotation_sorting);
   apply_field_override(expression_line_limit, src.expression_line_limit);
   apply_field_override(expression_include_annotations, src.expression_include_annotations);
   apply_field_override(parsable_expression, src.parsable_expression);
   apply_field_override(compact_expression, src.compact_expression);
+  apply_field_override(compact_x, src.compact_x);
   apply_field_override(new_line_after_expression, src.new_line_after_expression);
 }
 
@@ -163,6 +178,12 @@ ScopedRichTextOptions::~ScopedRichTextOptions() {
 }
 
 
+static bool is_full_unicode() {
+  return *current_formatting_config().unicode_version == UnicodeVersion::full;
+}
+
+// TODO: Consider wrapping all calls to Ascii and Unicode encoders with `html_escape`
+//   instead of manually checking `is_html` everywhere.
 static bool is_html() {
   return *current_formatting_config().rich_text_format == RichTextFormat::html;
 }
@@ -178,7 +199,7 @@ std::string AbstractEncoder::minus() { return "-"; }
 std::string AbstractEncoder::opname(const std::string& name) { return name; }
 
 std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
-  switch (*current_formatting_config().rich_text_format) {
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().rich_text_format, {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
       return {};
@@ -187,12 +208,11 @@ std::string AbstractEncoder::begin_rich_text(const RichTextOptions& options) {
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
       return absl::Substitute(R"(<span style="$0">)", rich_text_options_to_css(options));
-  }
-  FATAL("Illegal rich_text_format");
+  });
 }
 
 std::string AbstractEncoder::end_rich_text() {
-  switch (*current_formatting_config().rich_text_format) {
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().rich_text_format, {
     case RichTextFormat::native:
     case RichTextFormat::plain_text:
       return {};
@@ -201,8 +221,7 @@ std::string AbstractEncoder::end_rich_text() {
       return get_command_for_console_rich_text_options();
     case RichTextFormat::html:
       return absl::Substitute("</span>");
-  }
-  FATAL("Illegal rich_text_format");
+  });
 }
 
 
@@ -211,9 +230,13 @@ class AsciiEncoder : public AbstractEncoder {
   std::string inf() override { return "Inf"; }
   std::string dot() override { return "."; }
   std::string tensor_prod() override { return " * "; }
-  std::string coprod_lie() override { return "  ^  "; }
-  std::string coprod_hopf() override { return "  @  "; }
+  std::string coprod_normal() override { return "  ^  "; }
+  std::string coprod_iterated() override { return "  @  "; }
+  std::string coprod_hopf() override { return "  %  "; }
   std::string comult() override { return is_html() ? "&amp;" : "&"; }
+  std::string set_union() override { return "|"; }
+  std::string set_intersection() override { return is_html() ? "&amp;" : "&"; }
+  std::string set_complement() override { return "~"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : " ");
@@ -245,6 +268,9 @@ class AsciiEncoder : public AbstractEncoder {
     return parens(expr);
   }
 
+  std::string num(int v) override {
+    return absl::StrCat(v);
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().parsable_expression) {
       // Allows to copy annotations from the output and use them in code.
@@ -271,6 +297,7 @@ class AsciiEncoder : public AbstractEncoder {
     }
   }
 
+  // TODO: Consider removing "_" from subindices for parseability.
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     return indices.empty() ? main : absl::StrCat(main, "_", str_join(indices, "_"));
@@ -293,6 +320,9 @@ class AsciiEncoder : public AbstractEncoder {
         : absl::StrCat(main, "^", str_join(indices, "^"));
   }
 
+  std::string mathcal(const std::string& str) override { return str; }
+  std::string mathbb(const std::string& str) override { return str; }
+
   std::string var(int idx) override {
     return absl::StrCat("x", idx);
   }
@@ -309,14 +339,19 @@ class UnicodeEncoder : public AbstractEncoder {
   static constexpr char kThinNbsp[] = " ";
   static constexpr char kMinusSign[] = "−";
 
+  // TODO: Test unicode in different terminals, browsers and operating systems.
   std::string newline() override { return maybe_html_newline(); }
   std::string inf() override { return "∞"; }
   std::string dot() override { return ""; }
   std::string minus() override { return kMinusSign; }
-  std::string tensor_prod() override { return "⊗"; }
-  std::string coprod_lie() override { return hspace("∧"); }
+  std::string tensor_prod() override { return is_full_unicode() ? "⨂" : "⊗"; }
+  std::string coprod_normal() override { return hspace("∧"); }
+  std::string coprod_iterated() override { return is_full_unicode() ? hspace("⦻") : hspace(tensor_prod()); }
   std::string coprod_hopf() override { return hspace("☒"); }
   std::string comult() override { return "△"; }
+  std::string set_union() override { return "⋃"; }
+  std::string set_intersection() override { return "⋂"; }
+  std::string set_complement() override { return "¬"; }  // TODO: Is this the best symbol? (same for LaTeX)
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing hspacing) override {
     const std::string spacing = (hspacing == HSpacing::dense ? "" : kNbsp);
@@ -359,6 +394,9 @@ class UnicodeEncoder : public AbstractEncoder {
   //   return fix_minus(absl::StrCat(v));
   // }
 
+  std::string num(int v) override {
+    return fix_minus(absl::StrCat(v));
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }
@@ -376,66 +414,38 @@ class UnicodeEncoder : public AbstractEncoder {
     }
   }
 
-  static std::string char_to_subscript(char ch) {
-    switch (ch) {
-      case '+': return "₊";
-      case '-': return "₋";
-      case '0': return "₀";
-      case '1': return "₁";
-      case '2': return "₂";
-      case '3': return "₃";
-      case '4': return "₄";
-      case '5': return "₅";
-      case '6': return "₆";
-      case '7': return "₇";
-      case '8': return "₈";
-      case '9': return "₉";
-    }
-    FATAL(absl::StrCat("There is no known subscript for '", std::string(1, ch), "'"));
+  static std::string to_subscript(char ch) {
+    const auto ret = unicode_subscript(ch);
+    CHECK(ret.has_value()) << "There is no known subscript for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string char_to_superscript(char ch) {
-    switch (ch) {
-      case '+': return "⁺";
-      case '-': return "⁻";
-      case '0': return "⁰";
-      case '1': return "¹";
-      case '2': return "²";
-      case '3': return "³";
-      case '4': return "⁴";
-      case '5': return "⁵";
-      case '6': return "⁶";
-      case '7': return "⁷";
-      case '8': return "⁸";
-      case '9': return "⁹";
-    }
-    FATAL(absl::StrCat("There is no known superscript for '", std::string(1, ch), "'"));
+  static std::string to_superscript(char ch) {
+    const auto ret = unicode_superscript(ch);
+    CHECK(ret.has_value()) << "There is no known superscript for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string string_to_subscript(const std::string& str) {
-    std::string ret;
-    for (const char ch : str) {
-      ret += char_to_subscript(ch);
-    }
-    return ret;
+  static std::string to_mathcal(char ch) {
+    const auto ret = unicode_mathcal(ch);
+    CHECK(ret.has_value()) << "There is no mathcal for '" << std::string(1, ch) << "'";
+    return *ret;
   }
-  static std::string string_to_superscript(const std::string& str) {
-    std::string ret;
-    for (const char ch : str) {
-      ret += char_to_superscript(ch);
-    }
-    return ret;
+  static std::string to_mathbb(char ch) {
+    const auto ret = unicode_mathbb(ch);
+    CHECK(ret.has_value()) << "There is no mathbb for '" << std::string(1, ch) << "'";
+    return *ret;
   }
 
   std::string sub(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
-      return s.length() == 1;
+      return strlen_utf8(s) == 1;
     }) ? "" : ",";
-    return absl::StrCat(main, str_join(indices, separator, string_to_subscript));
+    return absl::StrCat(main, str_join(indices, separator, string_mapper(to_subscript)));
   }
   std::string lrsub(const std::string& left_index, const std::string& main, const std::vector<std::string>& right_indices) override {
     CHECK(!main.empty());
     return absl::StrCat(
-      string_to_subscript(left_index),
+      string_mapper(to_subscript)(left_index),
       sub(main, right_indices)
     );
   }
@@ -443,9 +453,16 @@ class UnicodeEncoder : public AbstractEncoder {
   std::string super(const std::string& main, const std::vector<std::string>& indices) override {
     CHECK(!main.empty());
     const std::string separator = absl::c_all_of(indices, [](const std::string& s) {
-      return s.length() == 1;
+      return strlen_utf8(s) == 1;
     }) ? "" : "˒";
-    return absl::StrCat(main, str_join(indices, separator, string_to_superscript));
+    return absl::StrCat(main, str_join(indices, separator, string_mapper(to_superscript)));
+  }
+
+  std::string mathcal(const std::string& str) override {
+    return is_full_unicode() ? string_mapper(to_mathcal)(str) : str;
+  }
+  std::string mathbb(const std::string& str) override {
+    return is_full_unicode() ? string_mapper(to_mathbb)(str) : str;
   }
 
   std::string var(int idx) override {
@@ -464,9 +481,13 @@ class LatexEncoder : public AbstractEncoder {
   std::string inf() override { return "\\infty"; }
   std::string dot() override { return ""; }
   std::string tensor_prod() override { return " \\otimes "; }
-  std::string coprod_lie() override { return hspace("\\wedge"); }
+  std::string coprod_normal() override { return hspace("\\wedge"); }
+  std::string coprod_iterated() override { return hspace("\\bigotimes"); }
   std::string coprod_hopf() override { return hspace("\\boxtimes"); }
   std::string comult() override { return " \\triangle "; }
+  std::string set_union() override { return "\\bigcup"; }
+  std::string set_intersection() override { return "\\bigcap"; }
+  std::string set_complement() override { return "\\neg"; }
 
   std::string sum(const std::string& lhs, const std::string& rhs, HSpacing) override {
     return absl::StrCat(lhs, "+", rhs);
@@ -499,6 +520,9 @@ class LatexEncoder : public AbstractEncoder {
     return expr;
   }
 
+  std::string num(int v) override {
+    return absl::StrCat(v);
+  }
   std::string coeff(int v) override {
     if (*current_formatting_config().compact_expression) {
       if      (v == 0)  { return "0"; }
@@ -534,6 +558,16 @@ class LatexEncoder : public AbstractEncoder {
     return indices.empty() ? main : absl::StrCat(main, "^{", str_join(indices, ","), "}");
   }
 
+  // Note: default LaTeX fonts define \mathcal only for capical letters.
+  std::string mathcal(const std::string& str) override {
+    return absl::StrCat("\\mathcal{", str, "}");
+  }
+  // Note: requires `amsfonts` package.
+  // Note: default LaTeX fonts define \mathbb only for capical letters.
+  std::string mathbb(const std::string& str) override {
+    return absl::StrCat("\\mathbb{", str, "}");
+  }
+
   std::string var(int idx) override {
     return sub("x", {to_string(idx)});
   }
@@ -559,15 +593,16 @@ class LatexEncoder : public AbstractEncoder {
 };
 
 
-static AbstractEncoder* ascii_encoder = new AsciiEncoder;
-static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
-static AbstractEncoder* latex_encoder = new LatexEncoder;
-
 AbstractEncoder* current_encoder() {
-  switch (*current_formatting_config().encoder) {
+  // Important: encoders need to be static local (rather than static global)
+  //   in order to allow debug print in static initializers of other modules.
+  static AbstractEncoder* ascii_encoder = new AsciiEncoder;
+  static AbstractEncoder* unicode_encoder = new UnicodeEncoder;
+  static AbstractEncoder* latex_encoder = new LatexEncoder;
+
+  SWITCH_ENUM_OR_DIE(*current_formatting_config().encoder, {
     case Encoder::ascii:      return ascii_encoder;
     case Encoder::unicode:    return unicode_encoder;
     case Encoder::latex:      return latex_encoder;
-  }
-  FATAL("Unknown encoder");
+  });
 }

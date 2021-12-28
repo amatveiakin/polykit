@@ -48,7 +48,7 @@ constexpr int kCorrCoExprParts = 2;
 using CoCorrFSymb = std::vector<CorrFSymb>;
 
 inline std::string to_string(const CoCorrFSymb& fsymb) {
-  return str_join(fsymb, fmt::coprod_lie());
+  return str_join(fsymb, fmt::coprod_iterated());
 }
 
 namespace internal {
@@ -67,6 +67,7 @@ struct CorrCoExprParam {
     return to_string(obj);
   }
   static constexpr bool coproduct_is_lie_algebra = true;
+  static constexpr bool coproduct_is_iterated = true;
 };
 }  // namespace internal
 

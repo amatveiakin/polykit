@@ -5,29 +5,43 @@
 
 class Range {
 public:
+  using value_type = int;
+  using size_type = value_type;
+
+  // TODO: Make this a random access iterator.
+  // TODO: It is fine that `pointer` and `reference` are not defined?
   class Iterator {
   public:
-    Iterator(int value) : value_(value) {}
+    using difference_type = int;
+    using value_type = int;
+    using pointer = void;
+    using reference = void;
+    using iterator_category = std::forward_iterator_tag;
+
+    Iterator(value_type value) : value_(value) {}
     Iterator& operator++() { ++value_; return *this; }
-    int operator*() const { return value_; }
+    value_type operator*() const { return value_; }
     bool operator==(Iterator other) { return value_ == other.value_; }
     bool operator!=(Iterator other) { return value_ != other.value_; }
+
   private:
-    int value_;
+    value_type value_;
   };
 
-  Range(int from, int to) : from_(from), to_(to) {
+  Range(value_type from, value_type to) : from_(from), to_(to) {
     if (from_ > to_) {
       from_ = to_;
     }
   }
 
+  size_type size() const { return to_ - from_; }
+
   Iterator begin() const { return Iterator(from_); }
   Iterator end()   const { return Iterator(to_); }
 
 private:
-  int from_;
-  int to_;
+  value_type from_;
+  value_type to_;
 };
 
 inline Range range(int to) {
@@ -47,8 +61,4 @@ inline Range range_incl(int from, int to) {
 
 // Usage:
 //   for (EACH : range(...)) { ... }
-#ifdef __GNUC__
-#  define EACH  __attribute__((unused)) auto&& _loop_counter_
-#else
-#  define EACH  auto&& _loop_counter_
-#endif
+#define EACH  [[maybe_unused]] auto&& _loop_counter_

@@ -5,6 +5,92 @@ from .linear import Linear
 from .util import args_to_iterable, rotate_list
 
 
+# def cross_ratio(*indexed_points):
+#     v = args_to_iterable(indexed_points)
+#     ret = Linear()
+#     n = len(v)
+#     for i in range(n):
+#         ret += (-1)**i * X(v[i], v[(i+1)%n])
+#     return ret
+
+# # Returns
+# #   1 - cross_ratio(a, b, c, d)
+# # as symbol
+# def neg_cross_ratio(a, b, c, d):
+#     return cross_ratio(a, c, b, d)
+
+
+# def _QLi_4_point(points):
+#     assert len(points) == 4
+#     return (
+#         neg_cross_ratio(*points)
+#         if points[0] % 2 == 1 else
+#         -neg_cross_ratio(*rotate_list(points, 1))
+#     )
+
+# # _li_impl_cache = {}
+# # def _QLi_impl(weight, points):
+# #     # The only place where particular point values are used is `_QLi_4_point`,
+# #     # and only sign matters there
+# #     cache_key = tuple([weight] + [p % 2 for p in points])
+# #     if cache_key in _li_impl_cache:
+# #         ret = _li_impl_cache[cache_key]
+# #         ...  # TODO: index mapping
+# #         return ret
+# #     else:
+# #         ret = _QLi_impl_no_cache(weight, points)
+# #         _li_impl_cache[cache_key] = ret
+# #         return ret
+
+# def _QLi_impl(weight, points):
+#     num_points = len(points)
+#     assert num_points >= 4 and num_points % 2 == 0, f"Bad number of points: {num_points}"
+#     min_weight = (num_points - 2) // 2
+#     assert weight >= min_weight, f"Weight {weight} is less than minimum weight {min_weight}"
+#     def subsums():
+#         ret = Linear()
+#         for i in range(num_points - 3):
+#             ret += symbol_product(
+#                 _QLi_4_point(points[i:i+4]),
+#                 _QLi_impl(weight - 1, points[:i+1] + points[i+3:]),
+#             )
+#         return ret
+#     if weight == min_weight:
+#         if num_points == 4:
+#             return _QLi_4_point(points)
+#         else:
+#             return subsums()
+#     else:
+#         ret = symbol_product(
+#             cross_ratio(points),
+#             _QLi_impl(weight - 1, points),
+#         )
+#         if num_points > 4:
+#             ret += subsums()
+#         return ret
+
+
+# _qli_cache = {}
+
+# # Generates a polylog of a given weight on a given set of points.
+# def QLi(weight, points):
+#     assert isinstance(points, (list, tuple))
+#     num_points = len(points)
+#     cache_key = (weight, num_points)
+#     asc_indices = list(range(1, num_points + 1))
+#     index_map = {
+#         asc_indices[i]: points[i]
+#         for i in range(num_points)
+#     }
+#     asc_expr = None
+#     if cache_key in _qli_cache:
+#         asc_expr = _qli_cache[cache_key].copy()
+#     else:
+#         asc_expr = _QLi_impl(weight, asc_indices)
+#         _qli_cache[cache_key] = asc_expr.copy()
+#     return d_expr_substitute(asc_expr, index_map)
+
+
 def cross_ratio(p):
     assert len(p) % 2 == 0
     ret = Linear()

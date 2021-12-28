@@ -1,5 +1,10 @@
 from polypy import *
 
 
-# TODO: print_expression? !!!
-print_expression(to_lyndon_basis(QLi2(1,2,3,4)), d_monom_to_str)
+profiler = Profiler()
+expr = QLi6(1,2,3,4,5,6)
+profiler.finish("expr")
+print(f"Num terms before Lyndon = {expr.num_terms()}")
+lyndon = d_expr_to_lyndon_basis(expr)
+profiler.finish("lyndon")
+print(f"Num terms after Lyndon = {lyndon.num_terms()}")

@@ -1,3 +1,5 @@
+// TODO(C++20): Replace with / rewrite via std::ranges or range-v3.
+
 #pragma once
 
 #include "absl/algorithm/container.h"
@@ -6,6 +8,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
+#include "functional.h"
 #include "range.h"
 
 
@@ -56,21 +59,7 @@ void sort_two(T& a, T& b) {
   }
 }
 
-inline std::vector<int> seq_incl(int from, int to) {
-  CHECK_LE(from, to);
-  std::vector<int> ret(to - from + 1);
-  absl::c_iota(ret, from);
-  return ret;
-}
-
-template<int From, int To>
-inline std::array<int, To - From + 1> seq_incl_array() {
-  std::array<int, To - From + 1> ret;
-  absl::c_iota(ret, From);
-  return ret;
-}
-
-// Equivalent of std::identity from C++20
+// TODO(C++20): Replace with std::identity.
 struct identity_function_t {
   template<class T>
   constexpr T&& operator()(T&& t) const noexcept {
@@ -79,11 +68,46 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
+// TODO: For using together with `mapped`.
 template<typename T>
-std::vector<T> appended(std::vector<T> c, T element) {
-  c.push_back(std::move(element));
-  return c;
+struct convert_to_t {
+  template<class U>
+  T operator()(U&& u) const {
+    return T(std::forward<U>(u));
+  }
+};
+template<typename T>
+constexpr convert_to_t<T> convert_to;
+
+
+template<typename Container, typename Key>
+auto value_or(const Container& container, const Key& key, const typename Container::mapped_type& default_value) {
+  const auto it = container.find(key);
+  return (it == container.end()) ? default_value : it->second;
 }
+
+template<typename Container, typename Key>
+auto value_or(const Container& container, const Key& key) {
+  return value_or(container, key, {});
+}
+
+template<typename Container, typename Key>
+auto extract_value_or(Container& container, const Key& key, const typename Container::mapped_type& default_value) {
+  auto it = container.find(key);
+  if (it == container.end()) {
+    return default_value;
+  } else {
+    auto ret = std::move(it->second);
+    container.erase(it);
+    return ret;
+  }
+}
+
+template<typename Container, typename Key>
+auto extract_value_or(Container& container, const Key& key) {
+  return extract_value_or(container, key, {});
+}
+
 
 namespace internal {
 template <typename T>
@@ -208,15 +232,58 @@ std::vector<T> choose_by_mask(const std::vector<T>& v, const std::vector<MaskT>&
   return ret;
 }
 
+template<typename T>
+std::pair<std::vector<T>, std::vector<T>> split_slice(const std::vector<T>& v, int pos) {
+  return {slice(v, 0, pos), slice(v, pos)};
+}
+
+template<typename T>
+std::pair<std::vector<T>, std::vector<T>> split_indices(const std::vector<T>& v, const std::vector<int>& indices) {
+  return {choose_indices(v, indices), removed_indices(v, indices)};
+}
+
 template<typename T, size_t N>
 std::array<T, N> permute(const std::array<T, N>& v, const std::array<int, N>& indices) {
   return choose_indices(v, indices);
 }
 
+// Optimization potential: Replace instances of `append_vector(out, mapped(in))`
+//   with `absl::transform(in, std::back_inserter(out))`.
+// Optimization potential: Split into versions with `src` passed by l-value reference
+//   vs r-value reference.
+template<typename T, typename SrcContainerT>
+void append_vector(std::vector<T>& dst, SrcContainerT src) {
+  absl::c_move(src, std::back_inserter(dst));
+}
+
 template<typename Src, typename F>
 auto mapped(const Src& src, F&& func) {
-  std::vector<std::invoke_result_t<F, typename Src::value_type>> dst(src.size());
-  absl::c_transform(src, dst.begin(), std::forward<F>(func));
+  std::vector<std::invoke_result_t<F, typename Src::value_type>> dst;
+  dst.reserve(src.size());
+  absl::c_transform(src, std::back_inserter(dst), std::forward<F>(func));
+  return dst;
+}
+
+// A version of `mapped` that allows `func` to change source values.
+// This is NOT in-place map; the result is returned as usual.
+template<typename Src, typename F>
+auto mapped_mutable(Src& src, F&& func) {
+  std::vector<std::invoke_result_t<F, typename Src::reference>> dst;
+  dst.reserve(src.size());
+  std::transform(src.begin(), src.end(), std::back_inserter(dst), std::forward<F>(func));
+  return dst;
+}
+
+// Similar to
+//   view::zip(view::iota(0), src) | views::transform(func) | <convert-to-vector>
+// (note: `zip` is from https://github.com/ericniebler/range-v3, it's missing in C++20).
+template<typename Src, typename F>
+auto mapped_with_index(const Src& src, const F& func) {
+  std::vector<std::invoke_result_t<F, int, typename Src::value_type>> dst;
+  dst.reserve(src.size());
+  for (const int idx : range(src.size())) {
+    dst.push_back(func(idx, src[idx]));
+  }
   return dst;
 }
 
@@ -233,6 +300,17 @@ auto mapped_to_string(const Src& src) {
   return mapped(src, DISAMBIGUATE(to_string));
 }
 
+// Equivalent to `flatten(mapped(src, func))`.
+template<typename Src, typename F>
+auto mapped_expanding(const Src& src, const F& func) {
+  using ResultContainer = std::invoke_result_t<F, typename Src::value_type>;
+  std::vector<typename ResultContainer::value_type> dst;
+  for (const auto& value : src) {
+    append_vector(dst, func(value));
+  }
+  return dst;
+}
+
 template<typename T, typename F>
 std::vector<T> filtered(std::vector<T> src, F&& func) {
   src.erase(
@@ -242,6 +320,28 @@ std::vector<T> filtered(std::vector<T> src, F&& func) {
     src.end()
   );
   return src;
+}
+
+template<typename T, typename F>
+std::vector<std::vector<T>> group_by(const std::vector<T>& src, const F& func) {
+  std::vector<std::vector<T>> ret;
+  std::vector<T> group;
+  for (const T& element : src) {
+    if (!group.empty() && !func(group.back(), element)) {
+      ret.push_back(std::move(group));
+      group.clear();
+    }
+    group.push_back(element);
+  }
+  if (!group.empty()) {
+    ret.push_back(std::move(group));
+  }
+  return ret;
+}
+
+template<typename T>
+std::vector<std::vector<T>> group_equal(const std::vector<T>& src) {
+  return group_by(src, [](const T& lhs, const T& rhs) { return lhs == rhs; });
 }
 
 inline std::vector<int> odd_elements(std::vector<int> v) {
@@ -270,16 +370,15 @@ std::vector<T> rotated_vector(std::vector<T> v, int n) {
   return v;
 }
 
-template<typename T, typename SrcContainerT>
-void append_vector(std::vector<T>& dst, SrcContainerT&& src) {
-  const size_t old_size = dst.size();
-  dst.resize(old_size + src.size());
-  absl::c_move(src, dst.begin() + old_size);
-}
-
 template<typename Container>
 Container sorted(Container c) {
   absl::c_sort(c);
+  return c;
+}
+
+template <typename Container, typename Compare>
+Container sorted(Container c, Compare&& cmp) {
+  absl::c_sort(c, std::forward<Compare>(cmp));
   return c;
 }
 
@@ -359,21 +458,16 @@ auto sum(const Container& c) {
   return absl::c_accumulate(c, typename Container::value_type());
 }
 
-// Optimization potential: O(N*log(N)) sort for large N.
-template<typename Container, typename Compare>
-[[nodiscard]] int sort_with_sign(Container& v, const Compare& comp) {
-  int sign = 1;
-  for (EACH : range(v.size())) {
-    for (int i : range(v.size() - 1)) {
-      if (comp(v[i+1], v[i])) {
-        std::swap(v[i], v[i+1]);
-        sign *= -1;
-      }
-    }
-  }
-  return sign;
+template<typename Container>
+auto min_value(const Container& c) {
+  return *absl::c_min_element(c);
 }
 template<typename Container>
-[[nodiscard]] int sort_with_sign(Container& v) {
-  return sort_with_sign(v, std::less<>());
+auto max_value(const Container& c) {
+  return *absl::c_max_element(c);
+}
+template<typename Container>
+auto minmax_value(const Container& c) {
+  const auto minmax_it = absl::c_minmax_element(c);
+  return std::pair{*minmax_it.first, *minmax_it.second};
 }
