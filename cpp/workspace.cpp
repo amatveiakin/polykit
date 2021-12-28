@@ -1284,35 +1284,35 @@ int main(int /*argc*/, char *argv[]) {
   // );
   // std::cout << to_string(ranks) << "\n";
 
-  const int weight = 4;
-  const int dimension = 3;
-  const std::vector points = {1,2,3,4,5,6};
-  const auto coords = combinations(slice(points, 1), dimension - 1);
-  GrPolylogACoSpace space_words;
-  // TODO: factor out as `gr_free_lie_coalgebra(weight, dimension, points)`
-  for (const auto& word : get_lyndon_words(coords, weight)) {
-    const auto expr = GammaExpr::single(mapped(word, convert_to<Gamma>));
-    // if (is_totally_weakly_separated(expr)) {
-    //   space_words.push_back(expand_into_glued_pairs(expr));
-    // }
-    space_words.push_back(expand_into_glued_pairs(expr));
-  }
-  const auto space_l = mapped(
-    cartesian_combinations(std::vector{
-      std::pair{GrL2(dimension, points), 1},
-      std::pair{GrL1(dimension, points), 1},
-      std::pair{GrL1(dimension, points), 1},
-    }),
-    [](const auto& exprs) {
-      return abstract_coproduct_vec<GammaACoExpr>(mapped(exprs, [](const auto& e) {
-        return project_on(1, e);
-      }));
-    }
-  );
-  const auto ranks = space_venn_ranks(
-    space_words,
-    space_l,
-    DISAMBIGUATE(identity_function)
-  );
-  std::cout << to_string(ranks) << "\n";
+  // const int weight = 4;
+  // const int dimension = 3;
+  // const std::vector points = {1,2,3,4,5,6};
+  // const auto coords = combinations(slice(points, 1), dimension - 1);
+  // GrPolylogACoSpace space_words;
+  // // TODO: factor out as `gr_free_lie_coalgebra(weight, dimension, points)`
+  // for (const auto& word : get_lyndon_words(coords, weight)) {
+  //   const auto expr = GammaExpr::single(mapped(word, convert_to<Gamma>));
+  //   // if (is_totally_weakly_separated(expr)) {
+  //   //   space_words.push_back(expand_into_glued_pairs(expr));
+  //   // }
+  //   space_words.push_back(expand_into_glued_pairs(expr));
+  // }
+  // const auto space_l = mapped(
+  //   cartesian_combinations(std::vector{
+  //     std::pair{GrL2(dimension, points), 1},
+  //     std::pair{GrL1(dimension, points), 1},
+  //     std::pair{GrL1(dimension, points), 1},
+  //   }),
+  //   [](const auto& exprs) {
+  //     return abstract_coproduct_vec<GammaACoExpr>(mapped(exprs, [](const auto& e) {
+  //       return project_on(1, e);
+  //     }));
+  //   }
+  // );
+  // const auto ranks = space_venn_ranks(
+  //   space_words,
+  //   space_l,
+  //   DISAMBIGUATE(identity_function)
+  // );
+  // std::cout << to_string(ranks) << "\n";
 }
