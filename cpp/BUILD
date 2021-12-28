@@ -17,7 +17,6 @@ cc_library(
         "lib/bitset_util.h",
         "lib/call_cache.h",
         "lib/check.h",
-        "lib/circular_view.h",
         "lib/compact_variant.h",
         "lib/compare.h",
         "lib/compression.h",
