@@ -77,6 +77,12 @@ GrPolylogSpace GrL3(int dimension, const std::vector<int>& args);
 GrPolylogSpace GrL4_Dim3(const std::vector<int>& args);
 GrPolylogSpace GrL(int weight, int dimension, const std::vector<int>& args);
 
+// Suffix "test_space" stands for the fact that these are candidate spaces likely to be missing some functions.
+GrPolylogSpace CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points);
+GrPolylogSpace CGrL3_Dim3_test_space(const std::vector<int>& points);
+GrPolylogSpace CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
+GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
+
 // Computes a co-space of a given structure from spaces provided by `get_space`.
 // E.g. for weight == 5, num_coparts == 3 returns:
 //   + get_space(3) * lambda^2 get_space(1)
@@ -103,9 +109,10 @@ auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
   return ret;
 }
 
-// Note: applies normalize_remove_consecutive (hence not allowing arbitrary input points).
+// The "simple_" functions apply normalize_remove_consecutive (hence not allowing arbitrary input points).
 PolylogNCoSpace simple_co_L(int weight, int num_coparts, int num_points);
 GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
+GrPolylogNCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points);
 
 PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs);
 
