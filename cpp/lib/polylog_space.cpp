@@ -266,7 +266,7 @@ GrPolylogSpace GrL_core(
   bool include_one_minus_cross_ratio, int num_fixed_points
 ) {
   CHECK_LE(2, dimension);
-  CHECK_LE(5, args.size());
+  CHECK_LE(num_fixed_points, args.size());
   const auto& [main_args, fixed_p] = split_slice(args, args.size() - num_fixed_points);
   const auto& fixed_points = fixed_p;  // workaround: lambdas cannot capture structured bindings
   GrPolylogSpace ret;
