@@ -50,31 +50,6 @@
 #include "lib/zip.h"
 
 
-// TODO: Generalize and factor out
-GammaExpr gamma_substitute(const GammaExpr& expr, int from, int to) {
-  from -= Gamma::kBitsetOffset;
-  to -= Gamma::kBitsetOffset;
-  return expr.mapped_expanding([&](const auto& term) {
-    bool is_zero = false;
-    const auto new_term = mapped(term, [&](const Gamma& g) {
-      auto bitset = g.index_bitset();
-      if (bitset.test(from)) {
-        bitset.reset(from);
-        if (bitset.test(to)) {
-          is_zero = true;
-          return Gamma{};
-        } else {
-          bitset.set(to);
-          return Gamma(bitset);
-        }
-      } else {
-        return g;
-      }
-    });
-    return is_zero ? GammaExpr{} : GammaExpr::single(new_term);
-  });
-}
-
 GammaExpr SymmCGrLi3(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 6);
   constexpr int weight = 3;
@@ -443,20 +418,20 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
 
-  // std::cout << is_totally_weakly_separated(gamma_substitute(CGrLi(4, {1,2,3,4,5,6,7,8}), 7,1)) << "\n";
-  // std::cout << gamma_substitute(CGrLi(5, {1,2,3,4,5,6,7,8}), 4,3) << "\n";
+  // std::cout << is_totally_weakly_separated(substitute_variables(CGrLi(4, {1,2,3,4,5,6,7,8}), {1,2,3,4,5,6,1,8})) << "\n";
+  // std::cout << substitute_variables(CGrLi(5, {1,2,3,4,5,6,7,8}), {1,2,3,3,5,6,7,8}) << "\n";
 
   // const int weight = 4;
   // auto space = CGrL_Dim4_naive_test_space(weight, {1,2,3,4,5,6,7,8});
   // std::cout << to_string(space_venn_ranks(
   //   space,
   //   // {CGrLi(weight, {1,1,3,4,5,6,7,8})},
-  //   {gamma_substitute(CGrLi(weight, {1,2,3,4,5,6,7,8}), 7,1)},
+  //   {substitute_variables(CGrLi(weight, {1,2,3,4,5,6,7,8}), {1,2,3,4,5,6,1,8})},
   //   DISAMBIGUATE(to_lyndon_basis)
   // )) << "\n";
 
   // const auto expr = CGrLi(4, {1,1,3,4,5,6,7,8});
-  // const auto expr_alt = gamma_substitute(CGrLi(4, {1,2,3,4,5,6,7,8}), 2, 1);
+  // const auto expr_alt = substitute_variables(CGrLi(4, {1,2,3,4,5,6,7,8}), {1,1,3,4,5,6,7,8});
   // std::cout << (expr == expr_alt) << "\n";
 
   // const int weight = 5;

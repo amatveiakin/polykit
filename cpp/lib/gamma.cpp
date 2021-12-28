@@ -9,7 +9,6 @@ std::string to_string(const Gamma& g) {
 
 GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
   // Optimization potential: do things on bitset level.
-  // Optimization potential: can substitution result to a flat hash map.
   return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
     std::vector<Gamma> term_new;
     for (const Gamma& g_old : term_old) {
