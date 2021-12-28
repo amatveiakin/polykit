@@ -130,23 +130,6 @@ GammaExpr SymmCGrLi4(const std::vector<int>& points) {
   );
 }
 
-GrPolylogSpace GrL_Dim3_Weight4_test() {
-  const int weight = 4;
-  const int dimension = 3;
-  const std::vector points = {1,2,3,4,5,6,7};
-  GrPolylogSpace ret = GrL_core(weight, dimension, points, false, 0);
-  // for (const auto& [bonus_p, qli_points] : index_splits(points, dimension - 2)) {
-  //   const auto& bonus_points = bonus_p;  // workaround: lambdas cannot capture structured bindings
-  //   append_vector(
-  //     ret,
-  //     mapped(combinations(qli_points, 6), [&](auto p) {
-  //       return GrQLiVec(weight, bonus_points, p);
-  //     })
-  //   );
-  // }
-  return ret;
-}
-
 GammaNCoExpr C33(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 4);
   const auto pl = [&](int p1, int p2, int p3) {
@@ -716,7 +699,7 @@ int main(int /*argc*/, char *argv[]) {
   //   -4*GrQLi4(7)(1,2,3,4,5,6)
   // ;
   // std::cout << to_string(space_venn_ranks(
-  //   GrL_Dim3_Weight4_test(),
+  //   GrL_core(4, 3, {1,2,3,4,5,6,7}, false, 0),
   //   {expr},
   //   DISAMBIGUATE(to_lyndon_basis)
   // )) << "\n";
