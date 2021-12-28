@@ -461,12 +461,12 @@ GrPolylogNCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int 
 
 GrPolylogNCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points) {
   const auto points = to_vector(range_incl(1, num_points));
-  return co_space(weight, 2, [&](int part_weight) {
+  return co_space(weight, 2, [&](int w) {
     return normalize_space_remove_consecutive([&]() {
-      // if (part_weight == 1) {
+      // if (w == 1) {
       //   return GrFx(dimension, points);
       // }
-      return CGrL_test_space(part_weight, dimension, points);
+      return CGrL_test_space(w, dimension, points);
     }(), dimension, num_points);
   });
 }

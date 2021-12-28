@@ -85,20 +85,14 @@ GrPolylogSpace CGrL3_Dim3_test_space(const std::vector<int>& points);
 GrPolylogSpace CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
 GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
 
-// Computes a co-space of a given structure from spaces provided by `get_space`.
-// E.g. for weight == 5, num_coparts == 3 returns:
-//   + get_space(3) * lambda^2 get_space(1)
-//   + lambda^2 get_space(2) * get_space(1)
-template<typename SpaceF>
-auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
+template<typename SpaceF, typename CombineF>
+auto abstract_co_space(int weight, int num_coparts, const SpaceF& get_space, const CombineF& combine) {
   CHECK_LE(num_coparts, weight);
   const auto weights_per_summand = get_partitions(weight, num_coparts);
   const int max_atom_weight = max_value(flatten(weights_per_summand));
   const auto atom_spaces = mapped(range_incl(1, max_atom_weight), get_space);
-  using ExprT = typename decltype(atom_spaces)::value_type::value_type;
-  std::vector<NCoExprForExpr_t<ExprT>> ret;
-  for (const auto& summand_weights : weights_per_summand) {
-    auto summand_components = cartesian_combinations(
+  return mapped_expanding(weights_per_summand, [&](const auto& summand_weights) {
+    const auto summand_components = cartesian_combinations(
       mapped(group_equal(summand_weights), [&](const auto& equal_weight_group) {
         return std::pair{
           atom_spaces.at(equal_weight_group.front() - 1),
@@ -106,9 +100,17 @@ auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
         };
       })
     );
-    append_vector(ret, mapped(summand_components, DISAMBIGUATE(ncoproduct_vec)));
-  }
-  return ret;
+    return mapped(summand_components, combine);
+  });
+}
+
+// Computes a co-space of a given structure from spaces provided by `get_space`.
+// E.g. for weight == 5, num_coparts == 3 returns:
+//   + get_space(3) * lambda^2 get_space(1)
+//   + lambda^2 get_space(2) * get_space(1)
+template<typename SpaceF>
+auto co_space(int weight, int num_coparts, const SpaceF& get_space) {
+  return abstract_co_space(weight, num_coparts, get_space, DISAMBIGUATE(ncoproduct_vec));
 }
 
 // The "simple_" functions apply normalize_remove_consecutive (hence not allowing arbitrary input points).

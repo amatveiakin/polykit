@@ -307,15 +307,68 @@ TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
 }
 
-TEST(PolylogSpaceTest, GrL_contains_CGrLi) {
-  const std::vector points = {1,2,3,4,5,6};
-  // Should be inside for any weight.
-  for (const int weight : range_incl(2, 3)) {
-    const auto expr = CGrLi(weight, points);
-    const auto space = GrL(weight, 3, points);
-    EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
-  }
+
+class CGrLiVsSpacesTest : public ::testing::TestWithParam<std::pair<int, int>> {
+public:
+  int weight() const { return GetParam().first; }
+  int dimension() const { return GetParam().second; }
+};
+// Note: CGrLi requires that (weight >= dimension - 1).
+INSTANTIATE_TEST_SUITE_P(LARGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
+  std::pair{2, 3},
+  std::pair{3, 3}
+));
+INSTANTIATE_TEST_SUITE_P(HUGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
+  std::pair{4, 3}
+));
+
+TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
+  const int num_points = dimension() * 2;
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto expr = CGrLi(weight(), points);
+  const auto space = GrL(weight(), dimension(), points);
+  EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
 }
+
+TEST_P(CGrLiVsSpacesTest, CoCGrL_contains_CGrLiNcomultiplied) {
+  const int num_points = dimension() * 2;
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto expr = CGrLi(weight(), points);
+  const auto co_space = simple_co_CGrL_test_space(weight(), dimension(), num_points);
+  EXPECT_TRUE(space_contains(
+    co_space,
+    {ncomultiply(normalize_remove_consecutive(expr))},
+    DISAMBIGUATE(to_lyndon_basis)
+  ));
+}
+
+TEST_P(CGrLiVsSpacesTest, CoGrL_contains_CGrLiExpandedIntoGluedPairs) {
+  if (weight() != dimension() - 1) {
+    // TODO: Is it the right condition for when this should hold?
+    return;
+  }
+  const int num_points = dimension() * 2;
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto expr = CGrLi(weight(), points);
+  const auto co_space = abstract_co_space(
+    weight(),
+    weight() - 1,
+    [&](const int w) {
+      switch (w) {
+        case 1: return GrFx(dimension(), points);
+        case 2: return GrL2(dimension(), points);
+        default: FATAL("Unexpected part weight");
+      }
+    },
+    DISAMBIGUATE(abstract_coproduct_vec<GammaACoExpr>)
+  );
+  EXPECT_TRUE(space_contains(
+    co_space,
+    {expand_into_glued_pairs(expr)},
+    DISAMBIGUATE(identity_function)
+  ));
+}
+
 
 TEST(PolylogSpaceTest, GrL3Dim4_contains_QLiVec3PluckerDual) {
   const std::vector points = {1,2,3,4,5,6};
@@ -340,3 +393,17 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
     EXPECT_EQ(mapping_ranks.kernel(), cgrl_rank);
   }
 }
+
+#if 0
+  GrPolylogNCoSpace space_lyndon;
+  const auto coords = combinations(points, dimension);
+  for (const auto& word : get_lyndon_words(coords, weight)) {
+    const auto term = mapped(word, convert_to<Gamma>);
+    if (is_weakly_separated(term) && passes_normalize_remove_consecutive(term, dimension, num_points)) {
+      space_lyndon.push_back(ncomultiply(GammaExpr::single(term)));
+    }
+  }
+  const auto space_product = simple_co_CGrL_test_space(weight, dimension, num_points);
+  const auto ranks = space_venn_ranks(space_lyndon, space_product, DISAMBIGUATE(identity_function));
+  EXPECT_EQ(ranks.intersected(), ...);  // TODO: What is this?
+#endif
