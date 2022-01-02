@@ -1137,4 +1137,19 @@ int main(int /*argc*/, char *argv[]) {
   //   DISAMBIGUATE(identity_function)
   // );
   // std::cout << to_string(ranks) << "\n";
+
+
+  const int num_points = 6;
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto ranks = space_mapping_ranks(CL4(points), DISAMBIGUATE(to_lyndon_basis), [](const auto& expr) {
+    return std::tuple{
+      to_lyndon_basis(substitute_variables(expr, {1,1,3,4,5,6})),
+      to_lyndon_basis(substitute_variables(expr, {1,2,2,4,5,6})),
+      to_lyndon_basis(substitute_variables(expr, {1,2,3,3,5,6})),
+      to_lyndon_basis(substitute_variables(expr, {1,2,3,4,4,6})),
+      to_lyndon_basis(substitute_variables(expr, {1,2,3,4,5,5})),
+      to_lyndon_basis(substitute_variables(expr, {6,2,3,4,5,6})),
+    };
+  });
+  std::cout << to_string(ranks) << "\n";
 }
