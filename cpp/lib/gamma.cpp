@@ -208,24 +208,3 @@ GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_univ
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe) {
   return plucker_dual(delta_expr_to_gamma_expr(expr), point_universe);
 }
-
-GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr) {
-  using CoExprT = GammaACoExpr;
-  return expr.mapped_expanding([](const auto& term) {
-    CoExprT expanded_expr;
-    for (const int i : range(term.size() - 1)) {
-      std::vector<GammaExpr> expanded_term;
-      for (const int j : range(term.size() - 1)) {
-        if (j < i) {
-          expanded_term.push_back(GammaExpr::single({term[j]}));
-        } else if (j == i) {
-          expanded_term.push_back(GammaExpr::single({term[j], term[j+1]}));
-        } else {
-          expanded_term.push_back(GammaExpr::single({term[j+1]}));
-        }
-      }
-      expanded_expr += abstract_coproduct_vec<CoExprT>(expanded_term);
-    }
-    return expanded_expr;
-  });
-}

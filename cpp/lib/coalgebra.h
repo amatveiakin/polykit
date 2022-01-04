@@ -55,6 +55,13 @@ struct ICoExprForExpr {
 template<typename ExprT>
 using ICoExprForExpr_t = typename ICoExprForExpr<ExprT>::type;
 
+template<typename ExprT>
+struct ACoExprForExpr {
+  using type = void;
+};
+template<typename ExprT>
+using ACoExprForExpr_t = typename ACoExprForExpr<ExprT>::type;
+
 
 namespace internal {
 template<typename CoExprT, typename ExprT>
@@ -132,6 +139,11 @@ auto icoproduct_vec(const std::vector<ExprT>& expr) {
   return abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
 }
 
+template<typename ExprT>
+auto acoproduct_vec(const std::vector<ExprT>& expr) {
+  return abstract_coproduct_vec<ACoExprForExpr_t<ExprT>>(expr);
+}
+
 template<typename CoExprT, typename... Args>
 auto abstract_coproduct(Args&&... args) {
   return abstract_coproduct_vec<CoExprT>(std::vector{std::forward<Args>(args)...});
@@ -145,6 +157,11 @@ auto ncoproduct(Args&&... args) {
 template<typename... Args>
 auto icoproduct(Args&&... args) {
   return icoproduct_vec(std::vector{std::forward<Args>(args)...});
+}
+
+template<typename... Args>
+auto acoproduct(Args&&... args) {
+  return acoproduct_vec(std::vector{std::forward<Args>(args)...});
 }
 
 
@@ -269,6 +286,35 @@ auto ncomultiply_impl(const CoExprT& coexpr, std::vector<int> form) {
 template<typename T>
 auto ncomultiply(const T& expr, std::vector<int> form = {}) {
   return internal::ncomultiply_impl(internal::maybe_to_ncoexpr(expr), std::move(form));
+}
+
+// Converts each term
+//     x1 * x2 * ... * xn
+// into a sum
+//   + (x1*x2) @ x3 @ ... @ xn
+//   + x1 @ (x2*x3) @ ... @ xn
+//     ...
+//   + x1 @ x2 @ ... @ (x{n-1}*xn)
+//
+template<typename ExprT>
+auto expand_into_glued_pairs(const ExprT& expr) {
+  return expr.mapped_expanding([](const auto& term) {
+    ACoExprForExpr_t<ExprT> expanded_expr;
+    for (const int i : range(term.size() - 1)) {
+      std::vector<ExprT> expanded_term;
+      for (const int j : range(term.size() - 1)) {
+        if (j < i) {
+          expanded_term.push_back(ExprT::single({term[j]}));
+        } else if (j == i) {
+          expanded_term.push_back(ExprT::single({term[j], term[j+1]}));
+        } else {
+          expanded_term.push_back(ExprT::single({term[j+1]}));
+        }
+      }
+      expanded_expr += acoproduct_vec(expanded_term);
+    }
+    return expanded_expr;
+  });
 }
 
 

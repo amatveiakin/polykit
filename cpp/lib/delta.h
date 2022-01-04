@@ -259,14 +259,27 @@ struct DeltaNCoExprParam : DeltaICoExprParam {
   }
   static constexpr bool coproduct_is_iterated = false;
 };
+
+struct DeltaACoExprParam : DeltaICoExprParam {
+  static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
+    // TODO: Consider whether this could be made the default order for co-expressions.
+    //   If so, remove this additional co-expression type.
+    using namespace cmp;
+    return projected(lhs, rhs, [](const auto& v) {
+      return std::tuple{desc_val(v.size()), asc_ref(v)};
+    });
+  };
+};
 }  // namespace internal
 
 
 using DeltaExpr = Linear<internal::DeltaExprParam>;
 using DeltaICoExpr = Linear<internal::DeltaICoExprParam>;
 using DeltaNCoExpr = Linear<internal::DeltaNCoExprParam>;
+using DeltaACoExpr = Linear<internal::DeltaACoExprParam>;
 template<> struct ICoExprForExpr<DeltaExpr> { using type = DeltaICoExpr; };
 template<> struct NCoExprForExpr<DeltaExpr> { using type = DeltaNCoExpr; };
+template<> struct ACoExprForExpr<DeltaExpr> { using type = DeltaACoExpr; };
 
 inline DeltaExpr delta_to_expr(Delta d) {
   if (d.is_nil()) {

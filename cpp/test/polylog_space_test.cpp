@@ -360,7 +360,7 @@ TEST_P(CGrLiVsSpacesTest, CoGrL_contains_CGrLiExpandedIntoGluedPairs) {
         default: FATAL("Unexpected part weight");
       }
     },
-    DISAMBIGUATE(abstract_coproduct_vec<GammaACoExpr>)
+    DISAMBIGUATE(acoproduct_vec)
   );
   EXPECT_TRUE(space_contains(
     co_space,

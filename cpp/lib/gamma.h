@@ -142,6 +142,7 @@ using GammaNCoExpr = Linear<internal::GammaNCoExprParam>;
 using GammaACoExpr = Linear<internal::GammaACoExprParam>;
 template<> struct ICoExprForExpr<GammaExpr> { using type = GammaICoExpr; };
 template<> struct NCoExprForExpr<GammaExpr> { using type = GammaNCoExpr; };
+template<> struct ACoExprForExpr<GammaExpr> { using type = GammaACoExpr; };
 
 inline GammaExpr G(const std::vector<int>& vars) {
   Gamma g(vars);
@@ -177,17 +178,3 @@ GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points);
 
 GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe);
-
-// Converts each term
-//     x1 * x2 * ... * xn
-// into a sum
-//   + (x1*x2) @ x3 @ ... @ xn
-//   + x1 @ (x2*x3) @ ... @ xn
-//     ...
-//   + x1 @ x2 @ ... @ (x{n-1}*xn)
-//
-// Note: In principle this is a generic coalgebra operation that could be applied to
-//   any expression type. However need to decide whether ACoExpr is a thing before
-//   promoting this to coalgebra module.
-//
-GammaACoExpr expand_into_glued_pairs(const GammaExpr& expr);
