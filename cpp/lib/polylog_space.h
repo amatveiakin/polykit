@@ -158,6 +158,7 @@ std::string to_string(const SpaceCharacteristics& characteristics);
 // Verifies that each element has the same weight and dimension. Feel free to disable if not required.
 template<typename SpaceT>
 void check_space(const SpaceT& space) {
+  return;  // TODO: Fix the check for points in involution and re-enable it!
   check_space_is_homogeneous(space, [](const auto& expr) {
     return SpaceCharacteristics{expr.weight(), expr.dimension()};
   });

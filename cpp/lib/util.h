@@ -408,10 +408,14 @@ template<typename Container>
 bool all_unique_sorted(const Container& v) {
   return absl::c_adjacent_find(v) == v.end();
 }
+template<typename Container, typename Compare>
+bool all_unique_unsorted(Container v, Compare&& cmp) {
+  absl::c_sort(v, std::forward<Compare>(cmp));
+  return all_unique_sorted(v);
+}
 template<typename Container>
 bool all_unique_unsorted(Container v) {
-  absl::c_sort(v);
-  return all_unique_sorted(v);
+  return all_unique_unsorted(std::move(v), std::less<>());
 }
 
 template<size_t N, typename T>

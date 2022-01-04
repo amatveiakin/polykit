@@ -200,6 +200,176 @@ GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
 // TODO: Test:  arrow_left(arrow_up(x)) + arrow_up(arrow_left(x) == 0
 // TODO: Test:  symmetrize_double(symmetrize_loop(x)) == 0
 
+template<typename Container>
+static Container one_minus_cross_ratio(Container p) {
+  CHECK_EQ(4, p.size());
+  std::swap(p[1], p[2]);
+  return p;
+}
+
+PolylogSpace CL1_inv(const std::vector<int>& args) {
+  const auto& args_inv = concat(
+    mapped(args, [](const int idx) { return X(idx); }),
+    mapped(args, [](const int idx) { return -X(idx); })
+  );
+  PolylogSpace space;
+  const int weight = 1;
+  append_vector(space, mapped_expanding(combinations(args_inv, 4), [&](const auto& p) {
+    return std::array{
+      QLiVec(weight, p),
+      QLiVec(weight, one_minus_cross_ratio(p))
+    };
+  }));
+  return space;
+}
+
+PolylogSpace CL2_inv(const std::vector<int>& args) {
+  const auto& args_inv = concat(
+    mapped(args, [](const int idx) { return X(idx); }),
+    mapped(args, [](const int idx) { return -X(idx); })
+  );
+  PolylogSpace space;
+  const int weight = 2;
+  append_vector(space, mapped(combinations(args_inv, 4), [&](const auto& p) {
+    return QLiVec(weight, p);
+  }));
+  return space;
+}
+
+// TODO: Factor out
+// TODO: Optimize: don't compute rank on each step
+// TODO: Optimize: precompute `prepare(expr)`
+// Optimization potential: pre-apply for common spaces
+template<typename SpaceT, typename PrepareF>
+SpaceT space_basis(const SpaceT& space, const PrepareF& prepare) {
+  SpaceT ret;
+  int rank = 0;
+  for (const auto& expr : space) {
+    ret.push_back(expr);
+    const int new_rank = space_rank(ret, prepare);
+    if (new_rank == rank) {
+      ret.pop_back();
+    }
+    rank = new_rank;
+  }
+  return ret;
+}
+
+
+
+static bool less_inv(X a, X b) {
+  CHECK(a.form() == XForm::var || a.form() == XForm::neg_var);
+  CHECK(b.form() == XForm::var || b.form() == XForm::neg_var);
+  return cmp::projected(a, b, [](X x) { return std::pair{x.form(), x.idx()}; });
+}
+
+static bool between_inv(X point, std::pair<X, X> segment) {
+  const auto [a, b] = segment;
+  CHECK_LT(a, b);
+  return less_inv(a, point) && less_inv(point, b);
+}
+
+// static bool is_nil_inv(const Delta& d) {
+//   return d.is_nil() || d.a() == Zero || d.b() == Zero;
+// }
+
+auto delta_points_inv(const Delta& d) {
+  // HACK: "unglue" points assuming (x_i-0) compues only from (x_i-(-x_i)).  TODO: remove.
+  return d.b() == Zero
+    ? std::array{d.a(), d.a().negated()}
+    : std::array{d.a(), d.b()};
+}
+
+auto delta_points_inv(const Delta& d, bool invert) {
+  const auto points = delta_points_inv(d);
+  return invert
+    ? sorted(points, less_inv)
+    : sorted(mapped_array(points, [](const X x) { return x.negated(); }), less_inv);
+}
+
+// TODO: Test.
+bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
+  if (d1.is_nil() || d2.is_nil()) {
+    return true;
+  }
+  for (const bool invert_d1 : {false, true}) {
+    for (const bool invert_d2 : {false, true}) {
+      const auto [x1, y1] = delta_points_inv(d1, invert_d1);
+      const auto [x2, y2] = delta_points_inv(d2, invert_d2);
+      if (!all_unique_unsorted(std::array{x1, y1, x2, y2}, less_inv)) {
+        continue;
+      }
+      const bool intersect = between_inv(x1, {x2, y2}) != between_inv(y1, {x2, y2});
+      if (intersect) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// auto expand_inv(const Delta& d) {
+//   return std::vector{d.a(), d.a().negated(), d.b(), d.b().negated()};
+// }
+
+// // TODO: Test.
+// bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
+//   const auto d1_expanded = expand_inv(d1);
+//   const auto d2_expanded = expand_inv(d2);
+//   const auto a = set_difference(d1_expanded, d2_expanded);
+//   const auto b = set_difference(d2_expanded, d1_expanded);
+//   if (a.empty() || b.empty()) {
+//     return true;
+//   }
+//   int last_color = 0;  // a: 1,  b: 2
+//   int num_color_changes = 0;
+//   CHECK_EQ(a.size(), b.size());
+//   for (const auto& p : set_union(
+//     mapped(a, [](const X x) { return std::pair{x, 1}; }),
+//     mapped(b, [](const X x) { return std::pair{x, 2}; })
+//   )) {
+//     const int color = p.second;
+//     if (color != 0) {
+//       if (last_color != color) {
+//         ++num_color_changes;
+//         last_color = color;
+//       }
+//     }
+//   }
+//   CHECK_LE(2, num_color_changes) << dump_to_string(d1) << " vs " << dump_to_string(d2);
+//   return num_color_changes <= 3;
+// }
+
+// Optimization potential: consider whether this can be done in O(N) time;
+bool is_weakly_separated_inv(const DeltaExpr::ObjectT& term) {
+  for (int i : range(term.size())) {
+    for (int j : range(i)) {
+      if (!are_weakly_separated_inv(term[i], term[j])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+bool is_weakly_separated_inv(const DeltaNCoExpr::ObjectT& term) {
+  return is_weakly_separated_inv(flatten(term));
+}
+
+bool is_totally_weakly_separated_inv(const DeltaExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+bool is_totally_weakly_separated_inv(const DeltaNCoExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+
+DeltaExpr keep_non_weakly_separated_inv(const DeltaExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+
+
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -1126,7 +1296,7 @@ int main(int /*argc*/, char *argv[]) {
   //     std::pair{GrL1(dimension, points), 1},
   //   }),
   //   [](const auto& exprs) {
-  //     return abstract_coproduct_vec<GammaACoExpr>(mapped(exprs, [](const auto& e) {
+  //     return acoproduct_vec(mapped(exprs, [](const auto& e) {
   //       return project_on(1, e);
   //     }));
   //   }
@@ -1139,17 +1309,64 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_string(ranks) << "\n";
 
 
-  const int num_points = 6;
-  const auto points = to_vector(range_incl(1, num_points));
-  const auto ranks = space_mapping_ranks(CL4(points), DISAMBIGUATE(to_lyndon_basis), [](const auto& expr) {
-    return std::tuple{
-      to_lyndon_basis(substitute_variables(expr, {1,1,3,4,5,6})),
-      to_lyndon_basis(substitute_variables(expr, {1,2,2,4,5,6})),
-      to_lyndon_basis(substitute_variables(expr, {1,2,3,3,5,6})),
-      to_lyndon_basis(substitute_variables(expr, {1,2,3,4,4,6})),
-      to_lyndon_basis(substitute_variables(expr, {1,2,3,4,5,5})),
-      to_lyndon_basis(substitute_variables(expr, {6,2,3,4,5,6})),
-    };
-  });
-  std::cout << to_string(ranks) << "\n";
+  // const int num_points = 6;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto ranks = space_mapping_ranks(CL4(points), DISAMBIGUATE(to_lyndon_basis), [](const auto& expr) {
+  //   return std::tuple{
+  //     to_lyndon_basis(substitute_variables(expr, {1,1,3,4,5,6})),
+  //     to_lyndon_basis(substitute_variables(expr, {1,2,2,4,5,6})),
+  //     to_lyndon_basis(substitute_variables(expr, {1,2,3,3,5,6})),
+  //     to_lyndon_basis(substitute_variables(expr, {1,2,3,4,4,6})),
+  //     to_lyndon_basis(substitute_variables(expr, {1,2,3,4,5,5})),
+  //     to_lyndon_basis(substitute_variables(expr, {6,2,3,4,5,6})),
+  //   };
+  // });
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // for (const int half_num_points : range_incl(2, 6)) {
+  //   const auto points = to_vector(range_incl(1, half_num_points));
+  //   Profiler profiler;
+  //   auto cl1 = CL1_inv(points);
+  //   auto cl2 = CL2_inv(points);
+  //   profiler.finish("cl1/cl2 spaces");
+  //   cl1 = space_basis(cl1, DISAMBIGUATE(to_lyndon_basis));
+  //   cl2 = space_basis(cl2, DISAMBIGUATE(to_lyndon_basis));
+  //   profiler.finish("cl1/cl2 bases");
+  //   const auto space_a = mapped(
+  //     get_lyndon_words(cl1, 4),
+  //     [](const auto& components) {
+  //       return expand_into_glued_pairs(tensor_product(absl::MakeConstSpan(components)));
+  //     }
+  //   );
+  //   profiler.finish("space_a");
+  //   const auto space_b = mapped(
+  //     cartesian_product(cl2, cl1, cl1),
+  //     applied(DISAMBIGUATE(acoproduct))
+  //   );
+  //   profiler.finish("space_b");
+  //   const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(identity_function));
+  //   profiler.finish("ranks");
+  //   std::cout << "n=" << (half_num_points*2) << ": " << to_string(ranks) << "\n";
+  // }
+
+  for (const int half_num_points : range_incl(2, 6)) {
+    const auto points = to_vector(range_incl(1, half_num_points));
+    const auto& points_inv = concat(
+      mapped(points, [](const int idx) { return X(idx); }),
+      mapped(points, [](const int idx) { return -X(idx); })
+    );
+    Profiler profiler;
+    const auto space = mapped(L5(points_inv), DISAMBIGUATE(to_lyndon_basis));
+    profiler.finish("space");
+    const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+      return keep_non_weakly_separated_inv(expr);
+    });
+    profiler.finish("ranks");
+    std::cout << "n=" << (half_num_points*2) << ": " << to_string(ranks) << "\n";
+  }
+
+  // const auto expr = QLiSymm4(x1,x2,x3,x4,-x1,-x2,-x3,-x4);
+  // std::cout << is_totally_weakly_separated_inv(expr) << "\n";
+  // std::cout << is_totally_weakly_separated_inv(to_lyndon_basis(expr)) << "\n";
 }

@@ -242,8 +242,8 @@ bool are_weakly_separated(const Delta& d1, const Delta& d2) {
   if (!all_unique_unsorted(std::array{x1, y1, x2, y2})) {
     return true;
   }
-  const bool itersect = between(x1, {x2, y2}) != between(y1, {x2, y2});
-  return !itersect;
+  const bool intersect = between(x1, {x2, y2}) != between(y1, {x2, y2});
+  return !intersect;
 }
 
 // Optimization potential: consider whether this can be done in O(N) time;

@@ -306,6 +306,8 @@ DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points);
 
 // Expects: points.size() == 6
 // Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6.
+// DEPRECATED. Use x4=-x1, x5=-x2, x6=-x3 instead.
+// TODO: Is it really superseeded by substituting -x_i? If so, delete.
 DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points);
 
 DeltaExpr sort_term_multiples(const DeltaExpr& expr);
