@@ -15,7 +15,6 @@
 #include "check.h"
 #include "compare.h"
 #include "enumerator.h"
-#include "file_util.h"
 #include "format.h"
 #include "sorting.h"
 #include "string.h"
