@@ -109,6 +109,33 @@ PolylogSpace old_CL4_via_A2(const XArgs& args) {
   );
 }
 
+PolylogSpace CLC(int weight, const XArgs& xargs) {
+  auto args = xargs.as_x();
+  CHECK(args.size() % 2 == 0);
+  const int half_num_points = args.size()/ 2;
+  for (const int i : range(half_num_points)) {
+    CHECK(args[i] == -args[i+half_num_points]) << dump_to_string(args);
+  }
+  if (args.size() == 4) {
+    return CL(weight, args);
+  }
+  PolylogSpace space;
+  CHECK_GT(args.size(), 4);
+  // Cut into two halves, take one size (the other size is the same).
+  for (const int i : range(half_num_points)) {
+    const int n = half_num_points + 1;
+    const auto points = slice(args, i, i + n);
+    CHECK_EQ(points.size(), n);
+    append_vector(space, CL(weight, points));
+  }
+  // Discard opposite points and define recursively.
+  for (const int i : range(half_num_points)) {
+    const auto points = removed_indices(args, {i, i + half_num_points});
+    append_vector(space, CLC(weight, points));
+  }
+  return space;
+}
+
 // PolylogSpace H(int weight, const XArgs& xargs) {
 //   auto args = xargs.as_x();
 //   const X special_point = args.back();
