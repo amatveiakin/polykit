@@ -1392,21 +1392,31 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  // const auto points_inv = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
-  // const auto space_a = mapped(L4(points_inv), DISAMBIGUATE(ncoproduct));
-  // // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1}), 2), DISAMBIGUATE(ncoproduct_vec));
-  // // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1,-x2,-x3,-x4}), 2), DISAMBIGUATE(ncoproduct_vec));
-  // const std::vector space_b = {
-  //   + ncoproduct(QLi2(x1,x2,x3,x4), QLi2(x4,-x1,-x4,x1))
-  //   - ncoproduct(QLi2(x2,x3,x4,-x1), QLi2(-x1,-x2,x1,x2))
-  //   + ncoproduct(QLi2(x3,x4,-x1,-x2), QLi2(-x2,-x3,x2,x3))
-  //   - ncoproduct(QLi2(x4,-x1,-x2,-x3), QLi2(-x3,-x4,x3,x4))
-  // };
+  const std::vector points_inv = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // const auto space_a = mapped(CL4(points_inv), DISAMBIGUATE(ncoproduct));
+  auto space_a = CL4(points_inv);
+  for (const int i : range(points_inv.size())) {
+    auto p = points_inv;
+    p[i] = Inf;
+    append_vector(space_a, CL4(p));
+  }
+
+  // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1}), 2), DISAMBIGUATE(ncoproduct_vec));
+  // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1,-x2,-x3,-x4}), 2), DISAMBIGUATE(ncoproduct_vec));
+  const auto new_func_comult =
+    + ncoproduct(QLi2(x1,x2,x3,x4), QLi2(x4,-x1,-x4,x1))
+    - ncoproduct(QLi2(x2,x3,x4,-x1), QLi2(-x1,-x2,x1,x2))
+    + ncoproduct(QLi2(x3,x4,-x1,-x2), QLi2(-x2,-x3,x2,x3))
+    - ncoproduct(QLi2(x4,-x1,-x2,-x3), QLi2(-x3,-x4,x3,x4))
+  ;
+  // const std::vector space_b = {new_func_comult};
+
   // const auto ranks = space_mapping_ranks(
   //   concat(
   //     space_a,
   //     space_b
   //   ),
+  //   // space_a,
   //   DISAMBIGUATE(identity_function),
   //   [](const auto& expr) {
   //     if (expr.is_zero()) {
@@ -1432,6 +1442,68 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // );
   // std::cout << to_string(ranks) << "\n";
+
+  // const auto ranks = space_mapping_ranks(
+  //   mapped(space_a, DISAMBIGUATE(to_lyndon_basis)),
+  //   DISAMBIGUATE(identity_function),
+  //   DISAMBIGUATE(keep_non_weakly_separated_inv)
+  //   // [&](const auto& expr) {
+  //   //   return std::tuple{
+  //   //     keep_non_weakly_separated_inv(expr),
+  //   //     ncomultiply(expr, {2,2}) - new_func_comult,
+  //   //   };
+  //   // }
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+  // const auto ranks = space_venn_ranks(
+  //   mapped(space_a, [](const auto& expr) { return ncomultiply(expr, {2,2}); }),
+  //   space_b,
+  //   DISAMBIGUATE(identity_function)
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // CHECK(is_totally_weakly_separated_inv(QLi4(x1,x2,x3,x4,-x1,Inf)));
+  // std::cout << is_totally_weakly_separated_inv(QLi4(x1,x2,x3,x4,Inf,-x2)) << "\n";
+  const std::vector space = {
+    QLi4(x1,x2,x3,x4,-x1,Inf),
+    QLi4(x2,x3,x4,-x1,-x2,Inf),
+    QLi4(x3,x4,-x1,-x2,-x3,Inf),
+    QLi4(x4,-x1,-x2,-x3,-x4,Inf),
+    QLi4(x1,x2,Inf,-x1,-x2,-x3),
+    // QLi4(x1,x2,x3,x4,Inf,-x1),
+    // QLi4(x2,x3,x4,-x1,Inf,-x2),
+    // QLi4(x3,x4,-x1,-x2,Inf,-x3),
+    // QLi4(x4,-x1,-x2,-x3,Inf,-x4),
+    // QLi4(x1,x2,x3,Inf,x4,-x1),
+    // QLi4(x2,x3,x4,Inf,-x1,-x2),
+    // QLi4(x3,x4,-x1,Inf,-x2,-x3),
+    // QLi4(x4,-x1,-x2,Inf,-x3,-x4),
+  };
+  // for (const auto& expr : space) {
+  //   CHECK(is_totally_weakly_separated_inv(expr));
+  // }
+  const auto ranks = space_mapping_ranks(
+    mapped(space, DISAMBIGUATE(to_lyndon_basis)),
+    DISAMBIGUATE(identity_function),
+    [&](const auto& expr) {
+      return std::tuple{
+        // keep_non_weakly_separated_inv(expr),
+        ncomultiply(expr, {2,2}) - new_func_comult,
+      };
+    }
+  );
+  std::cout << to_string(ranks) << "\n";
+
+  // const auto ranks = space_venn_ranks(
+  //   space_a,
+  //   // space,
+  //   {QLi4(x1,x2,Inf,-x1,-x2,-x3)},
+  //   DISAMBIGUATE(to_lyndon_basis)
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
 
   // const std::vector space = {
   //   + supervremenno(x1,x2,x3,x4)
@@ -1462,23 +1534,23 @@ int main(int /*argc*/, char *argv[]) {
   //   + ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
   // );
 
-  std::cout << to_lyndon_basis(
-    +  supervremenno(x1,x2,x3,x4)
-    -  supervremenno(x1,x2,x3,x5)
-    +  supervremenno(x1,x2,x4,x5)
-    -  supervremenno(x1,x3,x4,x5)
-    +  supervremenno(x2,x3,x4,x5)
-    // -2*ncomultiply(QLi4(x1,x2,x3,x4,x5,-x1), {2,2})
-    // -2*ncomultiply(QLi4(x2,x3,x4,x5,-x1,-x2), {2,2})
-    // -2*ncomultiply(QLi4(x3,x4,x5,-x1,-x2,-x3), {2,2})
-    // -2*ncomultiply(QLi4(x4,x5,-x1,-x2,-x3,-x4), {2,2})
-    // -2*ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
-    -2*QLi4_Comult_2_2(x1,x2,x3,x4,x5,-x1)
-    -2*QLi4_Comult_2_2(x2,x3,x4,x5,-x1,-x2)
-    -2*QLi4_Comult_2_2(x3,x4,x5,-x1,-x2,-x3)
-    -2*QLi4_Comult_2_2(x4,x5,-x1,-x2,-x3,-x4)
-    -2*QLi4_Comult_2_2(x5,-x1,-x2,-x3,-x4,-x5)
-  );
+  // std::cout << to_lyndon_basis(
+  //   +  supervremenno(x1,x2,x3,x4)
+  //   -  supervremenno(x1,x2,x3,x5)
+  //   +  supervremenno(x1,x2,x4,x5)
+  //   -  supervremenno(x1,x3,x4,x5)
+  //   +  supervremenno(x2,x3,x4,x5)
+  //   // -2*ncomultiply(QLi4(x1,x2,x3,x4,x5,-x1), {2,2})
+  //   // -2*ncomultiply(QLi4(x2,x3,x4,x5,-x1,-x2), {2,2})
+  //   // -2*ncomultiply(QLi4(x3,x4,x5,-x1,-x2,-x3), {2,2})
+  //   // -2*ncomultiply(QLi4(x4,x5,-x1,-x2,-x3,-x4), {2,2})
+  //   // -2*ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
+  //   -2*QLi4_Comult_2_2(x1,x2,x3,x4,x5,-x1)
+  //   -2*QLi4_Comult_2_2(x2,x3,x4,x5,-x1,-x2)
+  //   -2*QLi4_Comult_2_2(x3,x4,x5,-x1,-x2,-x3)
+  //   -2*QLi4_Comult_2_2(x4,x5,-x1,-x2,-x3,-x4)
+  //   -2*QLi4_Comult_2_2(x5,-x1,-x2,-x3,-x4,-x5)
+  // );
 
   // std::cout << to_string(space_mapping_ranks(
   //   mapped(cartesian_power(L2({x1,x2,x3,x4,-x1,-x2,-x3,-x4}), 2), DISAMBIGUATE(ncoproduct_vec)),
