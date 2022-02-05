@@ -130,28 +130,6 @@ GammaExpr SymmCGrLi4(const std::vector<int>& points) {
   );
 }
 
-// TODO: rename
-GammaExpr arrow_left(const GammaExpr& expr, int num_dst_points) {
-  GammaExpr ret;
-  const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
-  for (const int i : range(num_dst_points)) {
-    const auto dst_points = removed_index(all_dst_points, i);
-    ret += neg_one_pow(i) * substitute_variables(expr, dst_points);
-  }
-  return ret;
-}
-
-// TODO: rename
-GammaExpr arrow_up(const GammaExpr& expr, int num_dst_points) {
-  GammaExpr ret;
-  const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
-  for (const int i : range(num_dst_points)) {
-    const auto [removed_points, dst_points] = split_indices(all_dst_points, {i});
-    ret += neg_one_pow(i) * pullback(substitute_variables(expr, dst_points), removed_points);
-  }
-  return ret;
-}
-
 GammaExpr symmetrize_double(const GammaExpr& expr, int num_points) {
   const auto points = to_vector(range_incl(1, num_points));
   const int sign = neg_one_pow(num_points);
@@ -168,9 +146,6 @@ GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
   return ret;
 }
 
-// TODO: Test:  arrow_left(arrow_left(x)) == 0
-// TODO: Test:  arrow_up(arrow_up(x)) == 0
-// TODO: Test:  arrow_left(arrow_up(x)) + arrow_up(arrow_left(x) == 0
 // TODO: Test:  symmetrize_double(symmetrize_loop(x)) == 0
 
 template<typename Container>
@@ -695,26 +670,6 @@ int main(int /*argc*/, char *argv[]) {
   // // std::cout << to_lyndon_basis(expr);
   // // std::cout << to_lyndon_basis(expr).termwise_abs().mapped_expanding(to_grqli_func_expr);
 
-  // const int dimension = 3;
-  // const std::vector points = {1,2,3,4,5};
-  // std::cout << to_string(space_venn_ranks(
-  //   mapped_expanding(
-  //     cartesian_product(GrL2(dimension, points), GrFx(dimension, points)),
-  //     [](const auto& p) -> std::vector<GammaNCoExpr> {
-  //       auto ret = ncomultiply(std::apply(DISAMBIGUATE(ncoproduct), p));
-  //       if (is_totally_weakly_separated(ret)) {
-  //         const auto& [a, b] = p;
-  //         std::cout << annotations_one_liner(a.annotations()) << " * " << annotations_one_liner(b.annotations()) << "\n";
-  //         return {ret};
-  //       } else {
-  //         return {};
-  //       }
-  //     }
-  //   ),
-  //   {C335(points)},
-  //   DISAMBIGUATE(to_lyndon_basis)
-  // )) << "\n";
-
 
 
   // std::cout << to_string(space_mapping_ranks(
@@ -1019,10 +974,10 @@ int main(int /*argc*/, char *argv[]) {
   //         //   lies on one the source space bases.
   //         const auto q = GammaExpr();
   //         // const auto q = to_lyndon_basis(symmetrize_double(expr, num_points));
-  //         // const auto x = to_lyndon_basis(symmetrize_loop(arrow_left(expr, num_points + 1), num_points + 1));
-  //         // const auto y = to_lyndon_basis(symmetrize_loop(arrow_up(expr, num_points + 1), num_points + 1));
-  //         const auto x = to_lyndon_basis(arrow_left(expr, num_points + 1));
-  //         const auto y = to_lyndon_basis(arrow_up(expr, num_points + 1));
+  //         // const auto x = to_lyndon_basis(symmetrize_loop(chern_arrow_left(expr, num_points + 1), num_points + 1));
+  //         // const auto y = to_lyndon_basis(symmetrize_loop(chern_arrow_up(expr, num_points + 1), num_points + 1));
+  //         const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+  //         const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
   //         const auto z = GammaExpr();
   //         switch (expr.dimension()) {
   //           // case 2: return std::tuple{x, y, z, z};

@@ -70,6 +70,7 @@ cc_library(
     name = "math",
     hdrs = [
         "lib/algebra.h",
+        "lib/chern_arrow.h",
         "lib/coalgebra.h",
         "lib/corr_expression.h",
         "lib/delta.h",
@@ -95,6 +96,7 @@ cc_library(
         "lib/x.h",
     ],
     srcs = [
+        "lib/chern_arrow.cpp",
         "lib/corr_expression.cpp",
         "lib/delta.cpp",
         "lib/delta_parse.cpp",
