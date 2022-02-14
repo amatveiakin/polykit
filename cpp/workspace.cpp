@@ -1320,6 +1320,7 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
+#if 0
   const std::vector points_inv = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
   // const auto space_a = mapped(CL4(points_inv), DISAMBIGUATE(ncoproduct));
   auto space_a = CL4(points_inv);
@@ -1423,6 +1424,7 @@ int main(int /*argc*/, char *argv[]) {
     }
   );
   std::cout << to_string(ranks) << "\n";
+#endif
 
   // const auto ranks = space_venn_ranks(
   //   space_a,
@@ -1501,4 +1503,78 @@ int main(int /*argc*/, char *argv[]) {
   //     std::cout << "w=" << weight << ", n=" << points_inv.size() << ": " << rank << "\n";
   //   }
   // }
+
+
+
+  const int num_points = 7;
+  auto source = sum_looped_vec(
+    [&](const auto& args) {
+      return LiQuad(num_points / 2 - 1, args);
+    },
+    num_points,
+    to_vector(range_incl(1, num_points - 1))
+  );
+
+  auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
+
+  constexpr char kInvalidInput[] = "Invalid input: ";
+  std::cout << "Functional\n" << source.annotations() << "\n";
+  while (true) {
+    std::vector<std::vector<int>> balls;
+    std::unique_ptr<Snowpal> snowpal;
+    auto reset_snowpal = [&]() {
+      snowpal = absl::make_unique<Snowpal>(expr, num_points);
+      for (const auto& b : balls) {
+        snowpal->add_ball(b);
+      }
+    };
+    reset_snowpal();
+    std::cout << "Original " << expr << "\n";
+    while (true) {
+      std::cout << "> ";
+      std::string input;
+      std::getline(std::cin, input);
+      trim(input);
+      if (input.empty()) {
+        continue;
+      } else if (input == "q" || input == "quit") {
+        return 0;
+      } else if (input == "r" || input == "reset") {
+        break;
+      } else if (input == "b" || input == "back") {
+        if (balls.empty()) {
+          std::cout << kInvalidInput << "nothing to remove\n";
+          continue;
+        }
+        balls.pop_back();
+        reset_snowpal();
+        std::cout << "Reverted " << *snowpal << "\n";
+        continue;
+      }
+      std::vector<int> ball;
+      try {
+        for (const char ch : input) {
+          if (std::isspace(ch)) {
+            continue;
+          }
+          const int var = std::stoi(std::string(1, ch));
+          if (var < 1 || var > num_points) {
+            throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
+          }
+          ball.push_back(var);
+        }
+      } catch (const std::exception& e) {
+        std::cout << kInvalidInput << e.what() << "\n";
+        continue;
+      }
+      try {
+        snowpal->add_ball(ball);
+        balls.push_back(ball);
+        std::cout << "Substituted " << *snowpal << "\n";
+      } catch (const IllegalTreeCutException& e) {
+        std::cout << kInvalidInput << e.what() << "\n";
+        reset_snowpal();
+      }
+    }
+  }
 }
