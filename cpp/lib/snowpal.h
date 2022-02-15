@@ -137,5 +137,8 @@ private:
   LiraExpr expr_;
 };
 
-std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const SplittingTree& splitting_tree);
+std::ostream& to_ostream(
+    std::ostream& os, const LiraExpr& expr, const SplittingTree& splitting_tree,
+    bool short_form_ratios);
+std::ostream& to_ostream(std::ostream& os, const Snowpal& snowpal, bool short_form_ratios);
 std::ostream& operator<<(std::ostream& os, const Snowpal& snowpal);

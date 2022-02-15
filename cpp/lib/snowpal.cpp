@@ -386,22 +386,30 @@ Snowpal& Snowpal::add_ball(std::vector<int> points) {
   // expr_ = fully_normalize_ratios(expr_);
   // expr_ = keep_distinct_ratios(expr_);
   // expr_ = keep_independent_ratios(expr_);
-  // expr_ = normalize_inverse(expr_);
+  expr_ = normalize_inverse(expr_);
   expr_ = to_lyndon_basis(expr_);
   return *this;
 }
 
-std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const SplittingTree& splitting_tree) {
-  ShortFormRatioStorage short_forms{splitting_tree.generate_short_form_ratios()};
-  expr.foreach([&](const LiraParamOnes& param, int) {
-    for (const auto& r : param.ratios()) {
-      if (!r.is_unity()) {
-        short_forms.record_usage_stats(r.as_ratio());
+std::ostream& to_ostream(
+    std::ostream& os, const LiraExpr& expr, const SplittingTree& splitting_tree,
+    bool short_form_ratios) {
+  const auto& snow_expr = expr.cast_to<SnowLiraExpr>();
+  ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
+  if (short_form_ratios) {
+    ShortFormRatioStorage short_forms{splitting_tree.generate_short_form_ratios()};
+    expr.foreach([&](const LiraParamOnes& param, int) {
+      for (const auto& r : param.ratios()) {
+        if (!r.is_unity()) {
+          short_forms.record_usage_stats(r.as_ratio());
+        }
       }
-    }
-  });
-  short_forms.update_normal_forms();
-  to_ostream(os, expr.cast_to<SnowLiraExpr>(), std::less<>{}, &short_forms);
+    });
+    short_forms.update_normal_forms();
+    to_ostream(os, snow_expr, std::less<>{}, &short_forms);
+  } else {
+    os << snow_expr;
+  }
   const auto nbr_indices_per_vertex = splitting_tree.dump_nbr_indices();
   if (nbr_indices_per_vertex.size() >= 2) {
     os << "^^^\n";
@@ -421,6 +429,10 @@ std::ostream& to_ostream(std::ostream& os, const LiraExpr& expr, const Splitting
   return os;
 }
 
+std::ostream& to_ostream(std::ostream& os, const Snowpal& snowpal, bool short_form_ratios) {
+  return to_ostream(os, snowpal.expr(), snowpal.splitting_tree(), short_form_ratios);
+}
+
 std::ostream& operator<<(std::ostream& os, const Snowpal& snowpal) {
-  return to_ostream(os, snowpal.expr(), snowpal.splitting_tree());
+  return to_ostream(os, snowpal, true);
 }
