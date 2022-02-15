@@ -43,40 +43,40 @@ inline void trim(std::string &s) {
   trim_right(s);
 }
 
-inline std::string trimed_left(std::string s) {
+[[nodiscard]] inline std::string trimed_left(std::string s) {
   trim_left(s);
   return s;
 }
 
-inline std::string trimed_right(std::string s) {
+[[nodiscard]] inline std::string trimed_right(std::string s) {
   trim_right(s);
   return s;
 }
 
-inline std::string trimed(std::string s) {
+[[nodiscard]] inline std::string trimed(std::string s) {
   trim(s);
   return s;
 }
 
 
-inline std::string pad_left(std::string str, int width, char padding = ' ') {
+[[nodiscard]] inline std::string pad_left(std::string str, int width, char padding = ' ') {
   return std::string(std::max(0, width - strlen_utf8(str)), padding) +
       std::move(str);
 }
 
-inline std::string pad_right(std::string str, int width, char padding = ' ') {
+[[nodiscard]] inline std::string pad_right(std::string str, int width, char padding = ' ') {
   return std::move(str) +
       std::string(std::max(0, width - strlen_utf8(str)), padding);
 }
 
-inline std::string pad_twosided(std::string str, int width, char padding = ' ') {
+[[nodiscard]] inline std::string pad_twosided(std::string str, int width, char padding = ' ') {
   const int padding_width = std::max(0, width - strlen_utf8(str));
   return std::string(padding_width / 2, padding) +
       std::move(str) +
       std::string((padding_width + 1) / 2, padding);
 }
 
-inline std::string pad_string(TextAlignment alignment, std::string str, int width, char padding = ' ') {
+[[nodiscard]] inline std::string pad_string(TextAlignment alignment, std::string str, int width, char padding = ' ') {
   SWITCH_ENUM_OR_DIE(alignment, {
     case TextAlignment::left: return pad_right(std::move(str), width, padding);
     case TextAlignment::center: return pad_twosided(std::move(str), width, padding);
