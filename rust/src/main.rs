@@ -4,6 +4,11 @@ pub mod polylog;
 
 
 fn main() {
-    println!("{}", polylog::QLi(2, &[1,2,3,4,5,6]));
-    println!("{}", math::Linear::single("test") * 200);
+    let mut timer = base::Timer::new();
+    let mut checksum = 0;
+    for _ in 0..1000 {
+        checksum += polylog::QLi(4, &[1,2,3,4,5,6,7,8]).l1_norm();
+    }
+    println!("Checksum: {}", checksum);
+    timer.finish("QLi");
 }
