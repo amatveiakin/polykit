@@ -1,0 +1,9 @@
+[package]
+name = "polykit"
+version = "0.1.0"
+authors = ["Andrei Matveiakin <a.matveiakin@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+num = "0.4"
+trait-set = "0.3.0"
