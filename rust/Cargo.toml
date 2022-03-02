@@ -6,4 +6,5 @@ edition = "2021"
 
 [dependencies]
 num = "0.4"
+smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"

@@ -1,12 +1,13 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops::{Index, Range, RangeFull};
+use smallvec::{SmallVec, smallvec};
 
 use super::linear::{Linear, TensorProduct};
 
 
-// TODO: Compact representation (entire Delta in a single i8) + inlined vector
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+// TODO: Compact representation (entire Delta in a single i8)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Delta {
     a: i8,
     b: i8,
@@ -47,7 +48,7 @@ impl fmt::Display for Delta {
 
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct DeltaProduct(pub Vec<Delta>);
+pub struct DeltaProduct(pub SmallVec<[Delta; 8]>);
 
 impl Index<Range<usize>> for DeltaProduct {
     type Output = [Delta];
@@ -64,7 +65,12 @@ impl Index<RangeFull> for DeltaProduct {
 
 impl TensorProduct for DeltaProduct {
     fn tensor_product(&self, rhs: &DeltaProduct) -> DeltaProduct {
-        DeltaProduct([&self[..], &rhs[..]].concat())
+        let mut ret = self.0.clone();
+        // Note: `ret.extend_from_slice(&rhs.0);` seems to be a bit slower. Not sure, why.
+        for v in &rhs.0 {
+            ret.push(*v);
+        }
+        DeltaProduct(ret)
     }
 }
 
@@ -80,5 +86,5 @@ pub type DeltaExpr = Linear<DeltaProduct>;
 
 #[allow(non_snake_case)]
 pub fn D(a: i32, b: i32) -> DeltaExpr {
-    DeltaExpr::single(DeltaProduct(Vec::from([Delta::new(a, b)])))
+    DeltaExpr::single(DeltaProduct(smallvec![Delta::new(a, b)]))
 }
