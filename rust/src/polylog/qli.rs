@@ -1,3 +1,7 @@
+#![allow(non_snake_case)]
+
+use tuple_conv::TupleOrVec;
+
 use crate::math::{DeltaExpr, cross_ratio_vec, neg_cross_ratio, tensor_product};
 
 
@@ -16,7 +20,6 @@ fn qli_node_func(p: &[Point]) -> DeltaExpr {
     }
 }
 
-#[allow(non_snake_case)]
 fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
     let num_points = points.len() as i32;
     if num_points < 4 || num_points % 2 != 0 {
@@ -57,9 +60,22 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
     }
 }
 
-#[allow(non_snake_case)]
 pub fn QLi(weight: i32, points: &[i32]) -> DeltaExpr {
     let tagged_points: Vec<Point> =
         points.iter().enumerate().map(|(i, p)| Point{ x: *p, odd: (i+1) % 2 == 1 }).collect();
     QLi_impl(weight, &tagged_points)
 }
+
+pub fn QLi1<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(1, &args.as_vec()) }
+pub fn QLi2<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(2, &args.as_vec()) }
+pub fn QLi3<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(3, &args.as_vec()) }
+pub fn QLi4<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(4, &args.as_vec()) }
+pub fn QLi5<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(5, &args.as_vec()) }
+pub fn QLi6<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(6, &args.as_vec()) }
+pub fn QLi7<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(7, &args.as_vec()) }
+pub fn QLi8<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(8, &args.as_vec()) }
+
+// Alternative:
+//   #[macro_export] macro_rules! QLi1 { ( $( $x:expr ),* ) => { polylog::QLi(1, &[ $( $x, )* ]) } }
+//   #[macro_export] macro_rules! QLi2 { ( $( $x:expr ),* ) => { polylog::QLi(2, &[ $( $x, )* ]) } }
+//   ...
