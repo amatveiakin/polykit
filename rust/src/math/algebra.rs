@@ -1,14 +1,14 @@
-use crate::math::{Linear, LinearObject, TensorProduct};
+use crate::math::{Linear, LinearMonom, TensorProduct};
 
 
-pub fn tensor_product<ObjectT>(lhs: Linear<ObjectT>, rhs: Linear<ObjectT>) -> Linear<ObjectT>
+pub fn tensor_product<MonomT>(lhs: Linear<MonomT>, rhs: Linear<MonomT>) -> Linear<MonomT>
 where
-    ObjectT: LinearObject + TensorProduct,
+    MonomT: LinearMonom + TensorProduct,
 {
-    let mut ret = Linear::<ObjectT>::zero();
-    for (l_obj, l_coeff) in (&lhs).into_iter() {
-        for (r_obj, r_coeff) in (&rhs).into_iter() {
-            ret.add_to(l_obj.tensor_product(r_obj), l_coeff * r_coeff);
+    let mut ret = Linear::<MonomT>::zero();
+    for (l, l_coeff) in (&lhs).into_iter() {
+        for (r, r_coeff) in (&rhs).into_iter() {
+            ret.add_to(l.tensor_product(r), l_coeff * r_coeff);
         }
     }
     ret

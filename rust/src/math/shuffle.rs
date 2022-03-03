@@ -1,12 +1,12 @@
 use crate::base::VectorLike;
-use crate::math::{Linear, LinearObject};
+use crate::math::{Linear, LinearMonom};
 
 
 // TODO: Unroll
 pub fn shuffle_product<T, MonomT>(u: MonomT, v: MonomT) -> Linear<MonomT>
 where
     T: Clone,
-    MonomT: LinearObject + VectorLike<T>,
+    MonomT: LinearMonom + VectorLike<T>,
 {
     if u.is_empty() && v.is_empty() {
         return Linear::<MonomT>::zero();
@@ -37,7 +37,7 @@ where
 pub fn shuffle_product_multi<T, MonomT>(words: &[MonomT]) -> Linear<MonomT>
 where
     T: Clone,
-    MonomT: LinearObject + VectorLike<T>,
+    MonomT: LinearMonom + VectorLike<T>,
 {
     match words.len() {
         0 => Linear::<MonomT>::zero(),
