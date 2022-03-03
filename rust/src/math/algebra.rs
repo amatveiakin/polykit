@@ -5,7 +5,7 @@ pub fn tensor_product<ObjectT>(lhs: Linear<ObjectT>, rhs: Linear<ObjectT>) -> Li
 where
     ObjectT: LinearObject + TensorProduct,
 {
-    let mut ret = Linear::<ObjectT>::new();
+    let mut ret = Linear::<ObjectT>::zero();
     for (l_obj, l_coeff) in (&lhs).into_iter() {
         for (r_obj, r_coeff) in (&rhs).into_iter() {
             ret.add_to(l_obj.tensor_product(r_obj), l_coeff * r_coeff);

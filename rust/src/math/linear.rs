@@ -8,25 +8,25 @@ use trait_set::trait_set;
 use i32 as Coeff;
 
 trait_set! {
-    // TODO: Rename `Object` to something more meaningful here and in other places.
+    // TODO: Rename `Object` to something more meaningful here and in other places (`Monom`?)
     // TODO: Use a trait alias when they are stable: https://github.com/rust-lang/rust/issues/41517.
     // Note: `Ord` is required only for printing.
-    pub trait LinearObject = Eq + Ord + Hash + Clone + Display + Debug;
+    pub trait LinearObject = Eq + Ord + Hash + Clone + Debug;
 }
 
 pub trait TensorProduct {
     fn tensor_product(&self, rhs: &Self) -> Self;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Linear<ObjectT: LinearObject> {
     data: HashMap<ObjectT, Coeff>,
 }
 
 impl<ObjectT: LinearObject> Linear<ObjectT> {
-    pub fn new() -> Self { Linear{ data: HashMap::new() } }
+    pub fn zero() -> Self { Self{ data: HashMap::new() } }
     pub fn single(object: ObjectT) -> Self {
-        let mut ret = Linear::new();
+        let mut ret = Self::zero();
         ret.add_to(object, 1);
         ret
     }
@@ -37,6 +37,23 @@ impl<ObjectT: LinearObject> Linear<ObjectT> {
             norm += coeff.abs();
         }
         norm
+    }
+
+    // TODO: Support different destination type
+    pub fn mapped<F: Fn(&ObjectT) -> ObjectT>(&self, f: F) -> Self {
+        let mut ret = Self::zero();
+        for (obj, coeff) in self.into_iter() {
+            ret.add_to(f(obj), *coeff);
+        }
+        ret
+    }
+    // TODO: Support different destination type
+    pub fn mapped_expanding<F: Fn(&ObjectT) -> Self>(&self, f: F) -> Self {
+        let mut ret = Self::zero();
+        for (obj, coeff) in self.into_iter() {
+            ret += f(obj) * *coeff;
+        }
+        ret
     }
 
     pub fn add_to(&mut self, object: ObjectT, v: Coeff) {
@@ -144,13 +161,25 @@ fn coeff_to_string(coeff: i32) -> String {
     }
 }
 
-impl<ObjectT: LinearObject> Display for Linear<ObjectT> {
+fn write_linear<ObjectT: LinearObject>(
+    expr: &Linear<ObjectT>,
+    f: &mut fmt::Formatter<'_>,
+    obj_printer: fn(&ObjectT) -> String
+) -> fmt::Result {
+    let mut elements: Vec<_> = expr.data.iter().collect();
+    elements.sort();
+    for (obj, coeff) in elements.iter() {
+        writeln!(f, "{} {}", coeff_to_string(**coeff), obj_printer(*obj))?;
+    }
+    Ok(())
+}
+impl<ObjectT: LinearObject + Display> Display for Linear<ObjectT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut elements: Vec<_> = self.data.iter().collect();
-        elements.sort();
-        for (obj, coeff) in elements.iter() {
-            writeln!(f, "{} {}", coeff_to_string(**coeff), *obj)?;
-        }
-        Ok(())
+        write_linear(self, f, |obj| obj.to_string())
+    }
+}
+impl<ObjectT: LinearObject> Debug for Linear<ObjectT> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_linear(self, f, |obj| format!("{:?}", obj))
     }
 }

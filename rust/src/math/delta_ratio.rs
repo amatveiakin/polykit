@@ -9,7 +9,7 @@ pub fn cross_ratio(a: i32, b: i32, c: i32, d: i32) -> DeltaExpr {
 pub fn cross_ratio_vec(p: &[i32]) -> DeltaExpr {
     let n = p.len();
     assert!(n % 2 == 0);
-    let mut ret = DeltaExpr::new();
+    let mut ret = DeltaExpr::zero();
     for i in 0..n {
         ret += neg_one_pow(i) * D(p[i], p[(i+1)%n]);
     }

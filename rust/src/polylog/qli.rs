@@ -31,7 +31,7 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
     }
 
     let subsums = || {
-        let mut ret = DeltaExpr::new();
+        let mut ret = DeltaExpr::zero();
         for i in 0 .. (num_points as usize) - 3 {
             let foundation = [&points[..i+1], &points[i+3..]].concat();
             ret += tensor_product(
