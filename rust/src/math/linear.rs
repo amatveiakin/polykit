@@ -57,10 +57,10 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
 
     pub fn add_to(&mut self, monom: MonomT, v: Coeff) {
         match self.data.entry(monom) {
-            hash_map::Entry::Occupied(occupied) => {
+            hash_map::Entry::Occupied(mut occupied) => {
                 let new_value = occupied.get() + v;
                 if new_value != 0 {
-                    *occupied.into_mut() = new_value;
+                    *occupied.get_mut() = new_value;
                 } else {
                     occupied.remove();
                 }
