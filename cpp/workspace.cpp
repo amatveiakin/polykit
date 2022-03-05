@@ -355,11 +355,12 @@ int main(int /*argc*/, char *argv[]) {
 
   Profiler profiler;
   int64_t checksum = 0;
-  for (EACH : range(1000)) {
-    checksum += QLi4(1,2,3,4,5,6,7,8).l1_norm();
+  for (EACH : range(100)) {
+    checksum += to_lyndon_basis(QLi4(1,2,3,4,5,6,7,8)).l1_norm();
   }
   std::cout << "Checksum: " << checksum << "\n";
   profiler.finish("QLi");
+
   return 0;
 
 

@@ -52,3 +52,45 @@ where
         },
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn monom(v: &[i32]) -> Linear<Vec<i32>> {
+        Linear::<Vec::<i32>>::single(v.to_vec())
+    }
+
+    #[test]
+    fn shuffle_product_1_1() {
+        assert_eq!(
+            shuffle_product(vec![1], vec![2]),
+              monom(&[1, 2])
+            + monom(&[2, 1])
+        );
+    }
+
+    #[test]
+    fn shuffle_product_2_1() {
+        assert_eq!(
+            shuffle_product(vec![1,2], vec![3]),
+              monom(&[1, 2, 3])
+            + monom(&[1, 3, 2])
+            + monom(&[3, 1, 2])
+        );
+    }
+
+    #[test]
+    fn shuffle_product_2_2() {
+        assert_eq!(
+            shuffle_product(vec![1,2], vec![3,4]),
+              monom(&[1, 2, 3, 4])
+            + monom(&[1, 3, 2, 4])
+            + monom(&[3, 1, 2, 4])
+            + monom(&[1, 3, 4, 2])
+            + monom(&[3, 1, 4, 2])
+            + monom(&[3, 4, 1, 2])
+        );
+    }
+}

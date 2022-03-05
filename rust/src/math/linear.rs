@@ -5,7 +5,7 @@ use std::ops;
 use trait_set::trait_set;
 
 
-use i32 as Coeff;
+pub use i32 as Coeff;
 
 trait_set! {
     // TODO: Use a trait alias when they are stable: https://github.com/rust-lang/rust/issues/41517.
@@ -17,7 +17,7 @@ pub trait TensorProduct {
     fn tensor_product(&self, rhs: &Self) -> Self;
 }
 
-#[derive(Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Linear<MonomT: LinearMonom> {
     data: HashMap<MonomT, Coeff>,
 }
@@ -27,6 +27,13 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     pub fn single(monom: MonomT) -> Self {
         let mut ret = Self::zero();
         ret.add_to(monom, 1);
+        ret
+    }
+    pub fn from_collection(collection: &[MonomT]) -> Self {
+        let mut ret = Self::zero();
+        for monom in collection {
+            ret.add_to(monom.clone(), 1);
+        }
         ret
     }
 
@@ -55,6 +62,16 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
         ret
     }
 
+    pub fn div_int(&mut self, denominator: Coeff) {
+        for (_k, v) in &mut self.data {
+            assert!(*v % denominator == 0);
+            *v /= denominator;
+        }
+    }
+
+    pub fn coeff_for(&self, monom: &MonomT) -> Coeff {
+        *self.data.get(monom).unwrap_or(&0)
+    }
     pub fn add_to(&mut self, monom: MonomT, v: Coeff) {
         match self.data.entry(monom) {
             hash_map::Entry::Occupied(mut occupied) => {
@@ -131,23 +148,23 @@ impl<MonomT: LinearMonom> ops::Sub for Linear<MonomT> {
     }
 }
 
-impl<MonomT: LinearMonom> ops::Mul<i32> for Linear<MonomT> {
+impl<MonomT: LinearMonom> ops::Mul<Coeff> for Linear<MonomT> {
     type Output = Self;
-    fn mul(mut self, factor: i32) -> Self {
+    fn mul(mut self, factor: Coeff) -> Self {
         for (_k, v) in &mut self.data {
             *v *= factor;
         }
         self
     }
 }
-impl<MonomT: LinearMonom> ops::Mul<Linear<MonomT>> for i32 {
+impl<MonomT: LinearMonom> ops::Mul<Linear<MonomT>> for Coeff {
     type Output = Linear<MonomT>;
     fn mul(self, expr: Linear<MonomT>) -> Linear<MonomT> {
         expr * self
     }
 }
 
-fn coeff_to_string(coeff: i32) -> String {
+fn coeff_to_string(coeff: Coeff) -> String {
     if coeff == 1 {
         String::from(" +")
     } else if coeff == -1 {

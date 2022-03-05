@@ -1,9 +1,10 @@
 use std::cmp::Ordering;
 use std::fmt;
-use std::ops::{Index, Range, RangeFull};
+use std::ops::{Index, Range, RangeFrom, RangeTo, RangeFull};
 use smallvec::{SmallVec, smallvec};
 
-use super::linear::{Linear, TensorProduct};
+use crate::base::{VectorLike};
+use crate::math::{Linear, TensorProduct};
 
 
 // TODO: Compact representation (entire Delta in a single i8)
@@ -50,9 +51,33 @@ impl fmt::Display for Delta {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeltaProduct(pub SmallVec<[Delta; 8]>);
 
+impl From<&[Delta]> for DeltaProduct {
+    fn from(slice: &[Delta]) -> Self {
+        DeltaProduct(<SmallVec::<[Delta; 8]> as From<&[Delta]>>::from(slice))
+    }
+}
+
+impl Index<usize> for DeltaProduct {
+    type Output = Delta;
+    fn index(&self, idx: usize) -> &Self::Output {
+        &self.0[idx]
+    }
+}
 impl Index<Range<usize>> for DeltaProduct {
     type Output = [Delta];
     fn index(&self, range: Range<usize>) -> &Self::Output {
+        &self.0[range]
+    }
+}
+impl Index<RangeFrom<usize>> for DeltaProduct {
+    type Output = [Delta];
+    fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
+        &self.0[range]
+    }
+}
+impl Index<RangeTo<usize>> for DeltaProduct {
+    type Output = [Delta];
+    fn index(&self, range: RangeTo<usize>) -> &Self::Output {
         &self.0[range]
     }
 }
@@ -79,6 +104,14 @@ impl fmt::Display for DeltaProduct {
         let element_strings: Vec<_> = self.0.iter().map(|d| d.to_string()).collect();
         write!(f, "{}", element_strings.join(" * "))
     }
+}
+
+impl VectorLike<Delta> for DeltaProduct {
+    fn from(s: &[Delta]) -> Self { <Self as From<&[Delta]>>::from(s) }
+    fn len(&self) -> usize { self.0.len() }
+    fn is_empty(&self) -> bool { self.0.is_empty() }
+    fn pop(&mut self) -> Option<Delta> { self.0.pop() }
+    fn push(&mut self, value: Delta) { self.0.push(value) }
 }
 
 
