@@ -60,7 +60,7 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
             hash_map::Entry::Occupied(occupied) => {
                 let new_value = occupied.get() + v;
                 if new_value != 0 {
-                    *occupied.into_mut() += new_value;
+                    *occupied.into_mut() = new_value;
                 } else {
                     occupied.remove();
                 }
