@@ -268,7 +268,6 @@ public:
     add_to_key(ParamT::object_to_key(obj), x);
   }
   void add_to_key(const StorageT& key, int x) {
-    // Equivalent to `set_coeff_for_key(key, coeff_for_key(key) + x);` but faster.
     int& value = data_[key];
     value += x;
     if (value == 0) {
@@ -409,13 +408,13 @@ public:
 
   BasicLinear& operator+=(const BasicLinear& other) {
     for (const auto& [key, coeff]: other.data_) {
-      set_coeff_for_key(key, coeff_for_key(key) + coeff);
+      add_to_key(key, coeff);
     }
     return *this;
   }
   BasicLinear& operator-=(const BasicLinear& other) {
     for (const auto& [key, coeff]: other.data_) {
-      set_coeff_for_key(key, coeff_for_key(key) - coeff);
+      add_to_key(key, -coeff);
     }
     return *this;
   }
@@ -446,14 +445,6 @@ public:
   }
 
 private:
-  void set_coeff_for_key(const StorageT& key, int coeff) {
-    if (coeff != 0) {
-      data_[key] = coeff;
-    } else {
-      data_.erase(key);
-    }
-  }
-
   ContainerT data_;
 };
 
