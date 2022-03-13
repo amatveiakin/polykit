@@ -1,5 +1,3 @@
-#![feature(map_first_last)]
-
 pub mod base;
 pub mod math;
 pub mod polylog;
