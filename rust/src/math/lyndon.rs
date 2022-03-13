@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::base::VectorLike;
-use crate::math::{Coeff, Linear, LinearMonom, shuffle_product_multi};
+use crate::math::{Coeff, Linear, LinearMonom, MonomVectorizable, shuffle_product_multi};
 
 
 fn factorial(x: Coeff) -> Coeff {
@@ -63,16 +63,15 @@ where
 //   to build the priority queue. In order to keep the ability to compute Lyndon
 //   basis for a mixed-weight expression, we could check length when filling the
 //   queue.
-pub fn to_lyndon_basis<T, MonomT>(expr: Linear<MonomT>) -> Linear<MonomT>
+pub fn to_lyndon_basis<MonomT>(expr: Linear<MonomT>) -> Linear<MonomT>
 where
-    T: Ord + Clone,
-    MonomT: LinearMonom + VectorLike<T>,
+    MonomT: LinearMonom + MonomVectorizable,
 {
-    let mut terms_to_convert = BTreeMap::<MonomT, Coeff>::new();
+    let mut terms_to_convert = BTreeMap::<MonomT::AsVector, Coeff>::new();
     for (monom, coeff) in expr.into_iter() {
-        terms_to_convert.insert(monom, coeff);
+        terms_to_convert.insert(monom.to_vector(), coeff);
     }
-    let mut terms_converted = Linear::<MonomT>::zero();
+    let mut terms_converted = Linear::<MonomT::AsVector>::zero();
 
     while let Some((word, coeff)) = terms_to_convert.pop_last() {
         if coeff == 0 {
@@ -92,7 +91,7 @@ where
             continue;
         }
 
-        let lyndon_expr = Linear::<MonomT>::from_collection(&lyndon_words);
+        let lyndon_expr = Linear::<MonomT::AsVector>::from_collection(&lyndon_words);
         let mut denominator: Coeff = 1;
         for (_, coeff) in lyndon_expr {
             denominator *= factorial(coeff);
@@ -108,7 +107,8 @@ where
         }
     }
 
-    terms_converted
+    // TODO: Make this trivial when MonomT is trivially vectorizable.
+    terms_converted.mapped(|v| <MonomT as MonomVectorizable>::from_vector(v))
 }
 
 

@@ -4,6 +4,8 @@ use std::hash::Hash;
 use std::ops;
 use trait_set::trait_set;
 
+use crate::base::{VectorLike};
+
 
 pub use i32 as Coeff;
 
@@ -16,6 +18,21 @@ trait_set! {
 pub trait TensorProduct {
     fn tensor_product(&self, rhs: &Self) -> Self;
 }
+
+pub trait MonomVectorizable: LinearMonom {
+    type Element: Ord + Clone;  // `Ord` required for Lyndon basis
+    type AsVector: LinearMonom + VectorLike<Self::Element>;
+    fn to_vector(self) -> Self::AsVector;
+    fn from_vector(v: Self::AsVector) -> Self;
+}
+
+impl<T: Eq + Ord + Hash + Clone + Debug> MonomVectorizable for Vec<T> {
+    type Element = T;
+    type AsVector = Self;
+    fn to_vector(self) -> Self { self }
+    fn from_vector(v: Self) -> Self { v }
+}
+
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct Linear<MonomT: LinearMonom> {
@@ -45,19 +62,25 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
         norm
     }
 
-    // TODO: Support different destination type
-    pub fn mapped<F: Fn(&MonomT) -> MonomT>(&self, f: F) -> Self {
-        let mut ret = Self::zero();
+    pub fn mapped<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
+    where
+        NewMonomT: LinearMonom,
+        F: Fn(MonomT) -> NewMonomT,
+    {
+        let mut ret = Linear::<NewMonomT>::zero();
         for (monom, coeff) in self.into_iter() {
-            ret.add_to(f(monom), *coeff);
+            ret.add_to(f(monom), coeff);
         }
         ret
     }
-    // TODO: Support different destination type
-    pub fn mapped_expanding<F: Fn(&MonomT) -> Self>(&self, f: F) -> Self {
-        let mut ret = Self::zero();
+    pub fn mapped_expanding<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
+    where
+        NewMonomT: LinearMonom,
+        F: Fn(MonomT) -> Linear<NewMonomT>,
+    {
+        let mut ret = Linear::<NewMonomT>::zero();
         for (monom, coeff) in self.into_iter() {
-            ret += f(monom) * *coeff;
+            ret += f(monom) * coeff;
         }
         ret
     }

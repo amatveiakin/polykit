@@ -4,7 +4,7 @@ use std::ops::{Index, Range, RangeFrom, RangeTo, RangeFull};
 use smallvec::{SmallVec, smallvec};
 
 use crate::base::{VectorLike};
-use crate::math::{Linear, TensorProduct};
+use crate::math::{Linear, MonomVectorizable, TensorProduct};
 
 
 // TODO: Compact representation (entire Delta in a single i8)
@@ -86,6 +86,13 @@ impl Index<RangeFull> for DeltaProduct {
     fn index(&self, _: RangeFull) -> &Self::Output {
         &self.0[..]
     }
+}
+
+impl MonomVectorizable for DeltaProduct {
+    type Element = Delta;
+    type AsVector = Self;
+    fn to_vector(self) -> Self { self }
+    fn from_vector(v: Self) -> Self { v }
 }
 
 impl TensorProduct for DeltaProduct {
