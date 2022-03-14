@@ -35,8 +35,8 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
         for i in 0 .. (num_points as usize) - 3 {
             let foundation = [&points[..i+1], &points[i+3..]].concat();
             ret += tensor_product(
-                qli_node_func(&points[i..i+4]),
-                QLi_impl(weight - 1, &foundation)
+                &qli_node_func(&points[i..i+4]),
+                &QLi_impl(weight - 1, &foundation)
             );
         }
         ret
@@ -50,8 +50,8 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
     } else {
         let cross_ratio_args: Vec<i32> = points.iter().map(|p| p.x).collect();
         let mut ret = tensor_product(
-            cross_ratio_vec(&cross_ratio_args),
-            QLi_impl(weight - 1, points)
+            &cross_ratio_vec(&cross_ratio_args),
+            &QLi_impl(weight - 1, points)
         );
         if num_points > 4 {
             ret += subsums();
