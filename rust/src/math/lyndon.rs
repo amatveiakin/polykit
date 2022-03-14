@@ -17,12 +17,9 @@ fn map_pop_last<K, V>(m: &mut BTreeMap<K, V>) -> Option<(K, V)>
 where
     K: Ord + Clone,
 {
-    let last = m.iter().next_back();
-    if let Some((k, _)) = last {
-        let k_copy = k.clone();
-        return m.remove_entry(&k_copy);
-    }
-    None
+    let (k, _) = m.iter().next_back()?;
+    let k_copy = k.clone();
+    return m.remove_entry(&k_copy);
 }
 
 
