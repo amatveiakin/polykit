@@ -63,7 +63,9 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
 pub fn QLi(weight: i32, points: &[i32]) -> DeltaExpr {
     let tagged_points: Vec<Point> =
         points.iter().enumerate().map(|(i, p)| Point{ x: *p, odd: (i+1) % 2 == 1 }).collect();
-    QLi_impl(weight, &tagged_points)
+    QLi_impl(weight, &tagged_points).annotated(
+        format!("QLi_{}({})", weight, points.iter().map(|p| p.to_string()).collect::<Vec<String>>().join(","))
+    )
 }
 
 pub fn QLi1<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(1, &args.as_vec()) }

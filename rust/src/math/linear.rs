@@ -35,11 +35,11 @@ impl<T: Eq + Ord + Hash + Clone + Debug> MonomVectorizable for Vec<T> {
 
 
 #[derive(PartialEq, Eq, Clone)]
-pub struct Linear<MonomT: LinearMonom> {
+pub struct BasicLinear<MonomT: LinearMonom> {
     data: HashMap<MonomT, Coeff>,
 }
 
-impl<MonomT: LinearMonom> Linear<MonomT> {
+impl<MonomT: LinearMonom> BasicLinear<MonomT> {
     pub fn zero() -> Self { Self{ data: HashMap::new() } }
     pub fn single(monom: MonomT) -> Self {
         let mut ret = Self::zero();
@@ -54,13 +54,177 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
         ret
     }
 
+    #[inline]
+    pub fn iter(&self) -> hash_map::Iter<'_, MonomT, Coeff> { self.data.iter() }
+
+    pub fn is_zero(&self) -> bool { self.data.is_empty() }
     pub fn l1_norm(&self) -> Coeff {
         let mut norm: Coeff = 0;
-        for (_, coeff) in (&self).into_iter() {
+        for (_, coeff) in (&self).iter() {
             norm += coeff.abs();
         }
         norm
     }
+
+    pub fn div_int(&mut self, denominator: Coeff) {
+        for (_k, v) in &mut self.data {
+            assert!(*v % denominator == 0);
+            *v /= denominator;
+        }
+    }
+
+    #[inline]
+    pub fn coeff_for(&self, monom: &MonomT) -> Coeff {
+        *self.data.get(monom).unwrap_or(&0)
+    }
+    #[inline]
+    pub fn add_to(&mut self, monom: MonomT, v: Coeff) {
+        match self.data.entry(monom) {
+            hash_map::Entry::Occupied(mut occupied) => {
+                let new_value = occupied.get() + v;
+                if new_value != 0 {
+                    *occupied.get_mut() = new_value;
+                } else {
+                    occupied.remove();
+                }
+            }
+            hash_map::Entry::Vacant(vacant) => {
+                if v != 0 {
+                    vacant.insert(v);
+                }
+            }
+        }
+    }
+}
+
+impl<MonomT: LinearMonom> IntoIterator for BasicLinear<MonomT> {
+    type Item = (MonomT, Coeff);
+    type IntoIter = hash_map::IntoIter<MonomT, Coeff>;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+impl<MonomT: LinearMonom> ops::Neg for BasicLinear<MonomT> {
+    type Output = Self;
+    fn neg(mut self) -> Self {
+        for (_k, v) in &mut self.data {
+            *v = -*v;
+        }
+        self
+    }
+}
+
+impl<MonomT: LinearMonom> ops::AddAssign for BasicLinear<MonomT> {
+    fn add_assign(&mut self, rhs: Self) {
+        for (k, v) in rhs.data {
+            self.add_to(k, v);
+        }
+    }
+}
+impl<MonomT: LinearMonom> ops::SubAssign for BasicLinear<MonomT> {
+    fn sub_assign(&mut self, rhs: Self) {
+        for (k, v) in rhs.data {
+            self.add_to(k, -v);
+        }
+    }
+}
+
+impl<MonomT: LinearMonom> ops::Add for BasicLinear<MonomT> {
+    type Output = Self;
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+impl<MonomT: LinearMonom> ops::Sub for BasicLinear<MonomT> {
+    type Output = Self;
+    fn sub(mut self, rhs: Self) -> Self {
+        self -= rhs;
+        self
+    }
+}
+
+impl<MonomT: LinearMonom> ops::Mul<Coeff> for BasicLinear<MonomT> {
+    type Output = Self;
+    fn mul(mut self, factor: Coeff) -> Self {
+        if factor == 0 {
+            return Self::zero();
+        }
+        for (_k, v) in &mut self.data {
+            *v *= factor;
+        }
+        self
+    }
+}
+impl<MonomT: LinearMonom> ops::Mul<BasicLinear<MonomT>> for Coeff {
+    type Output = BasicLinear<MonomT>;
+    fn mul(self, expr: BasicLinear<MonomT>) -> BasicLinear<MonomT> {
+        expr * self
+    }
+}
+
+fn coeff_to_string(coeff: Coeff) -> String {
+    if coeff == 1 {
+        String::from(" +")
+    } else if coeff == -1 {
+        String::from(" -")
+    } else if coeff == 0 {
+        String::from(" 0")
+    } else {
+        // Use two separate `format` calls to prevent the plus sign from being discarded.
+        format!("{:>2}", format!("{:+}", coeff))
+    }
+}
+
+fn write_basic_linear<MonomT: LinearMonom>(
+    expr: &BasicLinear<MonomT>,
+    f: &mut fmt::Formatter<'_>,
+    monom_printer: fn(&MonomT) -> String
+) -> fmt::Result {
+    let mut elements: Vec<_> = expr.data.iter().collect();
+    elements.sort();
+    for (monom, coeff) in elements.iter() {
+        writeln!(f, "{} {}", coeff_to_string(**coeff), monom_printer(*monom))?;
+    }
+    Ok(())
+}
+impl<MonomT: LinearMonom + Display> Display for BasicLinear<MonomT> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_basic_linear(self, f, |monom| monom.to_string())
+    }
+}
+impl<MonomT: LinearMonom> Debug for BasicLinear<MonomT> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write_basic_linear(self, f, |monom| format!("{:?}", monom))
+    }
+}
+
+
+#[derive(PartialEq, Eq, Clone)]
+pub struct Linear<MonomT: LinearMonom> {
+    main: BasicLinear<MonomT>,
+    annotations: BasicLinear<String>,
+}
+
+impl<MonomT: LinearMonom> Linear<MonomT> {
+    pub fn zero() -> Self {
+        Self{ main: BasicLinear::zero(), annotations: BasicLinear::zero() }
+    }
+    pub fn single(monom: MonomT) -> Self {
+        Self{ main: BasicLinear::single(monom), annotations: BasicLinear::zero() }
+    }
+    pub fn from_collection(collection: &[MonomT]) -> Self {
+        Self{ main: BasicLinear::from_collection(collection), annotations: BasicLinear::zero() }
+    }
+
+    #[inline]
+    pub fn iter(&self) -> hash_map::Iter<'_, MonomT, Coeff> { self.main.iter() }
+
+    pub fn is_zero(&self) -> bool { self.main.is_zero() }
+    pub fn is_blank(&self) -> bool { self.main.is_zero() && self.annotations.is_zero() }
+    pub fn l1_norm(&self) -> Coeff { self.main.l1_norm() }
 
     pub fn mapped<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
@@ -85,99 +249,63 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
         ret
     }
 
-    pub fn div_int(&mut self, denominator: Coeff) {
-        for (_k, v) in &mut self.data {
-            assert!(*v % denominator == 0);
-            *v /= denominator;
-        }
-    }
+    pub fn div_int(&mut self, denominator: Coeff) { self.main.div_int(denominator) }
 
-    pub fn coeff_for(&self, monom: &MonomT) -> Coeff {
-        *self.data.get(monom).unwrap_or(&0)
-    }
-    pub fn add_to(&mut self, monom: MonomT, v: Coeff) {
-        match self.data.entry(monom) {
-            hash_map::Entry::Occupied(mut occupied) => {
-                let new_value = occupied.get() + v;
-                if new_value != 0 {
-                    *occupied.get_mut() = new_value;
-                } else {
-                    occupied.remove();
-                }
-            }
-            hash_map::Entry::Vacant(vacant) => {
-                if v != 0 {
-                    vacant.insert(v);
-                }
-            }
-        }
-    }
-}
-
-impl<'a, MonomT: LinearMonom> IntoIterator for &'a Linear<MonomT> {
-    type Item = (&'a MonomT, &'a Coeff);
-    type IntoIter = hash_map::Iter<'a, MonomT, Coeff>;
     #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.iter()
+    pub fn coeff_for(&self, monom: &MonomT) -> Coeff { self.main.coeff_for(monom) }
+    #[inline]
+    pub fn add_to(&mut self, monom: MonomT, v: Coeff) { self.main.add_to(monom, v) }
+
+    pub fn annotated(mut self, annotation: String) -> Self {
+        self.annotations.add_to(annotation, 1);
+        self
     }
 }
+
 impl<MonomT: LinearMonom> IntoIterator for Linear<MonomT> {
     type Item = (MonomT, Coeff);
     type IntoIter = hash_map::IntoIter<MonomT, Coeff>;
     #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
-    }
+    fn into_iter(self) -> Self::IntoIter { self.main.into_iter() }
 }
 
 impl<MonomT: LinearMonom> ops::Neg for Linear<MonomT> {
     type Output = Self;
-    fn neg(mut self) -> Self {
-        for (_k, v) in &mut self.data {
-            *v = -*v;
-        }
-        self
+    fn neg(self) -> Self {
+        Self{ main: -self.main, annotations: -self.annotations }
     }
 }
 
 impl<MonomT: LinearMonom> ops::AddAssign for Linear<MonomT> {
     fn add_assign(&mut self, rhs: Self) {
-        for (k, v) in rhs.data {
-            self.add_to(k, v);
-        }
+        self.main += rhs.main;
+        self.annotations += rhs.annotations;
     }
 }
 impl<MonomT: LinearMonom> ops::SubAssign for Linear<MonomT> {
     fn sub_assign(&mut self, rhs: Self) {
-        for (k, v) in rhs.data {
-            self.add_to(k, -v);
-        }
+        self.main -= rhs.main;
+        self.annotations -= rhs.annotations;
     }
 }
 
 impl<MonomT: LinearMonom> ops::Add for Linear<MonomT> {
     type Output = Self;
-    fn add(mut self, rhs: Self) -> Self {
-        self += rhs;
-        self
+    fn add(self, rhs: Self) -> Self {
+        Self{ main: self.main + rhs.main, annotations: self.annotations + rhs.annotations }
     }
 }
 impl<MonomT: LinearMonom> ops::Sub for Linear<MonomT> {
     type Output = Self;
-    fn sub(mut self, rhs: Self) -> Self {
-        self -= rhs;
-        self
+    fn sub(self, rhs: Self) -> Self {
+        Self{ main: self.main - rhs.main, annotations: self.annotations - rhs.annotations }
     }
 }
 
 impl<MonomT: LinearMonom> ops::Mul<Coeff> for Linear<MonomT> {
     type Output = Self;
-    fn mul(mut self, factor: Coeff) -> Self {
-        for (_k, v) in &mut self.data {
-            *v *= factor;
-        }
-        self
+    fn mul(self, factor: Coeff) -> Self {
+        Self{ main: self.main * factor, annotations: self.annotations * factor }
     }
 }
 impl<MonomT: LinearMonom> ops::Mul<Linear<MonomT>> for Coeff {
@@ -187,28 +315,15 @@ impl<MonomT: LinearMonom> ops::Mul<Linear<MonomT>> for Coeff {
     }
 }
 
-fn coeff_to_string(coeff: Coeff) -> String {
-    if coeff == 1 {
-        String::from(" +")
-    } else if coeff == -1 {
-        String::from(" -")
-    } else if coeff == 0 {
-        String::from(" 0")
-    } else {
-        // Use two separate `format` calls to prevent the plus sign from being discarded.
-        format!("{:>2}", format!("{:+}", coeff))
-    }
-}
-
 fn write_linear<MonomT: LinearMonom>(
     expr: &Linear<MonomT>,
     f: &mut fmt::Formatter<'_>,
     monom_printer: fn(&MonomT) -> String
 ) -> fmt::Result {
-    let mut elements: Vec<_> = expr.data.iter().collect();
-    elements.sort();
-    for (monom, coeff) in elements.iter() {
-        writeln!(f, "{} {}", coeff_to_string(**coeff), monom_printer(*monom))?;
+    write_basic_linear(&expr.main, f, monom_printer)?;
+    if !expr.annotations.is_zero() {
+        writeln!(f, "===")?;
+        write_basic_linear(&expr.annotations, f, |monom| monom.clone())?;
     }
     Ok(())
 }
