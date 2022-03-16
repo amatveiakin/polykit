@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops;
+
 use smallvec::{SmallVec, smallvec};
 
 use crate::base::{VectorLike};
@@ -28,15 +29,12 @@ impl PartialOrd for Delta {
 
 impl Delta {
     pub fn new(a: i32, b: i32) -> Delta {
-        if a < b {
-            Delta{ a: a as i8, b: b as i8 }
-        } else {
-            Delta{ a: b as i8, b: a as i8 }
-        }
+        let (smaller, larger) = if a < b { (a, b) } else { (b, a) };
+        Delta{ a: smaller.try_into().unwrap(), b: larger.try_into().unwrap() }
     }
 
-    pub fn a(&self) -> i8 { self.a }
-    pub fn b(&self) -> i8 { self.b }
+    pub fn a(&self) -> i32 { self.a.into() }
+    pub fn b(&self) -> i32 { self.b.into() }
 
     pub fn is_nil(&self) -> bool { self.a == self.b }
 }
@@ -60,6 +58,17 @@ impl From<&[Delta]> for DeltaProduct {
 impl ops::Deref for DeltaProduct {
     type Target = [Delta];
     fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl IntoIterator for DeltaProduct {
+    type Item = Delta;
+    type IntoIter = smallvec::IntoIter<[Delta; 8]>;
+    fn into_iter(self) -> Self::IntoIter { self.0.into_iter() }
+}
+impl FromIterator<Delta> for DeltaProduct {
+    fn from_iter<T: IntoIterator<Item = Delta>>(iter: T) -> Self {
+        DeltaProduct(SmallVec::<[Delta; 8]>::from_iter(iter))
+    }
 }
 
 impl MonomVectorizable for DeltaProduct {

@@ -6,7 +6,9 @@ use smallvec::SmallVec;
 // A trait for objects that behave like vectors. It's not intended to provide
 // complete vector API, feel free to add new fields as necessary.
 pub trait VectorLike<T: Clone>:
-    ops::Deref<Target = [T]>
+    ops::Deref<Target = [T]> +
+    IntoIterator<Item = T> +
+    FromIterator<T> +
     // Why doesn't this work?
     //   TODO: Debug and use instead of manual `from(...)`; remove `as From` casts
     //   in various places afterwards.

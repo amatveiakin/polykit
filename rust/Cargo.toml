@@ -5,6 +5,7 @@ authors = ["Andrei Matveiakin <a.matveiakin@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+bitvec = "1.0.0"
 num = "0.4"
 smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"
