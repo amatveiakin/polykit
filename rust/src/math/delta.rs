@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt;
-use std::ops::{Index, Range, RangeFrom, RangeTo, RangeFull};
+use std::ops;
 use smallvec::{SmallVec, smallvec};
 
 use crate::base::{VectorLike};
@@ -57,35 +57,9 @@ impl From<&[Delta]> for DeltaProduct {
     }
 }
 
-impl Index<usize> for DeltaProduct {
-    type Output = Delta;
-    fn index(&self, idx: usize) -> &Self::Output {
-        &self.0[idx]
-    }
-}
-impl Index<Range<usize>> for DeltaProduct {
-    type Output = [Delta];
-    fn index(&self, range: Range<usize>) -> &Self::Output {
-        &self.0[range]
-    }
-}
-impl Index<RangeFrom<usize>> for DeltaProduct {
-    type Output = [Delta];
-    fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
-        &self.0[range]
-    }
-}
-impl Index<RangeTo<usize>> for DeltaProduct {
-    type Output = [Delta];
-    fn index(&self, range: RangeTo<usize>) -> &Self::Output {
-        &self.0[range]
-    }
-}
-impl Index<RangeFull> for DeltaProduct {
-    type Output = [Delta];
-    fn index(&self, _: RangeFull) -> &Self::Output {
-        &self.0[..]
-    }
+impl ops::Deref for DeltaProduct {
+    type Target = [Delta];
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl MonomVectorizable for DeltaProduct {

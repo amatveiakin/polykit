@@ -1,4 +1,4 @@
-use std::ops::{Index, Range, RangeFrom, RangeTo};
+use std::ops;
 
 use smallvec::SmallVec;
 
@@ -6,10 +6,7 @@ use smallvec::SmallVec;
 // A trait for objects that behave like vectors. It's not intended to provide
 // complete vector API, feel free to add new fields as necessary.
 pub trait VectorLike<T: Clone>:
-    Index<usize, Output = T> +
-    Index<Range<usize>, Output = [T]> +
-    Index<RangeFrom<usize>, Output = [T]> +
-    Index<RangeTo<usize>, Output = [T]> +
+    ops::Deref<Target = [T]>
     // Why doesn't this work?
     //   TODO: Debug and use instead of manual `from(...)`; remove `as From` casts
     //   in various places afterwards.
