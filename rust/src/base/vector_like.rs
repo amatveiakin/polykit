@@ -15,8 +15,6 @@ pub trait VectorLike<T: Clone>:
     // From<&[T]>
 {
     fn from(s: &[T]) -> Self;
-    fn len(&self) -> usize;
-    fn is_empty(&self) -> bool;
     fn pop(&mut self) -> Option<T>;
     fn push(&mut self, value: T);
 }
@@ -25,8 +23,6 @@ pub trait VectorLike<T: Clone>:
 macro_rules! vector_like_impl {
     () => {
         fn from(s: &[T]) -> Self { <Self as From<&[T]>>::from(s) }
-        fn len(&self) -> usize { self.len() }
-        fn is_empty(&self) -> bool { self.is_empty() }
         fn pop(&mut self) -> Option<T> { self.pop() }
         fn push(&mut self, value: T) { self.push(value) }
     };

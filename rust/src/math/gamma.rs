@@ -99,8 +99,6 @@ impl fmt::Display for GammaProduct {
 
 impl VectorLike<Gamma> for GammaProduct {
     fn from(s: &[Gamma]) -> Self { <Self as From<&[Gamma]>>::from(s) }
-    fn len(&self) -> usize { self.0.len() }
-    fn is_empty(&self) -> bool { self.0.is_empty() }
     fn pop(&mut self) -> Option<Gamma> { self.0.pop() }
     fn push(&mut self, value: Gamma) { self.0.push(value) }
 }

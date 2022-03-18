@@ -98,8 +98,6 @@ impl fmt::Display for DeltaProduct {
 
 impl VectorLike<Delta> for DeltaProduct {
     fn from(s: &[Delta]) -> Self { <Self as From<&[Delta]>>::from(s) }
-    fn len(&self) -> usize { self.0.len() }
-    fn is_empty(&self) -> bool { self.0.is_empty() }
     fn pop(&mut self) -> Option<Delta> { self.0.pop() }
     fn push(&mut self, value: Delta) { self.0.push(value) }
 }
