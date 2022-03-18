@@ -226,6 +226,7 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     pub fn is_blank(&self) -> bool { self.main.is_zero() && self.annotations.is_zero() }
     pub fn l1_norm(&self) -> Coeff { self.main.l1_norm() }
 
+    // TODO: Copy annotations in `mapped` and `mapped_expanding`
     pub fn mapped<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
         NewMonomT: LinearMonom,
