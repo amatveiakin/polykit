@@ -51,8 +51,7 @@ impl Gamma {
 
 impl fmt::Display for Gamma {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let index_strings: Vec<_> = self.index_vector().iter().map(|d| d.to_string()).collect();
-        write!(f, "({})", index_strings.join(","))
+        write!(f, "({})", self.index_vector().iter().map(|d| d.to_string()).join(","))
     }
 }
 
@@ -101,8 +100,7 @@ impl TensorProduct for GammaProduct {
 
 impl fmt::Display for GammaProduct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let element_strings: Vec<_> = self.0.iter().map(|d| d.to_string()).collect();
-        write!(f, "{}", element_strings.join(" * "))
+        write!(f, "{}", self.0.iter().map(|d| d.to_string()).join(" * "))
     }
 }
 

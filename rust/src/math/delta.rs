@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::ops;
 
+use itertools::Itertools;
 use smallvec::{SmallVec, smallvec};
 
 use crate::{vector_like_impl};
@@ -90,8 +91,7 @@ impl TensorProduct for DeltaProduct {
 
 impl fmt::Display for DeltaProduct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let element_strings: Vec<_> = self.0.iter().map(|d| d.to_string()).collect();
-        write!(f, "{}", element_strings.join(" * "))
+        write!(f, "{}", self.0.iter().map(|d| d.to_string()).join(" * "))
     }
 }
 
