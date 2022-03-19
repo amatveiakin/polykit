@@ -69,14 +69,14 @@ pub fn QLi(weight: i32, points: &[i32]) -> DeltaExpr {
     )
 }
 
-pub fn QLi1<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(1, &args.as_vec()) }
-pub fn QLi2<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(2, &args.as_vec()) }
-pub fn QLi3<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(3, &args.as_vec()) }
-pub fn QLi4<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(4, &args.as_vec()) }
-pub fn QLi5<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(5, &args.as_vec()) }
-pub fn QLi6<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(6, &args.as_vec()) }
-pub fn QLi7<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(7, &args.as_vec()) }
-pub fn QLi8<Args: TupleOrVec<i32>>(args: Args) -> DeltaExpr { QLi(8, &args.as_vec()) }
+pub fn QLi1<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(1, &points.as_vec()) }
+pub fn QLi2<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(2, &points.as_vec()) }
+pub fn QLi3<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(3, &points.as_vec()) }
+pub fn QLi4<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(4, &points.as_vec()) }
+pub fn QLi5<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(5, &points.as_vec()) }
+pub fn QLi6<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(6, &points.as_vec()) }
+pub fn QLi7<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(7, &points.as_vec()) }
+pub fn QLi8<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(8, &points.as_vec()) }
 
 // Alternative:
 //   #[macro_export] macro_rules! QLi1 { ( $( $x:expr ),* ) => { polylog::QLi(1, &[ $( $x, )* ]) } }

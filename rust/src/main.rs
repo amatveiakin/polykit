@@ -18,4 +18,6 @@ fn main() {
     println!("{}", QLi2((1,2,3,4)));
     println!("{}", to_lyndon_basis(QLi2((1,2,3,4))));
     println!("{}", pullback(QLi2((1,2,3,4)), &[5,6]));
+    println!("{}", GrQLi2((1,2,3,4), (5,6)));
+    println!("{}", GrQLi2((1,2,3,4), Vec::<i32>::new()));
 }
