@@ -1,14 +1,13 @@
 #![allow(non_snake_case)]
 
 use itertools::Itertools;
-use tuple_conv::TupleOrVec;
 
-use crate::math::{DeltaExpr, cross_ratio_vec, neg_cross_ratio, tensor_product};
+use crate::math::{X, DeltaExpr, cross_ratio_vec, neg_cross_ratio, tensor_product};
 
 
 #[derive(Debug, Clone)]
 struct Point {
-    x: i32,
+    x: X,
     odd: bool,
 }
 
@@ -49,7 +48,7 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
             subsums()
         }
     } else {
-        let cross_ratio_args: Vec<i32> = points.iter().map(|p| p.x).collect();
+        let cross_ratio_args: Vec<_> = points.iter().map(|p| p.x).collect();
         let mut ret = tensor_product(
             &cross_ratio_vec(&cross_ratio_args),
             &QLi_impl(weight - 1, points)
@@ -61,7 +60,7 @@ fn QLi_impl(weight: i32, points: &[Point]) -> DeltaExpr {
     }
 }
 
-pub fn QLi(weight: i32, points: &[i32]) -> DeltaExpr {
+pub fn QLi(weight: i32, points: &[X]) -> DeltaExpr {
     let tagged_points: Vec<Point> =
         points.iter().enumerate().map(|(i, p)| Point{ x: *p, odd: (i+1) % 2 == 1 }).collect();
     QLi_impl(weight, &tagged_points).annotate(
@@ -69,16 +68,11 @@ pub fn QLi(weight: i32, points: &[i32]) -> DeltaExpr {
     )
 }
 
-pub fn QLi1<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(1, &points.as_vec()) }
-pub fn QLi2<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(2, &points.as_vec()) }
-pub fn QLi3<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(3, &points.as_vec()) }
-pub fn QLi4<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(4, &points.as_vec()) }
-pub fn QLi5<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(5, &points.as_vec()) }
-pub fn QLi6<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(6, &points.as_vec()) }
-pub fn QLi7<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(7, &points.as_vec()) }
-pub fn QLi8<Points: TupleOrVec<i32>>(points: Points) -> DeltaExpr { QLi(8, &points.as_vec()) }
-
-// Alternative:
-//   #[macro_export] macro_rules! QLi1 { ( $( $x:expr ),* ) => { polylog::QLi(1, &[ $( $x, )* ]) } }
-//   #[macro_export] macro_rules! QLi2 { ( $( $x:expr ),* ) => { polylog::QLi(2, &[ $( $x, )* ]) } }
-//   ...
+#[macro_export] macro_rules! QLi1 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(1, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi2 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(2, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi3 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(3, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi4 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(4, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi5 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(5, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi6 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(6, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi7 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(7, &[ $( $crate::math::X::from($x), )* ]) } }
+#[macro_export] macro_rules! QLi8 { ( $( $x:expr ),* ) => { $crate::polylog::QLi(8, &[ $( $crate::math::X::from($x), )* ]) } }

@@ -5,6 +5,7 @@ mod gamma;
 mod linear;
 mod lyndon;
 mod shuffle;
+mod x;
 
 pub use algebra::*;
 pub use delta::*;
@@ -13,3 +14,4 @@ pub use gamma::*;
 pub use linear::*;
 pub use lyndon::*;
 pub use shuffle::*;
+pub use x::*;

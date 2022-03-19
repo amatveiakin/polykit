@@ -10,4 +10,3 @@ itertools = "0.10.3"
 num = "0.4"
 smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"
-tuple-conv = "1.0.1"

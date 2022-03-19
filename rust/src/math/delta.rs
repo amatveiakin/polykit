@@ -6,8 +6,8 @@ use itertools::Itertools;
 use smallvec::{SmallVec, smallvec};
 
 use crate::{vector_like_impl};
-use crate::base::{VectorLike};
-use crate::math::{Linear, MonomVectorizable, TensorProduct};
+use crate::base::{VectorLike, sort_two};
+use crate::math::{X, XArg, Linear, MonomVectorizable, TensorProduct};
 
 
 // TODO: Compact representation (entire Delta in a single i8)
@@ -30,9 +30,14 @@ impl PartialOrd for Delta {
 }
 
 impl Delta {
-    pub fn new(a: i32, b: i32) -> Delta {
-        let (smaller, larger) = if a < b { (a, b) } else { (b, a) };
-        Delta{ a: smaller.try_into().unwrap(), b: larger.try_into().unwrap() }
+    pub fn new<A: XArg, B: XArg>(a: A, b: B) -> Delta {
+        match (a.as_x(), b.as_x()) {
+            (X::Variable(a_var), X::Variable(b_var)) => {
+                let (smaller, larger) = sort_two((a_var, b_var));
+                Delta{ a: smaller.try_into().unwrap(), b: larger.try_into().unwrap() }
+            }
+            (_, _) => Delta{ a: 0, b: 0 }
+        }
     }
 
     pub fn a(&self) -> i32 { self.a.into() }
@@ -103,6 +108,11 @@ impl VectorLike<Delta> for DeltaProduct {
 pub type DeltaExpr = Linear<DeltaProduct>;
 
 #[allow(non_snake_case)]
-pub fn D(a: i32, b: i32) -> DeltaExpr {
-    DeltaExpr::single(DeltaProduct(smallvec![Delta::new(a, b)]))
+pub fn D<A: XArg, B: XArg>(a: A, b: B) -> DeltaExpr {
+    let d = Delta::new(a, b);
+    if d.is_nil() {
+        DeltaExpr::zero()
+    } else {
+        DeltaExpr::single(DeltaProduct(smallvec![d]))
+    }
 }
