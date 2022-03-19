@@ -4,6 +4,7 @@ use std::ops;
 
 use smallvec::{SmallVec, smallvec};
 
+use crate::{vector_like_impl};
 use crate::base::{VectorLike};
 use crate::math::{Linear, MonomVectorizable, TensorProduct};
 
@@ -49,17 +50,15 @@ impl fmt::Display for Delta {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeltaProduct(pub SmallVec<[Delta; 8]>);
 
+impl ops::Deref for DeltaProduct {
+    type Target = [Delta];
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
 impl From<&[Delta]> for DeltaProduct {
     fn from(slice: &[Delta]) -> Self {
         DeltaProduct(SmallVec::<[Delta; 8]>::from(slice))
     }
 }
-
-impl ops::Deref for DeltaProduct {
-    type Target = [Delta];
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
 impl IntoIterator for DeltaProduct {
     type Item = Delta;
     type IntoIter = smallvec::IntoIter<[Delta; 8]>;
@@ -97,8 +96,7 @@ impl fmt::Display for DeltaProduct {
 }
 
 impl VectorLike<Delta> for DeltaProduct {
-    fn pop(&mut self) -> Option<Delta> { self.0.pop() }
-    fn push(&mut self, value: Delta) { self.0.push(value) }
+    vector_like_impl!(self => self.0, element_type = Delta);
 }
 
 

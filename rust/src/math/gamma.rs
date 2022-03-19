@@ -4,6 +4,7 @@ use std::ops;
 use bitvec::array::{BitArray};
 use smallvec::{SmallVec, smallvec};
 
+use crate::{vector_like_impl};
 use crate::base::{VectorLike};
 use crate::math::{Linear, MonomVectorizable, TensorProduct, Delta, DeltaExpr};
 
@@ -60,17 +61,15 @@ impl fmt::Display for Gamma {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GammaProduct(pub SmallVec<[Gamma; 8]>);
 
+impl ops::Deref for GammaProduct {
+    type Target = [Gamma];
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
 impl From<&[Gamma]> for GammaProduct {
     fn from(slice: &[Gamma]) -> Self {
         GammaProduct(SmallVec::<[Gamma; 8]>::from(slice))
     }
 }
-
-impl ops::Deref for GammaProduct {
-    type Target = [Gamma];
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
 impl IntoIterator for GammaProduct {
     type Item = Gamma;
     type IntoIter = smallvec::IntoIter<[Gamma; 8]>;
@@ -107,8 +106,7 @@ impl fmt::Display for GammaProduct {
 }
 
 impl VectorLike<Gamma> for GammaProduct {
-    fn pop(&mut self) -> Option<Gamma> { self.0.pop() }
-    fn push(&mut self, value: Gamma) { self.0.push(value) }
+    vector_like_impl!(self => self.0, element_type = Gamma);
 }
 
 

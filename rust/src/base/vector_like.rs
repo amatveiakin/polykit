@@ -17,11 +17,16 @@ pub trait VectorLike<T: Clone>:
 
 #[macro_export]
 macro_rules! vector_like_impl {
-    () => {
-        fn pop(&mut self) -> Option<T> { self.pop() }
-        fn push(&mut self, value: T) { self.push(value) }
+    // `$self_object` must be `self`
+    ($self_object:ident => $vector_object:expr, element_type = $element_type:ty) => {
+        fn pop(&mut $self_object) -> Option<$element_type> { $vector_object.pop() }
+        fn push(&mut $self_object, value: $element_type) { $vector_object.push(value) }
     };
 }
 
-impl<T: Clone> VectorLike<T> for Vec<T> { vector_like_impl!(); }
-impl<T: Clone, const N: usize> VectorLike<T> for SmallVec<[T; N]> { vector_like_impl!(); }
+impl<T: Clone> VectorLike<T> for Vec<T> {
+    vector_like_impl!(self => self, element_type = T);
+}
+impl<T: Clone, const N: usize> VectorLike<T> for SmallVec<[T; N]> {
+    vector_like_impl!(self => self, element_type = T);
+}
