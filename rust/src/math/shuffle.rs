@@ -46,7 +46,7 @@ where
         _ => {
             let w_tail = words.last().unwrap();
             let shuffle_product_head = shuffle_product_multi(&words[0 .. words.len()-1]);
-            shuffle_product_head.mapped_expanding(|w_head| {
+            shuffle_product_head.map_expanding(|w_head| {
                 shuffle_product(w_head.clone(), w_tail.clone())
             })
         },

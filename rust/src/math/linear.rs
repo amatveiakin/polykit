@@ -226,8 +226,8 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     pub fn is_blank(&self) -> bool { self.main.is_zero() && self.annotations.is_zero() }
     pub fn l1_norm(&self) -> Coeff { self.main.l1_norm() }
 
-    // TODO: Copy annotations in `mapped` and `mapped_expanding`
-    pub fn mapped<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
+    // TODO: Copy annotations in `map` and `map_expanding`
+    pub fn map<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
         NewMonomT: LinearMonom,
         F: Fn(MonomT) -> NewMonomT,
@@ -238,7 +238,7 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
         }
         ret
     }
-    pub fn mapped_expanding<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
+    pub fn map_expanding<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
         NewMonomT: LinearMonom,
         F: Fn(MonomT) -> Linear<NewMonomT>,
@@ -257,7 +257,7 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     #[inline]
     pub fn add_to(&mut self, monom: MonomT, v: Coeff) { self.main.add_to(monom, v) }
 
-    pub fn annotated(mut self, annotation: String) -> Self {
+    pub fn annotate(mut self, annotation: String) -> Self {
         self.annotations.add_to(annotation, 1);
         self
     }

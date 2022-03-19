@@ -135,13 +135,13 @@ pub fn G(variables: &[i32]) -> GammaExpr {
 
 
 pub fn delta_expr_to_gamma_expr(expr: DeltaExpr) -> GammaExpr {
-    expr.mapped(|monom| {
+    expr.map(|monom| {
         monom.iter().map(|d| Gamma::from_vector(&[d.a(), d.b()])).collect()
     })
 }
 
 pub fn gamma_expr_to_delta_expr(expr: GammaExpr) -> DeltaExpr {
-    expr.mapped(|monom| {
+    expr.map(|monom| {
         monom.iter().map(|g| {
             let variables = g.index_vector();
             assert_eq!(variables.len(), 2);
@@ -159,7 +159,7 @@ pub fn pullback<E: ConvertibleToGammaExpr>(expr: E, bonus_points: &[i32]) -> Gam
         None => { return GammaExpr::zero(); },
         Some(v) => v,
     };
-    g_expr.mapped_expanding(|monom| {
+    g_expr.map_expanding(|monom| {
         let mut is_zero = false;
         let new_monom = monom.iter().map(|g| {
             if (*g.index_bitset() & bonus_points_bitset).any() {

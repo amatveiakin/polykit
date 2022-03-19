@@ -121,7 +121,7 @@ where
     }
 
     // TODO: Make this trivial when MonomT is trivially vectorizable.
-    terms_converted.mapped(|v| <MonomT as MonomVectorizable>::from_vector(v))
+    terms_converted.map(|v| <MonomT as MonomVectorizable>::from_vector(v))
 }
 
 
