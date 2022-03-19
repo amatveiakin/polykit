@@ -81,7 +81,7 @@ where
     MonomT: LinearMonom + MonomVectorizable,
 {
     let mut terms_to_convert = BTreeMap::<MonomT::AsVector, Coeff>::new();
-    for (monom, coeff) in expr.into_iter() {
+    for (monom, coeff) in expr.main.into_iter() {
         terms_to_convert.insert(monom.to_vector(), coeff);
     }
     let mut terms_converted = Linear::<MonomT::AsVector>::zero();
@@ -121,7 +121,11 @@ where
     }
 
     // TODO: Make this trivial when MonomT is trivially vectorizable.
-    terms_converted.map(|v| <MonomT as MonomVectorizable>::from_vector(v))
+    terms_converted.map(
+        |v| <MonomT as MonomVectorizable>::from_vector(v)
+    ).add_annotations(
+        expr.annotations
+    )
 }
 
 

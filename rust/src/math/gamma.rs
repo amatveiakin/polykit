@@ -2,6 +2,7 @@ use std::fmt;
 use std::ops;
 
 use bitvec::array::{BitArray};
+use itertools::Itertools;
 use smallvec::{SmallVec, smallvec};
 
 use crate::{vector_like_impl};
@@ -168,14 +169,7 @@ pub fn pullback<E: ConvertibleToGammaExpr>(expr: E, bonus_points: &[i32]) -> Gam
             Gamma::from_bitset(*g.index_bitset() | bonus_points_bitset)
         }).collect();
         if is_zero { GammaExpr::zero() } else { GammaExpr::single(new_monom) }
+    }).map_annotations(|annotation| {
+        format!("pb({}, {})", annotation, bonus_points.iter().sorted().join(","))
     })
-    // TODO: Fix annotations, relevant C++:
-    //   }).annotations_map([&](const std::string& annotation) {
-    //     // TODO: Find a proper pullback notation
-    //     return fmt::function(
-    //       fmt::opname("pb"),
-    //       {annotation, str_join(sorted(bonus_points), ",")},
-    //       HSpacing::sparse
-    //     );
-    //   });
 }

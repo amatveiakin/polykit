@@ -14,5 +14,8 @@ fn main() {
     // }
     // println!("Checksum: {}", checksum);
     // timer.finish("QLi");
+
     println!("{}", QLi2((1,2,3,4)));
+    println!("{}", to_lyndon_basis(QLi2((1,2,3,4))));
+    println!("{}", pullback(QLi2((1,2,3,4)), &[5,6]));
 }

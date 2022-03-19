@@ -66,6 +66,29 @@ impl<MonomT: LinearMonom> BasicLinear<MonomT> {
         norm
     }
 
+    pub fn map<NewMonomT, F>(self, f: F) -> BasicLinear<NewMonomT>
+    where
+        NewMonomT: LinearMonom,
+        F: Fn(MonomT) -> NewMonomT,
+    {
+        let mut ret = BasicLinear::<NewMonomT>::zero();
+        for (monom, coeff) in self.into_iter() {
+            ret.add_to(f(monom), coeff);
+        }
+        ret
+    }
+    pub fn map_expanding<NewMonomT, F>(self, f: F) -> BasicLinear<NewMonomT>
+    where
+        NewMonomT: LinearMonom,
+        F: Fn(MonomT) -> BasicLinear<NewMonomT>,
+    {
+        let mut ret = BasicLinear::<NewMonomT>::zero();
+        for (monom, coeff) in self.into_iter() {
+            ret += f(monom) * coeff;
+        }
+        ret
+    }
+
     pub fn div_int(&mut self, denominator: Coeff) {
         for (_k, v) in &mut self.data {
             assert!(*v % denominator == 0);
@@ -204,8 +227,8 @@ impl<MonomT: LinearMonom> Debug for BasicLinear<MonomT> {
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct Linear<MonomT: LinearMonom> {
-    main: BasicLinear<MonomT>,
-    annotations: BasicLinear<String>,
+    pub main: BasicLinear<MonomT>,
+    pub annotations: BasicLinear<String>,
 }
 
 impl<MonomT: LinearMonom> Linear<MonomT> {
@@ -226,28 +249,22 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     pub fn is_blank(&self) -> bool { self.main.is_zero() && self.annotations.is_zero() }
     pub fn l1_norm(&self) -> Coeff { self.main.l1_norm() }
 
-    // TODO: Copy annotations in `map` and `map_expanding`
     pub fn map<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
         NewMonomT: LinearMonom,
         F: Fn(MonomT) -> NewMonomT,
     {
-        let mut ret = Linear::<NewMonomT>::zero();
-        for (monom, coeff) in self.into_iter() {
-            ret.add_to(f(monom), coeff);
-        }
-        ret
+        Linear::<NewMonomT>{ main: self.main.map(f), annotations: self.annotations }
     }
     pub fn map_expanding<NewMonomT, F>(self, f: F) -> Linear<NewMonomT>
     where
         NewMonomT: LinearMonom,
         F: Fn(MonomT) -> Linear<NewMonomT>,
     {
-        let mut ret = Linear::<NewMonomT>::zero();
-        for (monom, coeff) in self.into_iter() {
-            ret += f(monom) * coeff;
+        Linear::<NewMonomT>{
+            main: self.main.map_expanding(|monom| f(monom).main),
+            annotations: self.annotations
         }
-        ret
     }
 
     pub fn div_int(&mut self, denominator: Coeff) { self.main.div_int(denominator) }
@@ -260,6 +277,20 @@ impl<MonomT: LinearMonom> Linear<MonomT> {
     pub fn annotate(mut self, annotation: String) -> Self {
         self.annotations.add_to(annotation, 1);
         self
+    }
+    pub fn drop_annotations(mut self) -> Self {
+        self.annotations = BasicLinear::zero();
+        self
+    }
+    pub fn add_annotations(mut self, annotations: BasicLinear<String>) -> Self {
+        self.annotations += annotations;
+        self
+    }
+    pub fn map_annotations<F>(self, f: F) -> Self
+    where
+        F: Fn(String) -> String,
+    {
+        Self{ main: self.main, annotations: self.annotations.map(f) }
     }
 }
 
@@ -323,7 +354,7 @@ fn write_linear<MonomT: LinearMonom>(
 ) -> fmt::Result {
     write_basic_linear(&expr.main, f, monom_printer)?;
     if !expr.annotations.is_zero() {
-        writeln!(f, "===")?;
+        writeln!(f, "~~~")?;
         write_basic_linear(&expr.annotations, f, |monom| monom.clone())?;
     }
     Ok(())
