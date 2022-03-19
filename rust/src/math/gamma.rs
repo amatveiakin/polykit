@@ -62,7 +62,7 @@ pub struct GammaProduct(pub SmallVec<[Gamma; 8]>);
 
 impl From<&[Gamma]> for GammaProduct {
     fn from(slice: &[Gamma]) -> Self {
-        GammaProduct(<SmallVec::<[Gamma; 8]> as From<&[Gamma]>>::from(slice))
+        GammaProduct(SmallVec::<[Gamma; 8]>::from(slice))
     }
 }
 
@@ -107,7 +107,6 @@ impl fmt::Display for GammaProduct {
 }
 
 impl VectorLike<Gamma> for GammaProduct {
-    fn from(s: &[Gamma]) -> Self { <Self as From<&[Gamma]>>::from(s) }
     fn pop(&mut self) -> Option<Gamma> { self.0.pop() }
     fn push(&mut self, value: Gamma) { self.0.push(value) }
 }

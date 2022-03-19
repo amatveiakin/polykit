@@ -9,12 +9,8 @@ pub trait VectorLike<T: Clone>:
     ops::Deref<Target = [T]> +
     IntoIterator<Item = T> +
     FromIterator<T> +
-    // Why doesn't this work?
-    //   TODO: Debug and use instead of manual `from(...)`; remove `as From` casts
-    //   in various places afterwards.
-    // From<&[T]>
+    for <'a> From<&'a [T]>
 {
-    fn from(s: &[T]) -> Self;
     fn pop(&mut self) -> Option<T>;
     fn push(&mut self, value: T);
 }
@@ -22,7 +18,6 @@ pub trait VectorLike<T: Clone>:
 #[macro_export]
 macro_rules! vector_like_impl {
     () => {
-        fn from(s: &[T]) -> Self { <Self as From<&[T]>>::from(s) }
         fn pop(&mut self) -> Option<T> { self.pop() }
         fn push(&mut self, value: T) { self.push(value) }
     };

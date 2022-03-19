@@ -51,7 +51,7 @@ pub struct DeltaProduct(pub SmallVec<[Delta; 8]>);
 
 impl From<&[Delta]> for DeltaProduct {
     fn from(slice: &[Delta]) -> Self {
-        DeltaProduct(<SmallVec::<[Delta; 8]> as From<&[Delta]>>::from(slice))
+        DeltaProduct(SmallVec::<[Delta; 8]>::from(slice))
     }
 }
 
@@ -97,7 +97,6 @@ impl fmt::Display for DeltaProduct {
 }
 
 impl VectorLike<Delta> for DeltaProduct {
-    fn from(s: &[Delta]) -> Self { <Self as From<&[Delta]>>::from(s) }
     fn pop(&mut self) -> Option<Delta> { self.0.pop() }
     fn push(&mut self, value: Delta) { self.0.push(value) }
 }
