@@ -1,6 +1,7 @@
 extern crate itertools;
 extern crate phf;
 extern crate proc_macro;
+extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
@@ -8,12 +9,12 @@ mod parse_latex;
 
 use itertools::Itertools;
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::parse::Parser;
+use quote::{quote, ToTokens};
 use syn::{Token, Lit, Expr};
+use syn::parse::Parser;
 use syn::punctuated::Punctuated;
 
-use parse_latex::{parse_latex, LatexToken, MathCommand, num_command_args};
+use parse_latex::{parse_latex, LatexToken, MathCommand};
 
 
 macro_rules! try_match {
@@ -25,54 +26,53 @@ macro_rules! try_match {
     };
 }
 
-macro_rules! format_tuple {
-    ($format_str:literal 0 $args:ident) => { format!($format_str) };
-    ($format_str:literal 1 $args:ident) => { format!($format_str, $args[0]) };
-    ($format_str:literal 2 $args:ident) => { format!($format_str, $args[0], $args[1]) };
-}
-
-macro_rules! format_command {
-    ($cmd:ident with $num_args:tt $args:ident => $format_str:literal) => {{
-        assert_eq!($num_args, num_command_args($cmd.command));
-        format_tuple!($format_str $num_args $args)
-    }};
-}
-
-fn make_format_for_token(token: LatexToken) -> String {
-    match token {
-        LatexToken::Placeholder() => String::from("{}"),
-        LatexToken::Literal(ch) => String::from(ch),
+fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) -> Expr {
+    syn::Expr::Verbatim(match token {
+        LatexToken::Placeholder(index) => {
+            let arg = macro_args[index].take().unwrap();
+            // TODO: Support things other than literals (like comma-separated lists)
+            quote! { math_format::mfmt::lit((#arg).to_string()) }
+        }
+        LatexToken::Literal(ch) => {
+            quote! { math_format::mfmt::lit(#ch.to_string()) }
+        }
         LatexToken::Command(cmd) => {
-            use MathCommand::*;
-            // TODO: Fix sub- and super-script (need to pass information about context for
-            //   encoders other than LaTeX)
-            let args = cmd.args.into_iter().map(|a| make_format_for_token(a)).collect_vec();
+            use MathCommand as MC;
+            let args = cmd.args.into_iter().map(|a| make_format_for_token(a, macro_args));
             match cmd.command {
-                Subscript => format_command!(cmd with 1 args => "_{}"),
-                Superscript => format_command!(cmd with 1 args => "^{}"),
-                Fraction => format_command!(cmd with 2 args => "{} / {}"),
-                Space => format_command!(cmd with 0 args => " "),
-                Infinity => format_command!(cmd with 0 args => "∞"),
+                MC::Subscript => quote!{ math_format::mfmt::sub(#(#args),*) },
+                MC::Superscript => quote!{ math_format::mfmt::sup(#(#args),*) },
+                MC::Fraction => quote!{ math_format::mfmt::frac(#(#args),*) },
+                MC::Space => quote!{ math_format::mfmt::space(#(#args),*) },
+                MC::Infinity => quote!{ math_format::mfmt::inf(#(#args),*) },
             }
         }
-        LatexToken::Sequence(seq) => seq.into_iter().map(|a| make_format_for_token(a)).join("")
-    }
+        LatexToken::Sequence(seq) => {
+            let args = seq.into_iter().map(|a| make_format_for_token(a, macro_args));
+            quote! { math_format::mfmt::concat(vec![#(#args),*]) }
+        }
+    })
 }
 
-fn make_format_string(src: &str) -> String {
-    make_format_for_token(parse_latex(src))
+fn make_format_expr(src: &str, macro_args: &mut Vec<Option<Expr>>) -> Expr {
+    let latex = parse_latex(src);
+    assert!(
+        latex.num_placeholders == macro_args.len(),
+        "Expected {} args, but got {}", latex.num_placeholders, macro_args.len()
+    );
+    make_format_for_token(latex.root, macro_args)
 }
 
 #[proc_macro]
 pub fn math_format(input: TokenStream) -> TokenStream {
     let format_err = "The first argument should specify format as literal string";
     let args = Punctuated::<Expr, Token![,]>::parse_separated_nonempty.parse(input).unwrap();
-    let mut args_iter = args.into_iter();
-    let format_expr = args_iter.next().expect(format_err);
+    let mut arg_iter = args.into_iter();
+    let format_expr = arg_iter.next().expect(format_err);
     let format_lit = try_match!(Expr::Lit[format_expr]).expect(format_err);
     let format_lit_str = try_match!(Lit::Str[format_lit.lit]).expect(format_err);
-    let format_string = make_format_string(&format_lit_str.value());
-    quote! {
-        format!(#format_string, #(#args_iter),*)
-    }.into()
+    let mut macro_args = arg_iter.map(|a| Some(a)).collect_vec();
+    let format_expr = make_format_expr(&format_lit_str.value(), &mut macro_args);
+    assert!(macro_args.iter().all(|a| a.is_none()));
+    format_expr.to_token_stream().into()
 }

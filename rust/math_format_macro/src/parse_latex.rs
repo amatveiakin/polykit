@@ -20,10 +20,15 @@ pub struct LatexCommand {
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum LatexToken {
-    Placeholder(),
+    Placeholder(usize),  // placeholder position in the initial string
     Literal(char),
     Command(LatexCommand),
     Sequence(Vec<LatexToken>),
+}
+
+pub struct LatexDocument {
+    pub root: LatexToken,
+    pub num_placeholders: usize,
 }
 
 pub const fn num_command_args(cmd: MathCommand) -> i32 {
@@ -45,13 +50,20 @@ const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
 };
 
 
-fn parse_latex_atom<I: Iterator<Item = Lexeme>>(lexemes: &mut Peekable<I>) -> LatexToken {
+fn parse_latex_atom<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> LatexToken
+where
+    I: Iterator<Item = Lexeme>
+{
     let l = lexemes.next().expect("Unexpected end-of-input in parse_latex_atom");
     match l {
         Lexeme::Symbol(symb) => {
             match symb {
                 '{' => panic!("{}", "Unexpected '{' (note: braces are allowed only around command argument and for sub-/super-script)"),
-                '@' => LatexToken::Placeholder(),
+                '@' => {
+                    let placeholder_id = *next_placeholder_id;
+                    *next_placeholder_id += 1;
+                    LatexToken::Placeholder(placeholder_id)
+                },
                 _ => LatexToken::Literal(symb),
             }
         },
@@ -59,7 +71,7 @@ fn parse_latex_atom<I: Iterator<Item = Lexeme>>(lexemes: &mut Peekable<I>) -> La
             let num_args = num_command_args(cmd);
             let mut args = Vec::new();
             for _ in 0..num_args {
-                args.push(parse_latex_block(lexemes))
+                args.push(parse_latex_block(lexemes, next_placeholder_id))
             }
             LatexToken::Command(LatexCommand{
                 command: cmd,
@@ -69,9 +81,12 @@ fn parse_latex_atom<I: Iterator<Item = Lexeme>>(lexemes: &mut Peekable<I>) -> La
     }
 }
 
-fn parse_latex_block<I: Iterator<Item = Lexeme>>(lexemes: &mut Peekable<I>) -> LatexToken {
+fn parse_latex_block<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> LatexToken
+where
+    I: Iterator<Item = Lexeme>
+{
     if *lexemes.peek().expect("Unexpected end-of-input in parse_latex_block") != Lexeme::Symbol('{') {
-        return parse_latex_atom(lexemes);
+        return parse_latex_atom(lexemes, next_placeholder_id);
     }
     lexemes.next();
     let mut tokens = Vec::new();
@@ -80,18 +95,22 @@ fn parse_latex_block<I: Iterator<Item = Lexeme>>(lexemes: &mut Peekable<I>) -> L
             lexemes.next();
             return LatexToken::Sequence(tokens);
         }
-        tokens.push(parse_latex_atom(lexemes));
+        tokens.push(parse_latex_atom(lexemes, next_placeholder_id));
     }
     panic!("{}", "No matching '}'");
 }
 
-pub fn parse_latex(src: &str) -> LatexToken {
+pub fn parse_latex(src: &str) -> LatexDocument {
     let mut lexemes = to_lexemes(src).into_iter().peekable();
     let mut tokens = Vec::new();
+    let mut next_placeholder_id: usize = 0;
     while lexemes.peek().is_some() {
-        tokens.push(parse_latex_block(&mut lexemes));
+        tokens.push(parse_latex_block(&mut lexemes, &mut next_placeholder_id));
     }
-    LatexToken::Sequence(tokens)
+    LatexDocument {
+        root: LatexToken::Sequence(tokens),
+        num_placeholders: next_placeholder_id,
+    }
 }
 
 
@@ -191,7 +210,7 @@ mod tests {
         use LatexToken::{Placeholder, Literal, Command, Sequence};
         use MathCommand::*;
         assert_eq!(
-            parse_latex(r"\frac1{23^@}"),
+            parse_latex(r"\frac1{23^@} + @"),
             Sequence(vec![
                 Command(LatexCommand {
                     command: Fraction,
@@ -203,12 +222,14 @@ mod tests {
                             Command(LatexCommand {
                                 command: Superscript,
                                 args: vec![
-                                    Placeholder(),
+                                    Placeholder(0),
                                 ]
                             })
                         ])
                     ]
-                })
+                }),
+                Literal('+'),
+                Placeholder(1),
             ])
         );
     }

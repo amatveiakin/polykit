@@ -1,6 +1,7 @@
 [workspace]
 members = [
     ".",
+    "math_format",
     "math_format_macro",
 ]
 
@@ -17,4 +18,5 @@ num = "0.4"
 smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"
 
+math_format = { path = "math_format" }
 math_format_macro = { path = "math_format_macro" }

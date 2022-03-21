@@ -1,0 +1,8 @@
+[package]
+name = "math_format"
+version = "0.1.0"
+publish = false
+
+[dependencies]
+derive-new = "0.5.9"
+itertools = "0.10.3"

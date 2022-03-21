@@ -3,12 +3,15 @@ pub mod math;
 pub mod polylog;
 
 use math::*;
+use math_format::*;
 use math_format_macro::math_format;
 
 
 fn main() {
-    println!("{}", math_format!(r"\frac1{@^2}", 2+3));
-    println!("{}", math_format!(r"a\   \  b_\inf"));
+    println!("{}", math_format!(r"\frac1{@^@}", 2+3, 4+5));
+    println!("{}", math_format!(r"\frac1{@^9}", 2+3));
+    println!("{}", math_format!(r"a\   \  b\inf"));
+    println!("{}", mfmt::concat(vec![mfmt::lit("a".to_string()), mfmt::sub(mfmt::lit("2".to_string()))]));
 
     // let mut timer = base::Timer::new();
     // let mut checksum = 0;
