@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "math_format_macro",
+]
+
 [package]
 name = "polykit"
 version = "0.1.0"
@@ -10,3 +16,5 @@ itertools = "0.10.3"
 num = "0.4"
 smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"
+
+math_format_macro = { path = "math_format_macro" }
