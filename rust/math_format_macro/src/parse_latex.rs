@@ -26,7 +26,7 @@ pub enum LatexToken {
     Sequence(Vec<LatexToken>),
 }
 
-const fn num_command_args(cmd: MathCommand) -> i32 {
+pub const fn num_command_args(cmd: MathCommand) -> i32 {
     match cmd {
         MathCommand::Subscript => 1,
         MathCommand::Superscript => 1,

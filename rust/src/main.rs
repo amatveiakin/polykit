@@ -8,7 +8,7 @@ use math_format_macro::math_format;
 
 fn main() {
     println!("{}", math_format!(r"\frac1{@^2}", 2+3));
-    println!("{}", math_format!(r"a\   \  b"));
+    println!("{}", math_format!(r"a\   \  b_\inf"));
 
     // let mut timer = base::Timer::new();
     // let mut checksum = 0;
