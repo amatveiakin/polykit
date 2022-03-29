@@ -4,6 +4,7 @@ use std::hash::Hash;
 use std::ops;
 use trait_set::trait_set;
 
+use math_format::current_formatting_config;
 use crate::base::{VectorLike};
 
 
@@ -353,7 +354,7 @@ fn write_linear<MonomT: LinearMonom>(
     monom_printer: fn(&MonomT) -> String
 ) -> fmt::Result {
     write_basic_linear(&expr.main, f, monom_printer)?;
-    if !expr.annotations.is_zero() {
+    if !expr.annotations.is_zero() && current_formatting_config().include_annotations {
         writeln!(f, "~~~")?;
         write_basic_linear(&expr.annotations, f, |monom| monom.clone())?;
     }

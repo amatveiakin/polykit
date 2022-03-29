@@ -6,3 +6,4 @@ publish = false
 [dependencies]
 derive-new = "0.5.9"
 itertools = "0.10.3"
+once_cell = "1.10.0"

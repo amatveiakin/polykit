@@ -1,25 +1,101 @@
 extern crate derive_new;
 extern crate itertools;
+extern crate once_cell;
 
 mod unicode_alphabets;
 
 use std::fmt;
+use std::sync::Mutex;
 
 use derive_new::new;
 use itertools::Itertools;
+use once_cell::sync::Lazy;
 
 use unicode_alphabets::{unicode_to_subscript, unicode_to_superscript};
 
 
+static CONFIG_STACK: Lazy<Mutex<Vec<FormattingConfig>>> = Lazy::new(|| {
+    Mutex::new(vec![FormattingConfig {
+        encoder: Encoder::PlainText,
+        include_annotations: true,
+    }])
+});
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum VPos {
+pub enum Encoder {
+    PlainText,
+    Unicode,
+    Latex,
+}
+
+#[derive(Clone, Debug)]
+pub struct FormattingConfig {
+    pub encoder: Encoder,
+    pub include_annotations: bool,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct FormattingConfigOverrides {
+    pub encoder: Option<Encoder>,
+    pub include_annotations: Option<bool>,
+}
+
+macro_rules! override_options {
+    (($old:ident <= $new:ident) -> $t:tt : $($field:ident,)*) => {
+        $t { $(
+            $field: if let Some(new_value) = $new.$field { new_value } else { $old.$field },
+        )* }
+    }
+}
+
+fn override_formatting_config(config: FormattingConfig, overrides: FormattingConfigOverrides) -> FormattingConfig {
+    override_options!((config <= overrides) -> FormattingConfig:
+        encoder,
+        include_annotations,
+    )
+}
+
+pub fn current_formatting_config() -> FormattingConfig {
+    Lazy::force(&CONFIG_STACK).lock().unwrap().last().unwrap().clone()
+}
+
+pub struct ScopedFormatting;
+impl ScopedFormatting {
+    pub fn new(overrides: FormattingConfigOverrides) -> Self {
+        let mut stack = Lazy::force(&CONFIG_STACK).lock().unwrap();
+        let current_config = stack.last().unwrap().clone();
+        stack.push(override_formatting_config(current_config, overrides));
+        Self{}
+    }
+}
+impl Drop for ScopedFormatting {
+    fn drop(&mut self) {
+        let mut stack = Lazy::force(&CONFIG_STACK).lock().unwrap();
+        stack.pop();
+    }
+}
+
+// Changes formatting config until the end of the scope.
+#[macro_export]
+macro_rules! scoped_formatting {
+    ($($field:ident : $value:expr),* $(,)?) => {
+        let _scoped_formatting = ScopedFormatting::new(FormattingConfigOverrides {
+            $($field: Some($value),)*
+            ..FormattingConfigOverrides::default()
+        });
+    };
+}
+
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+enum VPos {
     Normal,
     Sub,
     Super,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum FontStyle {
+enum FontStyle {
     MathNormal,
     MathStraight,
 }
@@ -72,7 +148,8 @@ pub struct Superscript {
 
 impl fmt::Display for FormatNode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let encoder = UnicodeEncoder::new();
+        let config = current_formatting_config();
+        let encoder = encoder_for_config(&config);
         let context = Context {
             vpos: VPos::Normal,
             font_style: FontStyle::MathNormal,
@@ -83,7 +160,7 @@ impl fmt::Display for FormatNode {
 
 
 #[derive(Clone)]
-pub struct Context {
+struct Context {
     vpos: VPos,
     font_style: FontStyle,
 }
@@ -114,13 +191,22 @@ fn context_for_children(mut context: Context, node: &FormatNode) -> Context {
 }
 
 
-trait Encoder {
+fn encoder_for_config(config: &FormattingConfig) -> Box<dyn EncoderInterface> {
+    // TODO: Reuse encoders
+    match config.encoder {
+        Encoder::PlainText => Box::new(PlainTextEncoder::new()),
+        Encoder::Unicode => Box::new(UnicodeEncoder::new()),
+        Encoder::Latex => panic!("Encoder::Latex not implemented"),
+    }
+}
+
+trait EncoderInterface {
     fn encode(&self, node: &FormatNode, context: &Context) -> String;
 }
 
 #[derive(new)]
-struct PlainTextEncoder {}
-impl Encoder for PlainTextEncoder {
+struct PlainTextEncoder;
+impl EncoderInterface for PlainTextEncoder {
     fn encode(&self, node: &FormatNode, context: &Context) -> String {
         let child_context = context_for_children(context.clone(), &node);
         use FormatNode as FN;
@@ -156,8 +242,8 @@ impl Encoder for PlainTextEncoder {
 }
 
 #[derive(new)]
-struct UnicodeEncoder {}
-impl Encoder for UnicodeEncoder {
+struct UnicodeEncoder;
+impl EncoderInterface for UnicodeEncoder {
     fn encode(&self, node: &FormatNode, context: &Context) -> String {
         let child_context = context_for_children(context.clone(), &node);
         use FormatNode as FN;
