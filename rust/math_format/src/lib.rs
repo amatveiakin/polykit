@@ -182,11 +182,13 @@ impl Encoder for UnicodeEncoder {
             FN::Concatenation(v) => v.children.iter().map(|c| self.encode(c, &child_context)).join(""),
             FN::CommaSeparatedList(v) => {
                 let children_encoded = v.children.iter().map(|c| self.encode(c, &child_context)).collect_vec();
-                let all_children_atomic = || children_encoded.iter().all(|c| c.len() == 1);
+                // Technically speaking, `graphemes` from the unicode-segmentation crate would be better,
+                //   but `chars` are good enough since there is no upper/lower case diactrics.
+                let all_children_atomic = || children_encoded.iter().all(|c| c.chars().count() == 1);
                 match context.vpos {
                     VPos::Normal => children_encoded.join(","),
-                    VPos::Sub => children_encoded.join(if all_children_atomic() { "," } else { "" }),
-                    VPos::Super => children_encoded.join(if all_children_atomic() { "˒" } else { "" }),
+                    VPos::Sub => children_encoded.join(if all_children_atomic() { "" } else { "," }),
+                    VPos::Super => children_encoded.join(if all_children_atomic() { "" } else { "˒" }),
                 }
             },
             FN::OperatorName(v) => self.encode(&*v.child, &child_context),
@@ -206,7 +208,10 @@ pub mod mfmt {
     use super::*;
     use FormatNode as FN;
 
-    pub fn lit(text: String) -> FN { FN::Literal(Literal::new(text)) }
+    pub fn lit<T: fmt::Display>(text: T) -> FN { FN::Literal(Literal::new(text.to_string())) }
+    pub fn comma_list<T: fmt::Display>(children: &[T]) -> FN {
+        FN::CommaSeparatedList(CommaSeparatedList::new(children.iter().map(|v| lit(v)).collect()))
+    }
     pub fn concat(children: Vec<FN>) -> FN { FN::Concatenation(Concatenation::new(children)) }
 
     pub fn space() -> FN { FN::SpecialCharacter(SpecialCharacter::Space) }

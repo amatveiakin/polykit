@@ -27,18 +27,14 @@ macro_rules! try_match {
 
 fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<Expr>>) -> Expr {
     use parse_latex::Token;
+    use parse_latex::PlaceholderFormat;
     syn::Expr::Verbatim(match token {
-        Token::Placeholder(index) => {
-            let arg = macro_args[index].take().unwrap();
-            // TODO: Debug: why does `(#arg).to_string()` variant fails with:
-            //     cannot infer type for type `{integer}`
-            //     = note: multiple `impl`s satisfying `{integer}: ToString` found in the `alloc` crate:
-            //             - impl ToString for i8;
-            //             - impl ToString for u8;
-            //   when some *other* invocation of `math_format!` fails?
-            // TODO: Support things other than literals (like comma-separated lists)
-            // quote! { math_format::mfmt::lit((#arg).to_string()) }
-            quote! { math_format::mfmt::lit(format!("{}", #arg)) }
+        Token::Placeholder(placeholder) => {
+            let arg = macro_args[placeholder.arg_index].take().unwrap();
+            match placeholder.format {
+                PlaceholderFormat::Atom => quote! { math_format::mfmt::lit(#arg) },
+                PlaceholderFormat::List => quote! { math_format::mfmt::comma_list(#arg) },
+            }
         }
         Token::Literal(ch) => {
             quote! { math_format::mfmt::lit(#ch.to_string()) }

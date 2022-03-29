@@ -14,6 +14,18 @@ impl ParsingError {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum PlaceholderFormat {
+    Atom,
+    List,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct Placeholder {
+    pub format: PlaceholderFormat,
+    pub arg_index: usize,
+}
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum MathCommand {
     Subscript,
     Superscript,
@@ -30,7 +42,7 @@ pub struct Command {
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum Token {
-    Placeholder(usize),  // placeholder position in the initial string
+    Placeholder(Placeholder),
     Literal(char),
     Command(Command),
     Sequence(Vec<Token>),
@@ -60,8 +72,13 @@ const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
     "inf" => MathCommand::Infinity,
 };
 
+const FORMAT_TO_PLACEHOLDER: phf::Map<&'static str, PlaceholderFormat> = phf_map! {
+    "" => PlaceholderFormat::Atom,
+    "," => PlaceholderFormat::List,
+};
 
-fn parse_atom<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<Token, ParsingError>
+
+fn parse_atom<I>(lexemes: &mut Peekable<I>) -> Result<Token, ParsingError>
 where
     I: Iterator<Item = Lexeme>
 {
@@ -70,19 +87,17 @@ where
         Lexeme::Symbol(symb) => {
             match symb {
                 '{' => Err(ParsingError::new("Unexpected '{' (note: braces are allowed only around command argument and for sub-/super-script)")),
-                '@' => {
-                    let placeholder_id = *next_placeholder_id;
-                    *next_placeholder_id += 1;
-                    Ok(Token::Placeholder(placeholder_id))
-                },
                 _ => Ok(Token::Literal(symb)),
             }
+        },
+        Lexeme::Placeholder(placeholder) => {
+            Ok(Token::Placeholder(placeholder))
         },
         Lexeme::Command(cmd) => {
             let num_args = num_command_args(cmd);
             let mut args = Vec::new();
             for _ in 0..num_args {
-                args.push(parse_block(lexemes, next_placeholder_id)?)
+                args.push(parse_block(lexemes)?)
             }
             Ok(Token::Command(Command{
                 command: cmd,
@@ -92,13 +107,13 @@ where
     }
 }
 
-fn parse_block<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<Token, ParsingError>
+fn parse_block<I>(lexemes: &mut Peekable<I>) -> Result<Token, ParsingError>
 where
     I: Iterator<Item = Lexeme>
 {
     let next_lexeme = lexemes.peek().ok_or(ParsingError::new("Unexpected end-of-input in parse_block"))?;
     if *next_lexeme != Lexeme::Symbol('{') {
-        return parse_atom(lexemes, next_placeholder_id);
+        return parse_atom(lexemes);
     }
     lexemes.next();
     let mut tokens = Vec::new();
@@ -107,22 +122,22 @@ where
             lexemes.next();
             return Ok(Token::Sequence(tokens));
         }
-        tokens.push(parse_atom(lexemes, next_placeholder_id)?);
+        tokens.push(parse_atom(lexemes)?);
     }
     Err(ParsingError::new("No matching '}'"))
 }
 
 pub fn parse_document(src: &str) -> Result<Document, ParsingError> {
-    let mut lexemes = to_lexemes(src)?.into_iter().peekable();
+    let (lexemes, num_placeholders) = to_lexemes(src)?;
+    let mut lexemes_iter = lexemes.into_iter().peekable();
     let mut tokens = Vec::new();
-    let mut next_placeholder_id: usize = 0;
-    while lexemes.peek().is_some() {
-        let token = parse_block(&mut lexemes, &mut next_placeholder_id)?;
+    while lexemes_iter.peek().is_some() {
+        let token = parse_block(&mut lexemes_iter)?;
         tokens.push(token);
     }
     Ok(Document {
         root: Token::Sequence(tokens),
-        num_placeholders: next_placeholder_id,
+        num_placeholders: num_placeholders,
     })
 }
 
@@ -131,6 +146,7 @@ pub fn parse_document(src: &str) -> Result<Document, ParsingError> {
 enum Lexeme {
     Symbol(char),
     Command(MathCommand),
+    Placeholder(Placeholder),
 }
 
 impl Lexeme {
@@ -142,13 +158,34 @@ impl Lexeme {
     }
 }
 
-fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, ParsingError> {
+pub fn parse_placeholder_format(format: &str) -> Result<PlaceholderFormat, ParsingError> {
+    match FORMAT_TO_PLACEHOLDER.get(format) {
+        Some(v) => Ok(*v),
+        None => Err(ParsingError::new(format!("Unknown placeholder format: '{}'", format))),
+    }
+}
+
+fn to_lexemes(src: &str) -> Result<(Vec<Lexeme>, usize), ParsingError> {
     let mut current_command = None;
     let mut just_saw_backslash = false;
+    let mut current_placeholder: Option<String> = None;
+    let mut next_placeholder_id = 0;
     let mut ret = Vec::new();
     let mut src_iter = itertools::put_back(src.chars());
     while let Some(ch) = src_iter.next() {
-        if just_saw_backslash {
+        if let Some(mut placeholder) = current_placeholder {
+            if ch == '>' {
+                ret.push(Lexeme::Placeholder(Placeholder {
+                    format: parse_placeholder_format(&placeholder)?,
+                    arg_index: next_placeholder_id,
+                }));
+                next_placeholder_id += 1;
+                current_placeholder = None;
+            } else {
+                placeholder.push(ch);
+                current_placeholder = Some(placeholder);
+            }
+        } else if just_saw_backslash {
             assert!(current_command.is_none());
             let command = String::from(ch);
             if ch.is_ascii_alphabetic() {
@@ -172,6 +209,10 @@ fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, ParsingError> {
             just_saw_backslash = true;
         } else if ch == '_' || ch == '^' {
             ret.push(Lexeme::from_command_name(&String::from(ch))?);
+        } else if ch == '<' {
+            current_placeholder = Some(String::new());
+        } else if ch == '>' {
+            return Err(ParsingError::new("Unmatched '>'"));
         } else {
             ret.push(Lexeme::Symbol(ch));
         }
@@ -182,7 +223,7 @@ fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, ParsingError> {
     if just_saw_backslash {
         return Err(ParsingError::new("Format string cannot end with '\\'"));
     }
-    Ok(ret)
+    Ok((ret, next_placeholder_id))
 }
 
 
@@ -192,31 +233,39 @@ mod tests {
 
     #[test]
     fn to_lexemes_test() {
-        use self::Lexeme::{Command, Symbol};
         use self::MathCommand::*;
         assert_eq!(
-            to_lexemes(r"\frac1{23^@}"),
-            Ok(vec![
-                Command(Fraction),
-                Symbol('1'),
-                Symbol('{'),
-                Symbol('2'),
-                Symbol('3'),
-                Command(Superscript),
-                Symbol('@'),
-                Symbol('}'),
-            ])
+            to_lexemes(r"\frac1{23^<>}"),
+            Ok((
+                vec![
+                    Lexeme::Command(Fraction),
+                    Lexeme::Symbol('1'),
+                    Lexeme::Symbol('{'),
+                    Lexeme::Symbol('2'),
+                    Lexeme::Symbol('3'),
+                    Lexeme::Command(Superscript),
+                    Lexeme::Placeholder(Placeholder {
+                        format: PlaceholderFormat::Atom,
+                        arg_index: 0,
+                    }),
+                    Lexeme::Symbol('}'),
+                ],
+                1
+            ))
         );
         assert_eq!(
             to_lexemes(r"a\   \  b c\ "),
-            Ok(vec![
-                Symbol('a'),
-                Command(Space),
-                Command(Space),
-                Symbol('b'),
-                Symbol('c'),
-                Command(Space),
-            ])
+            Ok((
+                vec![
+                    Lexeme::Symbol('a'),
+                    Lexeme::Command(Space),
+                    Lexeme::Command(Space),
+                    Lexeme::Symbol('b'),
+                    Lexeme::Symbol('c'),
+                    Lexeme::Command(Space),
+                ],
+                0
+            ))
         );
     }
 
@@ -224,7 +273,7 @@ mod tests {
     fn parse_document_test() {
         use self::MathCommand::*;
         assert_eq!(
-            parse_document(r"\frac1{23^@} + @"),
+            parse_document(r"\frac1{23^<>} + <>"),
             Ok(Document {
                 root: Token::Sequence(vec![
                     Token::Command(Command {
@@ -237,14 +286,20 @@ mod tests {
                                 Token::Command(Command {
                                     command: Superscript,
                                     args: vec![
-                                        Token::Placeholder(0),
+                                        Token::Placeholder(Placeholder {
+                                            format: PlaceholderFormat::Atom,
+                                            arg_index: 0,
+                                        }),
                                     ]
                                 })
                             ])
                         ]
                     }),
                     Token::Literal('+'),
-                    Token::Placeholder(1),
+                    Token::Placeholder(Placeholder {
+                        format: PlaceholderFormat::Atom,
+                        arg_index: 1,
+                    }),
                 ]),
                 num_placeholders: 2,
             })
