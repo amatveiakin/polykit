@@ -9,10 +9,12 @@ mod parse_latex;
 
 use itertools::Itertools;
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{Token, Lit, Expr};
 use syn::parse::Parser;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+
 
 use parse_latex::{parse_latex, LatexToken, MathCommand};
 
@@ -20,7 +22,7 @@ use parse_latex::{parse_latex, LatexToken, MathCommand};
 macro_rules! try_match {
     ($enum_value:path[ $var:expr ]) => {
         match $var {
-            $enum_value(v) => Some(v),
+            $enum_value(ref v) => Some(v),
             _ => None,
         }
     };
@@ -30,8 +32,15 @@ fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) 
     syn::Expr::Verbatim(match token {
         LatexToken::Placeholder(index) => {
             let arg = macro_args[index].take().unwrap();
+            // TODO: Debug: why does `(#arg).to_string()` variant fails with:
+            //     cannot infer type for type `{integer}`
+            //     = note: multiple `impl`s satisfying `{integer}: ToString` found in the `alloc` crate:
+            //             - impl ToString for i8;
+            //             - impl ToString for u8;
+            //   when some *other* invocation of `math_format!` fails?
             // TODO: Support things other than literals (like comma-separated lists)
-            quote! { math_format::mfmt::lit((#arg).to_string()) }
+            // quote! { math_format::mfmt::lit((#arg).to_string()) }
+            quote! { math_format::mfmt::lit(format!("{}", #arg)) }
         }
         LatexToken::Literal(ch) => {
             quote! { math_format::mfmt::lit(#ch.to_string()) }
@@ -54,13 +63,12 @@ fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) 
     })
 }
 
-fn make_format_expr(src: &str, macro_args: &mut Vec<Option<Expr>>) -> Expr {
-    let latex = parse_latex(src);
-    assert!(
-        latex.num_placeholders == macro_args.len(),
-        "Expected {} args, but got {}", latex.num_placeholders, macro_args.len()
-    );
-    make_format_for_token(latex.root, macro_args)
+fn make_format_expr(src: &str, macro_args: &mut Vec<Option<Expr>>) -> Result<Expr, String> {
+    let latex = parse_latex(src).map_err(|err| err.message)?;
+    if latex.num_placeholders != macro_args.len() {
+        return Err(format!("Expected {} args, but got {}", latex.num_placeholders, macro_args.len()));
+    }
+    Ok(make_format_for_token(latex.root, macro_args))
 }
 
 #[proc_macro]
@@ -72,7 +80,13 @@ pub fn math_format(input: TokenStream) -> TokenStream {
     let format_lit = try_match!(Expr::Lit[format_expr]).expect(format_err);
     let format_lit_str = try_match!(Lit::Str[format_lit.lit]).expect(format_err);
     let mut macro_args = arg_iter.map(|a| Some(a)).collect_vec();
-    let format_expr = make_format_expr(&format_lit_str.value(), &mut macro_args);
-    assert!(macro_args.iter().all(|a| a.is_none()));
-    format_expr.to_token_stream().into()
+    match make_format_expr(&format_lit_str.value(), &mut macro_args) {
+        Err(err) => {
+            quote_spanned!(format_expr.span()=> compile_error!(#err)).into()
+        }
+        Ok(expr) => {
+            assert!(macro_args.iter().all(|a| a.is_none()));
+            expr.to_token_stream().into()
+        }
+    }
 }
