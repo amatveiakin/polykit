@@ -4,12 +4,12 @@ use phf::phf_map;
 
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct LatexParsingError {
+pub struct ParsingError {
     pub message: String,
     // TODO: Store location and show it in compilation error message:
     //   https://stackoverflow.com/questions/71663743/make-procedural-macro-compilation-error-point-inside-a-token
 }
-impl LatexParsingError {
+impl ParsingError {
     pub fn new<T: ToString>(message: T) -> Self { Self{ message: message.to_string() } }
 }
 
@@ -23,22 +23,22 @@ pub enum MathCommand {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct LatexCommand {
+pub struct Command {
     pub command: MathCommand,
-    pub args: Vec<LatexToken>,
+    pub args: Vec<Token>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum LatexToken {
+pub enum Token {
     Placeholder(usize),  // placeholder position in the initial string
     Literal(char),
-    Command(LatexCommand),
-    Sequence(Vec<LatexToken>),
+    Command(Command),
+    Sequence(Vec<Token>),
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct LatexDocument {
-    pub root: LatexToken,
+pub struct Document {
+    pub root: Token,
     pub num_placeholders: usize,
 }
 
@@ -61,30 +61,30 @@ const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
 };
 
 
-fn parse_latex_atom<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<LatexToken, LatexParsingError>
+fn parse_atom<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<Token, ParsingError>
 where
     I: Iterator<Item = Lexeme>
 {
-    let l = lexemes.next().ok_or(LatexParsingError::new("Unexpected end-of-input in parse_latex_atom"))?;
+    let l = lexemes.next().ok_or(ParsingError::new("Unexpected end-of-input in parse_atom"))?;
     match l {
         Lexeme::Symbol(symb) => {
             match symb {
-                '{' => Err(LatexParsingError::new("Unexpected '{' (note: braces are allowed only around command argument and for sub-/super-script)")),
+                '{' => Err(ParsingError::new("Unexpected '{' (note: braces are allowed only around command argument and for sub-/super-script)")),
                 '@' => {
                     let placeholder_id = *next_placeholder_id;
                     *next_placeholder_id += 1;
-                    Ok(LatexToken::Placeholder(placeholder_id))
+                    Ok(Token::Placeholder(placeholder_id))
                 },
-                _ => Ok(LatexToken::Literal(symb)),
+                _ => Ok(Token::Literal(symb)),
             }
         },
         Lexeme::Command(cmd) => {
             let num_args = num_command_args(cmd);
             let mut args = Vec::new();
             for _ in 0..num_args {
-                args.push(parse_latex_block(lexemes, next_placeholder_id)?)
+                args.push(parse_block(lexemes, next_placeholder_id)?)
             }
-            Ok(LatexToken::Command(LatexCommand{
+            Ok(Token::Command(Command{
                 command: cmd,
                 args: args
             }))
@@ -92,36 +92,36 @@ where
     }
 }
 
-fn parse_latex_block<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<LatexToken, LatexParsingError>
+fn parse_block<I>(lexemes: &mut Peekable<I>, next_placeholder_id: &mut usize) -> Result<Token, ParsingError>
 where
     I: Iterator<Item = Lexeme>
 {
-    let next_lexeme = lexemes.peek().ok_or(LatexParsingError::new("Unexpected end-of-input in parse_latex_block"))?;
+    let next_lexeme = lexemes.peek().ok_or(ParsingError::new("Unexpected end-of-input in parse_block"))?;
     if *next_lexeme != Lexeme::Symbol('{') {
-        return parse_latex_atom(lexemes, next_placeholder_id);
+        return parse_atom(lexemes, next_placeholder_id);
     }
     lexemes.next();
     let mut tokens = Vec::new();
     while let Some(l) = lexemes.peek() {
         if *l == Lexeme::Symbol('}') {
             lexemes.next();
-            return Ok(LatexToken::Sequence(tokens));
+            return Ok(Token::Sequence(tokens));
         }
-        tokens.push(parse_latex_atom(lexemes, next_placeholder_id)?);
+        tokens.push(parse_atom(lexemes, next_placeholder_id)?);
     }
-    Err(LatexParsingError::new("No matching '}'"))
+    Err(ParsingError::new("No matching '}'"))
 }
 
-pub fn parse_latex(src: &str) -> Result<LatexDocument, LatexParsingError> {
+pub fn parse_document(src: &str) -> Result<Document, ParsingError> {
     let mut lexemes = to_lexemes(src)?.into_iter().peekable();
     let mut tokens = Vec::new();
     let mut next_placeholder_id: usize = 0;
     while lexemes.peek().is_some() {
-        let token = parse_latex_block(&mut lexemes, &mut next_placeholder_id)?;
+        let token = parse_block(&mut lexemes, &mut next_placeholder_id)?;
         tokens.push(token);
     }
-    Ok(LatexDocument {
-        root: LatexToken::Sequence(tokens),
+    Ok(Document {
+        root: Token::Sequence(tokens),
         num_placeholders: next_placeholder_id,
     })
 }
@@ -134,15 +134,15 @@ enum Lexeme {
 }
 
 impl Lexeme {
-    pub fn from_command_name(cmd: &str) -> Result<Self, LatexParsingError> {
+    pub fn from_command_name(cmd: &str) -> Result<Self, ParsingError> {
         match NAME_TO_COMMAND.get(cmd) {
             Some(v) => Ok(Lexeme::Command(*v)),
-            None => Err(LatexParsingError::new(format!("Unknown command: '{}'", cmd))),
+            None => Err(ParsingError::new(format!("Unknown command: '{}'", cmd))),
         }
     }
 }
 
-fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, LatexParsingError> {
+fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, ParsingError> {
     let mut current_command = None;
     let mut just_saw_backslash = false;
     let mut ret = Vec::new();
@@ -180,7 +180,7 @@ fn to_lexemes(src: &str) -> Result<Vec<Lexeme>, LatexParsingError> {
         ret.push(Lexeme::from_command_name(&command)?);
     }
     if just_saw_backslash {
-        return Err(LatexParsingError::new("Format string cannot end with '\\'"));
+        return Err(ParsingError::new("Format string cannot end with '\\'"));
     }
     Ok(ret)
 }
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn to_lexemes_test() {
         use self::Lexeme::{Command, Symbol};
-        use MathCommand::*;
+        use self::MathCommand::*;
         assert_eq!(
             to_lexemes(r"\frac1{23^@}"),
             Ok(vec![
@@ -221,31 +221,30 @@ mod tests {
     }
 
     #[test]
-    fn parse_latex_test() {
-        use LatexToken::{Placeholder, Literal, Command, Sequence};
-        use MathCommand::*;
+    fn parse_document_test() {
+        use self::MathCommand::*;
         assert_eq!(
-            parse_latex(r"\frac1{23^@} + @"),
-            Ok(LatexDocument {
-                root: Sequence(vec![
-                    Command(LatexCommand {
+            parse_document(r"\frac1{23^@} + @"),
+            Ok(Document {
+                root: Token::Sequence(vec![
+                    Token::Command(Command {
                         command: Fraction,
                         args: vec![
-                            Literal('1'),
-                            Sequence(vec![
-                                Literal('2'),
-                                Literal('3'),
-                                Command(LatexCommand {
+                            Token::Literal('1'),
+                            Token::Sequence(vec![
+                                Token::Literal('2'),
+                                Token::Literal('3'),
+                                Token::Command(Command {
                                     command: Superscript,
                                     args: vec![
-                                        Placeholder(0),
+                                        Token::Placeholder(0),
                                     ]
                                 })
                             ])
                         ]
                     }),
-                    Literal('+'),
-                    Placeholder(1),
+                    Token::Literal('+'),
+                    Token::Placeholder(1),
                 ]),
                 num_placeholders: 2,
             })

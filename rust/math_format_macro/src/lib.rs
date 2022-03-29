@@ -16,9 +16,6 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 
 
-use parse_latex::{parse_latex, LatexToken, MathCommand};
-
-
 macro_rules! try_match {
     ($enum_value:path[ $var:expr ]) => {
         match $var {
@@ -28,9 +25,10 @@ macro_rules! try_match {
     };
 }
 
-fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) -> Expr {
+fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<Expr>>) -> Expr {
+    use parse_latex::Token;
     syn::Expr::Verbatim(match token {
-        LatexToken::Placeholder(index) => {
+        Token::Placeholder(index) => {
             let arg = macro_args[index].take().unwrap();
             // TODO: Debug: why does `(#arg).to_string()` variant fails with:
             //     cannot infer type for type `{integer}`
@@ -42,11 +40,11 @@ fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) 
             // quote! { math_format::mfmt::lit((#arg).to_string()) }
             quote! { math_format::mfmt::lit(format!("{}", #arg)) }
         }
-        LatexToken::Literal(ch) => {
+        Token::Literal(ch) => {
             quote! { math_format::mfmt::lit(#ch.to_string()) }
         }
-        LatexToken::Command(cmd) => {
-            use MathCommand as MC;
+        Token::Command(cmd) => {
+            use parse_latex::MathCommand as MC;
             let args = cmd.args.into_iter().map(|a| make_format_for_token(a, macro_args));
             match cmd.command {
                 MC::Subscript => quote!{ math_format::mfmt::sub(#(#args),*) },
@@ -56,7 +54,7 @@ fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) 
                 MC::Infinity => quote!{ math_format::mfmt::inf(#(#args),*) },
             }
         }
-        LatexToken::Sequence(seq) => {
+        Token::Sequence(seq) => {
             let args = seq.into_iter().map(|a| make_format_for_token(a, macro_args));
             quote! { math_format::mfmt::concat(vec![#(#args),*]) }
         }
@@ -64,7 +62,7 @@ fn make_format_for_token(token: LatexToken, macro_args: &mut Vec<Option<Expr>>) 
 }
 
 fn make_format_expr(src: &str, macro_args: &mut Vec<Option<Expr>>) -> Result<Expr, String> {
-    let latex = parse_latex(src).map_err(|err| err.message)?;
+    let latex = parse_latex::parse_document(src).map_err(|err| err.message)?;
     if latex.num_placeholders != macro_args.len() {
         return Err(format!("Expected {} args, but got {}", latex.num_placeholders, macro_args.len()));
     }
