@@ -18,14 +18,14 @@ use unicode_alphabets::{unicode_to_subscript, unicode_to_superscript};
 
 static CONFIG_STACK: Lazy<Mutex<Vec<FormattingConfig>>> = Lazy::new(|| {
     Mutex::new(vec![FormattingConfig {
-        encoder: Encoder::PlainText,
+        encoder: Encoder::Ascii,
         include_annotations: true,
     }])
 });
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Encoder {
-    PlainText,
+    Ascii,
     Unicode,
     Latex,
 }
@@ -249,7 +249,7 @@ fn format_literal(s: &str, context: &Context) -> String {
 fn encoder_for_config(config: &FormattingConfig) -> Box<dyn EncoderInterface> {
     // TODO: Reuse encoders
     match config.encoder {
-        Encoder::PlainText => Box::new(PlainTextEncoder::new()),
+        Encoder::Ascii => Box::new(AsciiEncoder::new()),
         Encoder::Unicode => Box::new(UnicodeEncoder::new()),
         Encoder::Latex => panic!("Encoder::Latex not implemented"),
     }
@@ -260,8 +260,8 @@ trait EncoderInterface {
 }
 
 #[derive(new)]
-struct PlainTextEncoder;
-impl EncoderInterface for PlainTextEncoder {
+struct AsciiEncoder;
+impl EncoderInterface for AsciiEncoder {
     fn encode(&self, node: &FormatNode, context: &Context) -> String {
         let child_context = context_for_children(context.clone(), &node);
         use FormatNode as FN;
@@ -312,7 +312,7 @@ impl EncoderInterface for UnicodeEncoder {
             }
             FN::SpecialCharacter(v) => {
                 // TODO: Forbid custom context.vpos is other places where necessary.
-                // TODO: Do this consistently with PlainTextEncoder.
+                // TODO: Do this consistently with AsciiEncoder.
                 assert_eq!(context.vpos, VPos::Normal);
                 use SpecialCharacter as SC;
                 match v {
