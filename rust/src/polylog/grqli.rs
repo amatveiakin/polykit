@@ -2,7 +2,7 @@
 
 use itertools::Itertools;
 
-use crate::base::{StringTools};
+use math_format_macro::math_format;
 use crate::math::{to_x_vec, GammaExpr, pullback};
 use crate::polylog::{QLi};
 
@@ -12,13 +12,12 @@ pub fn GrQLi(weight: i32, qli_points: &[i32], bonus_points: &[i32]) -> GammaExpr
         QLi(weight, &to_x_vec(qli_points)),
         bonus_points
     ).drop_annotations().annotate(
-        format!(
-            "GrQLi_{}({})",
+        math_format!(
+            r"\op{GrQLi}_<>(<,><><,>)",
             weight,
-            [
-                bonus_points.iter().sorted().join(","),
-                qli_points.iter().join(",")
-            ].iter().join_non_empty(" / ")
+            bonus_points.iter().sorted().collect_vec(),
+            if bonus_points.is_empty() { "" } else { " / " },
+            qli_points.to_vec(),
         )
     )
 }

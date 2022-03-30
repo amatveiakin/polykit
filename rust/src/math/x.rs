@@ -1,6 +1,9 @@
 use std::fmt;
 use std::hash;
 
+use math_format::{MathFormat, FormatNode};
+use math_format_macro::math_format_node;
+
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
 pub enum X {
@@ -11,11 +14,11 @@ pub enum X {
 impl From<i32> for X {
     fn from(idx: i32) -> X { X::Variable(idx) }
 }
-impl fmt::Display for X {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl MathFormat for X {
+    fn to_format_node(self) -> FormatNode {
         match self {
-            X::Infinity => write!(f, "Inf"),
-            X::Variable(idx) => write!(f, "{}", idx),
+            X::Infinity => math_format_node!(r"\inf"),
+            X::Variable(idx) => math_format_node!(r"<>", idx),
         }
     }
 }

@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 
-use itertools::Itertools;
-
+use math_format_macro::math_format;
 use crate::math::{X, DeltaExpr, cross_ratio_vec, neg_cross_ratio, tensor_product};
 
 
@@ -64,7 +63,7 @@ pub fn QLi(weight: i32, points: &[X]) -> DeltaExpr {
     let tagged_points: Vec<Point> =
         points.iter().enumerate().map(|(i, p)| Point{ x: *p, odd: (i+1) % 2 == 1 }).collect();
     QLi_impl(weight, &tagged_points).annotate(
-        format!("QLi_{}({})", weight, points.iter().map(|p| p.to_string()).join(","))
+        math_format!(r"\op{QLi}_<>(<,>)", weight, points.to_vec())
     )
 }
 

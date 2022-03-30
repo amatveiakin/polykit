@@ -29,6 +29,7 @@ pub struct Placeholder {
 pub enum MathCommand {
     Subscript,
     Superscript,
+    OperatorName,
     Fraction,
     Space,
     Infinity,
@@ -58,6 +59,7 @@ pub const fn num_command_args(cmd: MathCommand) -> i32 {
     match cmd {
         MathCommand::Subscript => 1,
         MathCommand::Superscript => 1,
+        MathCommand::OperatorName => 1,
         MathCommand::Fraction => 2,
         MathCommand::Space => 0,
         MathCommand::Infinity => 0,
@@ -67,6 +69,7 @@ pub const fn num_command_args(cmd: MathCommand) -> i32 {
 const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
     "_" => MathCommand::Subscript,
     "^" => MathCommand::Superscript,
+    "op" => MathCommand::OperatorName,
     "frac" => MathCommand::Fraction,
     " " => MathCommand::Space,
     "inf" => MathCommand::Infinity,

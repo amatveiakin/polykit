@@ -37,6 +37,7 @@ fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<
             }
         }
         Token::Literal(ch) => {
+            // TODO: Group literals together
             quote! { math_format::mfmt::lit(#ch.to_string()) }
         }
         Token::Command(cmd) => {
@@ -45,6 +46,7 @@ fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<
             match cmd.command {
                 MC::Subscript => quote!{ math_format::mfmt::sub(#(#args),*) },
                 MC::Superscript => quote!{ math_format::mfmt::sup(#(#args),*) },
+                MC::OperatorName => quote!{ math_format::mfmt::op(#(#args),*) },
                 MC::Fraction => quote!{ math_format::mfmt::frac(#(#args),*) },
                 MC::Space => quote!{ math_format::mfmt::space(#(#args),*) },
                 MC::Infinity => quote!{ math_format::mfmt::inf(#(#args),*) },
@@ -66,9 +68,9 @@ fn make_format_expr(src: &str, macro_args: &mut Vec<Option<Expr>>) -> Result<Exp
 }
 
 #[proc_macro]
-pub fn math_format(input: TokenStream) -> TokenStream {
+pub fn math_format_node(input: TokenStream) -> TokenStream {
     let format_err = "The first argument should specify format as literal string";
-    let args = Punctuated::<Expr, Token![,]>::parse_separated_nonempty.parse(input).unwrap();
+    let args = Punctuated::<Expr, Token![,]>::parse_terminated.parse(input).unwrap();
     let mut arg_iter = args.into_iter();
     let format_expr = arg_iter.next().expect(format_err);
     let format_lit = try_match!(Expr::Lit[format_expr]).expect(format_err);
@@ -83,4 +85,12 @@ pub fn math_format(input: TokenStream) -> TokenStream {
             expr.to_token_stream().into()
         }
     }
+}
+
+#[proc_macro]
+pub fn math_format(input: TokenStream) -> TokenStream {
+    let format_node: proc_macro2::TokenStream = math_format_node(input).into();
+    quote!{
+        #format_node .render()
+    }.into()
 }

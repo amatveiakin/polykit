@@ -1,3 +1,4 @@
+extern crate console;
 extern crate derive_new;
 extern crate itertools;
 extern crate once_cell;
@@ -7,6 +8,7 @@ mod unicode_alphabets;
 use std::fmt;
 use std::sync::Mutex;
 
+use console::style;
 use derive_new::new;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
@@ -87,6 +89,16 @@ macro_rules! scoped_formatting {
 }
 
 
+pub trait MathFormat {
+    fn to_format_node(self) -> FormatNode;
+}
+impl MathFormat for FormatNode {
+    fn to_format_node(self) -> FormatNode { self }
+}
+impl<T: fmt::Display> MathFormat for T {
+    fn to_format_node(self) -> FormatNode { FormatNode::Literal(Literal::new(self.to_string())) }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 enum VPos {
     Normal,
@@ -146,15 +158,15 @@ pub struct Superscript {
     child: Box<FormatNode>,
 }
 
-impl fmt::Display for FormatNode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl FormatNode {
+    pub fn render(&self) -> String {
         let config = current_formatting_config();
         let encoder = encoder_for_config(&config);
         let context = Context {
             vpos: VPos::Normal,
             font_style: FontStyle::MathNormal,
         };
-        write!(f, "{}", encoder.encode(self, &context))
+        encoder.encode(self, &context)
     }
 }
 
@@ -190,6 +202,49 @@ fn context_for_children(mut context: Context, node: &FormatNode) -> Context {
     context
 }
 
+// TODO: Allow to choose formatting option: concole, html, latex or none
+fn format_fragment_as_math_normal(fragment: &str, is_alpha: bool) -> String {
+    if is_alpha {
+        // This should've been italic, but it's not supported on many terminals including
+        //   Windows cmd. So using gray color instead.
+        // Note. Another approach for Unicode encoder would've been to use italic Unicode
+        //   letters (https://unicode-search.net/unicode-namesearch.pl?term=ITALIC,
+        //   https://yaytext.com/bold-italic/). Sadly, terminal support is terrible.
+        // TODO: What if it's nested inside a colored fragment?
+        format!("{}", style(&fragment).color256(8))
+    } else {
+        fragment.to_owned()
+    }
+}
+
+fn format_literal(s: &str, context: &Context) -> String {
+    match context.font_style {
+        FontStyle::MathNormal => {
+            let mut ret = String::new();
+            let mut fragment = String::new();
+            let mut fragment_is_alpha = None;
+            for ch in s.chars() {
+                let ch_is_alpha = Some(ch.is_alphabetic());
+                if fragment_is_alpha != ch_is_alpha {
+                    match fragment_is_alpha {
+                        None => assert!(fragment.is_empty()),
+                        Some(is_alpha) => ret.push_str(&format_fragment_as_math_normal(&fragment, is_alpha)),
+                    }
+                    fragment.clear();
+                    fragment_is_alpha = ch_is_alpha;
+                }
+                fragment.push(ch);
+            }
+            match fragment_is_alpha {
+                None => assert!(fragment.is_empty()),
+                Some(is_alpha) => ret.push_str(&format_fragment_as_math_normal(&fragment, is_alpha)),
+            }
+            ret
+        },
+        FontStyle::MathStraight => s.to_owned(),
+    }
+}
+
 
 fn encoder_for_config(config: &FormattingConfig) -> Box<dyn EncoderInterface> {
     // TODO: Reuse encoders
@@ -211,7 +266,7 @@ impl EncoderInterface for PlainTextEncoder {
         let child_context = context_for_children(context.clone(), &node);
         use FormatNode as FN;
         match node {
-            FN::Literal(v) => v.text.clone(),
+            FN::Literal(v) => format_literal(&v.text, context),
             FN::SpecialCharacter(v) => {
                 use SpecialCharacter as SC;
                 match v {
@@ -250,7 +305,7 @@ impl EncoderInterface for UnicodeEncoder {
         match node {
             FN::Literal(v) => {
                 match context.vpos {
-                    VPos::Normal => v.text.clone(),
+                    VPos::Normal => format_literal(&v.text, context),
                     VPos::Sub => v.text.chars().into_iter().map(|c| unicode_to_subscript(c).unwrap()).collect(),
                     VPos::Super => v.text.chars().into_iter().map(|c| unicode_to_superscript(c).unwrap()).collect(),
                 }
@@ -292,20 +347,28 @@ impl EncoderInterface for UnicodeEncoder {
 
 pub mod mfmt {
     use super::*;
+    use MathFormat as MF;
     use FormatNode as FN;
 
-    pub fn lit<T: fmt::Display>(text: T) -> FN { FN::Literal(Literal::new(text.to_string())) }
-    pub fn comma_list<T: fmt::Display>(children: &[T]) -> FN {
-        FN::CommaSeparatedList(CommaSeparatedList::new(children.iter().map(|v| lit(v)).collect()))
+    pub fn lit<T: MF>(v: T) -> FN { v.to_format_node() }
+    pub fn comma_list<T: MF>(children: Vec<T>) -> FN {
+        FN::CommaSeparatedList(CommaSeparatedList::new(vec_to_format_nodes(children)))
     }
-    pub fn concat(children: Vec<FN>) -> FN { FN::Concatenation(Concatenation::new(children)) }
+    pub fn concat<T: MF>(children: Vec<T>) -> FN {
+        FN::Concatenation(Concatenation::new(vec_to_format_nodes(children)))
+    }
 
     pub fn space() -> FN { FN::SpecialCharacter(SpecialCharacter::Space) }
     pub fn inf() -> FN { FN::SpecialCharacter(SpecialCharacter::Infinity) }
 
-    pub fn frac(numerator: FN, denominator: FN) -> FN {
-        FN::Fraction(Fraction::new(Box::new(numerator), Box::new(denominator)))
+    pub fn op<T: MF>(child: T) -> FN { FN::OperatorName(OperatorName::new(Box::new(child.to_format_node()))) }
+    pub fn frac<T1: MF, T2: MF>(numerator: T1, denominator: T2) -> FN {
+        FN::Fraction(Fraction::new(Box::new(numerator.to_format_node()), Box::new(denominator.to_format_node())))
     }
-    pub fn sub(child: FN) -> FN { FN::Subscript(Subscript::new(Box::new(child))) }
-    pub fn sup(child: FN) -> FN { FN::Superscript(Superscript::new(Box::new(child))) }
+    pub fn sub<T: MF>(child: T) -> FN { FN::Subscript(Subscript::new(Box::new(child.to_format_node()))) }
+    pub fn sup<T: MF>(child: T) -> FN { FN::Superscript(Superscript::new(Box::new(child.to_format_node()))) }
+
+    fn vec_to_format_nodes<T: MF>(elements: Vec<T>) -> Vec<FN> {
+        elements.into_iter().map(|c| c.to_format_node()).collect()
+    }
 }
