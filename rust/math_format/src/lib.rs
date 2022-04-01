@@ -6,6 +6,7 @@ extern crate once_cell;
 mod unicode_alphabets;
 
 use std::fmt;
+use std::rc::Rc;
 use std::sync::Mutex;
 
 use console::style;
@@ -19,6 +20,7 @@ use unicode_alphabets::{unicode_to_subscript, unicode_to_superscript};
 static CONFIG_STACK: Lazy<Mutex<Vec<FormattingConfig>>> = Lazy::new(|| {
     Mutex::new(vec![FormattingConfig {
         encoder: Encoder::Ascii,
+        rich_text_format: RichTextFormat::Console,
         include_annotations: true,
     }])
 });
@@ -30,15 +32,35 @@ pub enum Encoder {
     Latex,
 }
 
+// Rich text support diagram:
+//
+//           |              Rich text format
+//  Encoder  +-------------------------------------------
+//           |  Disabled    Console     HTML       LaTeX
+// ----------+-------------------------------------------
+//   ASCII   |  disabled    enabled    enabled      N/A
+//  Unicode  |  disabled    enabled    enabled      N/A
+//   LaTeX   |  disabled      N/A        N/A      enabled
+//
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum RichTextFormat {
+    Disabled,
+    Console,
+    Html,
+    Latex,
+}
+
 #[derive(Clone, Debug)]
 pub struct FormattingConfig {
     pub encoder: Encoder,
+    pub rich_text_format: RichTextFormat,
     pub include_annotations: bool,
 }
 
 #[derive(Clone, Default, Debug)]
 pub struct FormattingConfigOverrides {
     pub encoder: Option<Encoder>,
+    pub rich_text_format: Option<RichTextFormat>,
     pub include_annotations: Option<bool>,
 }
 
@@ -53,8 +75,22 @@ macro_rules! override_options {
 fn override_formatting_config(config: FormattingConfig, overrides: FormattingConfigOverrides) -> FormattingConfig {
     override_options!((config <= overrides) -> FormattingConfig:
         encoder,
+        rich_text_format,
         include_annotations,
     )
+}
+
+fn check_formatting_config(config: &FormattingConfig) {
+    use RichTextFormat as RTF;
+    match (config.encoder, config.rich_text_format) {
+        (_, RTF::Disabled) => {},
+        (Encoder::Ascii | Encoder::Unicode, RTF::Console | RTF::Html) => {},
+        (Encoder::Latex, RTF::Latex) => {},
+        _ => panic!(
+            "Unsupported combination: Encoder={:?}, RichTextFormat={:?}",
+            config.encoder, config.rich_text_format
+        ),
+    }
 }
 
 pub fn current_formatting_config() -> FormattingConfig {
@@ -66,7 +102,9 @@ impl ScopedFormatting {
     pub fn new(overrides: FormattingConfigOverrides) -> Self {
         let mut stack = Lazy::force(&CONFIG_STACK).lock().unwrap();
         let current_config = stack.last().unwrap().clone();
-        stack.push(override_formatting_config(current_config, overrides));
+        let new_config = override_formatting_config(current_config, overrides);
+        check_formatting_config(&new_config);
+        stack.push(new_config);
         Self{}
     }
 }
@@ -163,6 +201,7 @@ impl FormatNode {
         let config = current_formatting_config();
         let encoder = encoder_for_config(&config);
         let context = Context {
+            config: Rc::new(config),
             vpos: VPos::Normal,
             font_style: FontStyle::MathNormal,
         };
@@ -173,6 +212,7 @@ impl FormatNode {
 
 #[derive(Clone)]
 struct Context {
+    config: Rc<FormattingConfig>,
     vpos: VPos,
     font_style: FontStyle,
 }
@@ -203,15 +243,24 @@ fn context_for_children(mut context: Context, node: &FormatNode) -> Context {
 }
 
 // TODO: Allow to choose formatting option: concole, html, latex or none
-fn format_fragment_as_math_normal(fragment: &str, is_alpha: bool) -> String {
+fn format_fragment_as_math_normal(fragment: &str, rich_text_format: RichTextFormat, is_alpha: bool) -> String {
     if is_alpha {
-        // This should've been italic, but it's not supported on many terminals including
-        //   Windows cmd. So using gray color instead.
-        // Note. Another approach for Unicode encoder would've been to use italic Unicode
-        //   letters (https://unicode-search.net/unicode-namesearch.pl?term=ITALIC,
-        //   https://yaytext.com/bold-italic/). Sadly, terminal support is terrible.
-        // TODO: What if it's nested inside a colored fragment?
-        format!("{}", style(&fragment).color256(8))
+        use RichTextFormat as RTF;
+        match rich_text_format {
+            RTF::Disabled | RTF::Latex => fragment.to_owned(),
+            RTF::Console => {
+                // This should've been italic, but it's not supported on many terminals including
+                //   Windows cmd. So using gray color instead.
+                // Note. Another approach for Unicode encoder would've been to use italic Unicode
+                //   letters (https://unicode-search.net/unicode-namesearch.pl?term=ITALIC,
+                //   https://yaytext.com/bold-italic/). Sadly, terminal support is terrible.
+                // TODO: What if it's nested inside a colored fragment?
+                format!("{}", style(&fragment).color256(8))
+            },
+            RTF::Html => {
+                format!("<i>{}</i>", fragment)
+            },
+        }
     } else {
         fragment.to_owned()
     }
@@ -228,7 +277,9 @@ fn format_literal(s: &str, context: &Context) -> String {
                 if fragment_is_alpha != ch_is_alpha {
                     match fragment_is_alpha {
                         None => assert!(fragment.is_empty()),
-                        Some(is_alpha) => ret.push_str(&format_fragment_as_math_normal(&fragment, is_alpha)),
+                        Some(is_alpha) => ret.push_str(
+                            &format_fragment_as_math_normal(&fragment, context.config.rich_text_format, is_alpha)
+                        ),
                     }
                     fragment.clear();
                     fragment_is_alpha = ch_is_alpha;
@@ -237,8 +288,10 @@ fn format_literal(s: &str, context: &Context) -> String {
             }
             match fragment_is_alpha {
                 None => assert!(fragment.is_empty()),
-                Some(is_alpha) => ret.push_str(&format_fragment_as_math_normal(&fragment, is_alpha)),
-            }
+                Some(is_alpha) => ret.push_str(
+                    &format_fragment_as_math_normal(&fragment, context.config.rich_text_format, is_alpha)
+                ),
+    }
             ret
         },
         FontStyle::MathStraight => s.to_owned(),
