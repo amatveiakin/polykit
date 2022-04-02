@@ -48,8 +48,23 @@ fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<
                 MC::Superscript => quote!{ math_format::mfmt::sup(#(#args),*) },
                 MC::OperatorName => quote!{ math_format::mfmt::op(#(#args),*) },
                 MC::Fraction => quote!{ math_format::mfmt::frac(#(#args),*) },
+
                 MC::Space => quote!{ math_format::mfmt::space(#(#args),*) },
                 MC::Infinity => quote!{ math_format::mfmt::inf(#(#args),*) },
+
+                MC::Red => quote!{ math_format::mfmt::color(math_format::Color::Red, #(#args),*) },
+                MC::Green => quote!{ math_format::mfmt::color(math_format::Color::Green, #(#args),*) },
+                MC::Yellow => quote!{ math_format::mfmt::color(math_format::Color::Yellow, #(#args),*) },
+                MC::Blue => quote!{ math_format::mfmt::color(math_format::Color::Blue, #(#args),*) },
+                MC::Magenta => quote!{ math_format::mfmt::color(math_format::Color::Magenta, #(#args),*) },
+                MC::Cyan => quote!{ math_format::mfmt::color(math_format::Color::Cyan, #(#args),*) },
+                MC::Orange => quote!{ math_format::mfmt::color(math_format::Color::Orange, #(#args),*) },
+                MC::Gray => quote!{ math_format::mfmt::color(math_format::Color::Gray, #(#args),*) },
+                MC::PaleRed => quote!{ math_format::mfmt::color(math_format::Color::PaleRed, #(#args),*) },
+                MC::PaleGreen => quote!{ math_format::mfmt::color(math_format::Color::PaleGreen, #(#args),*) },
+                MC::PaleBlue => quote!{ math_format::mfmt::color(math_format::Color::PaleBlue, #(#args),*) },
+                MC::PaleMagenta => quote!{ math_format::mfmt::color(math_format::Color::PaleMagenta, #(#args),*) },
+                MC::PaleCyan => quote!{ math_format::mfmt::color(math_format::Color::PaleCyan, #(#args),*) },
             }
         }
         Token::Sequence(seq) => {

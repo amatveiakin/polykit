@@ -1,4 +1,3 @@
-extern crate console;
 extern crate derive_new;
 extern crate itertools;
 extern crate once_cell;
@@ -9,7 +8,6 @@ use std::fmt;
 use std::rc::Rc;
 use std::sync::Mutex;
 
-use console::style;
 use derive_new::new;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
@@ -145,9 +143,117 @@ enum VPos {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-enum FontStyle {
-    MathNormal,
-    MathStraight,
+pub enum MathFont {
+    Normal,
+    Straight,
+}
+
+// Console assumes white-on-black, so "pale" colors are darker.
+// HTML and LaTeX assume black-on-white, so "pale" colors are brighter.
+// Colors match only approximately across different rich text formats.
+//
+// When using colors in LaTeX add
+//    \usepackage[dvipsnames]{xcolor}
+// to the preambule.
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum Color {
+    Normal,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    Orange,
+    Gray,
+    PaleRed,
+    PaleGreen,
+    PaleBlue,
+    PaleMagenta,
+    PaleCyan,
+}
+
+impl Color {
+    // Returns a color with similar hue, but different brightness.
+    pub fn alternative_brightness(self) -> Color {
+        match self {
+            Color::Normal =>       Color::Gray,
+            Color::Red =>          Color::PaleRed,
+            Color::Green =>        Color::PaleGreen,
+            Color::Yellow =>       Color::Orange,
+            Color::Blue =>         Color::PaleBlue,
+            Color::Magenta =>      Color::PaleMagenta,
+            Color::Cyan =>         Color::PaleCyan,
+            Color::Orange =>       Color::Yellow,
+            Color::Gray =>         Color::Normal,
+            Color::PaleRed =>      Color::Red,
+            Color::PaleGreen =>    Color::Green,
+            Color::PaleBlue =>     Color::Blue,
+            Color::PaleMagenta =>  Color::Magenta,
+            Color::PaleCyan =>     Color::Cyan,
+        }
+    }
+
+    pub fn to_console(self) -> &'static str {
+        match self {
+            Color::Normal =>       "0;37",
+            Color::Red =>          "1;31",
+            Color::Green =>        "1;32",
+            Color::Yellow =>       "1;33",
+            Color::Blue =>         "1;34",
+            Color::Magenta =>      "1;35",
+            Color::Cyan =>         "1;36",
+            Color::Orange =>       "0;33",  // olive actually
+            Color::Gray =>         "1;30",
+            Color::PaleRed =>      "0;31",
+            Color::PaleGreen =>    "0;32",
+            Color::PaleBlue =>     "0;34",
+            Color::PaleMagenta =>  "0;35",
+            Color::PaleCyan =>     "0;36",
+        }
+    }
+
+    pub fn to_html(self) -> &'static str {
+        match self {
+            Color::Normal =>       "Black",
+            Color::Red =>          "Red",
+            Color::Green =>        "LimeGreen",
+            Color::Yellow =>       "Gold",
+            Color::Blue =>         "Blue",
+            Color::Magenta =>      "Magenta",
+            Color::Cyan =>         "DarkCyan",
+            Color::Orange =>       "DarkOrange",
+            Color::Gray =>         "Gray",
+            Color::PaleRed =>      "LightCoral",
+            Color::PaleGreen =>    "LightGreen",
+            Color::PaleBlue =>     "DeepSkyBlue",
+            Color::PaleMagenta =>  "Violet",
+            Color::PaleCyan =>     "MediumAquamarine",
+        }
+    }
+
+    // Note. Color names are case-sensitive. Basic colors start with a small letter
+    // and additional colors provided by `dvipsnames` option start with a capital
+    // letter. Colors that differ only in case can be very different, e.g. "Green"
+    // is much darker than "green".
+    pub fn to_latex(self) -> &'static str {
+        match self {
+            Color::Normal =>       "black",
+            Color::Red =>          "red",
+            Color::Green =>        "Green",
+            Color::Yellow =>       "Goldenrod",
+            Color::Blue =>         "blue",
+            Color::Magenta =>      "magenta",
+            Color::Cyan =>         "cyan",
+            Color::Orange =>       "Peach",
+            Color::Gray =>         "gray",
+            Color::PaleRed =>      "Salmon",
+            Color::PaleGreen =>    "LimeGreen",
+            Color::PaleBlue =>     "SkyBlue",
+            Color::PaleMagenta =>  "Lavender",
+            Color::PaleCyan =>     "Turquoise",
+        }
+    }
 }
 
 pub enum FormatNode {
@@ -159,6 +265,7 @@ pub enum FormatNode {
     Fraction(Fraction),
     Subscript(Subscript),
     Superscript(Superscript),
+    ApplyColor(ApplyColor),
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -195,6 +302,11 @@ pub struct Subscript {
 pub struct Superscript {
     child: Box<FormatNode>,
 }
+#[derive(new)]
+pub struct ApplyColor {
+    color: Color,
+    child: Box<FormatNode>,
+}
 
 impl FormatNode {
     pub fn render(&self) -> String {
@@ -203,7 +315,8 @@ impl FormatNode {
         let context = Context {
             config: Rc::new(config),
             vpos: VPos::Normal,
-            font_style: FontStyle::MathNormal,
+            math_font: MathFont::Normal,
+            color: Color::Normal,
         };
         encoder.encode(self, &context)
     }
@@ -214,7 +327,8 @@ impl FormatNode {
 struct Context {
     config: Rc<FormattingConfig>,
     vpos: VPos,
-    font_style: FontStyle,
+    math_font: MathFont,
+    color: Color,  // track current color since console doesn't support nested tags
 }
 
 // TODO: Is there a way to copy context only when it actually changed?
@@ -228,7 +342,7 @@ fn context_for_children(mut context: Context, node: &FormatNode) -> Context {
         FN::Fraction(_)
             => {},
         FN::OperatorName(_) => {
-            context.font_style = FontStyle::MathStraight;
+            context.math_font = MathFont::Straight;
         }
         FN::Subscript(_) => {
             assert_eq!(context.vpos, VPos::Normal);
@@ -238,24 +352,49 @@ fn context_for_children(mut context: Context, node: &FormatNode) -> Context {
             assert_eq!(context.vpos, VPos::Normal);
             context.vpos = VPos::Super;
         },
+        FN::ApplyColor(v) => {
+            context.color = v.color;
+        },
     }
     context
 }
 
-// TODO: Allow to choose formatting option: concole, html, latex or none
-fn format_fragment_as_math_normal(fragment: &str, rich_text_format: RichTextFormat, is_alpha: bool) -> String {
+fn text_color_tags(old_color: Color, new_color: Color, rich_text_format: RichTextFormat) -> (String, String) {
+    use RichTextFormat as RTF;
+    match rich_text_format {
+        RTF::Disabled => (
+            String::new(),
+            String::new(),
+        ),
+        RTF::Console => (
+            format!("\x1b[{}m", new_color.to_console()),
+            format!("\x1b[{}m", old_color.to_console()),
+        ),
+        RTF::Html => (
+            format!(r#"<span style="color: {}">"#, new_color.to_html()),
+            format!(r#"</span>"#),
+        ),
+        RTF::Latex => (
+            format!(r"\textcolor{{{}}}{{", new_color.to_latex()),
+            format!(r"}}"),
+        ),
+    }
+}
+
+fn format_fragment_as_math_normal(fragment: &str, is_alpha: bool, parent_color: Color, rich_text_format: RichTextFormat) -> String {
     if is_alpha {
         use RichTextFormat as RTF;
         match rich_text_format {
             RTF::Disabled | RTF::Latex => fragment.to_owned(),
             RTF::Console => {
                 // This should've been italic, but it's not supported on many terminals including
-                //   Windows cmd. So using gray color instead.
+                //   Windows cmd. So using alternative color instead.
                 // Note. Another approach for Unicode encoder would've been to use italic Unicode
                 //   letters (https://unicode-search.net/unicode-namesearch.pl?term=ITALIC,
                 //   https://yaytext.com/bold-italic/). Sadly, terminal support is terrible.
-                // TODO: What if it's nested inside a colored fragment?
-                format!("{}", style(&fragment).color256(8))
+                let child_color = parent_color.alternative_brightness();
+                let (begin, end) = text_color_tags(parent_color, child_color, rich_text_format);
+                format!("{}{}{}", begin, fragment, end)
             },
             RTF::Html => {
                 format!("<i>{}</i>", fragment)
@@ -267,8 +406,8 @@ fn format_fragment_as_math_normal(fragment: &str, rich_text_format: RichTextForm
 }
 
 fn format_literal(s: &str, context: &Context) -> String {
-    match context.font_style {
-        FontStyle::MathNormal => {
+    match context.math_font {
+        MathFont::Normal => {
             let mut ret = String::new();
             let mut fragment = String::new();
             let mut fragment_is_alpha = None;
@@ -278,7 +417,7 @@ fn format_literal(s: &str, context: &Context) -> String {
                     match fragment_is_alpha {
                         None => assert!(fragment.is_empty()),
                         Some(is_alpha) => ret.push_str(
-                            &format_fragment_as_math_normal(&fragment, context.config.rich_text_format, is_alpha)
+                            &format_fragment_as_math_normal(&fragment, is_alpha, context.color, context.config.rich_text_format)
                         ),
                     }
                     fragment.clear();
@@ -289,12 +428,12 @@ fn format_literal(s: &str, context: &Context) -> String {
             match fragment_is_alpha {
                 None => assert!(fragment.is_empty()),
                 Some(is_alpha) => ret.push_str(
-                    &format_fragment_as_math_normal(&fragment, context.config.rich_text_format, is_alpha)
+                    &format_fragment_as_math_normal(&fragment, is_alpha, context.color, context.config.rich_text_format)
                 ),
-    }
+            }
             ret
         },
-        FontStyle::MathStraight => s.to_owned(),
+        MathFont::Straight => s.to_owned(),
     }
 }
 
@@ -345,10 +484,15 @@ impl EncoderInterface for AsciiEncoder {
             ),
             FN::Subscript(v) => format!("_{}", self.encode(&*v.child, &child_context)),
             FN::Superscript(v) => format!("^{}", self.encode(&*v.child, &child_context)),
+            FN::ApplyColor(v) => {
+                let (begin, end) = text_color_tags(context.color, child_context.color, context.config.rich_text_format);
+                format!("{}{}{}", begin, self.encode(&*v.child, &child_context), end)
+            }
         }
     }
 }
 
+// TODO: Fix minus signs.
 #[derive(new)]
 struct UnicodeEncoder;
 impl EncoderInterface for UnicodeEncoder {
@@ -393,6 +537,10 @@ impl EncoderInterface for UnicodeEncoder {
             ),
             FN::Subscript(v) => self.encode(&*v.child, &child_context),
             FN::Superscript(v) => self.encode(&*v.child, &child_context),
+            FN::ApplyColor(v) => {
+                let (begin, end) = text_color_tags(context.color, child_context.color, context.config.rich_text_format);
+                format!("{}{}{}", begin, self.encode(&*v.child, &child_context), end)
+            }
         }
     }
 }
@@ -420,6 +568,10 @@ pub mod mfmt {
     }
     pub fn sub<T: MF>(child: T) -> FN { FN::Subscript(Subscript::new(Box::new(child.to_format_node()))) }
     pub fn sup<T: MF>(child: T) -> FN { FN::Superscript(Superscript::new(Box::new(child.to_format_node()))) }
+
+    pub fn color<T: MF>(color: Color, child: T) -> FN {
+        FN::ApplyColor(ApplyColor::new(color, Box::new(child.to_format_node())))
+    }
 
     fn vec_to_format_nodes<T: MF>(elements: Vec<T>) -> Vec<FN> {
         elements.into_iter().map(|c| c.to_format_node()).collect()

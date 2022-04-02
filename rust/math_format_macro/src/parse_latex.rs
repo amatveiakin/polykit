@@ -31,8 +31,23 @@ pub enum MathCommand {
     Superscript,
     OperatorName,
     Fraction,
+
     Space,
     Infinity,
+
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    Orange,
+    Gray,
+    PaleRed,
+    PaleGreen,
+    PaleBlue,
+    PaleMagenta,
+    PaleCyan,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -61,8 +76,23 @@ pub const fn num_command_args(cmd: MathCommand) -> i32 {
         MathCommand::Superscript => 1,
         MathCommand::OperatorName => 1,
         MathCommand::Fraction => 2,
+
         MathCommand::Space => 0,
         MathCommand::Infinity => 0,
+
+        MathCommand::Red => 1,
+        MathCommand::Green => 1,
+        MathCommand::Yellow => 1,
+        MathCommand::Blue => 1,
+        MathCommand::Magenta => 1,
+        MathCommand::Cyan => 1,
+        MathCommand::Orange => 1,
+        MathCommand::Gray => 1,
+        MathCommand::PaleRed => 1,
+        MathCommand::PaleGreen => 1,
+        MathCommand::PaleBlue => 1,
+        MathCommand::PaleMagenta => 1,
+        MathCommand::PaleCyan => 1,
     }
 }
 
@@ -71,8 +101,23 @@ const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
     "^" => MathCommand::Superscript,
     "op" => MathCommand::OperatorName,
     "frac" => MathCommand::Fraction,
+
     " " => MathCommand::Space,
     "inf" => MathCommand::Infinity,
+
+    "red" => MathCommand::Red,
+    "green" => MathCommand::Green,
+    "yellow" => MathCommand::Yellow,
+    "blue" => MathCommand::Blue,
+    "magenta" => MathCommand::Magenta,
+    "cyan" => MathCommand::Cyan,
+    "orange" => MathCommand::Orange,
+    "gray" => MathCommand::Gray,
+    "palered" => MathCommand::PaleRed,
+    "palegreen" => MathCommand::PaleGreen,
+    "paleblue" => MathCommand::PaleBlue,
+    "palemagenta" => MathCommand::PaleMagenta,
+    "palecyan" => MathCommand::PaleCyan,
 };
 
 const FORMAT_TO_PLACEHOLDER: phf::Map<&'static str, PlaceholderFormat> = phf_map! {
