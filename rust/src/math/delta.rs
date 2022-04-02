@@ -5,6 +5,7 @@ use std::ops;
 use itertools::Itertools;
 use smallvec::{SmallVec, smallvec};
 
+use math_format_macro::math_format;
 use crate::{vector_like_impl};
 use crate::base::{VectorLike, sort_two};
 use crate::math::{X, XArg, Linear, MonomVectorizable, TensorProduct};
@@ -96,7 +97,7 @@ impl TensorProduct for DeltaProduct {
 
 impl fmt::Display for DeltaProduct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.iter().map(|d| d.to_string()).join(" * "))
+        write!(f, "{}", self.0.iter().map(|d| d.to_string()).join(&math_format!(r"\tensorprod")))
     }
 }
 

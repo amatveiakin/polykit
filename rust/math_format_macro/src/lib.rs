@@ -51,6 +51,14 @@ fn make_format_for_token(token: parse_latex::Token, macro_args: &mut Vec<Option<
 
                 MC::Space => quote!{ math_format::mfmt::space(#(#args),*) },
                 MC::Infinity => quote!{ math_format::mfmt::inf(#(#args),*) },
+                MC::TensorProd => quote!{ math_format::mfmt::tensor_prod(#(#args),*) },
+                MC::CoprodNormal => quote!{ math_format::mfmt::coprod_normal(#(#args),*) },
+                MC::CoprodIterated => quote!{ math_format::mfmt::coprod_iterated(#(#args),*) },
+                MC::CoprodHopf => quote!{ math_format::mfmt::coprod_hopf(#(#args),*) },
+                MC::Comult => quote!{ math_format::mfmt::comult(#(#args),*) },
+                MC::SetUnion => quote!{ math_format::mfmt::set_union(#(#args),*) },
+                MC::SetIntersection => quote!{ math_format::mfmt::set_intersection(#(#args),*) },
+                MC::SetComplement => quote!{ math_format::mfmt::set_complement(#(#args),*) },
 
                 MC::Red => quote!{ math_format::mfmt::color(math_format::Color::Red, #(#args),*) },
                 MC::Green => quote!{ math_format::mfmt::color(math_format::Color::Green, #(#args),*) },

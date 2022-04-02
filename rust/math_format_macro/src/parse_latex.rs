@@ -34,6 +34,14 @@ pub enum MathCommand {
 
     Space,
     Infinity,
+    TensorProd,
+    CoprodNormal,
+    CoprodIterated,
+    CoprodHopf,
+    Comult,
+    SetUnion,
+    SetIntersection,
+    SetComplement,
 
     Red,
     Green,
@@ -79,6 +87,14 @@ pub const fn num_command_args(cmd: MathCommand) -> i32 {
 
         MathCommand::Space => 0,
         MathCommand::Infinity => 0,
+        MathCommand::TensorProd => 0,
+        MathCommand::CoprodNormal => 0,
+        MathCommand::CoprodIterated => 0,
+        MathCommand::CoprodHopf => 0,
+        MathCommand::Comult => 0,
+        MathCommand::SetUnion => 0,
+        MathCommand::SetIntersection => 0,
+        MathCommand::SetComplement => 0,
 
         MathCommand::Red => 1,
         MathCommand::Green => 1,
@@ -104,6 +120,14 @@ const NAME_TO_COMMAND: phf::Map<&'static str, MathCommand> = phf_map! {
 
     " " => MathCommand::Space,
     "inf" => MathCommand::Infinity,
+    "tensorprod" => MathCommand::TensorProd,
+    "coprodnormal" => MathCommand::CoprodNormal,
+    "coproditerated" => MathCommand::CoprodIterated,
+    "coprodhopf" => MathCommand::CoprodHopf,
+    "comult" => MathCommand::Comult,
+    "setunion" => MathCommand::SetUnion,
+    "setintersection" => MathCommand::SetIntersection,
+    "setcomplement" => MathCommand::SetComplement,
 
     "red" => MathCommand::Red,
     "green" => MathCommand::Green,

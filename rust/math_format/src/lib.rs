@@ -272,6 +272,14 @@ pub enum FormatNode {
 pub enum SpecialCharacter {
     Space,
     Infinity,
+    TensorProd,
+    CoprodNormal,
+    CoprodIterated,
+    CoprodHopf,
+    Comult,
+    SetUnion,
+    SetIntersection,
+    SetComplement,
 }
 #[derive(new)]
 pub struct Literal {
@@ -438,6 +446,10 @@ fn format_literal(s: &str, context: &Context) -> String {
 }
 
 
+fn unicode_hspace(s: &str) -> String {
+    return format!(" {} ", s);  // note: this is unicode non-breaking space!
+}
+
 fn encoder_for_config(config: &FormattingConfig) -> Box<dyn EncoderInterface> {
     // TODO: Reuse encoders
     match config.encoder {
@@ -461,9 +473,18 @@ impl EncoderInterface for AsciiEncoder {
             FN::Literal(v) => format_literal(&v.text, context),
             FN::SpecialCharacter(v) => {
                 use SpecialCharacter as SC;
+                // TODO: Escape html characters: " " -> "&nbsp;", "&" -> "&amp;", ...
                 match v {
                     SC::Space => " ",
                     SC::Infinity => "Inf",
+                    SC::TensorProd => " * ",
+                    SC::CoprodNormal => "  ^  ",
+                    SC::CoprodIterated => "  @  ",
+                    SC::CoprodHopf => "  %  ",
+                    SC::Comult => "&",
+                    SC::SetUnion => "|",
+                    SC::SetIntersection => "&",
+                    SC::SetComplement => "!",
                 }.to_string()
             }
             FN::Concatenation(v) => v.children.iter().map(|c| self.encode(c, &child_context)).join(""),
@@ -512,9 +533,18 @@ impl EncoderInterface for UnicodeEncoder {
                 assert_eq!(context.vpos, VPos::Normal);
                 use SpecialCharacter as SC;
                 match v {
-                    SC::Space => " ",
-                    SC::Infinity => "∞",
-                }.to_string()
+                    SC::Space => " ".to_owned(),
+                    SC::Infinity => "∞".to_owned(),
+                    SC::TensorProd => "⊗".to_owned(),
+                    SC::CoprodNormal => unicode_hspace("∧"),
+                    SC::CoprodIterated => unicode_hspace("⊗"),
+                    SC::CoprodHopf => unicode_hspace("☒"),
+                    SC::Comult => "△".to_owned(),
+                    SC::SetUnion => "⋃".to_owned(),
+                    SC::SetIntersection => "⋂".to_owned(),
+                    SC::SetComplement => "¬".to_owned(),
+
+                }
             }
             FN::Concatenation(v) => v.children.iter().map(|c| self.encode(c, &child_context)).join(""),
             FN::CommaSeparatedList(v) => {
@@ -560,6 +590,14 @@ pub mod mfmt {
 
     pub fn space() -> FN { FN::SpecialCharacter(SpecialCharacter::Space) }
     pub fn inf() -> FN { FN::SpecialCharacter(SpecialCharacter::Infinity) }
+    pub fn tensor_prod() -> FN { FN::SpecialCharacter(SpecialCharacter::TensorProd) }
+    pub fn coprod_normal() -> FN { FN::SpecialCharacter(SpecialCharacter::CoprodNormal) }
+    pub fn coprod_iterated() -> FN { FN::SpecialCharacter(SpecialCharacter::CoprodIterated) }
+    pub fn coprod_hopf() -> FN { FN::SpecialCharacter(SpecialCharacter::CoprodHopf) }
+    pub fn comult() -> FN { FN::SpecialCharacter(SpecialCharacter::Comult) }
+    pub fn set_union() -> FN { FN::SpecialCharacter(SpecialCharacter::SetUnion) }
+    pub fn set_intersection() -> FN { FN::SpecialCharacter(SpecialCharacter::SetIntersection) }
+    pub fn set_complement() -> FN { FN::SpecialCharacter(SpecialCharacter::SetComplement) }
 
     pub fn op<T: MF>(child: T) -> FN { FN::OperatorName(OperatorName::new(Box::new(child.to_format_node()))) }
     pub fn frac<T1: MF, T2: MF>(numerator: T1, denominator: T2) -> FN {
