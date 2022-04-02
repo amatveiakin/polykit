@@ -48,7 +48,7 @@ impl Delta {
 
 impl fmt::Display for Delta {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}-{})", self.a, self.b)
+        write!(f, "{}", math_format!("(<>-<>)", self.a, self.b))
     }
 }
 

@@ -492,7 +492,6 @@ impl EncoderInterface for AsciiEncoder {
     }
 }
 
-// TODO: Fix minus signs.
 #[derive(new)]
 struct UnicodeEncoder;
 impl EncoderInterface for UnicodeEncoder {
@@ -502,7 +501,7 @@ impl EncoderInterface for UnicodeEncoder {
         match node {
             FN::Literal(v) => {
                 match context.vpos {
-                    VPos::Normal => format_literal(&v.text, context),
+                    VPos::Normal => format_literal(&v.text.replace("-", "−"), context),
                     VPos::Sub => v.text.chars().into_iter().map(|c| unicode_to_subscript(c).unwrap()).collect(),
                     VPos::Super => v.text.chars().into_iter().map(|c| unicode_to_superscript(c).unwrap()).collect(),
                 }

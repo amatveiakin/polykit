@@ -15,7 +15,7 @@ fn main() {
     println!("{}", math_format!(r"\frac1{<>^<>}", 2+3, 4+5));
     println!("{}", math_format!(r"\frac1{<>^9}", 2+3));
     println!("{}", math_format!(r"a\   \  b\inf"));
-    println!("{}", math_format!(r"\yellow{\op{QLi}_<,>(x_1, x_2)}", vec![1,33]));
+    println!("{}", math_format!(r"\yellow{-7\op{QLi}_<,>(x_1, x_2)}", vec![1,33]));
     println!("{}", mfmt::concat(vec![mfmt::lit("a"), mfmt::sub("2")]).render());
 
     // let mut timer = base::Timer::new();

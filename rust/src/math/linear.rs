@@ -189,6 +189,7 @@ impl<MonomT: LinearMonom> ops::Mul<BasicLinear<MonomT>> for Coeff {
     }
 }
 
+// TODO: Unicode minus
 fn coeff_to_string(coeff: Coeff) -> String {
     if coeff == 1 {
         String::from(" +")
