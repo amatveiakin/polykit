@@ -353,18 +353,6 @@ int main(int /*argc*/, char *argv[]) {
     .set_compact_x(true)
   );
 
-  Profiler profiler;
-  int64_t checksum = 0;
-  for (EACH : range(1000)) {
-    // checksum += to_lyndon_basis(QLi4(1,2,3,4,5,6,7,8)).l1_norm();
-    checksum += QLi4(1,2,3,4,5,6,7,8).l1_norm();
-  }
-  std::cout << "Checksum: " << checksum << "\n";
-  profiler.finish("QLi");
-
-  return 0;
-
-
 
   // const int weight = 4;
   // const std::vector points = {1,2,3,4,5,6,7,8};
@@ -1516,86 +1504,4 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-
-  const int num_points = 9;
-  auto source = sum_looped_vec(
-    [&](const auto& args) {
-      return LiQuad(num_points / 2 - 1, args);
-    },
-    num_points,
-    to_vector(range_incl(1, num_points - 1))
-  );
-
-  auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
-
-  constexpr char kInvalidInput[] = "Invalid input: ";
-  bool short_form_ratios = true;
-  std::cout << "Functional\n" << source.annotations() << "\n";
-  while (true) {
-    std::vector<std::vector<int>> balls;
-    std::unique_ptr<Snowpal> snowpal;
-    auto reset_snowpal = [&]() {
-      snowpal = absl::make_unique<Snowpal>(expr, num_points);
-      for (const auto& b : balls) {
-        snowpal->add_ball(b);
-      }
-    };
-    reset_snowpal();
-    std::cout << expr;
-    while (true) {
-      std::cout << "\n> ";
-      std::string input;
-      std::getline(std::cin, input);
-      trim(input);
-      if (input.empty()) {
-        continue;
-      } else if (input == "q" || input == "quit") {
-        return 0;
-      } else if (input == "sf" || input == "short_forms") {
-        short_form_ratios = !short_form_ratios;
-        if (short_form_ratios) {
-          std::cout << "Short form cross-ratios: enabled\n";
-        } else {
-          std::cout << "Short form cross-ratios: disabled\n";
-        }
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-        continue;
-      } else if (input == "r" || input == "reset") {
-        break;
-      } else if (input == "b" || input == "back") {
-        if (balls.empty()) {
-          std::cout << kInvalidInput << "nothing to remove\n";
-          continue;
-        }
-        balls.pop_back();
-        reset_snowpal();
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-        continue;
-      }
-      std::vector<int> ball;
-      try {
-        for (const char ch : input) {
-          if (std::isspace(ch)) {
-            continue;
-          }
-          const int var = std::stoi(std::string(1, ch));
-          if (var < 1 || var > num_points) {
-            throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
-          }
-          ball.push_back(var);
-        }
-      } catch (const std::exception& e) {
-        std::cout << kInvalidInput << e.what() << "\n";
-        continue;
-      }
-      try {
-        snowpal->add_ball(ball);
-        balls.push_back(ball);
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-      } catch (const IllegalTreeCutException& e) {
-        std::cout << kInvalidInput << e.what() << "\n";
-        reset_snowpal();
-      }
-    }
-  }
 }

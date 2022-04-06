@@ -177,6 +177,7 @@ int main(int argc, char *argv[]) {
 
 /*
   constexpr char kInvalidInput[] = "Invalid input: ";
+  bool short_form_ratios = true;
   std::cout << "Functional\n" << source.annotations() << "\n";
   while (true) {
     std::vector<std::vector<int>> balls;
@@ -187,14 +188,10 @@ int main(int argc, char *argv[]) {
         snowpal->add_ball(b);
       }
     };
-    auto add_ball = [&](const std::vector<int>& ball) {
-      snowpal->add_ball(ball);
-      balls.push_back(ball);
-    };
     reset_snowpal();
-    std::cout << "Original " << expr << "\n";
+    std::cout << expr;
     while (true) {
-      std::cout << "> ";
+      std::cout << "\n> ";
       std::string input;
       std::getline(std::cin, input);
       trim(input);
@@ -202,6 +199,15 @@ int main(int argc, char *argv[]) {
         continue;
       } else if (input == "q" || input == "quit") {
         return 0;
+      } else if (input == "sf" || input == "short_forms") {
+        short_form_ratios = !short_form_ratios;
+        if (short_form_ratios) {
+          std::cout << "Short form cross-ratios: enabled\n";
+        } else {
+          std::cout << "Short form cross-ratios: disabled\n";
+        }
+        to_ostream(std::cout, *snowpal, short_form_ratios);
+        continue;
       } else if (input == "r" || input == "reset") {
         break;
       } else if (input == "b" || input == "back") {
@@ -211,7 +217,7 @@ int main(int argc, char *argv[]) {
         }
         balls.pop_back();
         reset_snowpal();
-        std::cout << "Reverted " << *snowpal << "\n";
+        to_ostream(std::cout, *snowpal, short_form_ratios);
         continue;
       }
       std::vector<int> ball;
@@ -240,7 +246,7 @@ int main(int argc, char *argv[]) {
       try {
         snowpal->add_ball(ball);
         balls.push_back(ball);
-        std::cout << "Substituted " << *snowpal << "\n";
+        to_ostream(std::cout, *snowpal, short_form_ratios);
       } catch (const IllegalTreeCutException& e) {
         std::cout << kInvalidInput << e.what() << "\n";
         reset_snowpal();
