@@ -20,6 +20,7 @@
 #include "lib/integer_math.h"
 #include "lib/iterated_integral.h"
 #include "lib/itertools.h"
+#include "lib/kappa.h"
 #include "lib/lexicographical.h"
 #include "lib/linalg.h"
 #include "lib/lira_ones.h"
@@ -317,24 +318,6 @@ DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
   return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
 }
 
-
-
-DeltaNCoExpr supervremenno(X x1, X x2, X x3, X x4) {
-  return
-    + ncoproduct(QLi2(x1,x2,x3,x4), QLi2(x4,-x1,-x4,x1))
-    - ncoproduct(QLi2(x2,x3,x4,-x1), QLi2(-x1,-x2,x1,x2))
-    + ncoproduct(QLi2(x3,x4,-x1,-x2), QLi2(-x2,-x3,x2,x3))
-    - ncoproduct(QLi2(x4,-x1,-x2,-x3), QLi2(-x3,-x4,x3,x4))
-  ;
-}
-
-DeltaNCoExpr QLi4_Comult_2_2(X x1, X x2, X x3, X x4, X x5, X x6) {
-  return
-    + ncoproduct(QLi2(x1,x2,x3,x4), QLi2(x1,x4,x5,x6))
-    + ncoproduct(QLiNeg2(x2,x3,x4,x5), QLi2(x1,x2,x5,x6))
-    + ncoproduct(QLi2(x3,x4,x5,x6), QLi2(x1,x2,x3,x6))
-  ;
-}
 
 
 int main(int /*argc*/, char *argv[]) {
@@ -1433,53 +1416,6 @@ int main(int /*argc*/, char *argv[]) {
   // );
   // std::cout << to_string(ranks) << "\n";
 
-
-  // const std::vector space = {
-  //   + supervremenno(x1,x2,x3,x4)
-  //   - supervremenno(x1,x2,x3,x5)
-  //   + supervremenno(x1,x2,x4,x5)
-  //   - supervremenno(x1,x3,x4,x5)
-  //   + supervremenno(x2,x3,x4,x5),
-  //   + ncomultiply(QLi4(x1,x2,x3,x4,x5,-x1), {2,2})
-  //   + ncomultiply(QLi4(x2,x3,x4,x5,-x1,-x2), {2,2})
-  //   + ncomultiply(QLi4(x3,x4,x5,-x1,-x2,-x3), {2,2})
-  //   + ncomultiply(QLi4(x4,x5,-x1,-x2,-x3,-x4), {2,2})
-  //   + ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
-  // };
-  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
-
-  // std::cout << to_lyndon_basis(
-  //   + supervremenno(x1,x2,x3,x4)
-  //   - supervremenno(x1,x2,x3,x5)
-  //   + supervremenno(x1,x2,x4,x5)
-  //   - supervremenno(x1,x3,x4,x5)
-  //   + supervremenno(x2,x3,x4,x5)
-  // );
-  // std::cout << to_lyndon_basis(
-  //   + ncomultiply(QLi4(x1,x2,x3,x4,x5,-x1), {2,2})
-  //   + ncomultiply(QLi4(x2,x3,x4,x5,-x1,-x2), {2,2})
-  //   + ncomultiply(QLi4(x3,x4,x5,-x1,-x2,-x3), {2,2})
-  //   + ncomultiply(QLi4(x4,x5,-x1,-x2,-x3,-x4), {2,2})
-  //   + ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
-  // );
-
-  // std::cout << to_lyndon_basis(
-  //   +  supervremenno(x1,x2,x3,x4)
-  //   -  supervremenno(x1,x2,x3,x5)
-  //   +  supervremenno(x1,x2,x4,x5)
-  //   -  supervremenno(x1,x3,x4,x5)
-  //   +  supervremenno(x2,x3,x4,x5)
-  //   // -2*ncomultiply(QLi4(x1,x2,x3,x4,x5,-x1), {2,2})
-  //   // -2*ncomultiply(QLi4(x2,x3,x4,x5,-x1,-x2), {2,2})
-  //   // -2*ncomultiply(QLi4(x3,x4,x5,-x1,-x2,-x3), {2,2})
-  //   // -2*ncomultiply(QLi4(x4,x5,-x1,-x2,-x3,-x4), {2,2})
-  //   // -2*ncomultiply(QLi4(x5,-x1,-x2,-x3,-x4,-x5), {2,2})
-  //   -2*QLi4_Comult_2_2(x1,x2,x3,x4,x5,-x1)
-  //   -2*QLi4_Comult_2_2(x2,x3,x4,x5,-x1,-x2)
-  //   -2*QLi4_Comult_2_2(x3,x4,x5,-x1,-x2,-x3)
-  //   -2*QLi4_Comult_2_2(x4,x5,-x1,-x2,-x3,-x4)
-  //   -2*QLi4_Comult_2_2(x5,-x1,-x2,-x3,-x4,-x5)
-  // );
 
   // std::cout << to_string(space_mapping_ranks(
   //   mapped(cartesian_power(L2({x1,x2,x3,x4,-x1,-x2,-x3,-x4}), 2), DISAMBIGUATE(ncoproduct_vec)),
