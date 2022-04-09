@@ -86,20 +86,6 @@ bool is_weakly_separated(const GammaNCoExpr::ObjectT& term) {
   return is_weakly_separated(flatten(term));
 }
 
-bool is_totally_weakly_separated(const GammaExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-bool is_totally_weakly_separated(const GammaNCoExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-
-GammaExpr keep_non_weakly_separated(const GammaExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-
 bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dimension, int num_points) {
   // TODO: Do we even need to pass the dimension, given that it can be deduced?
   if (dimension != 0) {

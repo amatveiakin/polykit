@@ -899,6 +899,17 @@ using StringExpr = Linear<SimpleLinearParam<std::string>>;
 
 
 template<typename ParamT>
+bool is_totally_weakly_separated(const Linear<ParamT>& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+template<typename ParamT>
+Linear<ParamT> keep_non_weakly_separated(const Linear<ParamT>& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
+}
+
+
+template<typename ParamT>
 struct PrintableLinear {
   Linear<ParamT> expression;
   FormattingConfig formatting_config;

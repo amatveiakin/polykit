@@ -261,20 +261,6 @@ bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term) {
   return is_weakly_separated(flatten(term));
 }
 
-bool is_totally_weakly_separated(const DeltaExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-bool is_totally_weakly_separated(const DeltaNCoExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated(term); });
-}
-
-DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated(term); });
-}
-
 // TODO: Remove circular neighbour (n,1) when the number of points n is odd,
 //   similarly to passes_normalize_remove_consecutive for GammaExpr.
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term) {

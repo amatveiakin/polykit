@@ -55,6 +55,8 @@ struct ICoExprForExpr {
 template<typename ExprT>
 using ICoExprForExpr_t = typename ICoExprForExpr<ExprT>::type;
 
+// TODO: Consider whether this could be made the default order for co-expressions.
+//   If so, remove this additional co-expression type.
 template<typename ExprT>
 struct ACoExprForExpr {
   using type = void;

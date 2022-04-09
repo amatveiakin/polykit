@@ -125,8 +125,6 @@ struct GammaNCoExprParam : GammaICoExprParam {
 
 struct GammaACoExprParam : GammaICoExprParam {
   static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
-    // TODO: Consider whether this could be made the default order for co-expressions.
-    //   If so, remove this additional co-expression type.
     using namespace cmp;
     return projected(lhs, rhs, [](const auto& v) {
       return std::tuple{desc_val(v.size()), asc_ref(v)};
@@ -157,10 +155,6 @@ GammaExpr project_on(int axis, const GammaExpr& expr);
 bool are_weakly_separated(const Gamma& g1, const Gamma& g2);
 bool is_weakly_separated(const GammaExpr::ObjectT& term);
 bool is_weakly_separated(const GammaNCoExpr::ObjectT& term);
-bool is_totally_weakly_separated(const GammaExpr& expr);
-bool is_totally_weakly_separated(const GammaNCoExpr& expr);
-GammaExpr keep_non_weakly_separated(const GammaExpr& expr);
-GammaNCoExpr keep_non_weakly_separated(const GammaNCoExpr& expr);
 
 bool passes_normalize_remove_consecutive(const GammaExpr::ObjectT& term, int dimension, int num_points);
 GammaExpr normalize_remove_consecutive(const GammaExpr& expr, int dimension, int num_points);

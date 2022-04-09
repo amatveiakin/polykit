@@ -262,8 +262,6 @@ struct DeltaNCoExprParam : DeltaICoExprParam {
 
 struct DeltaACoExprParam : DeltaICoExprParam {
   static bool lyndon_compare(const VectorT::value_type& lhs, const VectorT::value_type& rhs) {
-    // TODO: Consider whether this could be made the default order for co-expressions.
-    //   If so, remove this additional co-expression type.
     using namespace cmp;
     return projected(lhs, rhs, [](const auto& v) {
       return std::tuple{desc_val(v.size()), asc_ref(v)};
@@ -322,10 +320,6 @@ DeltaExpr terms_without_variables(const DeltaExpr& expr, const std::vector<int>&
 bool are_weakly_separated(const Delta& d1, const Delta& d2);
 bool is_weakly_separated(const DeltaExpr::ObjectT& term);
 bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term);
-bool is_totally_weakly_separated(const DeltaExpr& expr);
-bool is_totally_weakly_separated(const DeltaNCoExpr& expr);
-DeltaExpr keep_non_weakly_separated(const DeltaExpr& expr);
-DeltaNCoExpr keep_non_weakly_separated(const DeltaNCoExpr& expr);
 
 // TODO: Allow circular normalization when the number of points is odd.
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term);
