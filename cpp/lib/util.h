@@ -311,6 +311,19 @@ auto mapped_expanding(const Src& src, const F& func) {
   return dst;
 }
 
+// Transforms:  vector<vector<...vector<x>...>>  =>  vector<vector<...vector<f(x)>...>>
+template<size_t Nesting, typename Src, typename F>
+auto mapped_nested(const Src& src, const F& func) {
+  static_assert(Nesting >= 1);
+  if constexpr (Nesting == 1) {
+    return mapped(src, func);
+  } else {
+    return mapped(src, [&](const auto& v) {
+      return mapped_nested<Nesting-1>(v, func);
+    });
+  }
+}
+
 template<typename T, typename F>
 std::vector<T> filtered(std::vector<T> src, F&& func) {
   src.erase(
