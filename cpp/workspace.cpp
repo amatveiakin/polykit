@@ -185,25 +185,6 @@ PolylogSpace CL2_inv(const std::vector<int>& args) {
   return space;
 }
 
-// TODO: Factor out
-// TODO: Optimize: don't compute rank on each step
-// TODO: Optimize: precompute `prepare(expr)`
-// Optimization potential: pre-apply for common spaces
-template<typename SpaceT, typename PrepareF>
-SpaceT space_basis(const SpaceT& space, const PrepareF& prepare) {
-  SpaceT ret;
-  int rank = 0;
-  for (const auto& expr : space) {
-    ret.push_back(expr);
-    const int new_rank = space_rank(ret, prepare);
-    if (new_rank == rank) {
-      ret.pop_back();
-    }
-    rank = new_rank;
-  }
-  return ret;
-}
-
 
 
 static bool less_inv(X a, X b) {
