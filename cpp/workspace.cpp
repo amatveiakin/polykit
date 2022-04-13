@@ -300,6 +300,20 @@ DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
 }
 
 
+using TypeDPolylogSpace = std::vector<KappaExpr>;
+
+TypeDPolylogSpace type_d_free_lie_coalgebra(int weight) {
+  const auto coords = concat(
+    mapped(combinations({1,2,3,4,5,6}, 3), [](const auto& points) {
+      return Kappa(Gamma(points));
+    }),
+    std::vector{ Kappa(KappaX{}), Kappa(KappaY{}) }
+  );
+  return mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+    return KappaExpr::single(word);
+  });
+}
+
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -1421,4 +1435,129 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
+  // constexpr int dimension = 3;
+  constexpr int num_points = 6;
+  // const auto points = to_vector(range_incl(1, num_points));
+
+#if 1
+  static constexpr auto kappa_y_to_x = [](const KappaExpr& expr) {
+    return expr.mapped([&](const auto& term) {
+      return mapped(term, [&](const Kappa& k) {
+        return std::visit(overloaded {
+          [&](const KappaX&) -> Kappa { return KappaY{}; },
+          [&](const KappaY&) -> Kappa { return KappaX{}; },
+          [&](const Gamma& g) -> Kappa { return g; }
+        }, k);
+      });
+    });
+  };
+  static constexpr auto cycle_indices = [](const KappaExpr& expr, int shift) {
+    return expr.mapped([&](const auto& term) {
+      return mapped(term, [&](const Kappa& k) {
+        return std::visit(overloaded {
+          [&](const KappaX&) -> Kappa { return KappaX{}; },
+          [&](const KappaY&) -> Kappa { return KappaY{}; },
+          [&](const Gamma& g) -> Kappa {
+            return Gamma(mapped(g.index_vector(), [&](const int idx) {
+              return pos_mod(idx + shift - 1, num_points) + 1;
+            }));
+          },
+        }, k);
+      });
+    });
+  };
+
+  const std::vector<std::vector<KappaExpr>> b2_generators_y_cyclable = {
+    {
+      K(1,3,4) + K_Y(),
+      K(1,3,6) + K(1,4,5) + K(2,3,4),
+      K(1,4,6) + K(3,4,5) + K(1,2,3),
+    },
+    {
+      K(3,4,6) + K_Y(),
+      K(1,4,6) + K(2,3,6) + K(3,4,5),
+      K(1,3,6) + K(2,3,4) + K(4,5,6),
+    },
+    {
+      K_Y(),
+      K(2,3,6) + K(1,4,5),
+      K(1,2,3) + K(4,5,6),
+    },
+  };
+  const std::vector<std::vector<KappaExpr>> b2_generators_y_fixed = {
+    {
+      K(1,3,5) + K_Y(),
+      K(1,2,3) + K(3,4,5) + K(1,5,6),
+      K(1,3,6) + K(2,3,5) + K(1,4,5),
+    },
+    {
+      K(2,4,6) + K_Y(),
+      K(4,5,6) + K(2,3,4) + K(1,2,6),
+      K(1,4,6) + K(2,4,5) + K(2,3,6),
+    },
+  };
+  for (const auto& expr : flatten(b2_generators_y_fixed)) {
+    CHECK(expr == cycle_indices(expr, 2));
+  }
+
+  const auto b2_generators_x_cyclable = mapped_nested<2>(b2_generators_y_cyclable, kappa_y_to_x);
+  const auto b2_generators_x_fixed = mapped_nested<2>(b2_generators_y_fixed, kappa_y_to_x);
+
+  const auto b2_generators = concat(
+    mapped_nested<2>(b2_generators_y_cyclable, [](const auto& expr) { return cycle_indices(expr, 0); }),
+    mapped_nested<2>(b2_generators_y_cyclable, [](const auto& expr) { return cycle_indices(expr, 2); }),
+    mapped_nested<2>(b2_generators_y_cyclable, [](const auto& expr) { return cycle_indices(expr, 4); }),
+    mapped_nested<2>(b2_generators_y_fixed, [](const auto& expr) { return cycle_indices(expr, 0); }),
+    mapped_nested<2>(b2_generators_x_cyclable, [](const auto& expr) { return cycle_indices(expr, 1); }),
+    mapped_nested<2>(b2_generators_x_cyclable, [](const auto& expr) { return cycle_indices(expr, 3); }),
+    mapped_nested<2>(b2_generators_x_cyclable, [](const auto& expr) { return cycle_indices(expr, 5); }),
+    mapped_nested<2>(b2_generators_x_fixed, [](const auto& expr) { return cycle_indices(expr, 1); })
+  );
+
+  const auto fx = concat(
+    mapped(combinations(to_vector(range_incl(1, num_points)), 3), [](const auto& points) {
+      return KappaExpr::single({Kappa(Gamma(points))});
+    }),
+    {K_X(), K_Y()}
+  );
+  CHECK_EQ(fx.size(), 20 + 2);
+
+  const auto b2_full = concat(
+    mapped(GrL2(3, to_vector(range_incl(1, num_points))), gamma_expr_to_kappa_expr),
+    mapped(b2_generators, [](const auto& gen) {
+      const auto &[a, b, c] = to_array<3>(gen);
+      return tensor_product(a, b) + tensor_product(b, c) + tensor_product(c, a);
+    })
+  );
+  const auto b2 = space_basis(b2_full, DISAMBIGUATE(to_lyndon_basis));
+#else
+  const auto fx = GrFx(3, {1,2,3,4,5,6});
+  const auto b2 = GrL2(3, {1,2,3,4,5,6});
+#endif
+
+  std::cout << "Fx rank = " << space_rank(fx, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  std::cout << "B2 rank = " << space_rank(b2, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  for (const int weight : range_incl(2, 6)) {
+    const auto space_words = mapped(
+      filtered(
+        type_d_free_lie_coalgebra(weight),
+        DISAMBIGUATE(is_totally_weakly_separated)
+      ),
+      DISAMBIGUATE(expand_into_glued_pairs)
+    );
+    const auto space_l = mapped(
+      cartesian_combinations(concat(
+        std::vector{std::pair{b2, 1}},
+        std::vector(weight-2, std::pair{fx, 1})
+      )),
+      DISAMBIGUATE(acoproduct_vec)
+    );
+    const auto ranks = space_venn_ranks(
+      space_words,
+      space_l,
+      DISAMBIGUATE(identity_function)
+    );
+    std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
+  }
 }
