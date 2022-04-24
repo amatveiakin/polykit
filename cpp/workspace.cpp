@@ -270,6 +270,11 @@ bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
 //   return num_color_changes <= 3;
 // }
 
+// TODO: Split DeltaExpr into the one with minuses and without:
+//   without: type A
+//   with (point in involution): type C
+//   Q. what to do about `Zero`?
+
 // Optimization potential: consider whether this can be done in O(N) time;
 bool is_weakly_separated_inv(const DeltaExpr::ObjectT& term) {
   for (int i : range(term.size())) {
@@ -300,8 +305,6 @@ DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
 }
 
 
-using TypeDPolylogSpace = std::vector<KappaExpr>;
-
 TypeDPolylogSpace type_d_free_lie_coalgebra(int weight) {
   const auto coords = concat(
     mapped(combinations({1,2,3,4,5,6}, 3), [](const auto& points) {
@@ -315,6 +318,61 @@ TypeDPolylogSpace type_d_free_lie_coalgebra(int weight) {
 }
 
 
+
+// TODO: Factor out
+inline int mod_eq(int a, int b, int mod) {
+  return pos_mod(a, mod) == pos_mod(b, mod);
+}
+
+// ProjectionExpr alt_project_on(int axis, const DeltaExpr& expr, int num_vars) {
+//   return project_on(axis, expr).filtered([&](const auto& term) {
+//     return !absl::c_any_of(term, [&](const X& x) {
+//       const int idx = x.as_simple_var();
+//       return (
+//         pos_mod(idx - 1, num_vars) == pos_mod(axis, num_vars)
+//         // pos_mod(idx - 1, num_vars) == pos_mod(axis, num_vars) ||
+//         // pos_mod(idx + 1, num_vars) == pos_mod(axis, num_vars)
+//       );
+//     });
+//   });
+// }
+
+int var_sign(X x) {
+  switch (x.form()) {
+    case XForm::var: return 1;
+    case XForm::neg_var: return -1;
+    default: FATAL(absl::StrCat("Unexpected form: ", to_string(x)));
+  }
+}
+
+// bool is_frozen_coord(const Delta& d, int num_vars) {
+//   const auto [a, b] = delta_points_inv(d);
+//   const bool same_sign = var_sign(a) == var_sign(b);
+//   const int diff = std::abs(a.idx() - b.idx());
+//   return (
+//     (mod_eq(diff, 1, num_vars) && same_sign) ||
+//     (mod_eq(diff, -1, num_vars) && !same_sign)
+//   );
+// }
+
+bool is_frozen_coord(const Delta& d, int num_vars) {  // TODO: !!!
+  CHECK_EQ(num_vars, 4);
+  return d == Delta(x1,x2) || d == Delta(x2,x3) || d == Delta(x3,x4);
+  // return d == Delta(x1,x2) || d == Delta(x2,x3);
+  // return d == Delta(x1,x2);
+  // return false;
+}
+
+DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars) {
+  return expr.filtered([&](const auto& term) {
+    return absl::c_all_of(term, [&](const Delta& d) {
+      return !are_weakly_separated_inv(d, axis) || is_frozen_coord(d, num_vars);
+    });
+  });
+}
+
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -326,7 +384,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(30)
+    // .set_expression_line_limit(30)
     .set_annotation_sorting(AnnotationSorting::length)
     .set_compact_x(true)
   );
@@ -1435,11 +1493,11 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
+#if 0
   // constexpr int dimension = 3;
   constexpr int num_points = 6;
   // const auto points = to_vector(range_incl(1, num_points));
 
-#if 1
   static constexpr auto kappa_y_to_x = [](const KappaExpr& expr) {
     return expr.mapped([&](const auto& term) {
       return mapped(term, [&](const Kappa& k) {
@@ -1466,6 +1524,15 @@ int main(int /*argc*/, char *argv[]) {
       });
     });
   };
+  static constexpr auto n_log = [](int weight, const std::array<KappaExpr, 3>& triple) {
+    const auto &[a, b, c] = triple;
+    CHECK_GE(weight, 2);
+    KappaExpr ret = tensor_product(a - c, b - c);
+    for (EACH : range(weight - 2)) {
+      ret = tensor_product(b - c, ret);
+    }
+    return ret;
+  };
 
   const std::vector<std::vector<KappaExpr>> b2_generators_y_cyclable = {
     {
@@ -1479,8 +1546,8 @@ int main(int /*argc*/, char *argv[]) {
       K(1,3,6) + K(2,3,4) + K(4,5,6),
     },
     {
-      K_Y(),
       K(2,3,6) + K(1,4,5),
+      K_Y(),
       K(1,2,3) + K(4,5,6),
     },
   };
@@ -1525,15 +1592,20 @@ int main(int /*argc*/, char *argv[]) {
   const auto b2_full = concat(
     mapped(GrL2(3, to_vector(range_incl(1, num_points))), gamma_expr_to_kappa_expr),
     mapped(b2_generators, [](const auto& gen) {
-      const auto &[a, b, c] = to_array<3>(gen);
-      return tensor_product(a, b) + tensor_product(b, c) + tensor_product(c, a);
+      // (a-c) * (b-c) == a*b + b*c + c*a
+      return n_log(2, to_array<3>(gen));
     })
   );
   const auto b2 = space_basis(b2_full, DISAMBIGUATE(to_lyndon_basis));
-#else
-  const auto fx = GrFx(3, {1,2,3,4,5,6});
-  const auto b2 = GrL2(3, {1,2,3,4,5,6});
-#endif
+
+  // TODO: Test
+  // for (const auto& gen : b2_generators) {
+  //   for (const int weight : range_incl(2, 4)) {
+  //     const auto expr = n_log(weight, to_array<3>(gen));
+  //     CHECK_EQ(expr.weight(), weight);
+  //     CHECK(is_totally_weakly_separated(expr));
+  //   }
+  // }
 
   std::cout << "Fx rank = " << space_rank(fx, DISAMBIGUATE(to_lyndon_basis)) << "\n";
   std::cout << "B2 rank = " << space_rank(b2, DISAMBIGUATE(to_lyndon_basis)) << "\n";
@@ -1559,5 +1631,88 @@ int main(int /*argc*/, char *argv[]) {
       DISAMBIGUATE(identity_function)
     );
     std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
+
+
+    const auto new_space = mapped(b2_generators, [&](const auto& gen) {
+      return expand_into_glued_pairs(n_log(weight, to_array<3>(gen)));
+    });
+    CHECK(space_contains(space_words, new_space, DISAMBIGUATE(identity_function)));
+    CHECK(space_contains(space_l, new_space, DISAMBIGUATE(identity_function)));
+    std::cout << "Contains: OK\n";
   }
+#endif
+
+
+
+  // for (const int num_points : range_incl(5, 7)) {
+  //   for (const int weight : range_incl(2, 5)) {
+  //     const auto space = CL(weight, to_vector(range_incl(1, num_points)));
+  //     const auto space_pr = mapped(space, DISAMBIGUATE(project_on_x1));
+  //     const auto space_pr_alt = mapped(space, [&](const auto& expr) {
+  //       return alt_project_on(1, expr, num_points);
+  //     });
+  //     const int rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  //     const int rank_pr = space_rank(space_pr, DISAMBIGUATE(to_lyndon_basis));
+  //     const int rank_pr_alt = space_rank(space_pr_alt, DISAMBIGUATE(to_lyndon_basis));
+  //     std::cout << "p=" << num_points << ", w=" << weight << ": ";
+  //     std::cout << rank << " / " << rank_pr << " / " << rank_pr_alt << "\n";
+  //   }
+  // }
+
+  // for (const int num_vars : range_incl(2, 4)) {
+  //   for (const int weight : range_incl(2, 5)) {
+  //     const auto& args = concat(
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
+  //       // std::vector{Inf}
+  //     );
+  //     auto space = L(weight, args);
+  //     // TODO: Why so slow?
+  //     space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(identity_function),
+  //       DISAMBIGUATE(keep_non_weakly_separated_inv)
+  //     );
+  //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
+  //     std::cout << to_string(ranks) << "\n";
+  //   }
+  // }
+
+  // const auto expr = to_lyndon_basis(QLi3(x1,x2,x3,x4,-x1,-x2,-x3,-x4));
+  // std::cout << expr;
+  // const auto axis = Delta(x1,x3);
+  // std::cout << "projection on " << to_string(axis) << ": " << alt_project_on(axis, expr, 4);
+
+  for (const int num_vars : range_incl(4, 5)) {
+    for (const int weight : range_incl(3, 4)) {
+      const auto& args = concat(
+        mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
+        mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
+      );
+      auto space = L(weight, args);
+      space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+      const auto ranks = space_mapping_ranks(
+        space,
+        DISAMBIGUATE(identity_function),
+        [&](const auto& expr) {
+          return std::tuple{
+            keep_non_weakly_separated_inv(expr),
+            alt_project_on(Delta(x1,x4), expr, num_vars),
+          };
+        }
+      );
+      std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
+      std::cout << to_string(ranks) << "\n";
+    }
+  }
+
+  // const std::vector p = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // for (const auto& s : combinations(p, 2)) {
+  //   const auto [a, b] = to_array<2>(s);
+  //   const auto d = Delta(a, b);
+  //   if (is_frozen_coord(d, 4)) {
+  //     std::cout << to_string(d) << "\n";
+  //   }
+  // }
 }

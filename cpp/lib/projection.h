@@ -37,6 +37,12 @@ struct ProjectionExprParam {
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
   }
+  static int object_to_weight(const ObjectT& obj) {
+    return obj.size();
+  }
+  static int object_to_dimension(const ObjectT&) {
+    return 1;
+  }
 };
 }  // namespace internal
 

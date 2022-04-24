@@ -7,6 +7,7 @@
 #include "gamma.h"
 #include "integer_math.h"
 #include "itertools.h"
+#include "kappa.h"
 #include "linalg.h"
 #include "parallel_util.h"
 #include "profiler.h"
@@ -18,12 +19,19 @@ using PolylogNCoSpace = std::vector<DeltaNCoExpr>;
 using GrPolylogSpace = std::vector<GammaExpr>;
 using GrPolylogNCoSpace = std::vector<GammaNCoExpr>;
 using GrPolylogACoSpace = std::vector<GammaACoExpr>;
+using TypeDPolylogSpace = std::vector<KappaExpr>;
+using TypeDPolylogNCoSpace = std::vector<KappaNCoExpr>;
+using TypeDPolylogACoSpace = std::vector<KappaACoExpr>;
 
+// TODO: Generic dump_to_string_impl for `std::vector<Linear<T>>`
 std::string dump_to_string_impl(const PolylogSpace& space);
 std::string dump_to_string_impl(const PolylogNCoSpace& space);
 std::string dump_to_string_impl(const GrPolylogSpace& space);
 std::string dump_to_string_impl(const GrPolylogNCoSpace& space);
 std::string dump_to_string_impl(const GrPolylogACoSpace& space);
+std::string dump_to_string_impl(const TypeDPolylogSpace& space);
+std::string dump_to_string_impl(const TypeDPolylogNCoSpace& space);
+std::string dump_to_string_impl(const TypeDPolylogACoSpace& space);
 
 PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs);
 PolylogSpace CB(int weight, const XArgs& xargs);

@@ -52,6 +52,9 @@ std::string dump_to_string_impl(const PolylogNCoSpace& space) { return space_to_
 std::string dump_to_string_impl(const GrPolylogSpace& space) { return space_to_string(space); }
 std::string dump_to_string_impl(const GrPolylogNCoSpace& space) { return space_to_string(space); }
 std::string dump_to_string_impl(const GrPolylogACoSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const TypeDPolylogSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const TypeDPolylogNCoSpace& space) { return space_to_string(space); }
+std::string dump_to_string_impl(const TypeDPolylogACoSpace& space) { return space_to_string(space); }
 
 
 PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs) {
