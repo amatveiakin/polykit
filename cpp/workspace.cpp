@@ -372,6 +372,126 @@ DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars)
 }
 
 
+// TODO: Factor out
+// TODO: Fast pow
+int int_pow(int x, int p) {
+  int ret = 1;
+  for (EACH: range(p)) {
+    ret *= x;
+  }
+  return ret;
+}
+
+DeltaExpr typeC_QLi_arg4(int weight, const XArgs& args) {
+  const auto& points = args.as_x();
+  CHECK_EQ(points.size(), 4);
+  CHECK_GE(weight, 2);
+  return QLiVec(weight, args).dived_int(int_pow(2, weight-1)).without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("typeC_QLi"), {weight}),
+      points
+    )
+  );
+}
+
+DeltaExpr typeC_QLi_arg8(int weight, const XArgs& args) {
+  // TODO: Check arg structure (same as CLC) (also rename CLC to typeC_CL) !!!
+  const auto& points = args.as_x();
+  CHECK_EQ(points.size(), 8);
+  CHECK_GE(weight, 2);
+  const int w = weight - 1;
+  auto expr =
+    + tensor_product(
+      QLiVec   (1, choose_indices_one_based(points, std::vector{1,4,5,8})),
+      QLiVec   (w, choose_indices_one_based(points, std::vector{1,2,3,4}))
+    )
+    - tensor_product(
+      QLiNegVec(1, choose_indices_one_based(points, std::vector{2,5,6,1})),
+      QLiNegVec(w, choose_indices_one_based(points, std::vector{2,3,4,5}))
+    )
+    + tensor_product(
+      QLiVec   (1, choose_indices_one_based(points, std::vector{3,6,7,2})),
+      QLiVec   (w, choose_indices_one_based(points, std::vector{3,4,5,6}))
+    )
+    - tensor_product(
+      QLiNegVec(1, choose_indices_one_based(points, std::vector{4,7,8,3})),
+      QLiNegVec(w, choose_indices_one_based(points, std::vector{4,5,6,7}))
+    )
+  ;
+  if (weight > 2) {
+    expr += tensor_product(cross_ratio(points), typeC_QLi_arg8(w, points)).dived_int(2);
+  }
+  return expr.without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("typeC_QLi"), {weight}),
+      points
+    )
+  );
+}
+
+DeltaExpr typeC_QLi(int weight, const XArgs& args) {
+  switch (args.size()) {
+    case 4: return typeC_QLi_arg4(weight, args);
+    case 8: return typeC_QLi_arg8(weight, args);
+    default: FATAL("Unsupported number of arguments");
+  }
+}
+
+
+// DeltaExpr typeC_QLiSymm4(const XArgs& args) {
+//   const int weight = 4;
+//   const auto& points = args.as_x();
+//   CHECK_EQ(points.size(), 8);
+//   return (
+//     + typeC_QLi(4, points)
+//     + (
+//       + QLiVec(4, choose_indices_one_based(points, {1,2,3,4}))
+//       + QLiVec(4, choose_indices_one_based(points, {2,3,4,5}))
+//       + QLiVec(4, choose_indices_one_based(points, {3,4,5,6}))
+//       + QLiVec(4, choose_indices_one_based(points, {4,5,6,7}))
+//       + QLiVec(4, choose_indices_one_based(points, {5,6,7,8}))
+//       + QLiVec(4, choose_indices_one_based(points, {6,7,8,1}))
+//       + QLiVec(4, choose_indices_one_based(points, {7,8,1,2}))
+//       + QLiVec(4, choose_indices_one_based(points, {8,1,2,3}))
+//     ) * 2
+//     + (
+//       + QLiVec(4, choose_indices_one_based(points, {1,2,5,6}))
+//       + QLiVec(4, choose_indices_one_based(points, {2,3,6,7}))
+//       + QLiVec(4, choose_indices_one_based(points, {3,4,7,8}))
+//       + QLiVec(4, choose_indices_one_based(points, {4,5,8,1}))
+//     ).dived_int(4)
+//   ).without_annotations().annotate(
+//     fmt::function_num_args(
+//       fmt::sub_num(fmt::opname("typeC_QLiSymm"), {weight}),
+//       points
+//     )
+//   );
+// }
+
+DeltaExpr typeC_QLiSymm(int weight, const XArgs& args) {
+  const auto& points = args.as_x();
+  CHECK_EQ(points.size(), 8);
+  return (
+    + typeC_QLi(weight, points)
+    + (
+      + QLiVec(weight, choose_indices_one_based(points, {1,2,3,4}))
+      - QLiVec(weight, choose_indices_one_based(points, {3,4,5,2}))
+      + QLiVec(weight, choose_indices_one_based(points, {3,4,5,6}))
+      - QLiVec(weight, choose_indices_one_based(points, {5,6,7,4}))
+    )
+    + (
+      + typeC_QLi(weight, choose_indices_one_based(points, {1,2,5,6}))
+      + typeC_QLi(weight, choose_indices_one_based(points, {3,4,7,8}))
+    )
+  ).without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("typeC_QLiSymm"), {weight}),
+      points
+    )
+  );
+}
+
+
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -385,7 +505,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     // .set_expression_line_limit(30)
-    .set_annotation_sorting(AnnotationSorting::length)
+    // .set_annotation_sorting(AnnotationSorting::length)
+    .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
   );
 
@@ -1684,28 +1805,29 @@ int main(int /*argc*/, char *argv[]) {
   // const auto axis = Delta(x1,x3);
   // std::cout << "projection on " << to_string(axis) << ": " << alt_project_on(axis, expr, 4);
 
-  for (const int num_vars : range_incl(4, 5)) {
-    for (const int weight : range_incl(3, 4)) {
-      const auto& args = concat(
-        mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
-        mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
-      );
-      auto space = L(weight, args);
-      space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
-      const auto ranks = space_mapping_ranks(
-        space,
-        DISAMBIGUATE(identity_function),
-        [&](const auto& expr) {
-          return std::tuple{
-            keep_non_weakly_separated_inv(expr),
-            alt_project_on(Delta(x1,x4), expr, num_vars),
-          };
-        }
-      );
-      std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
-      std::cout << to_string(ranks) << "\n";
-    }
-  }
+  // // TODO: Fix !!!
+  // for (const int num_vars : range_incl(4, 5)) {
+  //   for (const int weight : range_incl(3, 4)) {
+  //     const auto& args = concat(
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
+  //     );
+  //     auto space = L(weight, args);
+  //     space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(identity_function),
+  //       [&](const auto& expr) {
+  //         return std::tuple{
+  //           keep_non_weakly_separated_inv(expr),
+  //           alt_project_on(Delta(x1,x4), expr, num_vars),
+  //         };
+  //       }
+  //     );
+  //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
+  //     std::cout << to_string(ranks) << "\n";
+  //   }
+  // }
 
   // const std::vector p = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
   // for (const auto& s : combinations(p, 2)) {
@@ -1715,4 +1837,234 @@ int main(int /*argc*/, char *argv[]) {
   //     std::cout << to_string(d) << "\n";
   //   }
   // }
+
+
+
+  // const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // const int weight = 5;
+  // const auto expr = typeC_QLi(weight, points);
+  // std::cout << is_totally_weakly_separated_inv(expr) << "\n";
+  // auto space = L(weight, points);
+  // // auto space = CLC(weight, points);
+  // space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << space_rank(space, DISAMBIGUATE(identity_function)) << "\n";
+  // space.push_back(to_lyndon_basis(expr));
+  // std::cout << space_rank(space, DISAMBIGUATE(identity_function)) << "\n";
+
+  // const int weight = 4;
+  // auto space = CLC(weight, {x1,x2,x3,x4,x5,-x1,-x2,-x3,-x4,-x5});
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // space.push_back(typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}));
+  // space.push_back(typeC_QLi(weight, {x1,x2,x3,x5,-x1,-x2,-x3,-x5}));
+  // space.push_back(typeC_QLi(weight, {x1,x2,x4,x5,-x1,-x2,-x4,-x5}));
+  // space.push_back(typeC_QLi(weight, {x1,x3,x4,x5,-x1,-x3,-x4,-x5}));
+  // space.push_back(typeC_QLi(weight, {x2,x3,x4,x5,-x2,-x3,-x4,-x5}));
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  // const auto prepare = [](const auto& expr) {
+  //   return to_lyndon_basis(project_on_x1(expr)).filtered([](const auto& term) {
+  //     return absl::c_count(term, Zero) == 0;
+  //   });
+  // };
+  // const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // const int weight = 4;
+
+  // std::cout << prepare(typeC_QLi(weight, points));
+  // std::cout << prepare(QLi3(x1,-x2,-x3,-x4));
+  // std::cout << prepare(QLi3(x1,x2,-x3,-x4));
+  // std::cout << prepare(QLi3(x1,x2,x3,-x4));
+  // std::cout << prepare(QLi3(x1,x2,x3,x4));
+
+  // std::cout << prepare(
+  //   +  typeC_QLi(weight, points)
+  //   -4*QLi3(x1,-x2,-x3,-x4)
+  //   -4*QLi3(x1,x2,x3,-x4)
+  // );
+  // std::cout << prepare(QLi3(x1,x2,x3,-x1));
+  // std::cout << prepare(QLi3(-x4,x1,x2,x4));
+  // std::cout << prepare(QLi3(-x3,-x4,x1,x3));
+  // std::cout << prepare(QLi3(x1,-x1,-x3,-x4));
+  // std::cout << prepare(QLi3(x2,x1,-x4,-x2));
+  // std::cout << prepare(QLi3(x3,x2,x1,-x3));
+
+  // std::cout << prepare(
+  //   +  typeC_QLi(weight, points)
+  //   -4*QLi3(x1,-x2,-x3,-x4)
+  //   -4*QLi3(x1,x2,x3,-x4)
+  //   +4*QLi3(x1,x2,x3,-x1)
+  //   +4*QLi3(-x4,x1,x2,x4)
+  //   +4*QLi3(x2,x1,-x4,-x2)
+  // );
+
+  // std::cout << to_lyndon_basis(
+  //   + typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
+  //   - typeC_QLi(weight, {x2,x3,x4,-x1,-x2,-x3,-x4,x1})
+  //   + 2 * (
+  //     + QLi3(x1,x2,x3,x4)
+  //     - QLi3(x2,x3,x4,-x1)
+  //     + QLi3(x3,x4,-x1,-x2)
+  //     - QLi3(x4,-x1,-x2,-x3)
+  //     + QLi3(-x1,-x2,-x3,-x4)
+  //     - QLi3(-x2,-x3,-x4,x1)
+  //     + QLi3(-x3,-x4,x1,x2)
+  //     - QLi3(-x4,x1,x2,x3)
+  //   )
+  // );
+
+  // for (const int weight : range_incl(2, 7)) {
+  //   const auto space = mapped_parallel(
+  //     CLC(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}), DISAMBIGUATE(to_lyndon_basis)
+  //   );
+  //   const auto a = to_lyndon_basis(typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}));
+  //   const auto b = to_lyndon_basis(typeC_QLi(weight, {x2,x3,x4,-x1,-x2,-x3,-x4,x1}));
+  //   std::cout << "w=" << weight << "\n";
+  //   std::cout << "diff lies in = " << space_contains(space, {a - b}, DISAMBIGUATE(identity_function)) << "\n";
+  //   std::cout << "sum lies in = " << space_contains(space, {a + b}, DISAMBIGUATE(identity_function)) << "\n";
+  //   std::cout << "\n";
+  // }
+
+  // const int weight = 4;
+  // const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // // const auto space = mapped_expanding(range(4), [&](const int shift) {
+  // //   return std::array{
+  // //     QLiVec(weight, choose_indices_one_based(rotated_vector(points, shift), {1,2,3,4})),
+  // //     QLiVec(weight, choose_indices_one_based(rotated_vector(points, shift), {1,2,5,6})),
+  // //   };
+  // // });
+  // const auto qli_a = to_lyndon_basis(
+  //   + QLi4(x1,x2,x3,x4)
+  //   + QLi4(x2,x3,x4,-x1)
+  //   + QLi4(x3,x4,-x1,-x2)
+  //   + QLi4(x4,-x1,-x2,-x3)
+  //   + QLi4(-x1,-x2,-x3,-x4)
+  //   + QLi4(-x2,-x3,-x4,x1)
+  //   + QLi4(-x3,-x4,x1,x2)
+  //   + QLi4(-x4,x1,x2,x3)
+  // );
+  // const auto qli_b = to_lyndon_basis(
+  //   + QLi4(x1,x2,-x1,-x2)
+  //   + QLi4(x2,x3,-x2,-x3)
+  //   + QLi4(x3,x4,-x3,-x4)
+  //   + QLi4(x4,-x1,-x4,x1)
+  // );
+  // const std::vector space = {qli_a, qli_b};
+
+  // const auto typec_qli = to_lyndon_basis(
+  //   + typeC_QLi(weight, points)
+  //   + typeC_QLi(weight, rotated_vector(points, 1))
+  // );
+  // // std::cout << dump_to_string(space) << "\n";
+  // // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function))) << "\n";
+  // std::cout << 8*qli_a + qli_b + 2*typec_qli;
+
+  // const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // for (const int weight : range_incl(2, 6)) {
+  //   const int sign = neg_one_pow(weight);
+  //   std::cout << to_lyndon_basis(
+  //     + typeC_QLiSymm(weight, points)
+  //     + sign * typeC_QLiSymm(weight, rotated_vector(points, 1))
+  //   );
+  // }
+
+  // std::cout << to_lyndon_basis(typeC_QLi(weight, {x1,x1,x3,x4,-x1,-x1,-x3,-x4}));  // ZERO
+  // std::cout << to_lyndon_basis(typeC_QLi(weight, {x1,x2,x2,x4,-x1,-x2,-x2,-x4}));
+  // std::cout << to_lyndon_basis(QLi4(1,1,2,3,4,5));  // ZERO
+  // std::cout << to_lyndon_basis(QLi4(1,2,2,3,4,5));
+
+
+  // std::cout << to_lyndon_basis(
+  //   + QLi2(x1,x2,x3,-x1)
+  //   + QLi2(x2,x3,-x1,-x2)
+  //   + QLi2(x3,-x1,-x2,-x3)
+  //   + typeC_QLi(2, {x1,x2,-x1,-x2})
+  //   + typeC_QLi(2, {x2,x3,-x2,-x3})
+  //   + typeC_QLi(2, {x3,-x1,-x3,x1})
+  // );
+
+  // const int weight = 3;
+  // const std::vector space = {
+  //   typeC_QLiSymm(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
+  //   ,
+  //   + typeC_QLi(weight, {x1,x2,-x1,-x2})
+  //   + typeC_QLi(weight, {x2,x3,-x2,-x3})
+  //   + typeC_QLi(weight, {x3,x4,-x3,-x4})
+  //   + typeC_QLi(weight, {x4,-x1,-x4,x1})
+  //   ,
+  //   + QLiSymmVec(weight, {x1,x2,x3,x4})
+  //   + QLiSymmVec(weight, {x2,x3,x4,-x1})
+  //   + QLiSymmVec(weight, {x3,x4,-x1,-x2})
+  //   + QLiSymmVec(weight, {x4,-x1,-x2,-x3})
+  //   ,
+  //   + QLiSymmVec(weight, {x1,x2,x3,-x1})
+  //   + QLiSymmVec(weight, {x2,x3,x4,-x2})
+  //   + QLiSymmVec(weight, {x3,x4,-x1,-x3})
+  //   + QLiSymmVec(weight, {x4,-x1,-x2,-x4})
+  //   ,
+  //   + QLiSymmVec(weight, {x1,x2,x3,-x3})
+  //   + QLiSymmVec(weight, {x2,x3,x4,-x4})
+  //   + QLiSymmVec(weight, {x3,x4,-x1,x1})
+  //   + QLiSymmVec(weight, {x4,-x1,-x2,x2})
+  //   ,
+  //   + QLiSymmVec(weight, {x1,x2,x4,-x1})
+  //   + QLiSymmVec(weight, {x2,x3,-x1,-x2})
+  //   + QLiSymmVec(weight, {x3,x4,-x2,-x3})
+  //   + QLiSymmVec(weight, {x4,-x1,-x3,-x4})
+  //   ,
+  //   + typeC_QLi(weight, {x1,x3,-x1,-x3})
+  //   + typeC_QLi(weight, {x2,x4,-x2,-x4})
+  // };
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << " / " << space.size() << "\n";
+
+  const auto prepare = [](const auto& expr) {
+    return to_lyndon_basis(expr);
+    // return to_lyndon_basis(project_on_x1(expr));
+    // return to_lyndon_basis(project_on_x1(expr)).filtered([](const auto& term) {
+    //   return num_distinct_elements_unsorted(mapped(term, [](X x) { return x.idx(); })) >= 3;
+    //   // std::vector<int> variables;
+    //   // for (X x: term) {
+    //   //   if (!x.is_constant()) {
+    //   //     variables.push_back(x.idx());
+    //   //   }
+    //   // }
+    //   // return num_distinct_elements_unsorted(variables);
+    // });
+  };
+  const int weight = 3;
+  std::cout << prepare(
+    + typeC_QLiSymm(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
+    - (
+      + typeC_QLi(weight, {x1,x2,-x1,-x2})
+      + typeC_QLi(weight, {x2,x3,-x2,-x3})
+      + typeC_QLi(weight, {x3,x4,-x3,-x4})
+      + typeC_QLi(weight, {x4,-x1,-x4,x1})
+    )
+    + (
+      + typeC_QLi(weight, {x1,x3,-x1,-x3})
+      + typeC_QLi(weight, {x2,x4,-x2,-x4})
+    )
+    - (
+      + QLiSymmVec(weight, {x1,x2,x3,x4})
+      + QLiSymmVec(weight, {x2,x3,x4,-x1})
+      + QLiSymmVec(weight, {x3,x4,-x1,-x2})
+      + QLiSymmVec(weight, {x4,-x1,-x2,-x3})
+    )
+    - (
+      + QLiSymmVec(weight, {x1,x2,x4,-x1})
+      + QLiSymmVec(weight, {x2,x3,-x1,-x2})
+      + QLiSymmVec(weight, {x3,x4,-x2,-x3})
+      + QLiSymmVec(weight, {x4,-x1,-x3,-x4})
+    )
+    + (
+      + QLiSymmVec(weight, {x1,x2,x3,-x1})
+      + QLiSymmVec(weight, {x2,x3,x4,-x2})
+      + QLiSymmVec(weight, {x3,x4,-x1,-x3})
+      + QLiSymmVec(weight, {x4,-x1,-x2,-x4})
+    )
+    + (
+      + QLiSymmVec(weight, {x1,x2,x3,-x3})
+      + QLiSymmVec(weight, {x2,x3,x4,-x4})
+      + QLiSymmVec(weight, {x3,x4,-x1,x1})
+      + QLiSymmVec(weight, {x4,-x1,-x2,x2})
+    )
+  );
 }
