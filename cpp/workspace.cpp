@@ -36,6 +36,7 @@
 #include "lib/polylog_via_correlators.h"
 #include "lib/polylog_qli.h"
 #include "lib/polylog_space.h"
+#include "lib/polylog_type_c_qli.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
 #include "lib/pvector.h"
@@ -122,7 +123,6 @@ GammaExpr SymmCGrLi4(const std::vector<int>& points) {
     + CGrLi(weight, args({3,2,1,6,5,4}))
     - CGrLi(weight, args({2,1,6,5,4,3}))
   ;
-  // return expr;
   return expr.without_annotations().annotate(
     fmt::function_num_args(
       fmt::sub_num(fmt::opname("SymmCGrLi"), {weight}),
@@ -186,144 +186,6 @@ PolylogSpace CL2_inv(const std::vector<int>& args) {
 }
 
 
-
-static bool less_inv(X a, X b) {
-  CHECK(a.form() == XForm::var || a.form() == XForm::neg_var);
-  CHECK(b.form() == XForm::var || b.form() == XForm::neg_var);
-  return cmp::projected(a, b, [](X x) { return std::pair{x.form(), x.idx()}; });
-}
-
-static bool between_inv(X point, std::pair<X, X> segment) {
-  const auto [a, b] = segment;
-  CHECK_LT(a, b);
-  return less_inv(a, point) && less_inv(point, b);
-}
-
-// static bool is_nil_inv(const Delta& d) {
-//   return d.is_nil() || d.a() == Zero || d.b() == Zero;
-// }
-
-auto delta_points_inv(const Delta& d) {
-  // HACK: "unglue" points assuming (x_i-0) compues only from (x_i-(-x_i)).  TODO: remove.
-  return d.b() == Zero
-    ? std::array{d.a(), d.a().negated()}
-    : std::array{d.a(), d.b()};
-}
-
-auto delta_points_inv(const Delta& d, bool invert) {
-  const auto points = delta_points_inv(d);
-  return invert
-    ? sorted(points, less_inv)
-    : sorted(mapped_array(points, [](const X x) { return x.negated(); }), less_inv);
-}
-
-// TODO: Test.
-bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
-  if (d1.is_nil() || d2.is_nil()) {
-    return true;
-  }
-  for (const bool invert_d1 : {false, true}) {
-    for (const bool invert_d2 : {false, true}) {
-      const auto [x1, y1] = delta_points_inv(d1, invert_d1);
-      const auto [x2, y2] = delta_points_inv(d2, invert_d2);
-      if (!all_unique_unsorted(std::array{x1, y1, x2, y2}, less_inv)) {
-        continue;
-      }
-      const bool intersect = between_inv(x1, {x2, y2}) != between_inv(y1, {x2, y2});
-      if (intersect) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// auto expand_inv(const Delta& d) {
-//   return std::vector{d.a(), d.a().negated(), d.b(), d.b().negated()};
-// }
-
-// // TODO: Test.
-// bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
-//   const auto d1_expanded = expand_inv(d1);
-//   const auto d2_expanded = expand_inv(d2);
-//   const auto a = set_difference(d1_expanded, d2_expanded);
-//   const auto b = set_difference(d2_expanded, d1_expanded);
-//   if (a.empty() || b.empty()) {
-//     return true;
-//   }
-//   int last_color = 0;  // a: 1,  b: 2
-//   int num_color_changes = 0;
-//   CHECK_EQ(a.size(), b.size());
-//   for (const auto& p : set_union(
-//     mapped(a, [](const X x) { return std::pair{x, 1}; }),
-//     mapped(b, [](const X x) { return std::pair{x, 2}; })
-//   )) {
-//     const int color = p.second;
-//     if (color != 0) {
-//       if (last_color != color) {
-//         ++num_color_changes;
-//         last_color = color;
-//       }
-//     }
-//   }
-//   CHECK_LE(2, num_color_changes) << dump_to_string(d1) << " vs " << dump_to_string(d2);
-//   return num_color_changes <= 3;
-// }
-
-// TODO: Split DeltaExpr into the one with minuses and without:
-//   without: type A
-//   with (point in involution): type C
-//   Q. what to do about `Zero`?
-
-// Optimization potential: consider whether this can be done in O(N) time;
-bool is_weakly_separated_inv(const DeltaExpr::ObjectT& term) {
-  for (int i : range(term.size())) {
-    for (int j : range(i)) {
-      if (!are_weakly_separated_inv(term[i], term[j])) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-bool is_weakly_separated_inv(const DeltaNCoExpr::ObjectT& term) {
-  return is_weakly_separated_inv(flatten(term));
-}
-
-bool is_totally_weakly_separated_inv(const DeltaExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
-}
-bool is_totally_weakly_separated_inv(const DeltaNCoExpr& expr) {
-  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
-}
-
-DeltaExpr keep_non_weakly_separated_inv(const DeltaExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
-}
-DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
-  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
-}
-
-
-TypeDPolylogSpace type_d_free_lie_coalgebra(int weight) {
-  const auto coords = concat(
-    mapped(combinations({1,2,3,4,5,6}, 3), [](const auto& points) {
-      return Kappa(Gamma(points));
-    }),
-    std::vector{ Kappa(KappaX{}), Kappa(KappaY{}) }
-  );
-  return mapped(get_lyndon_words(coords, weight), [](const auto& word) {
-    return KappaExpr::single(word);
-  });
-}
-
-
-
-// TODO: Factor out
-inline int mod_eq(int a, int b, int mod) {
-  return pos_mod(a, mod) == pos_mod(b, mod);
-}
-
 // ProjectionExpr alt_project_on(int axis, const DeltaExpr& expr, int num_vars) {
 //   return project_on(axis, expr).filtered([&](const auto& term) {
 //     return !absl::c_any_of(term, [&](const X& x) {
@@ -337,17 +199,10 @@ inline int mod_eq(int a, int b, int mod) {
 //   });
 // }
 
-int var_sign(X x) {
-  switch (x.form()) {
-    case XForm::var: return 1;
-    case XForm::neg_var: return -1;
-    default: FATAL(absl::StrCat("Unexpected form: ", to_string(x)));
-  }
-}
 
 // bool is_frozen_coord(const Delta& d, int num_vars) {
 //   const auto [a, b] = delta_points_inv(d);
-//   const bool same_sign = var_sign(a) == var_sign(b);
+//   const bool same_sign = a.var_sign() == b.var_sign();
 //   const int diff = std::abs(a.idx() - b.idx());
 //   return (
 //     (mod_eq(diff, 1, num_vars) && same_sign) ||
@@ -369,129 +224,6 @@ DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars)
       return !are_weakly_separated_inv(d, axis) || is_frozen_coord(d, num_vars);
     });
   });
-}
-
-
-// TODO: Factor out
-// TODO: Fast pow
-int int_pow(int x, int p) {
-  int ret = 1;
-  for (EACH: range(p)) {
-    ret *= x;
-  }
-  return ret;
-}
-
-DeltaExpr typeC_QLi_arg4(int weight, const XArgs& args) {
-  const auto& points = args.as_x();
-  CHECK_EQ(points.size(), 4);
-  CHECK_GE(weight, 2);
-  return QLiVec(weight, args).dived_int(int_pow(2, weight-1)).without_annotations().annotate(
-    fmt::function_num_args(
-      fmt::sub_num(fmt::opname("typeC_QLi"), {weight}),
-      points
-    )
-  );
-}
-
-DeltaExpr typeC_QLi_arg8(int weight, const XArgs& args) {
-  CHECK(inv_points_are_central_symmetric(args));
-  const auto& points = args.as_x();
-  CHECK_EQ(points.size(), 8);
-  CHECK_GE(weight, 2);
-  const int w = weight - 1;
-  auto expr =
-    + tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{1,4,5,8})),
-      QLiVec   (w, choose_indices_one_based(points, std::vector{1,2,3,4}))
-    )
-    - tensor_product(
-      QLiNegVec(1, choose_indices_one_based(points, std::vector{2,5,6,1})),
-      QLiNegVec(w, choose_indices_one_based(points, std::vector{2,3,4,5}))
-    )
-    + tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{3,6,7,2})),
-      QLiVec   (w, choose_indices_one_based(points, std::vector{3,4,5,6}))
-    )
-    - tensor_product(
-      QLiNegVec(1, choose_indices_one_based(points, std::vector{4,7,8,3})),
-      QLiNegVec(w, choose_indices_one_based(points, std::vector{4,5,6,7}))
-    )
-  ;
-  if (weight > 2) {
-    expr += tensor_product(cross_ratio(points), typeC_QLi_arg8(w, points)).dived_int(2);
-  }
-  return expr.without_annotations().annotate(
-    fmt::function_num_args(
-      fmt::sub_num(fmt::opname("typeC_QLi"), {weight}),
-      points
-    )
-  );
-}
-
-DeltaExpr typeC_QLi(int weight, const XArgs& args) {
-  switch (args.size()) {
-    case 4: return typeC_QLi_arg4(weight, args);
-    case 8: return typeC_QLi_arg8(weight, args);
-    default: FATAL("Unsupported number of arguments");
-  }
-}
-
-
-// DeltaExpr typeC_QLiSymm4(const XArgs& args) {
-//   const int weight = 4;
-//   const auto& points = args.as_x();
-//   CHECK_EQ(points.size(), 8);
-//   return (
-//     + typeC_QLi(4, points)
-//     + (
-//       + QLiVec(4, choose_indices_one_based(points, {1,2,3,4}))
-//       + QLiVec(4, choose_indices_one_based(points, {2,3,4,5}))
-//       + QLiVec(4, choose_indices_one_based(points, {3,4,5,6}))
-//       + QLiVec(4, choose_indices_one_based(points, {4,5,6,7}))
-//       + QLiVec(4, choose_indices_one_based(points, {5,6,7,8}))
-//       + QLiVec(4, choose_indices_one_based(points, {6,7,8,1}))
-//       + QLiVec(4, choose_indices_one_based(points, {7,8,1,2}))
-//       + QLiVec(4, choose_indices_one_based(points, {8,1,2,3}))
-//     ) * 2
-//     + (
-//       + QLiVec(4, choose_indices_one_based(points, {1,2,5,6}))
-//       + QLiVec(4, choose_indices_one_based(points, {2,3,6,7}))
-//       + QLiVec(4, choose_indices_one_based(points, {3,4,7,8}))
-//       + QLiVec(4, choose_indices_one_based(points, {4,5,8,1}))
-//     ).dived_int(4)
-//   ).without_annotations().annotate(
-//     fmt::function_num_args(
-//       fmt::sub_num(fmt::opname("typeC_QLiSymm"), {weight}),
-//       points
-//     )
-//   );
-// }
-
-DeltaExpr typeC_QLiSymm(int weight, const XArgs& args) {
-  if (args.size() == 4) {
-    return typeC_QLi(weight, args);
-  }
-  const auto& points = args.as_x();
-  CHECK_EQ(points.size(), 8);
-  return (
-    + typeC_QLi(weight, points)
-    + (
-      + QLiVec(weight, choose_indices_one_based(points, {1,2,3,4}))
-      - QLiVec(weight, choose_indices_one_based(points, {3,4,5,2}))
-      + QLiVec(weight, choose_indices_one_based(points, {3,4,5,6}))
-      - QLiVec(weight, choose_indices_one_based(points, {5,6,7,4}))
-    )
-    + (
-      + typeC_QLi(weight, choose_indices_one_based(points, {1,2,5,6}))
-      + typeC_QLi(weight, choose_indices_one_based(points, {3,4,7,8}))
-    )
-  ).without_annotations().annotate(
-    fmt::function_num_args(
-      fmt::sub_num(fmt::opname("typeC_QLiSymm"), {weight}),
-      points
-    )
-  );
 }
 
 
@@ -1737,7 +1469,7 @@ int main(int /*argc*/, char *argv[]) {
   for (const int weight : range_incl(2, 6)) {
     const auto space_words = mapped(
       filtered(
-        type_d_free_lie_coalgebra(weight),
+        typeD_free_lie_coalgebra(weight),
         DISAMBIGUATE(is_totally_weakly_separated)
       ),
       DISAMBIGUATE(expand_into_glued_pairs)
@@ -2031,6 +1763,7 @@ int main(int /*argc*/, char *argv[]) {
   //   // return to_lyndon_basis(project_on_x1(expr));
   //   // return to_lyndon_basis(project_on_x1(expr)).filtered([](const auto& term) {
   //   //   return num_distinct_elements_unsorted(mapped(term, [](X x) { return x.idx(); })) >= 3;
+  //        // TODO: Update helper function for ProjectionExpr to do this (use mapped_filtered):
   //   //   // std::vector<int> variables;
   //   //   // for (X x: term) {
   //   //   //   if (!x.is_constant()) {
@@ -2108,127 +1841,4 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << expr;
   // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
 
-  const int weight = 4;
-  const auto typec_qli_expr =
-    // sign for typeC_QLiSymm = (-1)^(sum of the positive indices)
-    + typeC_QLiSymm(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
-    - typeC_QLiSymm(weight, {x1,x2,x3,x5,-x1,-x2,-x3,-x5})
-    + typeC_QLiSymm(weight, {x1,x2,x4,x5,-x1,-x2,-x4,-x5})
-    - typeC_QLiSymm(weight, {x1,x3,x4,x5,-x1,-x3,-x4,-x5})
-    + typeC_QLiSymm(weight, {x2,x3,x4,x5,-x2,-x3,-x4,-x5})
-    - typeC_QLiSymm(weight, {x1,x2,-x1,-x2})
-    + typeC_QLiSymm(weight, {x1,x3,-x1,-x3})
-    - typeC_QLiSymm(weight, {x1,x4,-x1,-x4})
-    + typeC_QLiSymm(weight, {x1,x5,-x1,-x5})
-    - typeC_QLiSymm(weight, {x2,x3,-x2,-x3})
-    + typeC_QLiSymm(weight, {x2,x4,-x2,-x4})
-    - typeC_QLiSymm(weight, {x2,x5,-x2,-x5})
-    - typeC_QLiSymm(weight, {x3,x4,-x3,-x4})
-    + typeC_QLiSymm(weight, {x3,x5,-x3,-x5})
-    - typeC_QLiSymm(weight, {x4,x5,-x4,-x5})
-    - QLiSymm4(x1,x2,x3,x4,x5,-x1)
-    - QLiSymm4(x2,x3,x4,x5,-x1,-x2)
-    - QLiSymm4(x3,x4,x5,-x1,-x2,-x3)
-    - QLiSymm4(x4,x5,-x1,-x2,-x3,-x4)
-    - QLiSymm4(x5,-x1,-x2,-x3,-x4,-x5)
-  ;
-  // const auto space = concat(
-  //   CB(weight, {x1,x2,x3,x4,x5,-x1}),
-  //   CB(weight, {x2,x3,x4,x5,-x1,-x2}),
-  //   CB(weight, {x3,x4,x5,-x1,-x2,-x3}),
-  //   CB(weight, {x4,x5,-x1,-x2,-x3,-x4}),
-  //   CB(weight, {x5,-x1,-x2,-x3,-x4,-x5})
-  // );
-  // std::cout << to_string(space_venn_ranks(space, {typec_qli_expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
-
-
-  const auto eqn =
-    + typec_qli_expr
-    - 2 * (
-      + QLi4(x1,x2,x3,x4)
-      + QLi4(x2,x3,x4,x5)
-      + QLi4(x3,x4,x5,-x1)
-      + QLi4(x4,x5,-x1,-x2)
-      + QLi4(x5,-x1,-x2,-x3)
-    )
-    + (
-      + QLi4(x1,x2,x3,x5)
-      + QLi4(x2,x3,x4,-x1)
-      + QLi4(x3,x4,x5,-x2)
-      + QLi4(x4,x5,-x1,-x3)
-      + QLi4(x5,-x1,-x2,-x4)
-    )
-    + (
-      + QLi4(x1,x3,x4,x5)
-      + QLi4(x2,x4,x5,-x1)
-      + QLi4(x3,x5,-x1,-x2)
-      + QLi4(x4,-x1,-x2,-x3)
-      + QLi4(x5,-x2,-x3,-x4)
-    )
-    - (
-      + QLi4(x1,x2,x4,x5)
-      + QLi4(x2,x3,x5,-x1)
-      + QLi4(x3,x4,-x1,-x2)
-      + QLi4(x4,x5,-x2,-x3)
-      + QLi4(x5,-x1,-x3,-x4)
-    )
-    - (
-      + QLi4(x1,x2,x3,-x1)
-      + QLi4(x2,x3,x4,-x2)
-      + QLi4(x3,x4,x5,-x3)
-      + QLi4(x4,x5,-x1,-x4)
-      + QLi4(x5,-x1,-x2,-x5)
-    )
-    + (
-      + QLi4(x1,x2,x4,-x1)
-      + QLi4(x2,x3,x5,-x2)
-      + QLi4(x3,x4,-x1,-x3)
-      + QLi4(x4,x5,-x2,-x4)
-      + QLi4(x5,-x1,-x3,-x5)
-    )
-    - (
-      + QLi4(x1,x2,x5,-x1)
-      + QLi4(x2,x3,-x1,-x2)
-      + QLi4(x3,x4,-x2,-x3)
-      + QLi4(x4,x5,-x3,-x4)
-      + QLi4(x5,-x1,-x4,-x5)
-    )
-    - (
-      + QLi4(x1,x3,x4,-x1)
-      + QLi4(x2,x4,x5,-x2)
-      + QLi4(x3,x5,-x1,-x3)
-      + QLi4(x4,-x1,-x2,-x4)
-      + QLi4(x5,-x2,-x3,-x5)
-    )
-    + (
-      + QLi4(x1,x3,x5,-x1)
-      + QLi4(x2,x4,-x1,-x2)
-      + QLi4(x3,x5,-x2,-x3)
-      + QLi4(x4,-x1,-x3,-x4)
-      + QLi4(x5,-x2,-x4,-x5)
-    )
-    - (
-      + QLi4(x1,x4,x5,-x1)
-      + QLi4(x2,x5,-x1,-x2)
-      + QLi4(x3,-x1,-x2,-x3)
-      + QLi4(x4,-x2,-x3,-x4)
-      + QLi4(x5,-x3,-x4,-x5)
-    )
-  ;
-  std::cout << to_lyndon_basis(eqn);
-  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << " / " << space.size() << "\n";
-  // for (const auto& expr : space) {
-  //   std::cout << to_lyndon_basis(expr);
-  //   // std::cout << to_lyndon_basis(project_on_x1(expr));
-  //   // std::cout << to_lyndon_basis(project_on_x1(expr)).filtered([](const auto& term) {
-  //   //   return num_distinct_elements_unsorted(mapped(term, [](X x) { return x.idx(); })) >= 3;
-  //   //   // std::vector<int> variables;
-  //   //   // for (X x: term) {
-  //   //   //   if (!x.is_constant()) {
-  //   //   //     variables.push_back(x.idx());
-  //   //   //   }
-  //   //   // }
-  //   //   // return num_distinct_elements_unsorted(variables) >= 3;
-  //   // });
-  // }
 }

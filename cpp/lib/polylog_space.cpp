@@ -1,3 +1,6 @@
+// TODO: Split into generic `linear space` with linera algebra functions and
+//   a module with space definitions.
+
 // TODO: Be consistent about parallelisation.
 //
 // Optimization potential: Convert spaces to Lyndon basis on construction.
@@ -475,6 +478,18 @@ GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>
     });
   }
   FATAL(absl::StrCat("Unsupported weight&dimension for CGrL: ", weight, "&", dimension));
+}
+
+TypeDPolylogSpace typeD_free_lie_coalgebra(int weight) {
+  const auto coords = concat(
+    mapped(combinations({1,2,3,4,5,6}, 3), [](const auto& points) {
+      return Kappa(Gamma(points));
+    }),
+    std::vector{ Kappa(KappaX{}), Kappa(KappaY{}) }
+  );
+  return mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+    return KappaExpr::single(word);
+  });
 }
 
 

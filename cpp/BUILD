@@ -139,6 +139,7 @@ cc_library(
         "lib/polylog_lira.h",
         "lib/polylog_via_correlators.h",
         "lib/polylog_qli.h",
+        "lib/polylog_type_c_qli.h",
         "lib/snowpal.h",
     ],
     srcs = [
@@ -154,6 +155,7 @@ cc_library(
         "lib/polylog_lira.cpp",
         "lib/polylog_via_correlators.cpp",
         "lib/polylog_qli.cpp",
+        "lib/polylog_type_c_qli.cpp",
         "lib/snowpal.cpp",
     ],
     deps = [

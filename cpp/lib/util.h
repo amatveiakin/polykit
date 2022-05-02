@@ -22,9 +22,26 @@ inline int pos_mod(int x, int y) {
   return (x % y + y) % y;
 }
 
+inline int mod_eq(int a, int b, int mod) {
+  return pos_mod(a, mod) == pos_mod(b, mod);
+}
+
 inline int neg_one_pow(int power) {
   CHECK_GE(power, 0);
   return 1 - power % 2 * 2;
+}
+
+inline int int_pow(int x, int p) {
+  CHECK_LE(0, p);
+  int ret = 1;
+  while (p > 0) {
+    if (p % 2 == 1) {
+      ret *= x;
+    }
+    x *= x;
+    p /= 2;
+  }
+  return ret;
 }
 
 inline int div_round_up(int a, int b) {
@@ -322,6 +339,20 @@ auto mapped_nested(const Src& src, const F& func) {
       return mapped_nested<Nesting-1>(v, func);
     });
   }
+}
+
+// Given a vector of values x and function that maps x => std::option(y),
+// returns a vector of non-null y.
+template<typename Src, typename F>
+auto filtered_mapped(const Src& src, const F& func) {
+  std::vector<typename std::invoke_result_t<F, typename Src::value_type>::value_type> dst;
+  for (const auto& old_value : src) {
+    auto new_value = func(old_value);
+    if (new_value.has_value()) {
+      dst.push_back(std::move(new_value).value());
+    }
+  }
+  return dst;
 }
 
 template<typename T, typename F>

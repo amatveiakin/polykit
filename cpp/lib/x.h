@@ -36,6 +36,7 @@ public:
   // Thus `x.idx() == my_var_idx` is equivalent to `!x.is_constant() && x.idx() == my_var_idx`.
   constexpr int idx() const { return idx_; }
   int as_simple_var() const { CHECK(is(XForm::var)); return idx_; }
+  constexpr int var_sign() const;  // var => +1, neg_var => -1, .. => FATAL
   constexpr bool is(XForm form) const { return form_ == form; }
   constexpr bool is_constant() const;
 
@@ -80,6 +81,16 @@ inline constexpr X::X(XForm form, int idx) : form_(form), idx_(idx) {
   }
 }
 
+std::string to_string(X x);
+
+inline constexpr int X::var_sign() const {
+  switch (form_) {
+    case XForm::var: return 1;
+    case XForm::neg_var: return -1;
+    default: FATAL(absl::StrCat("Unexpected form: ", to_string(*this)));
+  }
+}
+
 inline constexpr bool X::is_constant() const {
   SWITCH_ENUM_OR_DIE(form_, {
     case XForm::var:
@@ -119,8 +130,6 @@ inline X X::operator+() const {
   CHECK(!is_constant()) << "operator+ is not supported for " << to_string(form_);
   return *this;
 }
-
-std::string to_string(X x);
 
 inline static const X Zero = X::Zero();
 inline static const X Inf = X::Inf();

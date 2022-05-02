@@ -58,20 +58,6 @@ DeltaAlphabetMapping::DeltaAlphabetMapping() {
 }
 
 
-static int num_distinct_variables(const std::vector<Delta>& term) {
-  std::vector<int> elements;
-  for (const Delta& d : term) {
-    if (!d.a().is_constant()) {
-      elements.push_back(d.a().idx());
-    }
-    if (!d.b().is_constant()) {
-      elements.push_back(d.b().idx());
-    }
-  }
-  return num_distinct_elements_unsorted(elements);
-}
-
-
 static X substitution_result(X orig, const std::vector<X>& new_points) {
   SWITCH_ENUM_OR_DIE_WITH_CONTEXT(orig.form(), "variable substitution", {
     case XForm::var:
@@ -261,6 +247,83 @@ bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term) {
   return is_weakly_separated(flatten(term));
 }
 
+
+static bool less_inv(X a, X b) {
+  CHECK(a.form() == XForm::var || a.form() == XForm::neg_var);
+  CHECK(b.form() == XForm::var || b.form() == XForm::neg_var);
+  return cmp::projected(a, b, [](X x) { return std::pair{x.form(), x.idx()}; });
+}
+
+static bool between_inv(X point, std::pair<X, X> segment) {
+  const auto [a, b] = segment;
+  CHECK_LT(a, b);
+  return less_inv(a, point) && less_inv(point, b);
+}
+
+static auto delta_points_inv(const Delta& d) {
+  // HACK: "unglue" points assuming (x_i-0) compues only from (x_i-(-x_i)).
+  return d.b() == Zero
+    ? std::array{d.a(), d.a().negated()}
+    : std::array{d.a(), d.b()};
+}
+
+static auto delta_points_inv(const Delta& d, bool invert) {
+  const auto points = delta_points_inv(d);
+  return invert
+    ? sorted(points, less_inv)
+    : sorted(mapped_array(points, [](const X x) { return x.negated(); }), less_inv);
+}
+
+// TODO: Test.
+bool are_weakly_separated_inv(const Delta& d1, const Delta& d2) {
+  if (d1.is_nil() || d2.is_nil()) {
+    return true;
+  }
+  for (const bool invert_d1 : {false, true}) {
+    for (const bool invert_d2 : {false, true}) {
+      const auto [x1, y1] = delta_points_inv(d1, invert_d1);
+      const auto [x2, y2] = delta_points_inv(d2, invert_d2);
+      if (!all_unique_unsorted(std::array{x1, y1, x2, y2}, less_inv)) {
+        continue;
+      }
+      const bool intersect = between_inv(x1, {x2, y2}) != between_inv(y1, {x2, y2});
+      if (intersect) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool is_weakly_separated_inv(const DeltaExpr::ObjectT& term) {
+  for (int i : range(term.size())) {
+    for (int j : range(i)) {
+      if (!are_weakly_separated_inv(term[i], term[j])) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+bool is_weakly_separated_inv(const DeltaNCoExpr::ObjectT& term) {
+  return is_weakly_separated_inv(flatten(term));
+}
+
+bool is_totally_weakly_separated_inv(const DeltaExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+bool is_totally_weakly_separated_inv(const DeltaNCoExpr& expr) {
+  return !expr.contains([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+
+DeltaExpr keep_non_weakly_separated_inv(const DeltaExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr) {
+  return expr.filtered([](const auto& term) { return !is_weakly_separated_inv(term); });
+}
+
+
 // TODO: Remove circular neighbour (n,1) when the number of points n is odd,
 //   similarly to passes_normalize_remove_consecutive for GammaExpr.
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term) {
@@ -346,6 +409,19 @@ int count_var(const DeltaExpr::ObjectT& term, int var) {
     return d.a().idx() == var || d.b().idx() == var;
   });
 };
+
+int num_distinct_variables(const std::vector<Delta>& term) {
+  std::vector<int> elements;
+  for (const Delta& d : term) {
+    if (!d.a().is_constant()) {
+      elements.push_back(d.a().idx());
+    }
+    if (!d.b().is_constant()) {
+      elements.push_back(d.b().idx());
+    }
+  }
+  return num_distinct_elements_unsorted(elements);
+}
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr) {
   to_ostream_grouped(

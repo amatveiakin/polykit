@@ -475,6 +475,8 @@ class UnicodeEncoder : public AbstractEncoder {
 };
 
 
+// TODO: Either find new names for all functions that include an underscore sign,
+//   or fix underscores in LaTeX.
 class LatexEncoder : public AbstractEncoder {
   std::string newline() override { return "\\\\\n"; }
   // TODO: Make sure all op signs are in fact math ops from Latex point of view

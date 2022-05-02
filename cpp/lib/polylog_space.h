@@ -97,6 +97,8 @@ GrPolylogSpace CGrL3_Dim3_test_space(const std::vector<int>& points);
 GrPolylogSpace CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
 GrPolylogSpace CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
 
+TypeDPolylogSpace typeD_free_lie_coalgebra(int weight);
+
 template<typename SpaceF, typename CombineF>
 auto abstract_co_space(int weight, int num_coparts, const SpaceF& get_space, const CombineF& combine) {
   CHECK_LE(num_coparts, weight);

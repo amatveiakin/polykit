@@ -321,6 +321,22 @@ bool are_weakly_separated(const Delta& d1, const Delta& d2);
 bool is_weakly_separated(const DeltaExpr::ObjectT& term);
 bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term);
 
+// Functions ending with `_inv` work on type C spaces, i.e. 2n points in involution.
+// They support only polylogs of +x_i, -x_i and Inf. Feeding these function an expression
+// produced from Zero arguments will silenty yield incorrect results (!) due the ungluing
+// trick (see `delta_points_inv`).
+// TODO: Strong typing for space kinds. Split DeltaExpr into:
+//   * Type A: only +x_i (and Inf);
+//   * Type C: +x_i and -x_i (and Inf);
+//   * Free expressions including Zero, x_i^2, etc.
+bool are_weakly_separated_inv(const Delta& d1, const Delta& d2);
+bool is_weakly_separated_inv(const DeltaExpr::ObjectT& term);
+bool is_weakly_separated_inv(const DeltaNCoExpr::ObjectT& term);
+bool is_totally_weakly_separated_inv(const DeltaExpr& expr);
+bool is_totally_weakly_separated_inv(const DeltaNCoExpr& expr);
+DeltaExpr keep_non_weakly_separated_inv(const DeltaExpr& expr);
+DeltaNCoExpr keep_non_weakly_separated_inv(const DeltaNCoExpr& expr);
+
 // TODO: Allow circular normalization when the number of points is odd.
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term);
 DeltaExpr normalize_remove_consecutive(const DeltaExpr& expr);
@@ -332,5 +348,6 @@ DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 // For using together with `DeltaExpr::filter`
 int count_var(const DeltaExpr::ObjectT& term, int var);
+int num_distinct_variables(const std::vector<Delta>& term);
 
 void print_sorted_by_num_distinct_variables(std::ostream& os, const DeltaExpr& expr);
