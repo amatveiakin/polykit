@@ -877,6 +877,13 @@ std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
   return to_ostream(os, linear, std::less<>{}, LinearNoContext{});
 }
 
+// Dump for vector spaces.
+template<typename ParamT>
+std::string dump_to_string_impl(const std::vector<Linear<ParamT>>& space) {
+  return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
+    return annotations_one_liner(expr.annotations());
+  }), ">");
+}
 
 
 // Optimization potential: mark IDENTITY_VECTOR_FORM as no-op and return a

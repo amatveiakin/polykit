@@ -1,6 +1,3 @@
-// TODO: Split into generic `linear space` with linera algebra functions and
-//   a module with space definitions.
-
 // TODO: Be consistent about parallelisation.
 //
 // Optimization potential: Convert spaces to Lyndon basis on construction.
@@ -41,23 +38,6 @@ static Container one_minus_cross_ratio(Container p) {
   std::swap(p[1], p[2]);
   return p;
 }
-
-
-template<typename SpaceT>
-std::string space_to_string(const SpaceT& space) {
-  return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
-    return annotations_one_liner(expr.annotations());
-  }), ">");
-}
-
-std::string dump_to_string_impl(const PolylogSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const PolylogNCoSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const GrPolylogSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const GrPolylogNCoSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const GrPolylogACoSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const TypeDPolylogSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const TypeDPolylogNCoSpace& space) { return space_to_string(space); }
-std::string dump_to_string_impl(const TypeDPolylogACoSpace& space) { return space_to_string(space); }
 
 
 PolylogSpace CB_naive_via_QLi_fours(int weight, const XArgs& xargs) {
@@ -531,20 +511,4 @@ PolylogNCoSpace co_CL(int weight, int num_coparts, const XArgs& xargs) {
     // Precompute Lyndon basis to speed up coproduct.
     return mapped(CL(w, points), DISAMBIGUATE(to_lyndon_basis));
   });
-}
-
-
-std::string to_string(const SpaceCharacteristics& characteristics) {
-  return absl::StrCat("{w=", characteristics.weight, ", d=", characteristics.dimension, "}");
-}
-
-std::string to_string(const SpaceVennRanks& ranks) {
-  return absl::StrCat(
-    fmt::parens(absl::StrCat(ranks.a(), ", ", ranks.b())), ", ",
-    fmt::set_intersection(), " = ", ranks.intersected()
-  );
-}
-
-std::string to_string(const SpaceMappingRanks& ranks) {
-  return absl::StrCat(ranks.space(), " - ", ranks.image(), " = ", ranks.kernel());
 }

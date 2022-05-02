@@ -171,10 +171,12 @@ cc_library(
         "lib/expr_matrix_builder.h",
         "lib/linalg.h",
         "lib/polylog_space.h",
+        "lib/vector_space.h",
     ],
     srcs = [
         "lib/linalg.cpp",
         "lib/polylog_space.cpp",
+        "lib/vector_space.cpp",
     ],
     deps = [
         ":polylog",
