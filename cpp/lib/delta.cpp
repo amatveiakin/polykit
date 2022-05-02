@@ -278,6 +278,20 @@ DeltaExpr normalize_remove_consecutive(const DeltaExpr& expr) {
   });
 }
 
+bool inv_points_are_central_symmetric(const XArgs& xpoints) {
+  const auto points = xpoints.as_x();
+  if (points.size() % 2 != 0) {
+    return false;
+  }
+  const int half_num_points = points.size() / 2;
+  for (const int i : range(half_num_points)) {
+    if (points[i] != -points[i+half_num_points]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 static void graph_mark_reached(
     int start,

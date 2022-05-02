@@ -112,32 +112,41 @@ PolylogSpace old_CL4_via_A2(const XArgs& args) {
   );
 }
 
-PolylogSpace CLC(int weight, const XArgs& xargs) {
+
+template<typename LSpace>
+PolylogSpace typeC_space(int weight, const XArgs& xargs, const LSpace& lspace) {
   auto args = xargs.as_x();
-  CHECK(args.size() % 2 == 0);
-  const int half_num_points = args.size()/ 2;
-  for (const int i : range(half_num_points)) {
-    CHECK(args[i] == -args[i+half_num_points]) << dump_to_string(args);
-  }
+  CHECK(inv_points_are_central_symmetric(args)) << dump_to_string(args);
   if (args.size() == 4) {
-    return CL(weight, args);
+    return lspace(weight, args);
   }
   PolylogSpace space;
+  CHECK(args.size() % 2 == 0);
   CHECK_GT(args.size(), 4);
+  const int half_num_points = args.size() / 2;
   // Cut into two halves, take one size (the other size is the same).
   for (const int i : range(half_num_points)) {
     const int n = half_num_points + 1;
     const auto points = slice(args, i, i + n);
     CHECK_EQ(points.size(), n);
-    append_vector(space, CL(weight, points));
+    append_vector(space, lspace(weight, points));
   }
   // Discard opposite points and define recursively.
   for (const int i : range(half_num_points)) {
     const auto points = removed_indices(args, {i, i + half_num_points});
-    append_vector(space, CLC(weight, points));
+    append_vector(space, typeC_space(weight, points, lspace));
   }
   return space;
 }
+
+PolylogSpace typeC_CL(int weight, const XArgs& xargs) {
+  return typeC_space(weight, xargs, DISAMBIGUATE(CL));
+}
+
+PolylogSpace typeC_CB(int weight, const XArgs& xargs) {
+  return typeC_space(weight, xargs, DISAMBIGUATE(CB));
+}
+
 
 // PolylogSpace H(int weight, const XArgs& xargs) {
 //   auto args = xargs.as_x();

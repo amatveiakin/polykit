@@ -325,6 +325,9 @@ bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term);
 bool passes_normalize_remove_consecutive(const DeltaExpr::ObjectT& term);
 DeltaExpr normalize_remove_consecutive(const DeltaExpr& expr);
 
+// Checks that points [q_1, ..., q_2n] are such that q_i == -q_{i+n}
+bool inv_points_are_central_symmetric(const XArgs& points);
+
 DeltaExpr terms_with_connected_variable_graph(const DeltaExpr& expr);
 
 // For using together with `DeltaExpr::filter`

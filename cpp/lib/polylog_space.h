@@ -56,8 +56,8 @@ inline PolylogSpace CL8(const XArgs& xargs) { return CL(8, xargs); }
 PolylogSpace old_CL4_via_A2(const XArgs& xargs);
 
 // Cluster polylogarithms of type C.
-// Defined only for args [q_1, ..., q_2n] such that q_i == -q_{i+n}
-PolylogSpace CLC(int weight, const XArgs& xargs);
+PolylogSpace typeC_CL(int weight, const XArgs& xargs);
+PolylogSpace typeC_CB(int weight, const XArgs& xargs);
 
 PolylogSpace H(int weight, const XArgs& xargs);
 
