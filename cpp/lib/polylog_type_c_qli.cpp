@@ -6,7 +6,6 @@
 DeltaExpr typeC_QLi_arg4(int weight, const XArgs& args) {
   const auto& points = args.as_x();
   CHECK_EQ(points.size(), 4);
-  CHECK_GE(weight, 2);
   return QLiVec(weight, args).dived_int(int_pow(2, weight-1)).without_annotations().annotate(
     fmt::function_num_args(
       fmt::sub_num(fmt::opname("typeC_QLi"), {weight}),
@@ -16,7 +15,6 @@ DeltaExpr typeC_QLi_arg4(int weight, const XArgs& args) {
 }
 
 DeltaExpr typeC_QLi_arg8(int weight, const XArgs& args) {
-  CHECK(inv_points_are_central_symmetric(args));
   const auto& points = args.as_x();
   CHECK_EQ(points.size(), 8);
   CHECK_GE(weight, 2);
@@ -51,6 +49,8 @@ DeltaExpr typeC_QLi_arg8(int weight, const XArgs& args) {
 }
 
 DeltaExpr typeC_QLi(int weight, const XArgs& args) {
+  // TODO: Do we need this check? Maybe as a warning?
+  // CHECK(inv_points_are_central_symmetric(args));
   switch (args.size()) {
     case 4: return typeC_QLi_arg4(weight, args);
     case 8: return typeC_QLi_arg8(weight, args);
