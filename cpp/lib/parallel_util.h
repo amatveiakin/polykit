@@ -1,13 +1,13 @@
 #pragma once
 
-#include <execution>
-#include <future>
+// #include <execution>
+// #include <future>
 
 #include "util.h"
 
 
 #ifndef PARALLELISM_IMPLEMENTATION
-#  define PARALLELISM_IMPLEMENTATION 1
+#  define PARALLELISM_IMPLEMENTATION 0
 #endif
 
 #if PARALLELISM_IMPLEMENTATION == 0

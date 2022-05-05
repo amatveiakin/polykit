@@ -22,6 +22,19 @@ http_archive(
   build_file = "gmock.BUILD",
 )
 
+
+new_local_repository(
+  name = "linbox",
+  path = "/home/amatveiakin/lib-linbox/include",
+  build_file_content = """
+package(default_visibility = ["//visibility:public"])
+cc_library(
+  name = "headers",
+  hdrs = glob(["**/*.h", "**/*.inl"])
+)
+"""
+)
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
     name = "rules_python",

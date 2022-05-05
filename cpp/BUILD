@@ -178,7 +178,10 @@ cc_library(
         "lib/polylog_space.cpp",
         "lib/vector_space.cpp",
     ],
+    # copts = ["-I/home/amatveiakin/lib-linbox/include/"],
+    copts = ["-Iexternal/linbox"],
     deps = [
+        "@linbox//:headers",
         ":polylog",
     ],
 )

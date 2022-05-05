@@ -14,10 +14,12 @@ build:clang --cxxopt -std=c++17
 build:clang --cxxopt -Wextra
 build:clang --cxxopt -Wno-sign-compare
 build:clang --cxxopt -Wimplicit-fallthrough
+build:clang --cxxopt -Wno-deprecated-copy  # complains in absl
 build:clang --cxxopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
 build:clang --linkopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
-build:clang --linkopt -ltbb  # for <execution>
-build:clang --linkopt "-lgmp -lgivaro -lntl"  # for LinBox
+# build:clang --linkopt -ltbb  # for <execution>
+# build:clang --linkopt "-L/home/amatveiakin/lib-linbox/lib/ -lgmp -lgivaro -lntl"  # for LinBox
+build:clang --linkopt "-L/home/amatveiakin/lib-linbox/lib/ -lgmp -lgivaro"  # for LinBox
 
 build:clang-asan --repo_env=CC=clang
 build:clang-asan --cxxopt -std=c++17
