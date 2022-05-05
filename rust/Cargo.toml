@@ -18,6 +18,7 @@ cc = "1.0"
 bitvec = "1.0.0"
 itertools = "0.10.3"
 num = "0.4"
+rayon = "1.5.2"
 smallvec = { version = "1.8.0", features = ["union", "const_generics", "const_new"] }
 trait-set = "0.3.0"
 

@@ -24,9 +24,7 @@ fn main() {
     let mut timer = Timer::new();
     let space = CB_naive_via_QLi_fours(5, &[1,2,3,4,5,6,7,8]);
     timer.finish("space");
-    let space = space.into_iter().map(to_lyndon_basis).collect();
-    timer.finish("lyndon");
-    let rank = space_rank(space, convert::identity);
+    let rank = space_rank(&space, to_lyndon_basis);
     timer.finish("rank");
     println!("rank = {}", rank);
 

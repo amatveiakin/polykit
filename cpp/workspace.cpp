@@ -1919,9 +1919,7 @@ int main(int /*argc*/, char *argv[]) {
   Profiler profiler;
   auto space = CB_naive_via_QLi_fours(5, {1,2,3,4,5,6,7,8});
   profiler.finish("space");
-  space = mapped(space, DISAMBIGUATE(to_lyndon_basis));
-  profiler.finish("lyndon");
-  const int rank = space_rank(space, DISAMBIGUATE(identity_function));
+  const int rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
   profiler.finish("rank");
   std::cout << rank << "\n";
 }
