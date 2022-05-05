@@ -11,6 +11,9 @@ version = "0.1.0"
 authors = ["Andrei Matveiakin <a.matveiakin@gmail.com>"]
 edition = "2021"
 
+[build-dependencies]
+cc = "1.0"
+
 [dependencies]
 bitvec = "1.0.0"
 itertools = "0.10.3"
