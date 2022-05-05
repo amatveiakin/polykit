@@ -31,7 +31,7 @@ impl PartialOrd for Delta {
 }
 
 impl Delta {
-    pub fn new<A: XArg, B: XArg>(a: A, b: B) -> Delta {
+    pub fn new(a: impl XArg, b: impl XArg) -> Delta {
         match (a.as_x(), b.as_x()) {
             (X::Variable(a_var), X::Variable(b_var)) => {
                 let (smaller, larger) = sort_two((a_var, b_var));
@@ -109,7 +109,7 @@ impl VectorLike<Delta> for DeltaProduct {
 pub type DeltaExpr = Linear<DeltaProduct>;
 
 #[allow(non_snake_case)]
-pub fn D<A: XArg, B: XArg>(a: A, b: B) -> DeltaExpr {
+pub fn D(a: impl XArg, b: impl XArg) -> DeltaExpr {
     let d = Delta::new(a, b);
     if d.is_nil() {
         DeltaExpr::zero()

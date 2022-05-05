@@ -580,11 +580,11 @@ pub mod mfmt {
     use MathFormat as MF;
     use FormatNode as FN;
 
-    pub fn lit<T: MF>(v: T) -> FN { v.to_format_node() }
-    pub fn comma_list<T: MF>(children: Vec<T>) -> FN {
+    pub fn lit(v: impl MF) -> FN { v.to_format_node() }
+    pub fn comma_list(children: Vec<impl MF>) -> FN {
         FN::CommaSeparatedList(CommaSeparatedList::new(vec_to_format_nodes(children)))
     }
-    pub fn concat<T: MF>(children: Vec<T>) -> FN {
+    pub fn concat(children: Vec<impl MF>) -> FN {
         FN::Concatenation(Concatenation::new(vec_to_format_nodes(children)))
     }
 
@@ -599,18 +599,18 @@ pub mod mfmt {
     pub fn set_intersection() -> FN { FN::SpecialCharacter(SpecialCharacter::SetIntersection) }
     pub fn set_complement() -> FN { FN::SpecialCharacter(SpecialCharacter::SetComplement) }
 
-    pub fn op<T: MF>(child: T) -> FN { FN::OperatorName(OperatorName::new(Box::new(child.to_format_node()))) }
-    pub fn frac<T1: MF, T2: MF>(numerator: T1, denominator: T2) -> FN {
+    pub fn op(child: impl MF) -> FN { FN::OperatorName(OperatorName::new(Box::new(child.to_format_node()))) }
+    pub fn frac(numerator: impl MF, denominator: impl MF) -> FN {
         FN::Fraction(Fraction::new(Box::new(numerator.to_format_node()), Box::new(denominator.to_format_node())))
     }
-    pub fn sub<T: MF>(child: T) -> FN { FN::Subscript(Subscript::new(Box::new(child.to_format_node()))) }
-    pub fn sup<T: MF>(child: T) -> FN { FN::Superscript(Superscript::new(Box::new(child.to_format_node()))) }
+    pub fn sub(child: impl MF) -> FN { FN::Subscript(Subscript::new(Box::new(child.to_format_node()))) }
+    pub fn sup(child: impl MF) -> FN { FN::Superscript(Superscript::new(Box::new(child.to_format_node()))) }
 
-    pub fn color<T: MF>(color: Color, child: T) -> FN {
+    pub fn color(color: Color, child: impl MF) -> FN {
         FN::ApplyColor(ApplyColor::new(color, Box::new(child.to_format_node())))
     }
 
-    fn vec_to_format_nodes<T: MF>(elements: Vec<T>) -> Vec<FN> {
+    fn vec_to_format_nodes(elements: Vec<impl MF>) -> Vec<FN> {
         elements.into_iter().map(|c| c.to_format_node()).collect()
     }
 }
