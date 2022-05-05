@@ -27,7 +27,7 @@ impl MathFormat for X {
 pub const Inf: X = X::Infinity;
 
 
-pub trait XArg : Clone + Copy + PartialEq + PartialOrd + Eq + Ord + fmt::Debug + hash::Hash {
+pub trait XArg : Clone + Copy + PartialEq + PartialOrd + Eq + Ord + fmt::Debug + hash::Hash + MathFormat {
     fn as_x(self) -> X;
 }
 

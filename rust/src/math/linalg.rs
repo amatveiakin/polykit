@@ -4,8 +4,8 @@ use std::os;
 
 pub struct Matrix {
     triplets: Vec<Triplet>,
-    num_rows: usize,
-    num_cols: usize,
+    num_rows: u32,
+    num_cols: u32,
 }
 
 impl Matrix {
@@ -17,7 +17,7 @@ impl Matrix {
         }
     }
 
-    pub fn set(&mut self, row: usize, col: usize, value: i32) {
+    pub fn set(&mut self, row: u32, col: u32, value: i32) {
         self.triplets.push(Triplet{
             row: row.try_into().unwrap(),
             col: col.try_into().unwrap(),

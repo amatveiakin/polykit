@@ -1,8 +1,10 @@
+mod enumerator;
 mod string_tools;
 mod timer;
 mod util;
 mod vector_like;
 
+pub use enumerator::*;
 pub use string_tools::*;
 pub use timer::*;
 pub use util::*;

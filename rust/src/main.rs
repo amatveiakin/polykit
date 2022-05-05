@@ -4,9 +4,13 @@ pub mod base;
 pub mod math;
 pub mod polylog;
 
+use std::convert;
+
+use base::*;
 use math::*;
 use math_format::*;
 use math_format_macro::math_format;
+use polylog::*;
 
 
 fn main() {
@@ -17,12 +21,13 @@ fn main() {
     // }
     // println!("rank = {}", rank);
 
-    let mut m = Matrix::new();
-    m.set(0, 0, 1);
-    m.set(0, 1, 2);
-    m.set(1, 0, 3);
-    m.set(1, 1, 6);
-    let rank = matrix_rank(&m);
+    let mut timer = Timer::new();
+    let space = CB_naive_via_QLi_fours(5, &[1,2,3,4,5,6,7,8]);
+    timer.finish("space");
+    let space = space.into_iter().map(to_lyndon_basis).collect();
+    timer.finish("lyndon");
+    let rank = space_rank(space, convert::identity);
+    timer.finish("rank");
     println!("rank = {}", rank);
 
 

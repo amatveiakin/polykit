@@ -1848,71 +1848,80 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
   // std::cout << to_lyndon_basis(expr);
 
-  const std::vector points = {x1,x2,x3,x4,x5,x6,-x1,-x2,-x3,-x4,-x5,-x6};
-  const std::vector space = {
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{3,4,5,6,7,2})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{1,2,7,8}))
-    ),
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{5,6,7,8,3,4})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{3,8,9,2}))
-    ),
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{5,6,7,8,9,4})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{3,4,9,10}))
-    ),
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{7,8,9,10,5,6})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{5,10,11,4}))
-    ),
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{7,8,9,10,11,6})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{5,6,11,12}))
-    ),
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{9,10,11,12,7,8})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{7,12,1,6}))
-    ),
+  // const std::vector points = {x1,x2,x3,x4,x5,x6,-x1,-x2,-x3,-x4,-x5,-x6};
+  // const std::vector space = {
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{3,4,5,6,7,2})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{1,2,7,8}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{5,6,7,8,3,4})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{3,8,9,2}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{5,6,7,8,9,4})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{3,4,9,10}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{7,8,9,10,5,6})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{5,10,11,4}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{7,8,9,10,11,6})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{5,6,11,12}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{9,10,11,12,7,8})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{7,12,1,6}))
+  //   ),
 
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{1,2,3,4})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{1,4,5,6,7,10,11,12}))
-    ),
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{3,4,5,2})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{5,6,7,8,11,12,1,2}))
-    ),
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{3,4,5,6})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{3,6,7,8,9,12,1,2}))
-    ),
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{5,6,7,4})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{7,8,9,10,1,2,3,4}))
-    ),
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{5,6,7,8})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{5,8,9,10,11,2,3,4}))
-    ),
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{7,8,9,6})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{9,10,11,12,3,4,5,6}))
-    ),
-  };
-  const auto type_c_space = CL(3, points);
-  std::cout << to_string(space_venn_ranks(type_c_space, space, DISAMBIGUATE(to_lyndon_basis))) << "\n";
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{1,2,3,4})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{1,4,5,6,7,10,11,12}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{3,4,5,2})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{5,6,7,8,11,12,1,2}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{3,4,5,6})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{3,6,7,8,9,12,1,2}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{5,6,7,4})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{7,8,9,10,1,2,3,4}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{5,6,7,8})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{5,8,9,10,11,2,3,4}))
+  //   ),
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{7,8,9,6})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{9,10,11,12,3,4,5,6}))
+  //   ),
+  // };
+  // const auto type_c_space = CL(3, points);
+  // std::cout << to_string(space_venn_ranks(type_c_space, space, DISAMBIGUATE(to_lyndon_basis))) << "\n";
 
-  std::cout << to_lyndon_basis(
-    tensor_product(
-      QLiVec   (2, choose_indices_one_based(points, std::vector{3,4,5,6,7,2})),
-      typeC_QLi(1, choose_indices_one_based(points, std::vector{1,2,7,8}))
-    )
-  );
-  std::cout << to_lyndon_basis(
-    tensor_product(
-      QLiVec   (1, choose_indices_one_based(points, std::vector{1,2,3,4})),
-      typeC_QLi(2, choose_indices_one_based(points, std::vector{1,4,5,6,7,10,11,12}))
-    )
-  );
+  // std::cout << to_lyndon_basis(
+  //   tensor_product(
+  //     QLiVec   (2, choose_indices_one_based(points, std::vector{3,4,5,6,7,2})),
+  //     typeC_QLi(1, choose_indices_one_based(points, std::vector{1,2,7,8}))
+  //   )
+  // );
+  // std::cout << to_lyndon_basis(
+  //   tensor_product(
+  //     QLiVec   (1, choose_indices_one_based(points, std::vector{1,2,3,4})),
+  //     typeC_QLi(2, choose_indices_one_based(points, std::vector{1,4,5,6,7,10,11,12}))
+  //   )
+  // );
+
+  Profiler profiler;
+  auto space = CB_naive_via_QLi_fours(5, {1,2,3,4,5,6,7,8});
+  profiler.finish("space");
+  space = mapped(space, DISAMBIGUATE(to_lyndon_basis));
+  profiler.finish("lyndon");
+  const int rank = space_rank(space, DISAMBIGUATE(identity_function));
+  profiler.finish("rank");
+  std::cout << rank << "\n";
 }
