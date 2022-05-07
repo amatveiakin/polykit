@@ -1,16 +1,16 @@
 #pragma once
 
 #include "format.h"
-#include "lexicographical.h"
 #include "linear.h"
 #include "pvector.h"
 #include "util.h"
 
 
+#define HAS_CORR_EXPR 1
+
 struct CorrFSymb {
   CorrFSymb() {}
-  explicit CorrFSymb(std::vector<int> points_arg)
-    : points(lexicographically_minimal_rotation(points_arg)) {}
+  explicit CorrFSymb(std::vector<int> points_arg);
 
   std::vector<int> points;
 

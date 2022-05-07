@@ -170,12 +170,18 @@ cc_library(
     hdrs = [
         "lib/expr_matrix_builder.h",
         "lib/linalg.h",
-        "lib/polylog_space.h",
+        "lib/polylog_type_ac_space.h",
+        "lib/polylog_type_d_space.h",
+        "lib/polylog_gr_space.h",
+        "lib/space_algebra.h",
         "lib/vector_space.h",
     ],
     srcs = [
         "lib/linalg.cpp",
-        "lib/polylog_space.cpp",
+        "lib/polylog_type_ac_space.cpp",
+        "lib/polylog_type_d_space.cpp",
+        "lib/polylog_gr_space.cpp",
+        "lib/space_algebra.cpp",
         "lib/vector_space.cpp",
     ],
     deps = [

@@ -1,4 +1,4 @@
-// Full Grassmannian (3,6) including both Plücker and non-Plücker coordinates.
+// Type D polylog: Grassmannian (3,6) including both Plücker and non-Plücker coordinates.
 
 #pragma once
 
@@ -11,6 +11,8 @@
 #include "gamma.h"
 #include "pvector.h"
 
+
+#define HAS_KAPPA_EXPR 1
 
 struct KappaX {  // 12 34 56
   bool operator==(const KappaX&) const { return true; }

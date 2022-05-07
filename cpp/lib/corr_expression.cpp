@@ -1,6 +1,11 @@
 #include "corr_expression.h"
 
 #include "coalgebra.h"
+#include "lexicographical.h"
+
+
+CorrFSymb::CorrFSymb(std::vector<int> points_arg)
+  : points(lexicographically_minimal_rotation(points_arg)) {}
 
 
 CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_points) {

@@ -24,6 +24,8 @@
 #include "polylog_lira_param.h"
 
 
+#define HAS_THETA_EXPR 1
+
 class ThetaComplement {
 public:
   ThetaComplement() {}

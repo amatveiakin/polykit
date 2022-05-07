@@ -12,6 +12,8 @@
 #include "pvector.h"
 
 
+#define HAS_GAMMA_EXPR 1
+
 constexpr int kMaxGammaVariables = 16;
 
 static_assert(kMaxGammaVariables <= sizeof(unsigned long) * CHAR_BIT);  // for std::bitset::to_ulong

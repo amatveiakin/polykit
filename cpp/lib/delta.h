@@ -26,6 +26,8 @@
 #include "x.h"
 
 
+#define HAS_DELTA_EXPR 1
+
 // TODO: Implement integratability criterion
 
 // Represents (x_i - x_j).

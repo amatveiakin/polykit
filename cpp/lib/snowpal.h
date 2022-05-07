@@ -5,7 +5,6 @@
 #include "ratio.h"
 #include "sequence_iteration.h"
 #include "set_util.h"
-#include "theta.h"
 
 
 class IllegalTreeCutException : public std::exception {

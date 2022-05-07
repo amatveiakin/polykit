@@ -1,7 +1,6 @@
-#include <fstream>
-#include <iostream>
-#include <regex>
-#include <sstream>
+// Optimization potential. To improve compilation time:
+//   - Add DECLARE_EXPR/DEFINE_EXPR macros, move lyndon and co-product to .cpp;
+//   - Add a way to disable co-products and corresponding expressions.
 
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
@@ -9,49 +8,64 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
 
-#include "lib/algebra.h"
-#include "lib/coalgebra.h"
-#include "lib/delta_parse.h"
-#include "lib/enumerator.h"
-#include "lib/expr_matrix_builder.h"
-#include "lib/file_util.h"
-#include "lib/format.h"
-#include "lib/gamma.h"
 #include "lib/integer_math.h"
-#include "lib/iterated_integral.h"
 #include "lib/itertools.h"
-#include "lib/kappa.h"
-#include "lib/lexicographical.h"
 #include "lib/linalg.h"
-#include "lib/lira_ones.h"
-#include "lib/loops.h"
 #include "lib/lyndon.h"
-#include "lib/mystic_algebra.h"
-#include "lib/polylog_cgrli.h"
-#include "lib/polylog_grli.h"
-#include "lib/polylog_grqli.h"
-#include "lib/polylog_li.h"
-#include "lib/polylog_liquad.h"
-#include "lib/polylog_lira.h"
-#include "lib/polylog_via_correlators.h"
 #include "lib/polylog_qli.h"
-#include "lib/polylog_space.h"
+#include "lib/polylog_type_ac_space.h"
 #include "lib/polylog_type_c_qli.h"
 #include "lib/profiler.h"
 #include "lib/projection.h"
-#include "lib/pvector.h"
 #include "lib/range.h"
 #include "lib/sequence_iteration.h"
-#include "lib/set_util.h"
-#include "lib/shuffle.h"
-#include "lib/snowpal.h"
+#include "lib/space_algebra.h"
 #include "lib/summation.h"
-#include "lib/table_printer.h"
+
+// In order to reduce compilation time enable expressions only when necessary:
+
+#if 0
+#include "lib/gamma.h"
+#include "lib/chern_arrow.h"
+#include "lib/polylog_cgrli.h"
+#include "lib/polylog_grli.h"
+#include "lib/polylog_grqli.h"
+#include "lib/polylog_gr_space.h"
+#elif defined(HAS_GAMMA_EXPR)
+#  error "Expression type leaked: check header structure"
+#endif
+
+#if 0
+#include "lib/kappa.h"
+#include "lib/polylog_type_d_space.h"
+#elif defined(HAS_KAPPA_EXPR)
+#  error "Expression type leaked: check header structure"
+#endif
+
+#if 0
+#include "lib/corr_expression.h"
+#include "lib/iterated_integral.h"
+#include "lib/polylog_via_correlators.h"
+#elif defined(HAS_CORR_EXPR)
+#  error "Expression type leaked: check header structure"
+#endif
+
+#if 0
+#include "lib/epsilon.h"
+#include "lib/lira_ones.h"
+#include "lib/loops.h"
+#include "lib/mystic_algebra.h"
+#include "lib/polylog_li.h"
+#include "lib/polylog_liquad.h"
+#include "lib/polylog_lira.h"
+#include "lib/snowpal.h"
 #include "lib/theta.h"
-#include "lib/triangulation.h"
-#include "lib/zip.h"
+#elif defined(HAS_EPSILON_EXPR) || defined(HAS_THETA_EXPR) || defined(HAS_LIRA_EXPR)
+#  error "Expression type leaked: check header structure"
+#endif
 
 
+#if 0
 GammaExpr SymmCGrLi3(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 6);
   constexpr int weight = 3;
@@ -148,6 +162,7 @@ GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
 }
 
 // TODO: Test:  symmetrize_double(symmetrize_loop(x)) == 0
+#endif
 
 template<typename Container>
 static Container one_minus_cross_ratio(Container p) {
@@ -156,12 +171,12 @@ static Container one_minus_cross_ratio(Container p) {
   return p;
 }
 
-PolylogSpace CL1_inv(const std::vector<int>& args) {
+TypeAC_Space CL1_inv(const std::vector<int>& args) {
   const auto& args_inv = concat(
     mapped(args, [](const int idx) { return X(idx); }),
     mapped(args, [](const int idx) { return -X(idx); })
   );
-  PolylogSpace space;
+  TypeAC_Space space;
   const int weight = 1;
   append_vector(space, mapped_expanding(combinations(args_inv, 4), [&](const auto& p) {
     return std::array{
@@ -172,12 +187,12 @@ PolylogSpace CL1_inv(const std::vector<int>& args) {
   return space;
 }
 
-PolylogSpace CL2_inv(const std::vector<int>& args) {
+TypeAC_Space CL2_inv(const std::vector<int>& args) {
   const auto& args_inv = concat(
     mapped(args, [](const int idx) { return X(idx); }),
     mapped(args, [](const int idx) { return -X(idx); })
   );
-  PolylogSpace space;
+  TypeAC_Space space;
   const int weight = 2;
   append_vector(space, mapped(combinations(args_inv, 4), [&](const auto& p) {
     return QLiVec(weight, p);
@@ -900,7 +915,7 @@ int main(int /*argc*/, char *argv[]) {
   //     const int fixed_a = 1;
   //     const int fixed_b = 2;
   //     const int nonfixed_start = 3;
-  //     PolylogSpace space;
+  //     TypeAC_Space space;
   //     for (const auto& seq : nondecreasing_sequences(n, weight)) {
   //       const auto symbol = tensor_product(absl::MakeConstSpan(mapped(seq, [](const int k) {
   //         return D(k + nonfixed_start, fixed_a) - D(fixed_b, fixed_a);
@@ -968,7 +983,7 @@ int main(int /*argc*/, char *argv[]) {
   //   const int weight = 3;
   //   const auto points = to_vector(range_incl(1, num_points));
   //   const auto coords = combinations(points, dimension);
-  //   GrPolylogNCoSpace space_comult;
+  //   Gr_NCoSpace space_comult;
   //   for (const auto& word : get_lyndon_words(coords, weight)) {
   //     const auto expr = GammaExpr::single(mapped(word, convert_to<Gamma>));
   //     const auto expr_pr = pr(expr);
@@ -976,12 +991,12 @@ int main(int /*argc*/, char *argv[]) {
   //       space_comult.push_back(ncomultiply(expr_pr, {1,2}));
   //     }
   //   }
-  //   GrPolylogSpace space_triplets;
+  //   Gr_Space space_triplets;
   //   for (const auto& indices : permutations(slice(points, 1), 4)) {
   //     space_triplets.push_back(substitute_variables(triplet_tmpl, indices));
   //   }
-  //   GrPolylogSpace fx = mapped(GrFx(dimension, points), pr);
-  //   GrPolylogNCoSpace second_space = mapped(cartesian_product(space_triplets, fx), applied(DISAMBIGUATE(ncoproduct)));
+  //   Gr_Space fx = mapped(GrFx(dimension, points), pr);
+  //   Gr_NCoSpace second_space = mapped(cartesian_product(space_triplets, fx), applied(DISAMBIGUATE(ncoproduct)));
   //   // TODO: Space coproduct helper function !!!
   //   const auto ranks = space_venn_ranks(
   //     space_comult,
@@ -1013,11 +1028,11 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 2;
   // for (const int num_points : range_incl(4, 8)) {
   //   const auto points = to_vector(range_incl(1, num_points));
-  //   GrPolylogSpace l2 = mapped(GrL2(dimension, points), pr);
-  //   GrPolylogSpace l1 = mapped(GrFx(dimension, points), pr);
-  //   // GrPolylogSpace l2 = GrL2(dimension, points);
-  //   // GrPolylogSpace l1 = GrL1(dimension, points);
-  //   GrPolylogNCoSpace space = mapped(
+  //   Gr_Space l2 = mapped(GrL2(dimension, points), pr);
+  //   Gr_Space l1 = mapped(GrFx(dimension, points), pr);
+  //   // Gr_Space l2 = GrL2(dimension, points);
+  //   // Gr_Space l1 = GrL1(dimension, points);
+  //   Gr_NCoSpace space = mapped(
   //     cartesian_combinations(std::vector{std::pair{l2, 1}, std::pair{l1, weight-2}}),
   //     DISAMBIGUATE(ncoproduct_vec)
   //   );
@@ -1122,7 +1137,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int dimension = 3;
   // const std::vector points = {1,2,3,4,5,6};
   // const auto coords = combinations(slice(points, 1), dimension - 1);
-  // GrPolylogACoSpace space_words = mapped(
+  // Gr_ACoSpace space_words = mapped(
   //   gr_free_lie_coalgebra(weight, dimension, points),
   //   DISAMBIGUATE(expand_into_glued_pairs)
   // );
@@ -1960,57 +1975,57 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // print_sorted_by_num_distinct_variables(std::cout, expr);
 
-  // const std::vector points = {1,2,3};
-  // const int weight = 5;
-  // const auto coords = mapped(combinations(points, 2), [](const auto& pair) {
-  //   const auto [a, b] = to_array<2>(pair);
-  //   return Delta(a, b);
-  // });
-  // const auto space = mapped(
-  //   filtered(
-  //     cartesian_power(coords, weight),
-  //     [](auto term) {
-  //       keep_unique_sorted(term);
-  //       return all_unique_unsorted(term);
-  //     }
-  //   ),
-  //   [](const auto& term) {
-  //     // std::cout << dump_to_string(term) << "\n";
-  //     return DeltaExpr::single(term);
-  //   }
-  // );
-  // // const auto expr = QLiVec(weight, points);
-  // const auto expr = DeltaExpr::single({Delta(1,2), Delta(1,2), Delta(1,3), Delta(1,2), Delta(2,3)});
-  // std::cout << to_lyndon_basis(expr);
-  // CHECK_EQ(expr.weight(), weight);
-  // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
-
-
-  const std::vector points = {1,2,3,4,5,6};
+  const std::vector points = {1,2,3};
   const int weight = 5;
-  const int dimension = 3;
-  const auto coords = mapped(combinations(points, dimension), [](const auto& points) {
-    return Gamma(points);
+  const auto coords = mapped(combinations(points, 2), [](const auto& pair) {
+    const auto [a, b] = to_array<2>(pair);
+    return Delta(a, b);
   });
-  Profiler profiler;
-  auto space = mapped(
+  const auto space = mapped(
     filtered(
       cartesian_power(coords, weight),
       [](auto term) {
         keep_unique_sorted(term);
-        return all_unique_unsorted(term) && is_weakly_separated(term);
+        return all_unique_unsorted(term);
       }
     ),
     [](const auto& term) {
-      return GammaExpr::single(term);
+      // std::cout << dump_to_string(term) << "\n";
+      return DeltaExpr::single(term);
     }
   );
-  profiler.finish("space");
-  space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
-  profiler.finish("lyndon");
-  const auto expr = to_lyndon_basis(CGrLi(weight, points));
-  profiler.finish("expr");
-  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
-  profiler.finish("ranks");
-  std::cout << to_string(ranks) << "\n";
+  // const auto expr = QLiVec(weight, points);
+  const auto expr = DeltaExpr::single({Delta(1,2), Delta(1,2), Delta(1,3), Delta(1,2), Delta(2,3)});
+  std::cout << to_lyndon_basis(expr);
+  CHECK_EQ(expr.weight(), weight);
+  std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
+
+
+  // const std::vector points = {1,2,3,4,5,6};
+  // const int weight = 5;
+  // const int dimension = 3;
+  // const auto coords = mapped(combinations(points, dimension), [](const auto& points) {
+  //   return Gamma(points);
+  // });
+  // Profiler profiler;
+  // auto space = mapped(
+  //   filtered(
+  //     cartesian_power(coords, weight),
+  //     [](auto term) {
+  //       keep_unique_sorted(term);
+  //       return all_unique_unsorted(term) && is_weakly_separated(term);
+  //     }
+  //   ),
+  //   [](const auto& term) {
+  //     return GammaExpr::single(term);
+  //   }
+  // );
+  // profiler.finish("space");
+  // space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  // profiler.finish("lyndon");
+  // const auto expr = to_lyndon_basis(CGrLi(weight, points));
+  // profiler.finish("expr");
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // profiler.finish("ranks");
+  // std::cout << to_string(ranks) << "\n";
 }

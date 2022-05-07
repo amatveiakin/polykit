@@ -5,6 +5,8 @@
 #include "theta.h"
 
 
+#define HAS_LIRA_EXPR 1
+
 // Represents a particular case of LiraParam, namely
 //   n_Li_1_1..._1(x_1, ..., x_n),  where each x_i each a single cross-ratio
 class LiraParamOnes {

@@ -18,6 +18,8 @@
 #include "pvector.h"
 
 
+#define HAS_EPSILON_EXPR 1
+
 constexpr int kMaxComplementVariables = 15;
 
 namespace internal {
