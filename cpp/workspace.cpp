@@ -238,7 +238,7 @@ int main(int /*argc*/, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
-    // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     // .set_expression_line_limit(30)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
@@ -1916,10 +1916,101 @@ int main(int /*argc*/, char *argv[]) {
   //   )
   // );
 
+
+  // auto expr = QLi5(1,2,3,4,5,6,7,8);
+  // std::cout << to_lyndon_basis(expr.filtered([](const auto& term) {
+  //   return contains_naive(term, Delta(1,4));
+  // }));
+
+
+  // auto expr = to_lyndon_basis(QLi5(1,2,3,4,5,6,7,8));
+  // auto expr = to_lyndon_basis(QLi6(1,2,3,4));
+
+  // expr = expr.filtered([](const auto& term) {
+  //   // return contains_naive(term, Delta(1,2)) && contains_naive(term, Delta(4,5));
+
+  //   return
+  //     absl::c_count(term, Delta(1,2)) > 0 &&
+  //     absl::c_count(term, Delta(2,4)) > 0 &&
+  //     absl::c_count(term, Delta(3,4)) > 0 &&
+  //     absl::c_all_of(term, [](const auto d) {
+  //       return
+  //         d == Delta(1,2) ||
+  //         d == Delta(2,4) ||
+  //         d == Delta(3,4)
+  //       ;
+  //     })
+  //   ;
+
+  //   // return absl::c_count(term, Delta(1,2)) > 1;
+
+  //   // const auto special_d = Delta(1,4);
+  //   // if (term[0] != special_d) {
+  //   //   return false;
+  //   // }
+  //   // const auto it = absl::c_find_if(term, [&](const auto& d) { return d != special_d; });
+  //   // return std::find(it, term.end(), special_d) != term.end();
+  // });
+  // // print_sorted_by_num_distinct_variables(std::cout, expr);
+  // std::cout << expr;
+
+  // auto expr = to_lyndon_basis(QLi3(1,2,3,4));
+  // expr = expr.filtered([](const auto& term) {
+  //   return contains_naive(term, Delta(1,2)) && contains_naive(term, Delta(3,4));
+  // });
+  // print_sorted_by_num_distinct_variables(std::cout, expr);
+
+  // const std::vector points = {1,2,3};
+  // const int weight = 5;
+  // const auto coords = mapped(combinations(points, 2), [](const auto& pair) {
+  //   const auto [a, b] = to_array<2>(pair);
+  //   return Delta(a, b);
+  // });
+  // const auto space = mapped(
+  //   filtered(
+  //     cartesian_power(coords, weight),
+  //     [](auto term) {
+  //       keep_unique_sorted(term);
+  //       return all_unique_unsorted(term);
+  //     }
+  //   ),
+  //   [](const auto& term) {
+  //     // std::cout << dump_to_string(term) << "\n";
+  //     return DeltaExpr::single(term);
+  //   }
+  // );
+  // // const auto expr = QLiVec(weight, points);
+  // const auto expr = DeltaExpr::single({Delta(1,2), Delta(1,2), Delta(1,3), Delta(1,2), Delta(2,3)});
+  // std::cout << to_lyndon_basis(expr);
+  // CHECK_EQ(expr.weight(), weight);
+  // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
+
+
+  const std::vector points = {1,2,3,4,5,6};
+  const int weight = 5;
+  const int dimension = 3;
+  const auto coords = mapped(combinations(points, dimension), [](const auto& points) {
+    return Gamma(points);
+  });
   Profiler profiler;
-  auto space = CB_naive_via_QLi_fours(5, {1,2,3,4,5,6,7,8});
+  auto space = mapped(
+    filtered(
+      cartesian_power(coords, weight),
+      [](auto term) {
+        keep_unique_sorted(term);
+        return all_unique_unsorted(term) && is_weakly_separated(term);
+      }
+    ),
+    [](const auto& term) {
+      return GammaExpr::single(term);
+    }
+  );
   profiler.finish("space");
-  const int rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-  profiler.finish("rank");
-  std::cout << rank << "\n";
+  space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  profiler.finish("lyndon");
+  const auto expr = to_lyndon_basis(CGrLi(weight, points));
+  profiler.finish("expr");
+  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  profiler.finish("ranks");
+  std::cout << to_string(ranks) << "\n";
 }
