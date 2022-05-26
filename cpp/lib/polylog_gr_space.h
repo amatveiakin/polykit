@@ -27,5 +27,7 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points);
 Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
 Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
 
+Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points);
+
 Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
 Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points);

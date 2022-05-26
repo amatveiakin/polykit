@@ -199,6 +199,27 @@ Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& poin
   FATAL(absl::StrCat("Unsupported weight&dimension for CGrL: ", weight, "&", dimension));
 }
 
+Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points) {
+  Gr_Space space;
+  if (dimension > 2) {
+    for (const int bonus_point_idx : range(points.size())) {
+      const auto bonus_args = choose_indices(points, {bonus_point_idx});
+      const auto main_args = removed_index(points, bonus_point_idx);
+      append_vector(space, mapped(ChernGrL(weight, dimension - 1, main_args), [&](const auto& expr) {
+        return pullback(expr, bonus_args);
+      }));
+    }
+  }
+  if (weight >= dimension - 1) {
+    for (const auto& args : combinations(points, dimension * 2)) {
+      for (const int shift : range(args.size() / 2)) {
+        space.push_back(CGrLi(weight, rotated_vector(args, shift)));
+      }
+    }
+  }
+  return space;
+}
+
 
 Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points) {
   const auto points = to_vector(range_incl(1, num_points));
