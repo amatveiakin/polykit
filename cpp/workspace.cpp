@@ -2396,31 +2396,104 @@ int main(int /*argc*/, char *argv[]) {
 //   }
 
 
+#if 1
   Gr_Space space;
+  // for (const int a: range_incl(1, 4)) {
+  //   GammaExpr expr;
+  //   for (const int b: range_incl(1, 4)) {
+  //     for (const int c: range_incl(6, 9)) {
+  //       if (a == b) {
+  //         continue;
+  //       }
+  //       const auto points = to_vector(range_incl(1, 9));
+  //       const auto main_points = removed_indices(points, {a-1, b-1, c-1});
+  //       int sign = neg_one_pow(absl::c_count_if(main_points, [](const int p) { return p % 2 == 1; }));
+  //       expr += sign * pullback(CGrLi(4, main_points), {a});
+  //       // std::cout << annotations_one_liner(expr.annotations()) << "\n";
+  //       // space.push_back(std::move(expr));
+  //     }
+  //   }
+  //   std::cout << expr.annotations() << "\n";
+  //   space.push_back(std::move(expr));
+  // };
+
   space.push_back(
-    + CGrLi(4, {1,2,3,4,5,6,7,8})
-    - CGrLi(4, {1,2,3,4,5,6,7,9})
-    + CGrLi(4, {1,2,3,4,5,6,8,9})
-    - CGrLi(4, {1,2,3,4,5,7,8,9})
-    + CGrLi(4, {1,2,3,4,6,7,8,9})
-    - CGrLi(4, {1,2,3,5,6,7,8,9})
-    + CGrLi(4, {1,2,4,5,6,7,8,9})
-    - CGrLi(4, {1,3,4,5,6,7,8,9})
-    + CGrLi(4, {2,3,4,5,6,7,8,9})
+    - pullback(CGrLi(4, {2,3,5,6,7,8}), {1})
+    + pullback(CGrLi(4, {2,3,5,6,7,9}), {1})
+    - pullback(CGrLi(4, {2,3,5,6,8,9}), {1})
+    + pullback(CGrLi(4, {2,3,5,7,8,9}), {1})
+    + pullback(CGrLi(4, {2,4,5,6,7,8}), {1})
+    - pullback(CGrLi(4, {2,4,5,6,7,9}), {1})
+    + pullback(CGrLi(4, {2,4,5,6,8,9}), {1})
+    - pullback(CGrLi(4, {2,4,5,7,8,9}), {1})
+    - pullback(CGrLi(4, {3,4,5,6,7,8}), {1})
+    + pullback(CGrLi(4, {3,4,5,6,7,9}), {1})
+    - pullback(CGrLi(4, {3,4,5,6,8,9}), {1})
+    + pullback(CGrLi(4, {3,4,5,7,8,9}), {1})
   );
-  for (const int a: range_incl(1, 4)) {
-    for (const int b: range_incl(1, 4)) {
-      for (const int c: range_incl(6, 9)) {
-        if (a == b) {
-          continue;
-        }
-        auto points = to_vector(range_incl(1, 9));
-        auto expr = pullback(CGrLi(4, removed_indices(points, {a-1, b-1, c-1})), {a});
-        std::cout << annotations_one_liner(expr.annotations()) << "\n";
-        space.push_back(std::move(expr));
-      }
-    }
-  };
+  space.push_back(
+    + pullback(CGrLi(4, {1,3,5,6,7,8}), {2})
+    - pullback(CGrLi(4, {1,3,5,6,7,9}), {2})
+    + pullback(CGrLi(4, {1,3,5,6,8,9}), {2})
+    - pullback(CGrLi(4, {1,3,5,7,8,9}), {2})
+    - pullback(CGrLi(4, {1,4,5,6,7,8}), {2})
+    + pullback(CGrLi(4, {1,4,5,6,7,9}), {2})
+    - pullback(CGrLi(4, {1,4,5,6,8,9}), {2})
+    + pullback(CGrLi(4, {1,4,5,7,8,9}), {2})
+    - (
+      - pullback(CGrLi(4, {3,4,5,6,7,8}), {2})
+      + pullback(CGrLi(4, {3,4,5,6,7,9}), {2})
+      - pullback(CGrLi(4, {3,4,5,6,8,9}), {2})
+      + pullback(CGrLi(4, {3,4,5,7,8,9}), {2})
+    )
+  );
+  space.push_back(
+    - (
+      - pullback(CGrLi(4, {1,2,5,6,7,8}), {3})
+      + pullback(CGrLi(4, {1,2,5,6,7,9}), {3})
+      - pullback(CGrLi(4, {1,2,5,6,8,9}), {3})
+      + pullback(CGrLi(4, {1,2,5,7,8,9}), {3})
+    )
+    - pullback(CGrLi(4, {1,4,5,6,7,8}), {3})
+    + pullback(CGrLi(4, {1,4,5,6,7,9}), {3})
+    - pullback(CGrLi(4, {1,4,5,6,8,9}), {3})
+    + pullback(CGrLi(4, {1,4,5,7,8,9}), {3})
+    + pullback(CGrLi(4, {2,4,5,6,7,8}), {3})
+    - pullback(CGrLi(4, {2,4,5,6,7,9}), {3})
+    + pullback(CGrLi(4, {2,4,5,6,8,9}), {3})
+    - pullback(CGrLi(4, {2,4,5,7,8,9}), {3})
+  );
+  space.push_back(
+    - pullback(CGrLi(4, {1,2,5,6,7,8}), {4})
+    + pullback(CGrLi(4, {1,2,5,6,7,9}), {4})
+    - pullback(CGrLi(4, {1,2,5,6,8,9}), {4})
+    + pullback(CGrLi(4, {1,2,5,7,8,9}), {4})
+    + pullback(CGrLi(4, {1,3,5,6,7,8}), {4})
+    - pullback(CGrLi(4, {1,3,5,6,7,9}), {4})
+    + pullback(CGrLi(4, {1,3,5,6,8,9}), {4})
+    - pullback(CGrLi(4, {1,3,5,7,8,9}), {4})
+    - pullback(CGrLi(4, {2,3,5,6,7,8}), {4})
+    + pullback(CGrLi(4, {2,3,5,6,7,9}), {4})
+    - pullback(CGrLi(4, {2,3,5,6,8,9}), {4})
+    + pullback(CGrLi(4, {2,3,5,7,8,9}), {4})
+  );
+  // for (const int a: range_incl(1, 4)) {
+  //   for (const int b: range_incl(1, 4)) {
+  //     for (const int c: range_incl(6, 9)) {
+  //       if (a == 2) {
+  //         continue;
+  //       }
+  //       if (a == b) {
+  //         continue;
+  //       }
+  //       const auto points = to_vector(range_incl(1, 9));
+  //       const auto main_points = removed_indices(points, {a-1, b-1, c-1});
+  //       int sign = neg_one_pow(absl::c_count_if(main_points, [](const int p) { return p % 2 == 1; }));
+  //       auto expr = sign * pullback(CGrLi(4, main_points), {a});
+  //       space.push_back(std::move(expr));
+  //     }
+  //   }
+  // };
   for (const int a: range_incl(1, 4)) {
     for (const int b: range_incl(1, 4)) {
       for (const int c: range_incl(1, 4)) {
@@ -2442,8 +2515,21 @@ int main(int /*argc*/, char *argv[]) {
   };
   // std::cout << dump_to_string(space) << "\n";
   // append_vector(space, ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 1));
-  const auto rank = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
-  std::cout << rank << " / " << space.size() << "\n";
+  const auto rank_before = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
+  std::cout << rank_before << " / " << space.size() << "\n";
+  space.push_back(
+    + CGrLi(4, {1,2,3,4,5,6,7,8})
+    - CGrLi(4, {1,2,3,4,5,6,7,9})
+    + CGrLi(4, {1,2,3,4,5,6,8,9})
+    - CGrLi(4, {1,2,3,4,5,7,8,9})
+    + CGrLi(4, {1,2,3,4,6,7,8,9})
+    - CGrLi(4, {1,2,3,5,6,7,8,9})
+    + CGrLi(4, {1,2,4,5,6,7,8,9})
+    - CGrLi(4, {1,3,4,5,6,7,8,9})
+    + CGrLi(4, {2,3,4,5,6,7,8,9})
+  );
+  const auto rank_after = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
+  std::cout << rank_after << " / " << space.size() << "\n";
   // const auto space_chern = ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 2);
   // const auto ranks = space_venn_ranks(space, space_chern, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(rank) << "\n";
@@ -2453,4 +2539,5 @@ int main(int /*argc*/, char *argv[]) {
   //   const auto rank = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
   //   std::cout << rank << " / " << space.size() << "\n";
   // }
+#endif
 }
