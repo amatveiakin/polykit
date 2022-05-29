@@ -2396,13 +2396,61 @@ int main(int /*argc*/, char *argv[]) {
 //   }
 
 
-  const int dimension = 4;
-  const int weight = 4;
-  const int num_points = 8;
-  const auto points = to_vector(range_incl(1, num_points));
-  for (const int depth : range_incl(1, 4)) {
-    const auto space = ChernGrL(weight, dimension, points, depth);
-    const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-    std::cout << "d=" << depth << ": " << rank << "\n";
-  }
+  Gr_Space space;
+  space.push_back(
+    + CGrLi(4, {1,2,3,4,5,6,7,8})
+    - CGrLi(4, {1,2,3,4,5,6,7,9})
+    + CGrLi(4, {1,2,3,4,5,6,8,9})
+    - CGrLi(4, {1,2,3,4,5,7,8,9})
+    + CGrLi(4, {1,2,3,4,6,7,8,9})
+    - CGrLi(4, {1,2,3,5,6,7,8,9})
+    + CGrLi(4, {1,2,4,5,6,7,8,9})
+    - CGrLi(4, {1,3,4,5,6,7,8,9})
+    + CGrLi(4, {2,3,4,5,6,7,8,9})
+  );
+  for (const int a: range_incl(1, 4)) {
+    for (const int b: range_incl(1, 4)) {
+      for (const int c: range_incl(6, 9)) {
+        if (a == b) {
+          continue;
+        }
+        auto points = to_vector(range_incl(1, 9));
+        auto expr = pullback(CGrLi(4, removed_indices(points, {a-1, b-1, c-1})), {a});
+        std::cout << annotations_one_liner(expr.annotations()) << "\n";
+        space.push_back(std::move(expr));
+      }
+    }
+  };
+  for (const int a: range_incl(1, 4)) {
+    for (const int b: range_incl(1, 4)) {
+      for (const int c: range_incl(1, 4)) {
+        for (const int d: range_incl(6, 9)) {
+          for (const int e: range_incl(6, 9)) {
+            if (a == b || a == c || b == c) {
+              continue;
+            }
+            if (d == e) {
+              continue;
+            }
+            auto points = to_vector(range_incl(1, 9));
+            auto expr = pullback(CGrLi(4, removed_indices(points, {a-1, b-1, c-1, d-1, e-1})), {a, b});
+            space.push_back(std::move(expr));
+          }
+        }
+      }
+    }
+  };
+  // std::cout << dump_to_string(space) << "\n";
+  // append_vector(space, ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 1));
+  const auto rank = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
+  std::cout << rank << " / " << space.size() << "\n";
+  // const auto space_chern = ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 2);
+  // const auto ranks = space_venn_ranks(space, space_chern, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(rank) << "\n";
+
+  // for (const int dimension : range_incl(2, 4)) {
+  //   const auto space = ChernGrL(4, dimension, {1,2,3,4,5,6,7,8,9}, 1);
+  //   const auto rank = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
+  //   std::cout << rank << " / " << space.size() << "\n";
+  // }
 }
