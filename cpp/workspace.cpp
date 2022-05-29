@@ -2165,46 +2165,46 @@ int main(int /*argc*/, char *argv[]) {
   // );
   // std::cout << to_string(ranks) << "\n";
 
-  const int weight = 4;
-  const int dimension = 4;
-  const int num_points = 8;
-  const auto points = to_vector(range_incl(1, num_points));
-  // const auto space = ChernGrL(weight, dimension, points);
-  const auto space = CGrL_test_space(weight, dimension, points);
-  const auto ranks = space_mapping_ranks(
-    space,
-    DISAMBIGUATE(to_lyndon_basis),
-    [&](const auto& expr) {
-      return std::tuple {
-        to_lyndon_basis(expr + substitute_variables(expr, {2,3,4,5,6,7,8,1})),
-        to_lyndon_basis(expr - substitute_variables(expr, {8,7,6,5,4,3,2,1})),
-        to_lyndon_basis(
-          + substitute_variables(expr, {1,2,3,4,5,6,7,8})
-          - substitute_variables(expr, {1,2,3,4,5,6,7,9})
-          + substitute_variables(expr, {1,2,3,4,5,6,8,9})
-          - substitute_variables(expr, {1,2,3,4,5,7,8,9})
-          + substitute_variables(expr, {1,2,3,4,6,7,8,9})
-          - substitute_variables(expr, {1,2,3,5,6,7,8,9})
-          + substitute_variables(expr, {1,2,4,5,6,7,8,9})
-          - substitute_variables(expr, {1,3,4,5,6,7,8,9})
-          + substitute_variables(expr, {2,3,4,5,6,7,8,9})
-        ),
-        to_lyndon_basis(
-          + pullback(substitute_variables(expr, {1,2,3,4,5,6,7,8}), {9})
-          - pullback(substitute_variables(expr, {1,2,3,4,5,6,7,9}), {8})
-          + pullback(substitute_variables(expr, {1,2,3,4,5,6,8,9}), {7})
-          - pullback(substitute_variables(expr, {1,2,3,4,5,7,8,9}), {6})
-          + pullback(substitute_variables(expr, {1,2,3,4,6,7,8,9}), {5})
-          - pullback(substitute_variables(expr, {1,2,3,5,6,7,8,9}), {4})
-          + pullback(substitute_variables(expr, {1,2,4,5,6,7,8,9}), {3})
-          - pullback(substitute_variables(expr, {1,3,4,5,6,7,8,9}), {2})
-          + pullback(substitute_variables(expr, {2,3,4,5,6,7,8,9}), {1})
-        ),
-        // to_lyndon_basis(expr - plucker_dual(expr, points)),
-      };
-    }
-  );
-  std::cout << to_string(ranks) << "\n";
+  // const int weight = 4;
+  // const int dimension = 4;
+  // const int num_points = 8;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // // const auto space = ChernGrL(weight, dimension, points);
+  // const auto space = CGrL_test_space(weight, dimension, points);
+  // const auto ranks = space_mapping_ranks(
+  //   space,
+  //   DISAMBIGUATE(to_lyndon_basis),
+  //   [&](const auto& expr) {
+  //     return std::tuple {
+  //       to_lyndon_basis(expr + substitute_variables(expr, {2,3,4,5,6,7,8,1})),
+  //       to_lyndon_basis(expr - substitute_variables(expr, {8,7,6,5,4,3,2,1})),
+  //       to_lyndon_basis(
+  //         + substitute_variables(expr, {1,2,3,4,5,6,7,8})
+  //         - substitute_variables(expr, {1,2,3,4,5,6,7,9})
+  //         + substitute_variables(expr, {1,2,3,4,5,6,8,9})
+  //         - substitute_variables(expr, {1,2,3,4,5,7,8,9})
+  //         + substitute_variables(expr, {1,2,3,4,6,7,8,9})
+  //         - substitute_variables(expr, {1,2,3,5,6,7,8,9})
+  //         + substitute_variables(expr, {1,2,4,5,6,7,8,9})
+  //         - substitute_variables(expr, {1,3,4,5,6,7,8,9})
+  //         + substitute_variables(expr, {2,3,4,5,6,7,8,9})
+  //       ),
+  //       to_lyndon_basis(
+  //         + pullback(substitute_variables(expr, {1,2,3,4,5,6,7,8}), {9})
+  //         - pullback(substitute_variables(expr, {1,2,3,4,5,6,7,9}), {8})
+  //         + pullback(substitute_variables(expr, {1,2,3,4,5,6,8,9}), {7})
+  //         - pullback(substitute_variables(expr, {1,2,3,4,5,7,8,9}), {6})
+  //         + pullback(substitute_variables(expr, {1,2,3,4,6,7,8,9}), {5})
+  //         - pullback(substitute_variables(expr, {1,2,3,5,6,7,8,9}), {4})
+  //         + pullback(substitute_variables(expr, {1,2,4,5,6,7,8,9}), {3})
+  //         - pullback(substitute_variables(expr, {1,3,4,5,6,7,8,9}), {2})
+  //         + pullback(substitute_variables(expr, {2,3,4,5,6,7,8,9}), {1})
+  //       ),
+  //       // to_lyndon_basis(expr - plucker_dual(expr, points)),
+  //     };
+  //   }
+  // );
+  // std::cout << to_string(ranks) << "\n";
 
 
   // const int weight = 4;
@@ -2357,4 +2357,43 @@ int main(int /*argc*/, char *argv[]) {
   // ;
   // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(ranks) << "\n";
+
+
+  // TODO: Try to dyhedralize and find space basis
+  for (const int weight : range_incl(4, 4)) {
+    for (const int num_points : range_incl(8, 8)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      Profiler profiler;
+      const auto space = concat(
+        ChernGrL(weight, 4, points),
+        ChernGrL(weight, 5, points),
+        ChernGrL(weight, 6, points)
+      );
+      profiler.finish("make space");
+      const auto ranks = space_mapping_ranks(
+        space,
+        DISAMBIGUATE(to_lyndon_basis),
+        [&](const auto& expr) {
+          // const auto x = to_lyndon_basis(symmetrize_loop(chern_arrow_left(expr, num_points + 1), num_points + 1));
+          // const auto y = to_lyndon_basis(symmetrize_loop(chern_arrow_up(expr, num_points + 1), num_points + 1));
+          const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+          const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
+          const auto z = GammaExpr();
+          switch (expr.dimension()) {
+            // case 4: return std::tuple{x, y, z};
+            // case 5: return std::tuple{z, x, y};
+            case 4: return std::tuple{x, y, z, z};
+            case 5: return std::tuple{z, x, y, z};
+            case 6: return std::tuple{z, z, x, y};
+            // case 2: return std::tuple{x, y, z, z, z};
+            // case 3: return std::tuple{z, x, y, z, z};
+            // case 4: return std::tuple{z, z, x, y, z};
+            // case 5: return std::tuple{z, z, z, x, y};
+            default: FATAL("Unexpected dimension");
+          };
+        }
+      );
+      std::cout << "w=" << weight << ", n=" << num_points << ":  " << to_string(ranks) << "\n";
+    }
+  }
 }
