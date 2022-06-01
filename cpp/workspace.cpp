@@ -2359,185 +2359,94 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_string(ranks) << "\n";
 
 
-//   // TODO: Try to dyhedralize and find space basis
-//   for (const int weight : range_incl(4, 4)) {
-//     for (const int num_points : range_incl(8, 8)) {
-//       const auto points = to_vector(range_incl(1, num_points));
-//       Profiler profiler;
-//       const auto space = concat(
-//         ChernGrL(weight, 4, points),
-//         ChernGrL(weight, 5, points),
-//         ChernGrL(weight, 6, points)
-//       );
-//       profiler.finish("make space");
-//       const auto ranks = space_mapping_ranks(
-//         space,
-//         DISAMBIGUATE(to_lyndon_basis),
-//         [&](const auto& expr) {
-//           const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
-//           const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
-//           const auto z = GammaExpr();
-//           switch (expr.dimension()) {
-//             // case 4: return std::tuple{x, y, z};
-//             // case 5: return std::tuple{z, x, y};
-//             case 4: return std::tuple{x, y, z, z};
-//             case 5: return std::tuple{z, x, y, z};
-//             case 6: return std::tuple{z, z, x, y};
-//             // case 2: return std::tuple{x, y, z, z, z};
-//             // case 3: return std::tuple{z, x, y, z, z};
-//             // case 4: return std::tuple{z, z, x, y, z};
-//             // case 5: return std::tuple{z, z, z, x, y};
-//             default: FATAL("Unexpected dimension");
-//           };
-//         }
-//       );
-//       std::cout << "w=" << weight << ", n=" << num_points << ":  " << to_string(ranks) << "\n";
-//     }
-//   }
-
-
-#if 1
-  Gr_Space space;
-  // for (const int a: range_incl(1, 4)) {
-  //   GammaExpr expr;
-  //   for (const int b: range_incl(1, 4)) {
-  //     for (const int c: range_incl(6, 9)) {
-  //       if (a == b) {
-  //         continue;
-  //       }
-  //       const auto points = to_vector(range_incl(1, 9));
-  //       const auto main_points = removed_indices(points, {a-1, b-1, c-1});
-  //       int sign = neg_one_pow(absl::c_count_if(main_points, [](const int p) { return p % 2 == 1; }));
-  //       expr += sign * pullback(CGrLi(4, main_points), {a});
-  //       // std::cout << annotations_one_liner(expr.annotations()) << "\n";
-  //       // space.push_back(std::move(expr));
-  //     }
-  //   }
-  //   std::cout << expr.annotations() << "\n";
-  //   space.push_back(std::move(expr));
-  // };
-
-  space.push_back(
-    - pullback(CGrLi(4, {2,3,5,6,7,8}), {1})
-    + pullback(CGrLi(4, {2,3,5,6,7,9}), {1})
-    - pullback(CGrLi(4, {2,3,5,6,8,9}), {1})
-    + pullback(CGrLi(4, {2,3,5,7,8,9}), {1})
-    + pullback(CGrLi(4, {2,4,5,6,7,8}), {1})
-    - pullback(CGrLi(4, {2,4,5,6,7,9}), {1})
-    + pullback(CGrLi(4, {2,4,5,6,8,9}), {1})
-    - pullback(CGrLi(4, {2,4,5,7,8,9}), {1})
-    - pullback(CGrLi(4, {3,4,5,6,7,8}), {1})
-    + pullback(CGrLi(4, {3,4,5,6,7,9}), {1})
-    - pullback(CGrLi(4, {3,4,5,6,8,9}), {1})
-    + pullback(CGrLi(4, {3,4,5,7,8,9}), {1})
-  );
-  space.push_back(
-    + pullback(CGrLi(4, {1,3,5,6,7,8}), {2})
-    - pullback(CGrLi(4, {1,3,5,6,7,9}), {2})
-    + pullback(CGrLi(4, {1,3,5,6,8,9}), {2})
-    - pullback(CGrLi(4, {1,3,5,7,8,9}), {2})
-    - pullback(CGrLi(4, {1,4,5,6,7,8}), {2})
-    + pullback(CGrLi(4, {1,4,5,6,7,9}), {2})
-    - pullback(CGrLi(4, {1,4,5,6,8,9}), {2})
-    + pullback(CGrLi(4, {1,4,5,7,8,9}), {2})
-    - (
-      - pullback(CGrLi(4, {3,4,5,6,7,8}), {2})
-      + pullback(CGrLi(4, {3,4,5,6,7,9}), {2})
-      - pullback(CGrLi(4, {3,4,5,6,8,9}), {2})
-      + pullback(CGrLi(4, {3,4,5,7,8,9}), {2})
-    )
-  );
-  space.push_back(
-    - (
-      - pullback(CGrLi(4, {1,2,5,6,7,8}), {3})
-      + pullback(CGrLi(4, {1,2,5,6,7,9}), {3})
-      - pullback(CGrLi(4, {1,2,5,6,8,9}), {3})
-      + pullback(CGrLi(4, {1,2,5,7,8,9}), {3})
-    )
-    - pullback(CGrLi(4, {1,4,5,6,7,8}), {3})
-    + pullback(CGrLi(4, {1,4,5,6,7,9}), {3})
-    - pullback(CGrLi(4, {1,4,5,6,8,9}), {3})
-    + pullback(CGrLi(4, {1,4,5,7,8,9}), {3})
-    + pullback(CGrLi(4, {2,4,5,6,7,8}), {3})
-    - pullback(CGrLi(4, {2,4,5,6,7,9}), {3})
-    + pullback(CGrLi(4, {2,4,5,6,8,9}), {3})
-    - pullback(CGrLi(4, {2,4,5,7,8,9}), {3})
-  );
-  space.push_back(
-    - pullback(CGrLi(4, {1,2,5,6,7,8}), {4})
-    + pullback(CGrLi(4, {1,2,5,6,7,9}), {4})
-    - pullback(CGrLi(4, {1,2,5,6,8,9}), {4})
-    + pullback(CGrLi(4, {1,2,5,7,8,9}), {4})
-    + pullback(CGrLi(4, {1,3,5,6,7,8}), {4})
-    - pullback(CGrLi(4, {1,3,5,6,7,9}), {4})
-    + pullback(CGrLi(4, {1,3,5,6,8,9}), {4})
-    - pullback(CGrLi(4, {1,3,5,7,8,9}), {4})
-    - pullback(CGrLi(4, {2,3,5,6,7,8}), {4})
-    + pullback(CGrLi(4, {2,3,5,6,7,9}), {4})
-    - pullback(CGrLi(4, {2,3,5,6,8,9}), {4})
-    + pullback(CGrLi(4, {2,3,5,7,8,9}), {4})
-  );
-  // for (const int a: range_incl(1, 4)) {
-  //   for (const int b: range_incl(1, 4)) {
-  //     for (const int c: range_incl(6, 9)) {
-  //       if (a == 2) {
-  //         continue;
-  //       }
-  //       if (a == b) {
-  //         continue;
-  //       }
-  //       const auto points = to_vector(range_incl(1, 9));
-  //       const auto main_points = removed_indices(points, {a-1, b-1, c-1});
-  //       int sign = neg_one_pow(absl::c_count_if(main_points, [](const int p) { return p % 2 == 1; }));
-  //       auto expr = sign * pullback(CGrLi(4, main_points), {a});
-  //       space.push_back(std::move(expr));
-  //     }
-  //   }
-  // };
-  for (const int a: range_incl(1, 4)) {
-    for (const int b: range_incl(1, 4)) {
-      for (const int c: range_incl(1, 4)) {
-        for (const int d: range_incl(6, 9)) {
-          for (const int e: range_incl(6, 9)) {
-            if (a == b || a == c || b == c) {
-              continue;
-            }
-            if (d == e) {
-              continue;
-            }
-            auto points = to_vector(range_incl(1, 9));
-            auto expr = pullback(CGrLi(4, removed_indices(points, {a-1, b-1, c-1, d-1, e-1})), {a, b});
-            space.push_back(std::move(expr));
-          }
+  // TODO: Try to dyhedralize and find space basis
+  for (const int weight : range_incl(3, 4)) {
+    for (const int num_points : range_incl(8, 8)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      Profiler profiler;
+      const auto space = concat(
+        wedge_ChernGrL(weight, 4, points),
+        wedge_ChernGrL(weight, 5, points),
+        wedge_ChernGrL(weight, 6, points)
+      );
+      profiler.finish("make space");
+      const auto ranks = space_mapping_ranks(
+        space,
+        DISAMBIGUATE(to_lyndon_basis),
+        [&](const auto& expr) {
+          const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+          const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
+          const auto z = GammaNCoExpr();
+          switch (expr.dimension()) {
+            // case 4: return std::tuple{x, y};
+            // case 4: return std::tuple{x, y, z};
+            // case 5: return std::tuple{z, x, y};
+            case 4: return std::tuple{x, y, z, z};
+            case 5: return std::tuple{z, x, y, z};
+            case 6: return std::tuple{z, z, x, y};
+            // case 2: return std::tuple{x, y, z, z, z};
+            // case 3: return std::tuple{z, x, y, z, z};
+            // case 4: return std::tuple{z, z, x, y, z};
+            // case 5: return std::tuple{z, z, z, x, y};
+            // case 2: return std::tuple{x, y, z, z, z, z};
+            // case 3: return std::tuple{z, x, y, z, z, z};
+            // case 4: return std::tuple{z, z, x, y, z, z};
+            // case 5: return std::tuple{z, z, z, x, y, z};
+            // case 6: return std::tuple{z, z, z, z, x, y};
+            default: FATAL("Unexpected dimension");
+          };
         }
-      }
+      );
+      std::cout << "w=" << weight << ", n=" << num_points << ":  " << to_string(ranks) << "\n";
     }
-  };
-  // std::cout << dump_to_string(space) << "\n";
-  // append_vector(space, ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 1));
-  const auto rank_before = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
-  std::cout << rank_before << " / " << space.size() << "\n";
-  space.push_back(
-    + CGrLi(4, {1,2,3,4,5,6,7,8})
-    - CGrLi(4, {1,2,3,4,5,6,7,9})
-    + CGrLi(4, {1,2,3,4,5,6,8,9})
-    - CGrLi(4, {1,2,3,4,5,7,8,9})
-    + CGrLi(4, {1,2,3,4,6,7,8,9})
-    - CGrLi(4, {1,2,3,5,6,7,8,9})
-    + CGrLi(4, {1,2,4,5,6,7,8,9})
-    - CGrLi(4, {1,3,4,5,6,7,8,9})
-    + CGrLi(4, {2,3,4,5,6,7,8,9})
-  );
-  const auto rank_after = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
-  std::cout << rank_after << " / " << space.size() << "\n";
-  // const auto space_chern = ChernGrL(4, 4, {1,2,3,4,5,6,7,8,9}, 2);
-  // const auto ranks = space_venn_ranks(space, space_chern, DISAMBIGUATE(to_lyndon_basis));
-  // std::cout << to_string(rank) << "\n";
+  }
 
-  // for (const int dimension : range_incl(2, 4)) {
-  //   const auto space = ChernGrL(4, dimension, {1,2,3,4,5,6,7,8,9}, 1);
-  //   const auto rank = space_rank(space,  DISAMBIGUATE(to_lyndon_basis));
-  //   std::cout << rank << " / " << space.size() << "\n";
+
+  // const int weight = 5;
+  // const int mid_point = weight + 1;
+  // const int num_points = mid_point * 2 - 1;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // const int num_pullbacks = 1;
+  // const int num_before = 1;
+  // const int num_after = 1;
+  // Profiler profiler;
+  // GammaExpr a;
+  // for (const auto& pb: combinations(to_vector(range(mid_point - 1)), num_pullbacks)) {
+  //   for (const auto& before: combinations(to_vector(range(mid_point - 1 - num_pullbacks)), num_before)) {
+  //     for (auto after: combinations(to_vector(range(mid_point - 1)), num_after)) {
+  //       const int num_pbs = num_pullbacks;  // workaround: lambdas cannot capture structured bindings
+  //       after = mapped(after, [&](const int p) { return p + mid_point - num_pbs; });
+  //       const int sign = neg_one_pow(sum(pb) + sum(before) + sum(after));
+  //       const auto [pb_point, non_pb_points] = split_indices(points, pb);
+  //       const auto main_points = removed_indices(non_pb_points, concat(before, after));
+  //       a += sign * pullback(CGrLi(weight, main_points), pb_point);
+  //     }
+  //   }
   // }
-#endif
+  // profiler.finish("a");
+  // GammaExpr b;
+  // for (const int p: range(num_points)) {
+  //   const int sign = neg_one_pow(p);
+  //   b += sign * CGrLi(weight, removed_index(points, p));
+  // }
+  // profiler.finish("b");
+  // const auto sum = to_lyndon_basis(a - b);
+  // profiler.finish("lyndon");
+  // std::cout << sum;
+
+
+  // const auto space = mapped(ChernGrL(4, 3, {1,2,3,4,5,6,7}), [](const auto& expr) {
+  //   return chern_arrow_up(expr, 8);
+  // });
+  // const auto cgrli_expr = CGrLi(4, {1,2,3,4,5,6,7,8});
+  // const auto ranks = space_venn_ranks(space, {cgrli_expr}, [](const auto& expr) {
+  //   return to_lyndon_basis(chern_arrow_left(expr, 9));
+  // });
+  // std::cout << to_string(ranks) << "\n";
+
+  // const std::vector points = {1,2,3,4,5,6,7,8,9,10};
+  // for (const int weight: {4,5}) {
+  //   const auto expr = CGrLi(weight, points);
+  //   std::cout << to_lyndon_basis(expr + plucker_dual(expr, points));
+  // }
 }
