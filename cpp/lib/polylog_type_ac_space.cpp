@@ -8,6 +8,14 @@
 #include "vector_space.h"
 
 
+template<typename Container>
+static Container one_minus_cross_ratio(Container p) {
+  CHECK_EQ(4, p.size());
+  std::swap(p[1], p[2]);
+  return p;
+}
+
+
 TypeAC_Space CB_naive_via_QLi_fours(int weight, const XArgs& xargs) {
   return mapped(combinations(xargs.as_x(), 4), [&](const auto& p) { return QLiVec(weight, p); });
 }
@@ -248,6 +256,26 @@ TypeAC_Space ACoordsHopf(int weight, const XArgs& xargs) {
   return ret;
 }
 
+TypeAC_Space CL1_inv(const XArgs& xargs) {
+  auto args = xargs.as_x();
+  CHECK(inv_points_are_central_symmetric(args)) << dump_to_string(args);
+  const int weight = 1;
+  return mapped_expanding(combinations(args, 4), [&](const auto& p) {
+    return std::array{
+      QLiVec(weight, p),
+      QLiVec(weight, one_minus_cross_ratio(p))
+    };
+  });
+}
+
+TypeAC_Space CL2_inv(const XArgs& xargs) {
+  auto args = xargs.as_x();
+  CHECK(inv_points_are_central_symmetric(args)) << dump_to_string(args);
+  const int weight = 2;
+  return mapped(combinations(args, 4), [&](const auto& p) {
+    return QLiVec(weight, p);
+  });
+}
 
 TypeAC_NCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
   const auto points = to_vector(range_incl(1, num_points));

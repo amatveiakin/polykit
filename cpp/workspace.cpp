@@ -65,44 +65,6 @@
 #endif
 
 
-template<typename Container>
-static Container one_minus_cross_ratio(Container p) {
-  CHECK_EQ(4, p.size());
-  std::swap(p[1], p[2]);
-  return p;
-}
-
-TypeAC_Space CL1_inv(const std::vector<int>& args) {
-  const auto& args_inv = concat(
-    mapped(args, [](const int idx) { return X(idx); }),
-    mapped(args, [](const int idx) { return -X(idx); })
-  );
-  TypeAC_Space space;
-  const int weight = 1;
-  append_vector(space, mapped_expanding(combinations(args_inv, 4), [&](const auto& p) {
-    return std::array{
-      QLiVec(weight, p),
-      QLiVec(weight, one_minus_cross_ratio(p))
-    };
-  }));
-  return space;
-}
-
-TypeAC_Space CL2_inv(const std::vector<int>& args) {
-  const auto& args_inv = concat(
-    mapped(args, [](const int idx) { return X(idx); }),
-    mapped(args, [](const int idx) { return -X(idx); })
-  );
-  TypeAC_Space space;
-  const int weight = 2;
-  append_vector(space, mapped(combinations(args_inv, 4), [&](const auto& p) {
-    return QLiVec(weight, p);
-  }));
-  return space;
-}
-
-
-
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -1035,32 +997,6 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // std::cout << to_string(ranks) << "\n";
 
-
-  // for (const int half_num_points : range_incl(2, 6)) {
-  //   const auto points = to_vector(range_incl(1, half_num_points));
-  //   Profiler profiler;
-  //   auto cl1 = CL1_inv(points);
-  //   auto cl2 = CL2_inv(points);
-  //   profiler.finish("cl1/cl2 spaces");
-  //   cl1 = space_basis(cl1, DISAMBIGUATE(to_lyndon_basis));
-  //   cl2 = space_basis(cl2, DISAMBIGUATE(to_lyndon_basis));
-  //   profiler.finish("cl1/cl2 bases");
-  //   const auto space_a = mapped(
-  //     get_lyndon_words(cl1, 4),
-  //     [](const auto& components) {
-  //       return expand_into_glued_pairs(tensor_product(absl::MakeConstSpan(components)));
-  //     }
-  //   );
-  //   profiler.finish("space_a");
-  //   const auto space_b = mapped(
-  //     cartesian_product(cl2, cl1, cl1),
-  //     applied(DISAMBIGUATE(acoproduct))
-  //   );
-  //   profiler.finish("space_b");
-  //   const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(identity_function));
-  //   profiler.finish("ranks");
-  //   std::cout << "n=" << (half_num_points*2) << ": " << to_string(ranks) << "\n";
-  // }
 
   // for (const int weight : range_incl(2, 4)) {
   // // for (const int weight : {4}) {
@@ -2175,47 +2111,47 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_string(ranks) << "\n";
 
 
-  // TODO: Try to dyhedralize and find space basis
-  for (const int weight : range_incl(3, 4)) {
-    for (const int num_points : range_incl(8, 8)) {
-      const auto points = to_vector(range_incl(1, num_points));
-      Profiler profiler;
-      const auto space = concat(
-        wedge_ChernGrL(weight, 4, points),
-        wedge_ChernGrL(weight, 5, points),
-        wedge_ChernGrL(weight, 6, points)
-      );
-      profiler.finish("make space");
-      const auto ranks = space_mapping_ranks(
-        space,
-        DISAMBIGUATE(to_lyndon_basis),
-        [&](const auto& expr) {
-          const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
-          const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
-          const auto z = GammaNCoExpr();
-          switch (expr.dimension()) {
-            // case 4: return std::tuple{x, y};
-            // case 4: return std::tuple{x, y, z};
-            // case 5: return std::tuple{z, x, y};
-            case 4: return std::tuple{x, y, z, z};
-            case 5: return std::tuple{z, x, y, z};
-            case 6: return std::tuple{z, z, x, y};
-            // case 2: return std::tuple{x, y, z, z, z};
-            // case 3: return std::tuple{z, x, y, z, z};
-            // case 4: return std::tuple{z, z, x, y, z};
-            // case 5: return std::tuple{z, z, z, x, y};
-            // case 2: return std::tuple{x, y, z, z, z, z};
-            // case 3: return std::tuple{z, x, y, z, z, z};
-            // case 4: return std::tuple{z, z, x, y, z, z};
-            // case 5: return std::tuple{z, z, z, x, y, z};
-            // case 6: return std::tuple{z, z, z, z, x, y};
-            default: FATAL("Unexpected dimension");
-          };
-        }
-      );
-      std::cout << "w=" << weight << ", n=" << num_points << ":  " << to_string(ranks) << "\n";
-    }
-  }
+  // // TODO: Try to dyhedralize and find space basis
+  // for (const int weight : range_incl(3, 4)) {
+  //   for (const int num_points : range_incl(8, 8)) {
+  //     const auto points = to_vector(range_incl(1, num_points));
+  //     Profiler profiler;
+  //     const auto space = concat(
+  //       wedge_ChernGrL(weight, 4, points),
+  //       wedge_ChernGrL(weight, 5, points),
+  //       wedge_ChernGrL(weight, 6, points)
+  //     );
+  //     profiler.finish("make space");
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(to_lyndon_basis),
+  //       [&](const auto& expr) {
+  //         const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+  //         const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
+  //         const auto z = GammaNCoExpr();
+  //         switch (expr.dimension()) {
+  //           // case 4: return std::tuple{x, y};
+  //           // case 4: return std::tuple{x, y, z};
+  //           // case 5: return std::tuple{z, x, y};
+  //           case 4: return std::tuple{x, y, z, z};
+  //           case 5: return std::tuple{z, x, y, z};
+  //           case 6: return std::tuple{z, z, x, y};
+  //           // case 2: return std::tuple{x, y, z, z, z};
+  //           // case 3: return std::tuple{z, x, y, z, z};
+  //           // case 4: return std::tuple{z, z, x, y, z};
+  //           // case 5: return std::tuple{z, z, z, x, y};
+  //           // case 2: return std::tuple{x, y, z, z, z, z};
+  //           // case 3: return std::tuple{z, x, y, z, z, z};
+  //           // case 4: return std::tuple{z, z, x, y, z, z};
+  //           // case 5: return std::tuple{z, z, z, x, y, z};
+  //           // case 6: return std::tuple{z, z, z, z, x, y};
+  //           default: FATAL("Unexpected dimension");
+  //         };
+  //       }
+  //     );
+  //     std::cout << "w=" << weight << ", n=" << num_points << ":  " << to_string(ranks) << "\n";
+  //   }
+  // }
 
 
   // const int weight = 5;

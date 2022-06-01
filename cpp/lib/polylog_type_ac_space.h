@@ -54,6 +54,9 @@ TypeAC_Space XCoords(int weight, const XArgs& args);
 TypeAC_Space ACoords(int weight, const XArgs& args);
 TypeAC_Space ACoordsHopf(int weight, const XArgs& args);
 
+TypeAC_Space CL1_inv(const XArgs& xargs);
+TypeAC_Space CL2_inv(const XArgs& xargs);
+
 // The "simple_" functions apply normalize_remove_consecutive (hence not allowing arbitrary input points).
 TypeAC_NCoSpace simple_co_L(int weight, int num_coparts, int num_points);
 

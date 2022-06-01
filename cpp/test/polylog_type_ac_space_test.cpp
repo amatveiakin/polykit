@@ -168,3 +168,24 @@ TEST(PolylogSpaceTest, HUGE_ClusterCoL_Weight5) {
   EXPECT_EQ(cluster_co_l_ranks(5, 4, 6), (ClusterCoRanks{6, 6}));
   EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoRanks{0, 0}));
 }
+
+TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
+  const std::vector points = {x1,x2,x3,-x1,-x2,-x3};
+  auto cl1 = CL1_inv(points);
+  auto cl2 = CL2_inv(points);
+  cl1 = space_basis(cl1, DISAMBIGUATE(to_lyndon_basis));
+  cl2 = space_basis(cl2, DISAMBIGUATE(to_lyndon_basis));
+  const auto space_a = mapped(
+    get_lyndon_words(cl1, 4),
+    [](const auto& components) {
+      return expand_into_glued_pairs(tensor_product(absl::MakeConstSpan(components)));
+    }
+  );
+  const auto space_b = mapped(
+    cartesian_product(cl2, cl1, cl1),
+    applied(DISAMBIGUATE(acoproduct))
+  );
+  const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(identity_function));
+  // Note. Testing against previously computed result; no alternative proof known.
+  EXPECT_EQ(ranks.intersected(), 42);
+}
