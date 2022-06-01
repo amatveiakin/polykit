@@ -138,3 +138,71 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
     )
   );
 }
+
+
+GammaExpr SymmCGrLi3(const std::vector<int>& points) {
+  CHECK_EQ(points.size(), 6);
+  constexpr int weight = 3;
+  const auto args = [&](const std::vector<int>& indices) {
+    return choose_indices_one_based(points, indices);
+  };
+  auto expr =
+    + CGrLiVec(weight, args({1,2,3,4,5,6}))
+  ;
+  expr +=
+    - GrQLiVec(weight, args({2}), args({3,4,5,6}))
+    + GrQLiVec(weight, args({5}), args({1,2,3,6}))
+    + GrQLiVec(weight, args({2}), args({1,3,4,5}))
+    - GrQLiVec(weight, args({5}), args({1,2,4,6}))
+    - GrQLiVec(weight, args({2}), args({1,3,4,6}))
+    + GrQLiVec(weight, args({5}), args({1,3,4,6}))
+    + GrQLiVec(weight, args({3}), args({1,2,4,6}))
+    - GrQLiVec(weight, args({6}), args({1,3,4,5}))
+    + GrQLiVec(weight, args({1}), args({3,4,5,6}))
+    - GrQLiVec(weight, args({4}), args({1,2,3,6}))
+  ;
+  expr -=
+    - GrQLiVec(weight, args({1}), args({2,3,4,6}))
+    + GrQLiVec(weight, args({2}), args({1,3,4,5}))
+    - GrQLiVec(weight, args({3}), args({2,4,5,6}))
+    + GrQLiVec(weight, args({4}), args({1,3,5,6}))
+    - GrQLiVec(weight, args({5}), args({1,2,4,6}))
+    + GrQLiVec(weight, args({6}), args({1,2,3,5}))
+  ;
+  return expr.without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("SymmCGrLi"), {weight}),
+      points
+    )
+  );
+}
+
+GammaExpr SymmCGrLi4_wip(const std::vector<int>& points) {
+  CHECK_EQ(points.size(), 6);
+  constexpr int weight = 4;
+  const auto args = [&](const std::vector<int>& indices) {
+    return choose_indices_one_based(points, indices);
+  };
+  auto expr =
+    + CGrLiVec(weight, args({1,2,3,4,5,6}))
+    - CGrLiVec(weight, args({2,3,4,5,6,1}))
+    + CGrLiVec(weight, args({3,4,5,6,1,2}))
+    - CGrLiVec(weight, args({4,5,6,1,2,3}))
+    + CGrLiVec(weight, args({5,6,1,2,3,4}))
+    - CGrLiVec(weight, args({6,1,2,3,4,5}))
+  ;
+  expr -=
+    + CGrLiVec(weight, args({1,6,5,4,3,2}))
+    - CGrLiVec(weight, args({6,5,4,3,2,1}))
+    + CGrLiVec(weight, args({5,4,3,2,1,6}))
+    - CGrLiVec(weight, args({4,3,2,1,6,5}))
+    + CGrLiVec(weight, args({3,2,1,6,5,4}))
+    - CGrLiVec(weight, args({2,1,6,5,4,3}))
+  ;
+  return expr.without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::sub_num(fmt::opname("SymmCGrLi"), {weight}),
+      points
+    )
+  );
+}

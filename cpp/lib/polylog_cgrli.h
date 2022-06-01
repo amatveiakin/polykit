@@ -4,6 +4,11 @@
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
 GammaExpr CGrLiVec(int weight, const std::vector<int>& points);
 
+GammaExpr SymmCGrLi3(const std::vector<int>& points);
+// Only partially symmetrized.
+// TODO: Finish symmetrizing.
+GammaExpr SymmCGrLi4_wip(const std::vector<int>& points);
+
 
 namespace internal {
 template<typename... Args>
