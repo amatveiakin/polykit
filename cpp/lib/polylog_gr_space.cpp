@@ -93,7 +93,7 @@ Gr_Space GrL4_Dim3(const std::vector<int>& args) {
   append_vector(
     ret,
     mapped(permutations(args, 6), [&](auto p) {
-      return CGrLi(4, p);
+      return CGrLiVec(4, p);
     })
   );
   return ret;
@@ -126,7 +126,7 @@ Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points) 
   }
   for (const auto& args : combinations(points, 6)) {
     for (const int shift : {0, 1, 2}) {
-      space.push_back(CGrLi(weight, rotated_vector(args, shift)));
+      space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
     }
   }
   return space;
@@ -147,7 +147,7 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points) {
     const auto fixed_args = choose_indices(points, {fixed_points_idx});
     const auto var_args_pool = removed_index(points, fixed_points_idx);
     for (const auto& var_args : combinations(var_args_pool, 5)) {
-      space.push_back(CGrLi(weight, concat(fixed_args, var_args)));
+      space.push_back(CGrLiVec(weight, concat(fixed_args, var_args)));
     }
   }
   return space;
@@ -167,7 +167,7 @@ Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) 
   }
   for (const auto& args : combinations(points, 8)) {
     for (const int shift : range(args.size() / 2)) {
-      space.push_back(CGrLi(weight, rotated_vector(args, shift)));
+      space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
     }
   }
   return space;
@@ -214,7 +214,7 @@ Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int
   if (weight >= dimension - 1 && depth >= dimension - 1) {
     for (const auto& args : combinations(points, dimension * 2)) {
       for (const int shift : range(args.size() / 2)) {
-        space.push_back(CGrLi(weight, rotated_vector(args, shift)));
+        space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
       }
     }
   }

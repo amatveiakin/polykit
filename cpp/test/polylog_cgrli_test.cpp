@@ -65,7 +65,7 @@ GammaExpr CGrLi_Dim3_alternative(int weight, const std::vector<int>& points) {
   }
   return ret.without_annotations().annotate(
     fmt::function_num_args(
-      fmt::sub_num(fmt::opname("CGrLi"), {weight}),
+      fmt::sub_num(fmt::opname("CGrLiVec"), {weight}),
       points
     )
   );
@@ -133,7 +133,7 @@ TEST(CGrLiTest, IsTotallyWeaklySeparated) {
   for (const int dimension : range_incl(2, 4)) {
     for (const int weight : range_incl(3, 4)) {
       const auto points = to_vector(range_incl(1, 2 * dimension));
-      EXPECT_TRUE(is_totally_weakly_separated(CGrLi(weight, points)));
+      EXPECT_TRUE(is_totally_weakly_separated(CGrLiVec(weight, points)));
     }
   }
 }
@@ -141,14 +141,14 @@ TEST(CGrLiTest, IsTotallyWeaklySeparated) {
 TEST(CGrLiTest, EqualsAlternative_Dim3) {
   for (const int weight : range_incl(2, 5)) {
     // TODO: Sync indices
-    EXPECT_EXPR_EQ(CGrLi(weight, {1,6,2,3,4,5}), CGrLi_Dim3_alternative(weight, {1,2,3,4,5,6}));
+    EXPECT_EXPR_EQ(CGrLiVec(weight, {1,6,2,3,4,5}), CGrLi_Dim3_alternative(weight, {1,2,3,4,5,6}));
   }
 }
 
 TEST(CGrLiTest, EqualsAlternative_Dim4_Weight3) {
-  EXPECT_EXPR_EQ(CGrLi(3, {1,2,3,4,5,6,7,8}), CGrLi_Dim4_Weight3_alternative({1,2,3,4,5,6,7,8}));
+  EXPECT_EXPR_EQ(CGrLi3(1,2,3,4,5,6,7,8), CGrLi_Dim4_Weight3_alternative({1,2,3,4,5,6,7,8}));
 }
 
 TEST(CGrLiTest, EqualsAlternative_Dim4_Weight4) {
-  EXPECT_EXPR_EQ(CGrLi(4, {1,2,3,4,5,6,7,8}), CGrLi_Dim4_Weight4_alternative({1,2,3,4,5,6,7,8}));
+  EXPECT_EXPR_EQ(CGrLi4(1,2,3,4,5,6,7,8), CGrLi_Dim4_Weight4_alternative({1,2,3,4,5,6,7,8}));
 }

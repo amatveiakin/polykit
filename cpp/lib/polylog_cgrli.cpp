@@ -82,8 +82,8 @@ GammaExpr CGrLi_component(
 };
 
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
-GammaExpr CGrLi(int weight, const std::vector<int>& points) {
-  // TODO: Define via CGrLi(ascending points) + substitute variables.
+GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
+  // TODO: Define via CGrLiVec(ascending points) + substitute variables.
   //   Directly substituting duplicate points is not equivalent (why?)
   //   ... or maybe this shouldn't work (consult Danya)
   // TODO: What does this mean for operations on GammaExpr in general?
