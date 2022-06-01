@@ -4,8 +4,10 @@
 
 #include "lib/itertools.h"
 #include "lib/polylog_grqli.h"
+#include "lib/polylog_gr_space.h"
 #include "lib/zip.h"
 #include "test_util/matchers.h"
+#include "test_util/space_matchers.h"
 
 
 // TODO: Deduplicate helper functions against polylog_cgrli.cpp
@@ -128,6 +130,17 @@ GammaExpr CGrLi_Dim4_Weight4_alternative(const std::vector<int>& points) {
 }
 
 
+TEST(CGrLiTest, CustomPointOrder) {
+  // Should be true for any weight and dimension.
+  for (const int weight : range_incl(2, 3)) {
+    const std::vector points = {2,1,3,6,5,4};
+    EXPECT_EXPR_EQ(
+      CGrLiVec(weight, points),
+      substitute_variables(CGrLiVec(weight, {1,2,3,4,5,6}), points)
+    );
+  }
+}
+
 TEST(CGrLiTest, IsTotallyWeaklySeparated) {
   // Should be true for any weight and dimension.
   for (const int dimension : range_incl(2, 4)) {
@@ -151,4 +164,121 @@ TEST(CGrLiTest, EqualsAlternative_Dim4_Weight3) {
 
 TEST(CGrLiTest, EqualsAlternative_Dim4_Weight4) {
   EXPECT_EXPR_EQ(CGrLi4(1,2,3,4,5,6,7,8), CGrLi_Dim4_Weight4_alternative({1,2,3,4,5,6,7,8}));
+}
+
+TEST(CGrLiTest, SymmCGrLiIsSymmetric) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + SymmCGrLi3({1,2,3,4,5,6})
+    + SymmCGrLi3({2,3,4,5,6,1})
+  );
+}
+
+TEST(CGrLiTest, CGrLi3Equation) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + CGrLi3(1,2,3,4,5,6)
+    - CGrLi3(1,2,3,4,5,7)
+    + CGrLi3(1,2,3,4,6,7)
+    - CGrLi3(1,2,3,5,6,7)
+    + CGrLi3(1,2,4,5,6,7)
+    - CGrLi3(1,3,4,5,6,7)
+    + CGrLi3(2,3,4,5,6,7)
+    - GrQLi3(1)(2,4,5,6)
+    + GrQLi3(1)(2,4,5,7)
+    - GrQLi3(1)(2,4,6,7)
+    + GrQLi3(1)(3,4,5,6)
+    - GrQLi3(1)(3,4,5,7)
+    + GrQLi3(1)(3,4,6,7)
+    + GrQLi3(2)(1,4,5,6)
+    - GrQLi3(2)(1,4,5,7)
+    + GrQLi3(2)(1,4,6,7)
+    - GrQLi3(2)(3,4,5,6)
+    + GrQLi3(2)(3,4,5,7)
+    - GrQLi3(2)(3,4,6,7)
+    - GrQLi3(3)(1,4,5,6)
+    + GrQLi3(3)(1,4,5,7)
+    - GrQLi3(3)(1,4,6,7)
+    + GrQLi3(3)(2,4,5,6)
+    - GrQLi3(3)(2,4,5,7)
+    + GrQLi3(3)(2,4,6,7)
+  );
+}
+
+TEST(CGrLiTest, SymmCGrLi3Equation) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + SymmCGrLi3({1,2,3,4,5,6})
+    - SymmCGrLi3({1,2,3,4,5,7})
+    + SymmCGrLi3({1,2,3,4,6,7})
+    - SymmCGrLi3({1,2,3,5,6,7})
+    + SymmCGrLi3({1,2,4,5,6,7})
+    - SymmCGrLi3({1,3,4,5,6,7})
+    + SymmCGrLi3({2,3,4,5,6,7})
+    - GrQLi3(1)(2,3,4,6)
+    + GrQLi3(1)(2,3,5,7)
+    - GrQLi3(1)(2,4,5,6)
+    - GrQLi3(1)(2,4,6,7)
+    + GrQLi3(1)(3,4,5,7)
+    + GrQLi3(1)(3,5,6,7)
+    + GrQLi3(2)(1,3,4,6)
+    - GrQLi3(2)(1,3,5,7)
+    + GrQLi3(2)(1,4,5,6)
+    + GrQLi3(2)(1,4,6,7)
+    - GrQLi3(2)(3,4,5,7)
+    - GrQLi3(2)(3,5,6,7)
+    - GrQLi3(3)(1,2,4,6)
+    + GrQLi3(3)(1,2,5,7)
+    - GrQLi3(3)(1,4,5,6)
+    - GrQLi3(3)(1,4,6,7)
+    + GrQLi3(3)(2,4,5,7)
+    + GrQLi3(3)(2,5,6,7)
+    + GrQLi3(4)(1,2,3,6)
+    - GrQLi3(4)(1,2,5,7)
+    + GrQLi3(4)(1,3,5,6)
+    + GrQLi3(4)(1,3,6,7)
+    - GrQLi3(4)(2,3,5,7)
+    - GrQLi3(4)(2,5,6,7)
+    - GrQLi3(5)(1,2,3,6)
+    + GrQLi3(5)(1,2,4,7)
+    - GrQLi3(5)(1,3,4,6)
+    - GrQLi3(5)(1,3,6,7)
+    + GrQLi3(5)(2,3,4,7)
+    + GrQLi3(5)(2,4,6,7)
+    + GrQLi3(6)(1,2,3,5)
+    - GrQLi3(6)(1,2,4,7)
+    + GrQLi3(6)(1,3,4,5)
+    + GrQLi3(6)(1,3,5,7)
+    - GrQLi3(6)(2,3,4,7)
+    - GrQLi3(6)(2,4,5,7)
+    - GrQLi3(7)(1,2,3,5)
+    + GrQLi3(7)(1,2,4,6)
+    - GrQLi3(7)(1,3,4,5)
+    - GrQLi3(7)(1,3,5,6)
+    + GrQLi3(7)(2,3,4,6)
+    + GrQLi3(7)(2,4,5,6)
+  );
+}
+
+TEST(CGrLiTest, LARGE_SymmCGrLi4EquationStub) {
+  auto expr =
+    + SymmCGrLi4_wip({1,2,3,4,5,6})
+    + SymmCGrLi4_wip({2,3,4,5,6,7})
+    + SymmCGrLi4_wip({3,4,5,6,7,1})
+    + SymmCGrLi4_wip({4,5,6,7,1,2})
+    + SymmCGrLi4_wip({5,6,7,1,2,3})
+    + SymmCGrLi4_wip({6,7,1,2,3,4})
+    + SymmCGrLi4_wip({7,1,2,3,4,5})
+  ;
+  expr +=
+    -4*GrQLi4(1)(2,3,4,5,6,7)
+    -4*GrQLi4(2)(3,4,5,6,7,1)
+    -4*GrQLi4(3)(4,5,6,7,1,2)
+    -4*GrQLi4(4)(5,6,7,1,2,3)
+    -4*GrQLi4(5)(6,7,1,2,3,4)
+    -4*GrQLi4(6)(7,1,2,3,4,5)
+    -4*GrQLi4(7)(1,2,3,4,5,6)
+  ;
+  EXPECT_POLYLOG_SPACE_CONTAINS(
+    GrL_core(4, 3, {1,2,3,4,5,6,7}, false, 0),
+    {expr},
+    DISAMBIGUATE(to_lyndon_basis)
+  );
 }
