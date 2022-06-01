@@ -151,6 +151,7 @@ inline GammaExpr G(const std::vector<int>& vars) {
 
 
 GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points);
+GammaNCoExpr substitute_variables(const GammaNCoExpr& expr, const std::vector<int>& new_points);
 
 GammaExpr project_on(int axis, const GammaExpr& expr);
 
@@ -169,8 +170,9 @@ GammaExpr delta_expr_to_gamma_expr(const DeltaExpr& expr);
 // Requires that expression is dimension 2.
 DeltaExpr gamma_expr_to_delta_expr(const GammaExpr& expr);
 
-GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points);
 GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points);
+GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points);
+GammaNCoExpr pullback(const GammaNCoExpr& expr, const std::vector<int>& bonus_points);
 
 GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe);

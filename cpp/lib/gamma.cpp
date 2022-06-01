@@ -7,20 +7,43 @@ std::string to_string(const Gamma& g) {
   return fmt::parens(str_join(g.index_vector(), ","));
 }
 
-GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
+Gamma monom_substitute_variables(Gamma g, const std::vector<int>& new_points) {
   // Optimization potential: do things on bitset level.
+  return Gamma(mapped(g.index_vector(), [&](const int idx) {
+    return new_points.at(idx - 1);
+  }));
+}
+
+GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
   return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
     std::vector<Gamma> term_new;
     for (const Gamma& g_old : term_old) {
-      Gamma g_new(mapped(g_old.index_vector(), [&](const int idx) {
-        return new_points.at(idx - 1);
-      }));
+      const Gamma g_new = monom_substitute_variables(g_old, new_points);
       if (g_new.is_nil()) {
         return {};
       }
       term_new.push_back(g_new);
     }
     return GammaExpr::single(term_new);
+  }).without_annotations();
+}
+
+// TODO: Auto-generate substitute_variables functions for all co-exprs.
+GammaNCoExpr substitute_variables(const GammaNCoExpr& expr, const std::vector<int>& new_points) {
+  return expr.mapped_expanding([&](const GammaNCoExpr::ObjectT& term_old) -> GammaNCoExpr {
+    std::vector<std::vector<Gamma>> term_new;
+    for (const auto& copart_old : term_old) {
+      std::vector<Gamma> copart_new;
+      for (const Gamma& g_old : copart_old) {
+        const Gamma g_new = monom_substitute_variables(g_old, new_points);
+        if (g_new.is_nil()) {
+          return {};
+        }
+        copart_new.push_back(g_new);
+      }
+      term_new.push_back(copart_new);
+    }
+    return GammaNCoExpr::single(term_new);
   }).without_annotations();
 }
 
@@ -143,24 +166,25 @@ DeltaExpr gamma_expr_to_delta_expr(const GammaExpr& expr) {
   });
 }
 
-GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) {
+template<size_t Nesting, typename LinearT>
+LinearT pullback_impl(const LinearT& expr, const std::vector<int>& bonus_points) {
   if (bonus_points.empty()) {
     return expr;
   }
   const auto bonus_bitset_or = vector_to_bitset_or<Gamma::BitsetT>(bonus_points, Gamma::kBitsetOffset);
   if (!bonus_bitset_or.has_value()) {
-    return GammaExpr{};
+    return LinearT{};
   }
   const auto& bonus_bitset = bonus_bitset_or.value();
   return expr.mapped_expanding([&](const auto& term) {
     bool is_zero = false;
-    const auto new_term = mapped(term, [&](const Gamma& g) {
+    const auto new_term = mapped_nested<Nesting>(term, [&](const Gamma& g) {
       if ((g.index_bitset() & bonus_bitset).any()) {
         is_zero = true;
       }
       return Gamma(g.index_bitset() | bonus_bitset);
     });
-    return is_zero ? GammaExpr{} : GammaExpr::single(new_term);
+    return is_zero ? LinearT{} : LinearT::single(new_term);
   }).annotations_map([&](const std::string& annotation) {
     // TODO: Find a proper pullback notation
     return fmt::function(
@@ -173,6 +197,14 @@ GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) 
 
 GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points) {
   return pullback(delta_expr_to_gamma_expr(expr), bonus_points);
+}
+
+GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points) {
+  return pullback_impl<1>(expr, bonus_points);
+}
+
+GammaNCoExpr pullback(const GammaNCoExpr& expr, const std::vector<int>& bonus_points) {
+  return pullback_impl<2>(expr, bonus_points);
 }
 
 GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe) {
