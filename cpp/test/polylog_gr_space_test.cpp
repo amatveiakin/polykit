@@ -3,11 +3,20 @@
 
 #include "gtest/gtest.h"
 
+#include "lib/chern_arrow.h"
 #include "lib/itertools.h"
 #include "lib/polylog_cgrli.h"
 #include "lib/polylog_grqli.h"
+#include "lib/polylog_qli.h"
+#include "lib/space_algebra.h"
 #include "lib/summation.h"
+#include "test_util/space_helpers.h"
+#include "test_util/space_matchers.h"
 
+
+std::tuple<int, int> to_image_kernel_pair(const SpaceMappingRanks& ranks) {
+  return {ranks.image(), ranks.kernel()};
+}
 
 ClusterCoRanks cluster_co_grl_ranks(int weight, int num_coparts, int dimension, int num_points) {
   return cluster_co_ranks(simple_co_GrL(weight, num_coparts, dimension, num_points));
@@ -132,7 +141,7 @@ INSTANTIATE_TEST_SUITE_P(HUGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
 TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
   const int num_points = dimension() * 2;
   const auto points = to_vector(range_incl(1, num_points));
-  const auto expr = CGrLi(weight(), points);
+  const auto expr = CGrLiVec(weight(), points);
   const auto space = GrL(weight(), dimension(), points);
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
 }
@@ -140,7 +149,7 @@ TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
 TEST_P(CGrLiVsSpacesTest, CoCGrL_contains_CGrLiNcomultiplied) {
   const int num_points = dimension() * 2;
   const auto points = to_vector(range_incl(1, num_points));
-  const auto expr = CGrLi(weight(), points);
+  const auto expr = CGrLiVec(weight(), points);
   const auto co_space = simple_co_CGrL_test_space(weight(), dimension(), num_points);
   EXPECT_TRUE(space_contains(
     co_space,
@@ -156,7 +165,7 @@ TEST_P(CGrLiVsSpacesTest, CoGrL_contains_CGrLiExpandedIntoGluedPairs) {
   }
   const int num_points = dimension() * 2;
   const auto points = to_vector(range_incl(1, num_points));
-  const auto expr = CGrLi(weight(), points);
+  const auto expr = CGrLiVec(weight(), points);
   const auto co_space = abstract_co_space(
     weight(),
     weight() - 1,
@@ -214,3 +223,42 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   const auto ranks = space_venn_ranks(space_lyndon, space_product, DISAMBIGUATE(identity_function));
   EXPECT_EQ(ranks.intersected(), ...);  // TODO: What is this?
 #endif
+
+TEST(PolylogSpaceTest, LARGE_CGrLCohomology) {
+  const auto compute_ranks = [](int weight, int num_points) {
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto ranks = space_mapping_ranks(
+      concat(
+        CGrL_test_space(weight, 2, points),
+        CGrL_test_space(weight, 3, points),
+        CGrL_test_space(weight, 4, points),
+        CGrL_test_space(weight, 5, points)
+      ),
+      DISAMBIGUATE(to_lyndon_basis),
+      [&](const auto& expr) {
+        // Note. This is actually a condition on complex cohomology, which is way more complicated
+        //   in theory, but for practical intents and purposes we can do this since each element
+        //   lies on one the source space bases.
+        const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+        const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
+        const auto _ = GammaExpr();
+        switch (expr.dimension()) {
+          case 2: return std::tuple{x, y, _, _, _};
+          case 3: return std::tuple{_, x, y, _, _};
+          case 4: return std::tuple{_, _, x, y, _};
+          case 5: return std::tuple{_, _, _, x, y};
+          default: FATAL("Unexpected dimension");
+        };
+      }
+    );
+    return to_image_kernel_pair(ranks);
+  };
+  EXPECT_EQ(compute_ranks(2, 4), (std::tuple{0, 1}));
+  EXPECT_EQ(compute_ranks(2, 5), (std::tuple{8, 0}));
+  EXPECT_EQ(compute_ranks(2, 6), (std::tuple{30, 9}));
+  EXPECT_EQ(compute_ranks(2, 7), (std::tuple{120, 30}));
+  EXPECT_EQ(compute_ranks(3, 4), (std::tuple{1, 0}));
+  EXPECT_EQ(compute_ranks(3, 5), (std::tuple{9, 1}));
+  EXPECT_EQ(compute_ranks(3, 6), (std::tuple{51, 10}));
+  EXPECT_EQ(compute_ranks(3, 7), (std::tuple{241, 51}));
+}
