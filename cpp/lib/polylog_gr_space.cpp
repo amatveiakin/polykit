@@ -1,6 +1,7 @@
 #include "polylog_gr_space.h"
 
 #include "itertools.h"
+#include "parallel_util.h"
 #include "polylog_cgrli.h"
 #include "polylog_grli.h"
 #include "polylog_grqli.h"
@@ -241,4 +242,14 @@ Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points)
       return CGrL_test_space(w, dimension, points);
     }(), dimension, num_points);
   });
+}
+
+Gr_NCoSpace wedge_ChernGrL(int weight, int dimension, const std::vector<int>& points) {
+  // Precompute Lyndon to speed up coproduct.
+  const auto chern_space = mapped(ChernGrL(weight - 1, dimension, points), DISAMBIGUATE(to_lyndon_basis));
+  const auto fx_space = mapped(GrFx(dimension, points), DISAMBIGUATE(to_lyndon_basis));
+  return filtered(
+    mapped_parallel(cartesian_product(chern_space, fx_space), applied(DISAMBIGUATE(ncoproduct))),
+    DISAMBIGUATE(is_totally_weakly_separated)
+  );
 }

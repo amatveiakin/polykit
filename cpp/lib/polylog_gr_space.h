@@ -31,3 +31,5 @@ Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int
 
 Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
 Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points);
+
+Gr_NCoSpace wedge_ChernGrL(int weight, int dimension, const std::vector<int>& points);
