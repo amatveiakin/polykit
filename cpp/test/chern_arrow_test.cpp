@@ -46,6 +46,6 @@ TEST_P(ChernArrowIdentityTest, LeftUp) {
 
 INSTANTIATE_TEST_SUITE_P(AllCases, ChernArrowIdentityTest, testing::Values(
   GrQLi2(1)(2,3,4,5,6,7),
-  GrLiVec({1}, {2,3,4,5}),
+  GrLi(1)(2,3,4,5),
   G({1,2,3,4,5})
 ));
