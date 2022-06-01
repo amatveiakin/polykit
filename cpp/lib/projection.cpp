@@ -29,6 +29,25 @@ ProjectionExpr project_on(int axis, const DeltaExpr& expr) {
   });
 }
 
+
+bool is_frozen_coord(const Delta& d, int num_vars) {
+  const auto [a, b] = delta_points_inv(d);
+  const bool same_sign = a.var_sign() == b.var_sign();
+  const int diff = std::abs(a.idx() - b.idx());
+  return (
+    (mod_eq(diff, 1, num_vars) && same_sign) ||
+    (mod_eq(diff, -1, num_vars) && !same_sign)
+  );
+}
+
+DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars) {
+  return expr.filtered([&](const auto& term) {
+    return absl::c_all_of(term, [&](const Delta& d) {
+      return !are_weakly_separated_inv(d, axis) || is_frozen_coord(d, num_vars);
+    });
+  });
+}
+
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct) {
   return expr.filtered_key([&](const ProjectionExpr::StorageT& term) {
     return num_distinct_elements_unsorted(term) == num_distinct;

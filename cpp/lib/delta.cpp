@@ -260,8 +260,7 @@ static bool between_inv(X point, std::pair<X, X> segment) {
   return less_inv(a, point) && less_inv(point, b);
 }
 
-static auto delta_points_inv(const Delta& d) {
-  // HACK: "unglue" points assuming (x_i-0) compues only from (x_i-(-x_i)).
+std::array<X, 2> delta_points_inv(const Delta& d) {
   return d.b() == Zero
     ? std::array{d.a(), d.a().negated()}
     : std::array{d.a(), d.b()};

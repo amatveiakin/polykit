@@ -323,6 +323,10 @@ bool are_weakly_separated(const Delta& d1, const Delta& d2);
 bool is_weakly_separated(const DeltaExpr::ObjectT& term);
 bool is_weakly_separated(const DeltaNCoExpr::ObjectT& term);
 
+// HACK: "Unglues" points assuming (x_i-0) compues only from (x_i-(-x_i)).
+// TODO: Proper solution that doesn't silently give wrong results with `Zero`.
+std::array<X, 2> delta_points_inv(const Delta& d);
+
 // Functions ending with `_inv` work on type C spaces, i.e. 2n points in involution.
 // They support only polylogs of +x_i, -x_i and Inf. Feeding these function an expression
 // produced from Zero arguments will silenty yield incorrect results (!) due the ungluing

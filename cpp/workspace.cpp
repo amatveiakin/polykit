@@ -102,47 +102,6 @@ TypeAC_Space CL2_inv(const std::vector<int>& args) {
 }
 
 
-// ProjectionExpr alt_project_on(int axis, const DeltaExpr& expr, int num_vars) {
-//   return project_on(axis, expr).filtered([&](const auto& term) {
-//     return !absl::c_any_of(term, [&](const X& x) {
-//       const int idx = x.as_simple_var();
-//       return (
-//         pos_mod(idx - 1, num_vars) == pos_mod(axis, num_vars)
-//         // pos_mod(idx - 1, num_vars) == pos_mod(axis, num_vars) ||
-//         // pos_mod(idx + 1, num_vars) == pos_mod(axis, num_vars)
-//       );
-//     });
-//   });
-// }
-
-
-// bool is_frozen_coord(const Delta& d, int num_vars) {
-//   const auto [a, b] = delta_points_inv(d);
-//   const bool same_sign = a.var_sign() == b.var_sign();
-//   const int diff = std::abs(a.idx() - b.idx());
-//   return (
-//     (mod_eq(diff, 1, num_vars) && same_sign) ||
-//     (mod_eq(diff, -1, num_vars) && !same_sign)
-//   );
-// }
-
-bool is_frozen_coord(const Delta& d, int num_vars) {  // TODO: !!!
-  CHECK_EQ(num_vars, 4);
-  return d == Delta(x1,x2) || d == Delta(x2,x3) || d == Delta(x3,x4);
-  // return d == Delta(x1,x2) || d == Delta(x2,x3);
-  // return d == Delta(x1,x2);
-  // return false;
-}
-
-DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars) {
-  return expr.filtered([&](const auto& term) {
-    return absl::c_all_of(term, [&](const Delta& d) {
-      return !are_weakly_separated_inv(d, axis) || is_frozen_coord(d, num_vars);
-    });
-  });
-}
-
-
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -1416,21 +1375,6 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  // for (const int num_points : range_incl(5, 7)) {
-  //   for (const int weight : range_incl(2, 5)) {
-  //     const auto space = CL(weight, to_vector(range_incl(1, num_points)));
-  //     const auto space_pr = mapped(space, DISAMBIGUATE(project_on_x1));
-  //     const auto space_pr_alt = mapped(space, [&](const auto& expr) {
-  //       return alt_project_on(1, expr, num_points);
-  //     });
-  //     const int rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-  //     const int rank_pr = space_rank(space_pr, DISAMBIGUATE(to_lyndon_basis));
-  //     const int rank_pr_alt = space_rank(space_pr_alt, DISAMBIGUATE(to_lyndon_basis));
-  //     std::cout << "p=" << num_points << ", w=" << weight << ": ";
-  //     std::cout << rank << " / " << rank_pr << " / " << rank_pr_alt << "\n";
-  //   }
-  // }
-
   // for (const int num_vars : range_incl(2, 4)) {
   //   for (const int weight : range_incl(2, 5)) {
   //     const auto& args = concat(
@@ -1445,35 +1389,6 @@ int main(int /*argc*/, char *argv[]) {
   //       space,
   //       DISAMBIGUATE(identity_function),
   //       DISAMBIGUATE(keep_non_weakly_separated_inv)
-  //     );
-  //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
-  //     std::cout << to_string(ranks) << "\n";
-  //   }
-  // }
-
-  // const auto expr = to_lyndon_basis(QLi3(x1,x2,x3,x4,-x1,-x2,-x3,-x4));
-  // std::cout << expr;
-  // const auto axis = Delta(x1,x3);
-  // std::cout << "projection on " << to_string(axis) << ": " << alt_project_on(axis, expr, 4);
-
-  // // TODO: Fix !!!
-  // for (const int num_vars : range_incl(4, 5)) {
-  //   for (const int weight : range_incl(3, 4)) {
-  //     const auto& args = concat(
-  //       mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
-  //       mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
-  //     );
-  //     auto space = L(weight, args);
-  //     space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
-  //     const auto ranks = space_mapping_ranks(
-  //       space,
-  //       DISAMBIGUATE(identity_function),
-  //       [&](const auto& expr) {
-  //         return std::tuple{
-  //           keep_non_weakly_separated_inv(expr),
-  //           alt_project_on(Delta(x1,x4), expr, num_vars),
-  //         };
-  //       }
   //     );
   //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
   //     std::cout << to_string(ranks) << "\n";
