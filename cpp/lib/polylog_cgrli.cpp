@@ -1,5 +1,6 @@
 #include "polylog_cgrli.h"
 
+#include "call_cache.h"
 #include "itertools.h"
 #include "polylog_grqli.h"
 #include "zip.h"
@@ -50,38 +51,41 @@ auto sum_alternating(const F& f, const std::vector<int>& points, const std::vect
 //   BC * ((1-B)*(1-C)) + (1-B) * (C*(1-C)) = BC*(1-B)*(1-C) + (1-B)*C*(1-C)
 //
 // The answer is in the right-most column, the row depends on the weight.
-//
-// TODO: Cache intermediate results! (probably just compute row by row)
 GammaExpr CGrLi_component(
-  int row,
-  int col,
+  int target_row,
+  int target_col,
   absl::Span<const GammaExpr> qli_components,
   absl::Span<const GammaExpr> casimir_components
 ) {
-  if (row == 0) {
-    return tensor_product(qli_components.subspan(qli_components.size() - col - 1));
-  }
-  if (col == 0) {
-    return tensor_product(absl::MakeConstSpan(
-      concat(std::vector(row, casimir_components.back()), {qli_components.back()})
-    ));
-  }
-  return (
-    + tensor_product(
-      casimir_components.at(casimir_components.size() - col - 1),
-      CGrLi_component(row-1, col, qli_components, casimir_components)
-    )
-    + tensor_product(
-      qli_components.at(qli_components.size() - col - 1),
-      CGrLi_component(row, col-1, qli_components, casimir_components)
-    )
-  );
-}
+  CallCache<GammaExpr, int, int> cache;
+  const std::function<GammaExpr(int, int)> impl = [&](int row, int col) {
+    if (row == 0) {
+      return tensor_product(qli_components.subspan(qli_components.size() - col - 1));
+    }
+    if (col == 0) {
+      return tensor_product(absl::MakeConstSpan(
+        concat(std::vector(row, casimir_components.back()), {qli_components.back()})
+      ));
+    }
+    return (
+      + tensor_product(
+        casimir_components.at(casimir_components.size() - col - 1),
+        cache.apply(impl, row-1, col)
+      )
+      + tensor_product(
+        qli_components.at(qli_components.size() - col - 1),
+        cache.apply(impl, row, col-1)
+      )
+    );
+  };
+  return impl(target_row, target_col);
+};
 
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
 GammaExpr CGrLi(int weight, const std::vector<int>& points) {
   // TODO: Define via CGrLi(ascending points) + substitute variables.
   //   Directly substituting duplicate points is not equivalent (why?)
+  //   ... or maybe this shouldn't work (consult Danya)
   // TODO: What does this mean for operations on GammaExpr in general?
   //   Should other functions (like GrQLi) do the same?
   CHECK(all_unique_unsorted(points)) << "Unimplemented: duplicate CGrLi points: " << dump_to_string(points);

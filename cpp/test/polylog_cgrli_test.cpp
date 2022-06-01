@@ -2,9 +2,35 @@
 
 #include "gtest/gtest.h"
 
+#include "lib/itertools.h"
 #include "lib/polylog_grqli.h"
+#include "lib/zip.h"
 #include "test_util/matchers.h"
 
+
+// TODO: Deduplicate helper functions against polylog_cgrli.cpp
+std::vector<int> apply_permutation(
+  const std::vector<int>& order_before,
+  const std::vector<int>& order_after,
+  const std::vector<int>& points
+) {
+  absl::flat_hash_map<int, int> replacements;
+  for (const auto& [before, after] : zip(order_before, order_after)) {
+    replacements[before] = after;
+  }
+  return mapped(points, [&](const auto& p) {
+    return value_or(replacements, p, p);
+  });
+}
+
+template<typename F>
+auto sum_alternating(const F& f, const std::vector<int>& points, const std::vector<int>& alternating) {
+  decltype(f(points)) ret;
+  for (const auto& [p, sign] : permutations_with_sign(alternating)) {
+    ret += sign * f(apply_permutation(alternating, p, points));
+  }
+  return ret;
+}
 
 GammaExpr CasimirDim3(const std::vector<int>& points) {
   const auto args = [&](const std::vector<int>& indices) {
@@ -45,8 +71,6 @@ GammaExpr CGrLi_Dim3_alternative(int weight, const std::vector<int>& points) {
   );
 }
 
-
-#if 0  // TODO: Test that CGrLi is equal to these definitions.
 GammaExpr CGrLi_Dim4_Weight3_alternative(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 8);
   const auto f = [](const std::vector<int>& arguments) {
@@ -102,7 +126,6 @@ GammaExpr CGrLi_Dim4_Weight4_alternative(const std::vector<int>& points) {
   };
   return sum_alternating(f1, points, choose_indices_one_based(points, {5,6,7}));
 }
-#endif
 
 
 TEST(CGrLiTest, IsTotallyWeaklySeparated) {
@@ -120,4 +143,12 @@ TEST(CGrLiTest, EqualsAlternative_Dim3) {
     // TODO: Sync indices
     EXPECT_EXPR_EQ(CGrLi(weight, {1,6,2,3,4,5}), CGrLi_Dim3_alternative(weight, {1,2,3,4,5,6}));
   }
+}
+
+TEST(CGrLiTest, EqualsAlternative_Dim4_Weight3) {
+  EXPECT_EXPR_EQ(CGrLi(3, {1,2,3,4,5,6,7,8}), CGrLi_Dim4_Weight3_alternative({1,2,3,4,5,6,7,8}));
+}
+
+TEST(CGrLiTest, EqualsAlternative_Dim4_Weight4) {
+  EXPECT_EXPR_EQ(CGrLi(4, {1,2,3,4,5,6,7,8}), CGrLi_Dim4_Weight4_alternative({1,2,3,4,5,6,7,8}));
 }
