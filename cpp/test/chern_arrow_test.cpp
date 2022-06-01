@@ -3,22 +3,11 @@
 
 #include "gtest/gtest.h"
 
-#include "test_util/helpers.h"
+#include "test_util/gamma_helpers.h"
 #include "test_util/matchers.h"
 #include "lib/polylog_grli.h"
 #include "lib/polylog_grqli.h"
 
-
-int detect_num_variables(const GammaExpr& expr) {
-  int max_var = 0;
-  for (const auto& [term, coeff] : expr) {
-    for (const Gamma& g : term) {
-      max_var = std::max(max_var, max_value(g.index_vector()));
-    }
-  }
-  CHECK_GT(max_var, 0);
-  return max_var;
-}
 
 // Identities that should be true for all symbols.
 class ChernArrowIdentityTest : public testing::TestWithParam<GammaExpr> {

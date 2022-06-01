@@ -1,9 +1,9 @@
 #pragma once
 
-#include "lib/linear.h"
-#include "lib/lyndon.h"
-#include "lib/space_algebra.h"
-#include "lib/vector_space.h"
+#include "cpp/lib/linear.h"
+#include "cpp/lib/lyndon.h"
+#include "cpp/lib/space_algebra.h"
+#include "cpp/lib/vector_space.h"
 
 
 template<typename SpaceF>

@@ -2,7 +2,7 @@
 
 #include "gmock/gmock.h"
 
-#include "lib/lyndon.h"
+#include "cpp/lib/lyndon.h"
 
 
 template<typename LinearT>

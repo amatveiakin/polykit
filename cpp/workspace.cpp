@@ -65,26 +65,6 @@
 #endif
 
 
-#if 1
-GammaExpr symmetrize_double(const GammaExpr& expr, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
-  const int sign = neg_one_pow(num_points);
-  return expr + sign * substitute_variables(expr, rotated_vector(points, 1));
-}
-
-GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
-  GammaExpr ret;
-  for (const int i : range(num_points)) {
-    const int sign = num_points % 2 == 1 ? 1 : neg_one_pow(i);
-    ret += sign * substitute_variables(expr, rotated_vector(points, i));
-  }
-  return ret;
-}
-
-// TODO: Test:  symmetrize_double(symmetrize_loop(x)) == 0
-#endif
-
 template<typename Container>
 static Container one_minus_cross_ratio(Container p) {
   CHECK_EQ(4, p.size());

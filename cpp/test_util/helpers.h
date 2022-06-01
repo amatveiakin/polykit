@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lib/coalgebra.h"
+#include "cpp/lib/coalgebra.h"
 
 
 struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>> {

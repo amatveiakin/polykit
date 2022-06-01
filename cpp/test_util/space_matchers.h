@@ -2,6 +2,8 @@
 
 #include "gmock/gmock.h"
 
+#include "cpp/lib/space_algebra.h"
+
 
 template<typename SpaceT, typename PrepareF>
 void EXPECT_POLYLOG_SPACE_EQ(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {

@@ -3,8 +3,11 @@
 #include "gtest/gtest.h"
 
 #include "lib/bitset_util.h"
+#include "lib/polylog_grli.h"
+#include "lib/polylog_grqli.h"
 #include "lib/itertools.h"
 #include "lib/set_util.h"
+#include "test_util/gamma_helpers.h"
 #include "test_util/matchers.h"
 
 
@@ -110,4 +113,12 @@ TEST(GammaTest, NormalizeRemoveConsecutive_Circular) {
   EXPECT_TRUE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({2,5})}, 2, 5));
   EXPECT_FALSE(passes_normalize_remove_consecutive(std::vector{Gamma({1,2}), Gamma({2,5})}, 2, 5));
   EXPECT_FALSE(passes_normalize_remove_consecutive(std::vector{Gamma({1,3}), Gamma({5,1})}, 2, 5));
+}
+
+TEST(GammaTest, SymmetrizeComposition) {
+  // Should be true for any expressions.
+  for (const auto& expr: {GrQLi2(1)(2,3,4,5,6,7), GrLi(1)(2,3,4,5), G({1,2,3,4,5})}) {
+    const int n = detect_num_variables(expr);
+    EXPECT_EXPR_ZERO(symmetrize_double(symmetrize_loop(expr, n), n));
+  }
 }

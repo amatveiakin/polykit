@@ -226,3 +226,19 @@ GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_univ
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe) {
   return plucker_dual(delta_expr_to_gamma_expr(expr), point_universe);
 }
+
+GammaExpr symmetrize_double(const GammaExpr& expr, int num_points) {
+  const auto points = to_vector(range_incl(1, num_points));
+  const int sign = neg_one_pow(num_points);
+  return expr + sign * substitute_variables(expr, rotated_vector(points, 1));
+}
+
+GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
+  const auto points = to_vector(range_incl(1, num_points));
+  GammaExpr ret;
+  for (const int i : range(num_points)) {
+    const int sign = num_points % 2 == 1 ? 1 : neg_one_pow(i);
+    ret += sign * substitute_variables(expr, rotated_vector(points, i));
+  }
+  return ret;
+}

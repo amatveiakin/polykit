@@ -195,6 +195,7 @@ cc_library(
     srcs = glob(["test_util/*.cpp"]),
     deps = [
         "@googletest//:gtest",
+        ":polylog",
     ],
 )
 
