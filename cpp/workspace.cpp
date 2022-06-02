@@ -1557,4 +1557,33 @@ int main(int /*argc*/, char *argv[]) {
   //   const auto expr = CGrLiVec(weight, points);
   //   std::cout << to_lyndon_basis(expr + plucker_dual(expr, points));
   // }
+
+
+  // const auto prepare = [](const auto& expr) {
+  //   return to_lyndon_basis(chern_arrow_left(expr, 7));
+  // };
+  // const auto expr =
+  //   + CGrLi3(1,2,3,4,5,6)
+  //   - pullback(CGrLi3(2,3,4,5), {1})
+  //   + pullback(CGrLi3(2,3,4,6), {1})
+  //   - pullback(CGrLi3(2,3,5,6), {1})
+  //   + pullback(CGrLi3(1,3,4,5), {2})
+  //   - pullback(CGrLi3(1,3,4,6), {2})
+  //   + pullback(CGrLi3(1,3,5,6), {2})
+  // ;
+  // std::cout << prepare(expr);
+
+  const auto expr = CGrLi4(1,2,3,4,5,6,7,8);
+  Gr_Space space;
+  const std::vector points = {1,2,3,4,5,6,7,8};
+  for (const int pb_arg : range_incl(1, 3)) {
+    const auto main_args_pool = removed_index(points, pb_arg - 1);
+    for (const auto& main_args : combinations(main_args_pool, 6)) {
+      space.push_back(pullback(CGrLiVec(4, main_args), {pb_arg}));
+    }
+  }
+  const auto ranks = space_venn_ranks(space, {expr}, [](const auto& expr) {
+    return to_lyndon_basis(chern_arrow_left(expr, 9));
+  });
+  std::cout << to_string(ranks) << "\n";
 }
