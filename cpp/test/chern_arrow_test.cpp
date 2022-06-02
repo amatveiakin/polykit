@@ -22,7 +22,7 @@ TEST_P(ChernArrowIdentityTest, LeftLeft) {
 
 TEST_P(ChernArrowIdentityTest, UpUp) {
   const int n = detect_num_variables(expr());
-  EXPECT_EXPR_ZERO(chern_arrow_left(chern_arrow_left(expr(), n+1), n+2));
+  EXPECT_EXPR_ZERO(chern_arrow_up(chern_arrow_up(expr(), n+1), n+2));
 }
 
 TEST_P(ChernArrowIdentityTest, LeftUp) {
