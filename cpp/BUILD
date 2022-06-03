@@ -127,6 +127,7 @@ cc_library(
 cc_library(
     name = "polylog",
     hdrs = [
+        "lib/chern_cocycle.h",
         "lib/iterated_integral.h",
         "lib/lira_ones.h",
         "lib/loops.h",
@@ -143,6 +144,7 @@ cc_library(
         "lib/snowpal.h",
     ],
     srcs = [
+        "lib/chern_cocycle.cpp",
         "lib/iterated_integral.cpp",
         "lib/lira_ones.cpp",
         "lib/loops.cpp",

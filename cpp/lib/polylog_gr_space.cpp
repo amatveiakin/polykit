@@ -200,6 +200,33 @@ Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& poin
   FATAL(absl::StrCat("Unsupported weight&dimension for CGrL: ", weight, "&", dimension));
 }
 
+Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int depth) {
+  Gr_Space space;
+  CHECK_LE(1, weight);
+  CHECK_LE(2, dimension);
+  CHECK_LE(1, depth);
+  if (weight == 1) {
+    return GrFx(dimension, points);
+  } else {
+    const int max_half_main_args = std::min({
+      static_cast<int>(points.size() / 2),
+      (weight + 1),
+      dimension,
+      (depth + 1),
+    });
+    for (const int half_main_args: range_incl(2, max_half_main_args)) {
+      const int num_main_args = half_main_args * 2;
+      const int num_pb_args = dimension - half_main_args;
+      for (const auto& [main_args, other_args] : index_splits(points, num_main_args)) {
+        for (const auto& pb_args : combinations(other_args, num_pb_args)) {
+          space.push_back(pullback(CGrLiVec(weight, main_args), pb_args));
+        }
+      }
+    }
+  }
+  return space;
+}
+
 Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, int depth) {
   Gr_Space space;
   if (dimension > 2) {

@@ -27,7 +27,9 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points);
 Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
 Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
 
-Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, int depth = std::numeric_limits<int>::max());
+// TODO: Proper infinity (note: don't use `std::numeric_limits<int>::max()` because of `depth + 1`).
+Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int depth = 1000000);
+Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, int depth = 1000000);
 
 Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points);
 Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points);
