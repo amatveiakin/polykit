@@ -200,13 +200,13 @@ Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& poin
   FATAL(absl::StrCat("Unsupported weight&dimension for CGrL: ", weight, "&", dimension));
 }
 
-Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int depth) {
+Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, int depth) {
   Gr_Space space;
   if (dimension > 2) {
     for (const int bonus_point_idx : range(points.size())) {
       const auto bonus_args = choose_indices(points, {bonus_point_idx});
       const auto main_args = removed_index(points, bonus_point_idx);
-      append_vector(space, mapped(ChernGrL(weight, dimension - 1, main_args, depth), [&](const auto& expr) {
+      append_vector(space, mapped(OldChernGrL(weight, dimension - 1, main_args, depth), [&](const auto& expr) {
         return pullback(expr, bonus_args);
       }));
     }
@@ -244,9 +244,9 @@ Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points)
   });
 }
 
-Gr_NCoSpace wedge_ChernGrL(int weight, int dimension, const std::vector<int>& points) {
+Gr_NCoSpace wedge_OldChernGrL(int weight, int dimension, const std::vector<int>& points) {
   // Precompute Lyndon to speed up coproduct.
-  const auto chern_space = mapped(ChernGrL(weight - 1, dimension, points), DISAMBIGUATE(to_lyndon_basis));
+  const auto chern_space = mapped(OldChernGrL(weight - 1, dimension, points), DISAMBIGUATE(to_lyndon_basis));
   const auto fx_space = mapped(GrFx(dimension, points), DISAMBIGUATE(to_lyndon_basis));
   return filtered(
     mapped_parallel(cartesian_product(chern_space, fx_space), applied(DISAMBIGUATE(ncoproduct))),

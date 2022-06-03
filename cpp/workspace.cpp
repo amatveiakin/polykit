@@ -1205,7 +1205,7 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // // const auto expr = CGrLiVec(weight, {8,7,6,5,4,3,2,1});
   // // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  // const auto space_new = ChernGrL(weight, dimension, points);
+  // const auto space_new = OldChernGrL(weight, dimension, points);
   // const auto ranks = space_venn_ranks(space, space_new, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(ranks) << "\n";
 
@@ -1213,14 +1213,14 @@ int main(int /*argc*/, char *argv[]) {
   //   for (const int dimension : range_incl(2, 4)) {
   //     for (const int num_points : range_incl(4, 8)) {
   //       const auto points = to_vector(range_incl(1, num_points));
-  //       const auto space = ChernGrL(weight, dimension, points);
+  //       const auto space = OldChernGrL(weight, dimension, points);
   //       std::cout << "w=" << weight << ", d=" << dimension << ", n=" << num_points << ": ";
   //       std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
   //     }
   //   }
   // }
 
-  // const auto space = ChernGrL(4, 4, {1,2,3,4,5,6,7,8});
+  // const auto space = OldChernGrL(4, 4, {1,2,3,4,5,6,7,8});
   // const auto expr = plucker_dual(CGrLi4(1,2,3,4,5,6,7,8), {1,2,3,4,5,6,7,8});
   // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(ranks) << "\n";
@@ -1233,7 +1233,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int bonus_point_idx : range(points.size())) {
   //   const auto bonus_args = choose_indices(points, {bonus_point_idx});
   //   const auto main_args = removed_index(points, bonus_point_idx);
-  //   append_vector(space, mapped(ChernGrL(weight, dimension - 1, main_args), [&](const auto& expr) {
+  //   append_vector(space, mapped(OldChernGrL(weight, dimension - 1, main_args), [&](const auto& expr) {
   //     return pullback(expr, bonus_args);
   //   }));
   // }
@@ -1250,7 +1250,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int dimension = 3;
   // const int num_points = 6;
   // const auto points = to_vector(range_incl(1, num_points));
-  // const auto space = ChernGrL(weight, dimension, points);
+  // const auto space = OldChernGrL(weight, dimension, points);
   // const auto ranks = space_mapping_ranks(
   //   space,
   //   DISAMBIGUATE(to_lyndon_basis),
@@ -1277,7 +1277,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int dimension = 4;
   // const int num_points = 8;
   // const auto points = to_vector(range_incl(1, num_points));
-  // // const auto space = ChernGrL(weight, dimension, points);
+  // // const auto space = OldChernGrL(weight, dimension, points);
   // const auto space = CGrL_test_space(weight, dimension, points);
   // const auto ranks = space_mapping_ranks(
   //   space,
@@ -1321,7 +1321,7 @@ int main(int /*argc*/, char *argv[]) {
   // const auto points = to_vector(range_incl(1, num_points));
   // Profiler profiler;
   // const auto space = mapped_parallel(
-  //   ChernGrL(weight, dimension, points),
+  //   OldChernGrL(weight, dimension, points),
   //   [&](const auto& a) {
   //     const auto b =
   //       + substitute_variables(a, {1,2,3,4,5,6,7})
@@ -1377,7 +1377,7 @@ int main(int /*argc*/, char *argv[]) {
   // const auto points = to_vector(range_incl(1, num_points));
   // Profiler profiler;
   // const auto space = mapped_parallel(
-  //   ChernGrL(weight, dimension, points),
+  //   OldChernGrL(weight, dimension, points),
   //   [&](const auto& a) {
   //     const auto b =
   //       + substitute_variables(a, {1,2,3,4,5,6})
@@ -1473,9 +1473,9 @@ int main(int /*argc*/, char *argv[]) {
   //     const auto points = to_vector(range_incl(1, num_points));
   //     Profiler profiler;
   //     const auto space = concat(
-  //       wedge_ChernGrL(weight, 4, points),
-  //       wedge_ChernGrL(weight, 5, points),
-  //       wedge_ChernGrL(weight, 6, points)
+  //       wedge_OldChernGrL(weight, 4, points),
+  //       wedge_OldChernGrL(weight, 5, points),
+  //       wedge_OldChernGrL(weight, 6, points)
   //     );
   //     profiler.finish("make space");
   //     const auto ranks = space_mapping_ranks(
@@ -1543,7 +1543,7 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << sum;
 
 
-  // const auto space = mapped(ChernGrL(4, 3, {1,2,3,4,5,6,7}), [](const auto& expr) {
+  // const auto space = mapped(OldChernGrL(4, 3, {1,2,3,4,5,6,7}), [](const auto& expr) {
   //   return chern_arrow_up(expr, 8);
   // });
   // const auto cgrli_expr = CGrLi4(1,2,3,4,5,6,7,8);
