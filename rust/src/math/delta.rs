@@ -57,6 +57,12 @@ impl fmt::Display for Delta {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeltaProduct(pub SmallVec<[Delta; 8]>);
 
+impl DeltaProduct {
+    pub fn new() -> Self {
+        DeltaProduct(SmallVec::<[Delta; 8]>::new())
+    }
+}
+
 impl ops::Deref for DeltaProduct {
     type Target = [Delta];
     fn deref(&self) -> &Self::Target { &self.0 }
@@ -102,7 +108,7 @@ impl fmt::Display for DeltaProduct {
 }
 
 impl VectorLike<Delta> for DeltaProduct {
-    vector_like_impl!(self => self.0, element_type = Delta);
+    vector_like_impl!(Self, self => self.0, element_type = Delta);
 }
 
 

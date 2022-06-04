@@ -61,6 +61,12 @@ impl fmt::Display for Gamma {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GammaProduct(pub SmallVec<[Gamma; 8]>);
 
+impl GammaProduct {
+    pub fn new() -> Self {
+        GammaProduct(SmallVec::<[Gamma; 8]>::new())
+    }
+}
+
 impl ops::Deref for GammaProduct {
     type Target = [Gamma];
     fn deref(&self) -> &Self::Target { &self.0 }
@@ -105,7 +111,7 @@ impl fmt::Display for GammaProduct {
 }
 
 impl VectorLike<Gamma> for GammaProduct {
-    vector_like_impl!(self => self.0, element_type = Gamma);
+    vector_like_impl!(Self, self => self.0, element_type = Gamma);
 }
 
 

@@ -21,12 +21,12 @@ fn main() {
     // }
     // println!("rank = {}", rank);
 
-    let mut timer = Timer::new();
-    let space = CB_naive_via_QLi_fours(5, &[1,2,3,4,5,6,7,8]);
-    timer.finish("space");
-    let rank = space_rank(&space, to_lyndon_basis);
-    timer.finish("rank");
-    println!("rank = {}", rank);
+    // let mut timer = Timer::new();
+    // let space = CB_naive_via_QLi_fours(5, &[1,2,3,4,5,6,7,8]);
+    // timer.finish("space");
+    // let rank = space_rank(&space, to_lyndon_basis);
+    // timer.finish("rank");
+    // println!("rank = {}", rank);
 
 
     // scoped_formatting!(
@@ -45,6 +45,16 @@ fn main() {
     // }
     // println!("Checksum: {}", checksum);
     // timer.finish("QLi");
+
+    println!("Rust");
+    for _ in 0..5 {
+        let mut timer = base::Timer::new();
+        let expr = QLi5!(1,2,3,4,5,6,7,8,9,10);
+        timer.finish("expr");
+        let lyndon = to_lyndon_basis(expr);
+        timer.finish("lyndon");
+        println!("checksum = {}", lyndon.l1_norm());
+    }
 
     // println!("{}", QLi2!(1,2,3,4));
     // println!("{}", QLi2!(1,2,3,Inf));
