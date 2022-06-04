@@ -1742,12 +1742,14 @@ int main(int /*argc*/, char *argv[]) {
   //   - ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6}))
   // );  // ZERO
 
-  const auto expr =
-    + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5}))
-    - chern_arrow_left(ChernCocycle(3, 1, {1,2,3,4}), 5)
-  ;
-  std::cout << expr;  // ZERO
+  // const auto expr =
+  //   + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5}))
+  //   - chern_arrow_left(ChernCocycle(3, 1, {1,2,3,4}), 5)
+  // ;
+  // std::cout << expr;  // ZERO
 
   // TODO: Test that it's always true (fix the sign first)
   // comultiply(cocycle(w, d, n)) == left(cocycle(w, d, n-1)) + up(cocycle(w, d-1, n-1))
+
+  std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 }

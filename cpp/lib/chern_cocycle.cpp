@@ -5,17 +5,20 @@
 #include "polylog_cgrli.h"
 
 
-GammaNCoExpr ChernCocycle_3_1(const std::vector<int>& points) {
-  CHECK_EQ(points.size(), 4);
-  const auto args = [&](const std::vector<int>& indices) {
-    return choose_indices_one_based(points, indices);
-  };
-  return
-    + ncoproduct(G(args({1,2})), G(args({1,3})), G(args({1,4})))
-    - ncoproduct(G(args({2,3})), G(args({2,4})), G(args({2,1})))
-    + ncoproduct(G(args({3,4})), G(args({3,1})), G(args({3,2})))
-    - ncoproduct(G(args({4,1})), G(args({4,2})), G(args({4,3})))
-  ;
+GammaNCoExpr ChernCocycle_Dim1(int weight, const std::vector<int>& points) {
+  CHECK_EQ(points.size(), weight + 1);
+  GammaNCoExpr ret;
+  for (const int p : range(points.size())) {
+    std::vector<GammaExpr> components;
+    for (const int q : range(points.size())) {
+      if (q != p) {
+        components.push_back(G(choose_indices(points, {p, q})));
+      }
+    }
+    const int sign = neg_one_pow(p);
+    ret += sign * ncoproduct_vec(components);
+  }
+  return ret;
 }
 
 GammaNCoExpr ChernCocycle_3_2(const std::vector<int>& points) {
@@ -39,11 +42,11 @@ GammaNCoExpr ChernCocycle_3_2(const std::vector<int>& points) {
 }
 
 GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>& points) {
+  if (dimension == 1 && points.size() == weight + 1) {
+    return ChernCocycle_Dim1(weight, points);
+  }
   if (weight == 3 && dimension == 2 && points.size() == 5) {
     return ChernCocycle_3_2(points);
-  }
-  if (weight == 3 && dimension == 1 && points.size() == 4) {
-    return ChernCocycle_3_1(points);
   }
   CHECK_EQ(weight * 2, points.size()) << "Not implemented";
   CHECK(points.size() % 2 == 0);
@@ -74,6 +77,7 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
   return ncoproduct(ret);
 }
 
+// TODO: How does `dimension` parameter in ChernCocycle relate to Grassmannian dimension?
 GammaNCoExpr ChernCocycle(int weight, int dimension, const std::vector<int>& points) {
   return ChernCocycle_impl(weight, dimension, points).annotate(
     fmt::function_num_args(
