@@ -94,6 +94,37 @@ int compute_cohomologies(int dimension, int num_points, const SpaceF& space) {
 }
 
 
+Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
+  const int dimension = 3;
+  const int weight = 4;
+  const int n = 6;
+  CHECK_EQ(args.size(), n+1);
+  Gr_NCoSpace space;
+  for (const auto& points : combinations(args, n)) {
+    const auto cgrli = CGrLiVec(weight - 1, points);
+    for (const int first : range(n)) {
+      const int second = (first + 1) % n;
+      const int third = (first + 2) % n;
+      space.push_back(ncoproduct(cgrli, G({points.at(first), points.at(second), points.at(third)})));
+    }
+  }
+  for (const int pb_index : range(args.size())) {
+    const auto& [pb_args, main_args] = split_indices(args, {pb_index});
+    const auto& pullback_args = pb_args;
+    // Precompute Lyndon to speed up coproduct.
+    const auto chern_space = mapped(ChernGrL(weight - 1, dimension - 1, main_args), [&](const auto& expr) {
+      return to_lyndon_basis(pullback(expr, pullback_args));
+    });
+    const auto fx_space = mapped(GrFx(dimension, args), DISAMBIGUATE(to_lyndon_basis));
+    append_vector(space, filtered(
+      mapped_parallel(cartesian_product(chern_space, fx_space), applied(DISAMBIGUATE(ncoproduct))),
+      DISAMBIGUATE(is_totally_weakly_separated)
+    ));
+  }
+  return space;
+}
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -1751,5 +1782,12 @@ int main(int /*argc*/, char *argv[]) {
   // TODO: Test that it's always true (fix the sign first)
   // comultiply(cocycle(w, d, n)) == left(cocycle(w, d, n-1)) + up(cocycle(w, d-1, n-1))
 
-  std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
+  // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
+
+  const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
+    return chern_arrow_up(expr, 8);
+  });
+  const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
+  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  std::cout << to_string(ranks) << "\n";
 }
