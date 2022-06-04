@@ -65,6 +65,34 @@
 #endif
 
 
+template<typename SpaceF>
+SpaceMappingRanks cohomology_ranks(int dimension, int num_points, const SpaceF& space) {
+  return space_mapping_ranks(
+    mapped_expanding(range_incl(dimension, num_points - 1), [&](const int dim) {
+      return space(dim, to_vector(range_incl(1, num_points)));
+    }),
+    DISAMBIGUATE(to_lyndon_basis),
+    [&](const auto& expr) {
+      std::vector<std::decay_t<decltype(expr)>> row(num_points - 1);
+      const int dim_index = expr.dimension() - dimension;
+      row.at(dim_index) = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
+      row.at(dim_index + 1) = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
+      return row;
+    }
+  );
+}
+
+// TODO: Check against LARGE_CGrLCohomology test
+// TODO: Dualize
+template<typename SpaceF>
+int compute_cohomologies(int dimension, int num_points, const SpaceF& space) {
+  return (
+    + cohomology_ranks(dimension, num_points, space).kernel()
+    - cohomology_ranks(dimension, num_points - 1, space).image()
+  );
+}
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -1573,17 +1601,30 @@ int main(int /*argc*/, char *argv[]) {
   // ;
   // std::cout << prepare(expr);
 
-  const auto expr = CGrLi4(1,2,3,4,5,6,7,8);
-  Gr_Space space;
-  const std::vector points = {1,2,3,4,5,6,7,8};
-  for (const int pb_arg : range_incl(1, 3)) {
-    const auto main_args_pool = removed_index(points, pb_arg - 1);
-    for (const auto& main_args : combinations(main_args_pool, 6)) {
-      space.push_back(pullback(CGrLiVec(4, main_args), {pb_arg}));
+  // const auto expr = CGrLi4(1,2,3,4,5,6,7,8);
+  // Gr_Space space;
+  // const std::vector points = {1,2,3,4,5,6,7,8};
+  // for (const int pb_arg : range_incl(1, 3)) {
+  //   const auto main_args_pool = removed_index(points, pb_arg - 1);
+  //   for (const auto& main_args : combinations(main_args_pool, 6)) {
+  //     space.push_back(pullback(CGrLiVec(4, main_args), {pb_arg}));
+  //   }
+  // }
+  // const auto ranks = space_venn_ranks(space, {expr}, [](const auto& expr) {
+  //   return to_lyndon_basis(chern_arrow_left(expr, 9));
+  // });
+  // std::cout << to_string(ranks) << "\n";
+
+  for (const int dimension : range_incl(3, 4)) {
+    for (const int weight : range_incl(3, 4)) {
+      for (const int num_points : range_incl(5, 8)) {
+        const auto ranks = compute_cohomologies(dimension, num_points, [&](const int dimension, const auto& points) {
+          return ChernGrL(weight, dimension, points);
+          // return CGrL_test_space(3, dimension, points);
+        });
+        std::cout << "d=" << dimension << ", w=" << weight << ", n=" << num_points << ": ";
+        std::cout << to_string(ranks) << "\n";
+      }
     }
   }
-  const auto ranks = space_venn_ranks(space, {expr}, [](const auto& expr) {
-    return to_lyndon_basis(chern_arrow_left(expr, 9));
-  });
-  std::cout << to_string(ranks) << "\n";
 }

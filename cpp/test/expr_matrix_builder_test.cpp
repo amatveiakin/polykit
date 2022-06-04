@@ -73,7 +73,7 @@ Matrix matrix(const std::vector<std::vector<int>>& values) {
 
 
 TEST(ExprMatrixBuilderTest, SingleType) {
-  ExprMatrixBuilder<SimpleVectorExpr> matrix_builder;
+  ExprTupleMatrixBuilder<SimpleVectorExpr> matrix_builder;
   matrix_builder.add_expr(SV({1}) + SV({2}));
   matrix_builder.add_expr(SV({2}) + SV({4}));
   matrix_builder.add_expr(SV({3}) - SV({4}));
@@ -88,7 +88,7 @@ TEST(ExprMatrixBuilderTest, SingleType) {
 }
 
 TEST(ExprMatrixBuilderTest, TwoOfSameTypes) {
-  ExprMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr> matrix_builder;
+  ExprTupleMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr> matrix_builder;
   matrix_builder.add_expr(SV({1}),  SV({2}));
   matrix_builder.add_expr(SV({2}),  SV({4}));
   matrix_builder.add_expr(SV({3}), -SV({4}));
@@ -107,7 +107,7 @@ TEST(ExprMatrixBuilderTest, TwoOfSameTypes) {
   );
 }
 TEST(ExprMatrixBuilderTest, ThreeOfSameTypes) {
-  ExprMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr, SimpleVectorExpr> matrix_builder;
+  ExprTupleMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr, SimpleVectorExpr> matrix_builder;
   matrix_builder.add_expr(SV({1}),  SV({2}), -SV({1}));
   matrix_builder.add_expr(SV({2}),  SV({4}), -SV({1}));
   matrix_builder.add_expr(SV({3}), -SV({4}),  SV({3})+SV({1}));
@@ -128,7 +128,7 @@ TEST(ExprMatrixBuilderTest, ThreeOfSameTypes) {
 
 // Structurally same as `TwoOfSameTypes`.
 TEST(ExprMatrixBuilderTest, DifferentTypes) {
-  ExprMatrixBuilder<SimpleVectorExpr, StringExpr> matrix_builder;
+  ExprTupleMatrixBuilder<SimpleVectorExpr, StringExpr> matrix_builder;
   matrix_builder.add_expr(SV({1}),  SS({"2"}));
   matrix_builder.add_expr(SV({2}),  SS({"4"}));
   matrix_builder.add_expr(SV({3}), -SS({"4"}));
@@ -144,7 +144,7 @@ TEST(ExprMatrixBuilderTest, DifferentTypes) {
 
 // Structurally same as `ThreeOfSameTypes`.
 TEST(ExprMatrixBuilderTest, MixedTypes) {
-  ExprMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr, StringExpr> matrix_builder;
+  ExprTupleMatrixBuilder<SimpleVectorExpr, SimpleVectorExpr, StringExpr> matrix_builder;
   matrix_builder.add_expr(SV({1}),  SV({2}), -SS({"1"}));
   matrix_builder.add_expr(SV({2}),  SV({4}), -SS({"1"}));
   matrix_builder.add_expr(SV({3}), -SV({4}),  SS({"3"})+SS({"1"}));

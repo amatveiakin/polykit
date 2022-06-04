@@ -224,6 +224,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   EXPECT_EQ(ranks.intersected(), ...);  // TODO: What is this?
 #endif
 
+// TODO: Test compute_cohomologies instead
 TEST(PolylogSpaceTest, LARGE_CGrLCohomology) {
   const auto compute_ranks = [](int weight, int num_points) {
     const auto points = to_vector(range_incl(1, num_points));

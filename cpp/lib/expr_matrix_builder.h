@@ -8,8 +8,17 @@
 #include "util.h"
 
 
+namespace internal {
+using SparseElement = std::pair<int, int>;  // (row/col, value)
+
+Matrix make_matrix(
+  const absl::flat_hash_set<std::vector<SparseElement>>& sparse_rows, int num_cols
+);
+}  // namespace internal
+
+
 template<typename... ExprTs>
-class ExprMatrixBuilder {
+class ExprTupleMatrixBuilder {
 public:
   void add_expr(const std::tuple<ExprTs...>& expressions) {
     return std::apply(
@@ -22,30 +31,22 @@ public:
   }
 
   Matrix make_matrix() const {
-    const auto sparse_columns = unique_sparse_columns();
-    Matrix matrix;
-    int i_col = 0;
-    for (const auto& column : sparse_columns) {
-      for (const auto& [i_row, value] : column) {
-        matrix.insert(i_row, i_col) = value;
-      }
-      ++i_col;
-    }
-    return matrix;
+    return internal::make_matrix(sparse_rows_, monoms_.size());
   }
 
 private:
-  using SparseElement = std::pair<int, int>;  // (row/col, value)
+  using SparseElement = internal::SparseElement;
   using KeyT = CompactVariant<typename ExprTs::ObjectT...>;
 
   void add_expr_impl(const ExprTs&... expressions) {
     std::vector<SparseElement> row;
     add_columns<0>(row, expressions...);
-    // TODO: Is sorting required? (col, value) pairs should be sorted in order for row
-    //   deduplication to work. However chances are they are already oredered the same
-    //   way: absl::hash_map iteration is likely deterministic within one launch.
+    // TODO: Is sorting required? (here and in `ExprVectorMatrixBuilder`)
+    //   (col, value) pairs should be sorted in order for row deduplication to work.
+    //   However chances are they are already oredered the same way: absl::hash_map
+    //   iteration is likely deterministic within one launch.
     absl::c_sort(row);
-    sparse_rows_.insert(row);
+    sparse_rows_.insert(std::move(row));
   }
 
   template<std::size_t Idx, typename Head, typename... Tail>
@@ -58,19 +59,38 @@ private:
   template<std::size_t Idx>
   void add_columns(std::vector<SparseElement>&) {}
 
-  absl::flat_hash_set<std::vector<SparseElement>> unique_sparse_columns() const {
-    const int num_cols = monoms_.size();
-    std::vector<std::vector<SparseElement>> sparse_columns(num_cols);
-    int i_row = 0;
-    for (const auto& row : sparse_rows_) {
-      for (const auto& [i_col, coeff] : row) {
-        sparse_columns[i_col].push_back({i_row, coeff});
+  Enumerator<KeyT> monoms_;
+
+  // For each row: for each non-zero value: (column, value)
+  absl::flat_hash_set<std::vector<SparseElement>> sparse_rows_;
+};
+
+template<typename ExprT>
+class ExprVectorMatrixBuilder {
+public:
+  void add_expr(const std::vector<ExprT>& expressions) {
+    auto row = make_row(expressions);
+    absl::c_sort(row);
+    sparse_rows_.insert(std::move(row));
+  }
+
+  Matrix make_matrix() const {
+    return internal::make_matrix(sparse_rows_, monoms_.size());
+  }
+
+private:
+  using SparseElement = internal::SparseElement;
+  using KeyT = std::pair<int, typename ExprT::ObjectT>;
+
+  std::vector<SparseElement> make_row(const std::vector<ExprT>& expressions) {
+    std::vector<SparseElement> row;
+    for (const int expr_idx : range(expressions.size())) {
+      const auto& expr = expressions.at(expr_idx);
+      for (const auto& [term, coeff] : expr) {
+        row.push_back({monoms_.index(KeyT{expr_idx, term}), coeff});
       }
-      ++i_row;
-    }
-    // Note: Elements are sorted within each column since we iterate rows sequentially.
-    //   Hence decuplication works.
-    return to_set(sparse_columns);
+    };
+    return row;
   }
 
   Enumerator<KeyT> monoms_;
@@ -81,8 +101,10 @@ private:
 
 
 template<typename... Ts>
-struct GetExprMatrixBuilder { using type = ExprMatrixBuilder<Ts...>; };
+struct GetExprMatrixBuilder { using type = ExprTupleMatrixBuilder<Ts...>; };
 template<typename... Ts>
-struct GetExprMatrixBuilder<std::tuple<Ts...>> { using type = ExprMatrixBuilder<Ts...>; };
+struct GetExprMatrixBuilder<std::tuple<Ts...>> { using type = ExprTupleMatrixBuilder<Ts...>; };
+template<typename T>
+struct GetExprMatrixBuilder<std::vector<T>> { using type = ExprVectorMatrixBuilder<T>; };
 template<typename... Ts>
 using GetExprMatrixBuilder_t = typename GetExprMatrixBuilder<Ts...>::type;

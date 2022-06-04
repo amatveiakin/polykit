@@ -179,6 +179,7 @@ cc_library(
         "lib/vector_space.h",
     ],
     srcs = [
+        "lib/expr_matrix_builder.cpp",
         "lib/linalg.cpp",
         "lib/polylog_type_ac_space.cpp",
         "lib/polylog_type_d_space.cpp",
