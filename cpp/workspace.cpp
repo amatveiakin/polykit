@@ -1619,8 +1619,7 @@ int main(int /*argc*/, char *argv[]) {
     for (const int weight : range_incl(3, 4)) {
       for (const int num_points : range_incl(5, 8)) {
         const auto ranks = compute_cohomologies(dimension, num_points, [&](const int dimension, const auto& points) {
-          return ChernGrL(weight, dimension, points);
-          // return CGrL_test_space(3, dimension, points);
+          return wedge_ChernGrL(weight, dimension, points);
         });
         std::cout << "d=" << dimension << ", w=" << weight << ", n=" << num_points << ": ";
         std::cout << to_string(ranks) << "\n";
