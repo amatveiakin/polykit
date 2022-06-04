@@ -25,14 +25,16 @@ GammaNCoExpr ChernCocycle_3_2(const std::vector<int>& points) {
     return choose_indices_one_based(points, indices);
   };
   return
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,3,5})), G(args({3,4})))
-    - ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({3,4})))
+    - ncoproduct(CGrLiVec(weight-1, args({1,2,3,5})), G(args({1,2})))
     - ncoproduct(CGrLiVec(weight-1, args({1,2,3,5})), G(args({3,5})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({4,5})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,3,4,5})), G(args({1,2})))
-    - ncoproduct(CGrLiVec(weight-1, args({2,3,4,5})), G(args({1,2})))
     - ncoproduct(CGrLiVec(weight-1, args({1,3,4,5})), G(args({1,5})))
+    - ncoproduct(CGrLiVec(weight-1, args({1,3,4,5})), G(args({3,4})))
+    + ncoproduct(CGrLiVec(weight-1, args({1,2,3,4})), G(args({1,2})))
+    + ncoproduct(CGrLiVec(weight-1, args({1,2,3,4})), G(args({3,4})))
+    + ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({1,2})))
+    + ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({4,5})))
     + ncoproduct(CGrLiVec(weight-1, args({2,3,4,5})), G(args({2,5})))
+    + ncoproduct(CGrLiVec(weight-1, args({2,3,4,5})), G(args({3,4})))
   ;
 }
 
