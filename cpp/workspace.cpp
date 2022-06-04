@@ -27,6 +27,7 @@
 #if 1
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
+#include "lib/chern_cocycle.h"
 #include "lib/polylog_cgrli.h"
 #include "lib/polylog_grli.h"
 #include "lib/polylog_grqli.h"
@@ -1615,15 +1616,138 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // std::cout << to_string(ranks) << "\n";
 
-  for (const int dimension : range_incl(3, 4)) {
-    for (const int weight : range_incl(3, 4)) {
-      for (const int num_points : range_incl(5, 8)) {
-        const auto ranks = compute_cohomologies(dimension, num_points, [&](const int dimension, const auto& points) {
-          return wedge_ChernGrL(weight, dimension, points);
-        });
-        std::cout << "d=" << dimension << ", w=" << weight << ", n=" << num_points << ": ";
-        std::cout << to_string(ranks) << "\n";
-      }
-    }
-  }
+  // for (const int dimension : range_incl(3, 4)) {
+  //   for (const int weight : range_incl(3, 4)) {
+  //     for (const int num_points : range_incl(5, 8)) {
+  //       const auto ranks = compute_cohomologies(dimension, num_points, [&](const int dimension, const auto& points) {
+  //         return wedge_ChernGrL(weight, dimension, points);
+  //       });
+  //       std::cout << "d=" << dimension << ", w=" << weight << ", n=" << num_points << ": ";
+  //       std::cout << to_string(ranks) << "\n";
+  //     }
+  //   }
+  // }
+
+
+  // std::cout << dump_to_string(wedge_ChernGrL(3, 2, {1,2,3,4,5})) << "\n";
+
+  // const std::vector wedge_chern_space = {
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,4})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({2,3})),
+  //   ncoproduct(CGrLi2(1,2,3,4), G({3,4})),
+  //   ncoproduct(CGrLi2(1,2,3,4), G({4,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({2,3})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({3,4})),
+  //   ncoproduct(CGrLi2(1,2,3,5), G({3,5})),
+  //   ncoproduct(CGrLi2(1,2,3,5), G({4,5})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({2,3})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({2,4})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({3,4})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({4,5})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({1,3})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({2,3})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({3,4})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({4,5})),
+  //   ncoproduct(CGrLi2(2,3,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({2,3})),
+  //   ncoproduct(CGrLi2(2,3,4,5), G({2,5})),
+  //   ncoproduct(CGrLi2(2,3,4,5), G({3,4})),
+  //   ncoproduct(CGrLi2(2,3,4,5), G({4,5})),
+  // };
+
+  // const std::vector wedge_chern_space = {
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,4})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({2,3})),
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({3,4})), #
+  //   // ncoproduct(CGrLi2(1,2,3,4), G({4,5})), *
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({2,3})),
+  //   ncoproduct(CGrLi2(1,2,3,5), G({3,4})),
+  //   ncoproduct(CGrLi2(1,2,3,5), G({3,5})),
+  //   // ncoproduct(CGrLi2(1,2,3,5), G({4,5})), *
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({2,3})),
+  //   // ncoproduct(CGrLi2(1,2,4,5), G({2,4})),
+  //   ncoproduct(CGrLi2(1,2,4,5), G({3,4})),
+  //   ncoproduct(CGrLi2(1,2,4,5), G({4,5})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({1,3})),
+  //   ncoproduct(CGrLi2(1,3,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({2,3})),
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({3,4})), #
+  //   // ncoproduct(CGrLi2(1,3,4,5), G({4,5})), *
+  //   ncoproduct(CGrLi2(2,3,4,5), G({1,2})),
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({1,5})),
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({2,3})),
+  //   ncoproduct(CGrLi2(2,3,4,5), G({2,5})),
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({3,4})), #
+  //   // ncoproduct(CGrLi2(2,3,4,5), G({4,5})), *
+  // };
+
+  // const auto space = mapped(
+  //   wedge_chern_space,
+  //   // wedge_ChernGrL(3, 2, {1,2,3,4,5}),
+  //   [](const auto& expr) {
+  //     return std::tuple {
+  //       chern_arrow_left(expr, 6),
+  //       chern_arrow_up(expr, 6),
+  //     };
+  //   }
+  // );
+  // const auto pair = std::tuple {
+  //   ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6})),
+  //   ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6})),
+  // };
+  // const auto ranks = space_venn_ranks(space, {pair}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+  // const auto wedge_chern_expr =
+  //   + ncoproduct(CGrLi2(1,2,3,5), G({3,4}))
+  //   - ncoproduct(CGrLi2(1,2,4,5), G({3,4}))
+  //   - ncoproduct(CGrLi2(1,2,3,5), G({3,5}))
+  //   + ncoproduct(CGrLi2(1,2,4,5), G({4,5}))
+  //   + ncoproduct(CGrLi2(1,3,4,5), G({1,2}))
+  //   - ncoproduct(CGrLi2(2,3,4,5), G({1,2}))
+  //   - ncoproduct(CGrLi2(1,3,4,5), G({1,5}))
+  //   + ncoproduct(CGrLi2(2,3,4,5), G({2,5}))
+  // ;
+  // std::cout << (
+  //   + chern_arrow_left(wedge_chern_expr, 6)
+  //   - ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6}))
+  // );  // ZERO
+  // std::cout << (
+  //   + chern_arrow_up(wedge_chern_expr, 6)
+  //   - ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6}))
+  // );  // ZERO
+
+  // std::cout << (
+  //   + chern_arrow_left(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+  //   - ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6}))
+  // );  // ZERO
+  // std::cout << (
+  //   + chern_arrow_up(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+  //   - ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6}))
+  // );  // ZERO
+
+  const auto expr =
+    + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5}))
+    - chern_arrow_left(ChernCocycle(3, 1, {1,2,3,4}), 5)
+  ;
+  std::cout << expr;  // ZERO
+
+  // TODO: Test that it's always true (fix the sign first)
+  // comultiply(cocycle(w, d, n)) == left(cocycle(w, d, n-1)) + up(cocycle(w, d-1, n-1))
 }

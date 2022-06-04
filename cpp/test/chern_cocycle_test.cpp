@@ -94,14 +94,14 @@ GammaExpr ChernCocycle_4_3_8(const std::vector<int>& points) {
 
 TEST(ChernCocycleTest, EqualsExplicit_Weight3) {
   std::vector points6 = {3,4,5,6,1,2};
-  EXPECT_EXPR_EQ(ChernCocycle_3_3_6(points6), ChernCocycle(3, 3, points6));
-  EXPECT_EXPR_EQ(ChernCocycle_3_2_6(points6), ChernCocycle(3, 2, points6));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_3_6(points6)), ChernCocycle(3, 3, points6));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_2_6(points6)), ChernCocycle(3, 2, points6));
 }
 
 TEST(ChernCocycleTest, LARGE_EqualsExplicit_Weight4) {
   std::vector points8 = {3,4,5,6,7,8,1,2};
-  EXPECT_EXPR_EQ(ChernCocycle_4_4_8(points8), ChernCocycle(4, 4, points8));
-  EXPECT_EXPR_EQ(ChernCocycle_4_3_8(points8), ChernCocycle(4, 3, points8));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_4_8(points8)), ChernCocycle(4, 4, points8));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_3_8(points8)), ChernCocycle(4, 3, points8));
 }
 
 TEST(ChernCocycleTest, InteractionWithArrows_Weight3) {
@@ -131,7 +131,7 @@ TEST(ChernCocycleTest, LARGE_DimensionMinusOneEquation_Weight4) {
 TEST(ChernCocycleTest, LARGE_ImageLiesInChernGrLImage_Weight3) {
   const auto expr = chern_arrow_left(ChernCocycle(3, 3, {1,2,3,4,5,6}), 7);
   const auto space = mapped(ChernGrL(3, 2, {1,2,3,4,5,6}), [](const auto& expr) {
-    return chern_arrow_up(expr, 7);
+    return ncoproduct(chern_arrow_up(expr, 7));
   });
   EXPECT_FALSE(to_lyndon_basis(expr).is_zero());
   EXPECT_POLYLOG_SPACE_CONTAINS(space, {expr}, DISAMBIGUATE(to_lyndon_basis));

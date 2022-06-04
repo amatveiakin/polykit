@@ -18,11 +18,12 @@ std::string to_string(const SpaceCharacteristics& characteristics);
 // TODO: Also check that space characteristics match in functions like `space_venn_ranks`.
 // Verifies that each element has the same weight and dimension. Feel free to disable if not required.
 template<typename SpaceT>
-void check_space(const SpaceT& space) {
-  return;  // TODO: Fix the check for points in involution and re-enable it!
-  check_space_is_homogeneous(space, [](const auto& expr) {
-    return SpaceCharacteristics{expr.weight(), expr.dimension()};
-  });
+void check_space(const SpaceT&) {
+  // TODO: Fix the check for points in involution and re-enable it!
+  // TODO: Fix for spaces of tuples
+  // check_space_is_homogeneous(space, [](const auto& expr) {
+  //   return SpaceCharacteristics{expr.weight(), expr.dimension()};
+  // });
 }
 
 template<typename SpaceT>
