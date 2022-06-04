@@ -3,7 +3,7 @@
 
 #include "absl/strings/substitute.h"
 
-#include "lib/shuffle.h"
+#include "cpp/lib/shuffle.h"
 
 
 std::string shuffle_unrolled(int n, int m) {

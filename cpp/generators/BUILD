@@ -1,11 +1,11 @@
 cc_binary(
     name = "shuffle_unroll",
     srcs = ["shuffle_unroll.cpp"],
-    deps = ["//:math"],
+    deps = ["//cpp:math"],
 )
 
 cc_binary(
     name = "shuffle_unroll_multi",
     srcs = ["shuffle_unroll_multi.cpp"],
-    deps = ["//:math"],
+    deps = ["//cpp:math"],
 )

@@ -1,1 +1,1 @@
-bazel build --config=clang generators:shuffle_unroll && ./bazel-bin/generators/shuffle_unroll > lib/shuffle_unrolled.h
+bazel build --config=clang generators:shuffle_unroll && ../bazel-bin/cpp/generators/shuffle_unroll > lib/shuffle_unrolled.h
