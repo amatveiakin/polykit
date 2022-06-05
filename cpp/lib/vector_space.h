@@ -5,54 +5,57 @@
 
 
 // TODO: Templatize.
+template<typename MarkerT>
 struct SpaceCharacteristics {
   int weight = 0;
-  int dimension = 0;
+  MarkerT marker = {};
   bool operator==(const SpaceCharacteristics& other) const {
-    return weight == other.weight && dimension == other.dimension;
+    return weight == other.weight && marker == other.marker;
   }
 };
 
-std::string to_string(const SpaceCharacteristics& characteristics);
-
-// TODO: Also check that space characteristics match in functions like `space_venn_ranks`.
-// Verifies that each element has the same weight and dimension. Feel free to disable if not required.
-template<typename SpaceT>
-void check_space(const SpaceT&) {
-  // TODO: Fix the check for points in involution and re-enable it!
-  // TODO: Fix for spaces of tuples
-  // check_space_is_homogeneous(space, [](const auto& expr) {
-  //   return SpaceCharacteristics{expr.weight(), expr.dimension()};
-  // });
-}
-
-template<typename SpaceT>
-void check_space_weight_eq(const SpaceT& space, int weight) {
-  for (const auto& expr : space) {
-    if (!expr.is_zero()) {
-      CHECK_EQ(expr.weight(), weight);
-    }
+template<typename MarkerT>
+std::string to_string(const SpaceCharacteristics<MarkerT>& characteristics) {
+  if constexpr (std::is_same_v<MarkerT, std::monostate>) {
+    return absl::StrCat("{w=", characteristics.weight, "}");
+  } else {
+    return absl::StrCat("{w=", characteristics.weight, "; ", to_string(characteristics.marker), "}");
   }
 }
 
-template<typename SpaceT, typename F>
-void check_space_is_homogeneous(const SpaceT& space, const F& func) {
-  std::optional<std::invoke_result_t<F, typename SpaceT::value_type>> exemplar;
-  const typename SpaceT::value_type* exemplar_ptr = nullptr;
-  for (const auto& expr : space) {
-    // TODO: Benchmark if checking each term of an expression is too slow.
-    if (!expr.is_zero()) {
-      const auto new_value = func(expr);
-      if (exemplar.has_value()) {
-        CHECK(exemplar == new_value)
-          << "  space not homogeneous:\n"
-          << dump_to_string(exemplar.value()) << " vs " << dump_to_string(new_value) << "\n"
-          << "  for\n"
-          << annotations_one_liner(exemplar_ptr->annotations())
-          << " vs " << annotations_one_liner(expr.annotations());
-      } else {
-        exemplar = new_value;
-        exemplar_ptr = &expr;
+// Verifies that each element has the same weight and dimension. Feel free to disable if not required.
+template<typename... SpaceTs>
+void check_spaces(const SpaceTs&... spaces) {
+  // TODO: Fix for spaces of tuples.
+  check_space_homogeneity([](const auto& expr) {
+    using Marker = std::decay_t<decltype(expr.uniformity_marker())>;
+    return SpaceCharacteristics<Marker>{expr.weight(), expr.uniformity_marker()};
+  }, spaces...);
+}
+
+template<typename F, typename... SpaceTs>
+void check_space_homogeneity(const F& func, const SpaceTs&... spaces) {
+  const auto spaces_list = {std::cref(spaces)...};
+  using Space = typename decltype(spaces_list)::value_type::type;
+  using Expr = typename Space::value_type;
+  std::optional<std::invoke_result_t<F, Expr>> exemplar;
+  const Expr* exemplar_ptr = nullptr;
+  for (const auto& space : spaces_list) {
+    for (const auto& expr : space.get()) {
+      // TODO: Benchmark if checking each term of an expression is too slow.
+      if (!expr.is_zero()) {
+        const auto new_value = func(expr);
+        if (exemplar.has_value()) {
+          CHECK(exemplar == new_value)
+            << "  space not homogeneous:\n"
+            << dump_to_string(exemplar.value()) << " vs " << dump_to_string(new_value) << "\n"
+            << "  for\n"
+            << annotations_one_liner(exemplar_ptr->annotations())
+            << " vs " << annotations_one_liner(expr.annotations());
+        } else {
+          exemplar = new_value;
+          exemplar_ptr = &expr;
+        }
       }
     }
   }

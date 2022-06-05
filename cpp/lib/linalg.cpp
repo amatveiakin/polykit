@@ -268,10 +268,10 @@ Matrix diagonalize_matrix(const Matrix& src) {
 }
 
 static int matrix_rank_fancy(const Matrix& matrix) {
-  return sum(mapped(
+  return sum(
     get_matrix_diagonal_blocks(matrix),
     [](const auto& b) { return matrix_rank_raw_linbox(diagonalize_matrix(b)); }
-  ));
+  );
 }
 
 #if 1

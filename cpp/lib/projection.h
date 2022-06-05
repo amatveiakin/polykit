@@ -9,6 +9,7 @@ struct ProjectionExprParam {
   using StorageT = PVector<std::byte, 10>;
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
   static constexpr int kFormBits = 4;
   static constexpr int kIndexBits = CHAR_BIT - kFormBits;
   static constexpr int kIndexMask = (1 << kIndexBits) - 1;
@@ -31,17 +32,12 @@ struct ProjectionExprParam {
   static ObjectT key_to_object(const StorageT& key) {
     return mapped(key, key_to_x);
   }
+  static std::monostate element_uniformity_marker(X) { return {}; }
   static std::string object_to_string(const ObjectT& obj) {
     return fmt::parens(str_join(obj, ", "));
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return obj.size();
-  }
-  static int object_to_dimension(const ObjectT&) {
-    return 1;
   }
 };
 }  // namespace internal

@@ -42,17 +42,13 @@ struct KappaExprParam {
   }
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
+  static std::monostate element_uniformity_marker(const Kappa&) { return {}; }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::tensor_prod());
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return obj.size();
-  }
-  static int object_to_dimension(const ObjectT&) {
-    return 3;
   }
 };
 struct KappaICoExprParam {
@@ -68,17 +64,9 @@ struct KappaICoExprParam {
   }
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  CO_DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_iterated(), KappaExprParam::object_to_string);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return sum(mapped(obj, [](const auto& part) { return part.size(); }));
-  }
-  static int object_to_dimension(const ObjectT& obj) {
-    CHECK(!obj.empty());
-    const auto part_dimensions = mapped(obj, &KappaExprParam::object_to_dimension);
-    CHECK(all_equal(part_dimensions));
-    return part_dimensions.front();
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

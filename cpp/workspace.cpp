@@ -1784,21 +1784,10 @@ int main(int /*argc*/, char *argv[]) {
 
   // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 
-  // const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
-  //   return chern_arrow_up(expr, 8);
-  // });
-  // const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
-  // std::cout << to_string(ranks) << "\n";
-
-
-  std::cout << "C++\n";
-  for (EACH : range(5)) {
-    Profiler profiler;
-    const auto expr = QLi5(1,2,3,4,5,6,7,8,9,10);
-    profiler.finish("expr");
-    const auto lyndon = to_lyndon_basis(expr);
-    profiler.finish("lyndon");
-    std::cout << "checksum = " << lyndon.l1_norm() << "\n";
-  }
+  const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
+    return chern_arrow_up(expr, 8);
+  });
+  const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
+  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  std::cout << to_string(ranks) << "\n";
 }

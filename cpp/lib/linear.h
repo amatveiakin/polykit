@@ -164,6 +164,26 @@ bool compare_length_first(const T& lhs, const T& rhs) {
     return compare_length_first(lhs, rhs);                                     \
   }
 
+#define DERIVE_WEIGHT_AND_UNIFORMITY_MARKER                                    \
+  static int object_to_weight(const ObjectT& obj) {                            \
+    return obj.size();                                                         \
+  }                                                                            \
+  static auto object_to_uniformity_marker(const ObjectT& obj) {                \
+    CHECK(!obj.empty());                                                       \
+    CHECK(all_equal(obj, [](const auto& v) { return element_uniformity_marker(v); })); \
+    return element_uniformity_marker(obj.front());                             \
+  }
+
+#define CO_DERIVE_WEIGHT_AND_UNIFORMITY_MARKER                                 \
+  static int object_to_weight(const ObjectT& obj) {                            \
+    return sum(obj, [](const auto& part) { return part.size(); });             \
+  }                                                                            \
+  static auto object_to_uniformity_marker(const ObjectT& obj) {                \
+    CHECK(!obj.empty());                                                       \
+    CHECK(all_equal(obj, &PartExprParam::object_to_uniformity_marker));        \
+    return PartExprParam::object_to_uniformity_marker(obj.front());            \
+  }
+
 
 template<typename BaseParamT>
 struct VectorLinearParam : SimpleLinearParam<typename BaseParamT::VectorT> {
@@ -244,6 +264,12 @@ public:
   int dimension() const {  // Grassmannian dimension
     CHECK(!is_zero());
     return ParamT::object_to_dimension(element().first);  // must be the same for each term
+  }
+  // A value must be the same for all parts of a term in all terms in all expressions in
+  // the same vector space.
+  auto uniformity_marker() const {
+    CHECK(!is_zero());
+    return ParamT::object_to_uniformity_marker(element().first);
   }
 
   const_key_iterator begin_key() const { return data_.begin(); }
@@ -560,6 +586,7 @@ public:
   int l1_norm() const { return main_.l1_norm(); }
   int weight() const { return main_.weight(); }
   int dimension() const { return main_.dimension(); }
+  auto uniformity_marker() const { return main_.uniformity_marker(); }
 
   const_key_iterator begin_key() const { return main_.begin_key(); }
   const_key_iterator end_key() const { return main_.end_key(); }

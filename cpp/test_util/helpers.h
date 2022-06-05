@@ -6,11 +6,10 @@
 struct SimpleVectorExprParam : SimpleLinearParam<std::vector<int>> {
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
+  static std::monostate element_uniformity_marker(int) { return {}; }
   static std::string object_to_string(const ObjectT& obj) {
     return fmt::parens(str_join(obj, ", "));
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return obj.size();
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
@@ -21,11 +20,9 @@ struct SimpleVectorICoExprParam : SimpleLinearParam<std::vector<std::vector<int>
   using PartExprParam = SimpleVectorExprParam;
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  CO_DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_iterated(), SimpleVectorExprParam::object_to_string);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return sum(mapped(obj, [](const auto& part) { return part.size(); }));
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

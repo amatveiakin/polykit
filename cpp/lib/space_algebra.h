@@ -43,7 +43,7 @@ std::string to_string(const SpaceMappingRanks& ranks);
 
 template<typename SpaceT, typename PrepareF, typename MatrixBuilderT>
 void add_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, MatrixBuilderT& matrix_builder) {
-  check_space(space);
+  check_spaces(space);
   const auto space_prepared = mapped_parallel(space, [prepare](const auto& s) {
     return prepare(s);
   });
@@ -67,6 +67,7 @@ int space_rank(const SpaceT& space, const PrepareF& prepare) {
 
 template<typename SpaceT, typename PrepareF>
 bool space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF& prepare) {
+  check_spaces(haystack, needle);
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_space_to_matrix_builder(haystack, prepare, matrix_builder);
@@ -79,6 +80,7 @@ bool space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF
 
 template<typename SpaceT, typename PrepareF>
 SpaceVennRanks space_venn_ranks(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
+  check_spaces(a, b);
   using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
   Profiler profiler(false);
 

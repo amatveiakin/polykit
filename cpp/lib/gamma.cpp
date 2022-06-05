@@ -7,6 +7,10 @@ std::string to_string(const Gamma& g) {
   return fmt::parens(str_join(g.index_vector(), ","));
 }
 
+std::string to_string(const GammaUniformityMarker& marker) {
+  return absl::StrCat("d=", marker.dimension);
+}
+
 Gamma monom_substitute_variables(Gamma g, const std::vector<int>& new_points) {
   // Optimization potential: do things on bitset level.
   return Gamma(mapped(g.index_vector(), [&](const int idx) {

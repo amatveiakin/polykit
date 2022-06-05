@@ -207,18 +207,13 @@ struct DeltaExprParam {
 #endif
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
+  static std::monostate element_uniformity_marker(const Delta&) { return {}; }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::tensor_prod());
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return obj.size();
-  }
-  static int object_to_dimension(const ObjectT& obj) {
-    CHECK(absl::c_all_of(obj, [](const Delta& d) { return d.is_var_diff(); }));
-    return 2;
   }
 };
 
@@ -239,17 +234,9 @@ struct DeltaICoExprParam {
 #endif
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  CO_DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_iterated(), DeltaExprParam::object_to_string);
-  }
-  static int object_to_weight(const ObjectT& obj) {
-    return sum(mapped(obj, [](const auto& part) { return part.size(); }));
-  }
-  static int object_to_dimension(const ObjectT& obj) {
-    absl::c_for_each(obj, [](const auto& part) {
-      CHECK(absl::c_all_of(part, [](const Delta& d) { return d.is_var_diff(); }));
-    });
-    return 2;
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

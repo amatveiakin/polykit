@@ -28,6 +28,17 @@ TEST(AppendVectorTest, MoveOnly) {
   EXPECT_THAT(a, testing::ElementsAre(Pointee(Eq(1)), Pointee(Eq(2))));
 }
 
+TEST(AllEqualTest, Basic) {
+  EXPECT_FALSE(all_equal(std::vector{1, 1, 3, 1, 5, 3}));
+  EXPECT_FALSE(all_equal(std::vector{1, 1, 3, 1, 5, 3}, [](const auto& v) { return v; }));
+  EXPECT_TRUE(all_equal(std::vector{1, 1, 3, 1, 5, 3}, [](const auto& v) { return v % 2; }));
+}
+
+TEST(SumTest, Basic) {
+  EXPECT_EQ(sum(std::vector{1, 2, 3, 4}), 10);
+  EXPECT_EQ(sum(std::vector{1, 2, 3, 4}, [](const auto& v) { return v * v; }), 30);
+}
+
 TEST(GroupByTest, GroupEqual) {
   EXPECT_EQ(
     group_equal(std::vector<int>{1, 2, 2, 1, 3, 3, 3, 1, 1, 3}),

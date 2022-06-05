@@ -32,6 +32,7 @@ public:
   explicit Gamma(const std::vector<int>& vars);
 
   bool is_nil() const { return indices_.none(); }
+  int dimension() const { return indices_.count(); }
 
   const BitsetT& index_bitset() const { return indices_; }
   std::vector<int> index_vector() const { return bitset_to_vector(indices_, kBitsetOffset); }
@@ -57,7 +58,14 @@ inline Gamma::Gamma(const std::vector<int>& vars) {
   }
 }
 
+struct GammaUniformityMarker {
+  int dimension = 0;
+  bool operator==(const GammaUniformityMarker& other) const { return dimension == other.dimension; }
+  bool operator!=(const GammaUniformityMarker& other) const { return dimension != other.dimension; }
+};
+
 std::string to_string(const Gamma& g);
+std::string to_string(const GammaUniformityMarker& marker);
 
 
 namespace internal {
@@ -72,20 +80,18 @@ struct GammaExprParam {
   }
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
+  static GammaUniformityMarker element_uniformity_marker(const Gamma& g) { return { g.dimension() }; }
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::tensor_prod());
   }
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
   }
-  static int object_to_weight(const ObjectT& obj) {
-    return obj.size();
-  }
   static int object_to_dimension(const ObjectT& obj) {
     CHECK(!obj.empty());
-    const auto dimensions = mapped(obj, [](const Gamma& g) { return g.index_vector().size(); });
-    CHECK(all_equal(dimensions)) << dump_to_string(obj);
-    return dimensions.front();
+    CHECK(all_equal(obj, [](const auto& v) { return v.dimension(); }));
+    return obj.front().dimension();
   }
 };
 
@@ -102,17 +108,14 @@ struct GammaICoExprParam {
   }
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  CO_DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
   static std::string object_to_string(const ObjectT& obj) {
     return str_join(obj, fmt::coprod_iterated(), GammaExprParam::object_to_string);
   }
-  static int object_to_weight(const ObjectT& obj) {
-    return sum(mapped(obj, [](const auto& part) { return part.size(); }));
-  }
   static int object_to_dimension(const ObjectT& obj) {
     CHECK(!obj.empty());
-    const auto part_dimensions = mapped(obj, &GammaExprParam::object_to_dimension);
-    CHECK(all_equal(part_dimensions));
-    return part_dimensions.front();
+    CHECK(all_equal(obj, &PartExprParam::object_to_dimension));
+    return PartExprParam::object_to_dimension(obj.front());
   }
   static constexpr bool coproduct_is_lie_algebra = true;
   static constexpr bool coproduct_is_iterated = true;

@@ -21,10 +21,3 @@
 //       (although it's all read-only access - how bad is that?)
 
 #include "vector_space.h"
-
-#include "format.h"
-
-
-std::string to_string(const SpaceCharacteristics& characteristics) {
-  return absl::StrCat("{w=", characteristics.weight, ", d=", characteristics.dimension, "}");
-}

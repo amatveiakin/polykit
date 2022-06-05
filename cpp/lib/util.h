@@ -500,10 +500,36 @@ template<typename Container>
 bool all_equal(const Container& c) {
   return absl::c_adjacent_find(c, std::not_equal_to<>()) == c.end();
 }
+// Equivalent to all_equal(mapped(c, projector)), but doesn't construct the intermediate vector.
+template<typename Container, typename Projector>
+bool all_equal(const Container& c, const Projector& projector) {
+  if (c.size() <= 1) {
+    return true;
+  }
+  auto prev = projector(c[0]);
+  for (size_t i : range(1, c.size())) {
+    auto current = projector(c[i]);
+    if (current != prev) {
+      return false;
+    }
+    prev = std::move(current);
+  }
+  return true;
+}
 
 template<typename Container>
 auto sum(const Container& c) {
   return absl::c_accumulate(c, typename Container::value_type());
+}
+template<typename Container, typename Projector>
+auto sum(const Container& c, const Projector& projector) {
+  return absl::c_accumulate(
+    c,
+    projector(typename Container::value_type()),
+    [&](const auto& x, const auto& y) {
+      return x + projector(y);
+    }
+  );
 }
 
 template<typename Container>
