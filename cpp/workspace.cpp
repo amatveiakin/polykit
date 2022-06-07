@@ -125,6 +125,29 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
 }
 
 
+// TODO: Factor out, sync with CasimirDim3 and with casimir_components in CGrLi definition
+GammaExpr casimir(const std::vector<int>& points) {
+  CHECK(points.size() % 2 == 0);
+  const int p = div_int(points.size(), 2);
+  const auto args = [&](const std::vector<int>& indices) {
+    return choose_indices_one_based(points, indices);
+  };
+  return
+    + G(args(to_vector(range_incl(1, p))))
+    + G(args(to_vector(range_incl(p+1, 2*p))))
+    - G(args(to_vector(range_incl(2, p+1))))
+    - G(args(concat(to_vector(range_incl(p+2, 2*p)), {1})))
+  ;
+}
+
+// TODO: Factor out
+template<typename Container>
+int permutation_sign(Container c) {
+  return sort_with_sign(c);
+}
+
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -1792,42 +1815,126 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_string(ranks) << "\n";
 
 
-  // auto space = concat(
-  //   ChernGrL(3, 4, {1,2,3,4,5,6,7,8}, 1), {
-  //     pullback(CGrLi3(2,3,5,6,7,8), {1}),
-  //     pullback(CGrLi3(2,4,5,6,7,8), {1}),
-  //     pullback(CGrLi3(3,4,5,6,7,8), {1}),
-  //     pullback(CGrLi3(1,3,5,6,7,8), {2}),
-  //     pullback(CGrLi3(1,4,5,6,7,8), {2}),
-  //     pullback(CGrLi3(3,4,5,6,7,8), {2}),
-  //     pullback(CGrLi3(1,2,5,6,7,8), {3}),
-  //     pullback(CGrLi3(1,4,5,6,7,8), {3}),
-  //     pullback(CGrLi3(2,4,5,6,7,8), {3}),
-  //     pullback(CGrLi3(1,2,5,6,7,8), {4}),
-  //     pullback(CGrLi3(1,3,5,6,7,8), {4}),
-  //     pullback(CGrLi3(2,3,5,6,7,8), {4}),
-  //   }
-  // );
-  // const auto expr =
-  //   + CGrLi3(1,2,3,4,5,6,7,8)
-  // ;
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  // std::cout << to_string(ranks) << "\n";
-
+  // // Check Aomoto polylogarithm properties:
+  // // * First: any permutation of (1,2,3,4) and of (5,6,7,8) multiplies the function by permutation sign
+  // //     - for (1,2,3) and (5,6,7) it's trivial from definition.
   // std::cout << to_lyndon_basis(
   //   + CGrLi3(1,2,3,4,5,6,7,8)
   //   + CGrLi3(1,2,4,3,5,6,7,8)
   // );
+  // std::cout << to_lyndon_basis(
+  //   + CGrLi3(1,2,3,4,5,6,7,8)
+  //   + CGrLi3(1,2,3,4,5,6,8,7)
+  // );
+  // // * Second: swap (1..n) and (n+1..2n).
+  // std::cout << to_lyndon_basis(
+  //   + CGrLi3(1,2,3,4,5,6,7,8)
+  //   - CGrLi3(5,6,7,8,1,2,3,4)
+  // );
+  // std::cout << to_lyndon_basis(
+  //   + CGrLi4(1,2,3,4,5,6,7,8,9,10)
+  //   + CGrLi4(6,7,8,9,10,1,2,3,4,5)
+  // );
+  // // * Third:
+  // std::cout << to_lyndon_basis(
+  //   + CGrLi3(1,2,3,4,6,7,8,9)
+  //   - CGrLi3(1,2,3,5,6,7,8,9)
+  //   + CGrLi3(1,2,4,5,6,7,8,9)
+  //   - CGrLi3(1,3,4,5,6,7,8,9)
+  //   + CGrLi3(2,3,4,5,6,7,8,9)
+  // );
+
+  // for (const int weight : range_incl(2, 4)) {
+  //   const int p = weight + 1;
+  //   const int num_points = p * 2;
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   const auto lhs = ncomultiply(CGrLiVec(weight, points));
+  //   // auto rhs = ncoproduct(casimir(points), CGrLiVec(weight - 1, points))
+  //   GammaNCoExpr rhs;
+  //   for (const int k : range_incl(1, p - 2)) {
+  //     for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
+  //       for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
+  //         // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
+  //         // const int sign = permutation_sign(concat(i, i_complement)) * permutation_sign(concat(j, j_complement));
+  //         const int sign = permutation_sign(concat(i, j, i_complement, j_complement));
+  //         // std::cout << dump_to_string(i) << " ~ " << dump_to_string(i_complement) << "; ";
+  //         // std::cout << dump_to_string(j) << " ~ " << dump_to_string(j_complement) << " => ";
+  //         // std::cout << sign << "\n";
+  //         const std::vector points_p = {points.at(p - 1)};
+  //         const std::vector points_2p = {points.at(2 * p - 1)};
+  //         rhs += sign * ncoproduct(
+  //           pullback(CGrLiVec(p - k - 1, concat(i_complement, points_p, j, points_2p)), i),
+  //           pullback(CGrLiVec(k,         concat(i, points_p, j_complement, points_2p)), j)
+  //         );
+  //       }
+  //     }
+  //   }
+  //   std::cout << lhs - rhs;
+  // }
+  // // TODO: Helper function to keep one component !!!
+  // // std::cout << (lhs - rhs).filtered([](const auto& coexpr) {
+  // //   const auto form = mapped(coexpr, [](const auto& expr) { return static_cast<int>(expr.size()); });
+  // //   CHECK_EQ(form.size(), 2);
+  // //   CHECK_EQ(sum(form), 4);
+  // //   return form == std::vector{2, 2};
+  // // });
+
+
+  // const auto expr =
+  //   + CGrLi2(1,2,3,4,5,6)
+  //   - (
+  //     + pullback(CGrLi2(2,4,5,6), {1})
+  //     - pullback(CGrLi2(3,4,5,6), {1})
+  //     - pullback(CGrLi2(1,4,5,6), {2})
+  //     + pullback(CGrLi2(3,4,5,6), {2})
+  //     + pullback(CGrLi2(1,4,5,6), {3})
+  //     - pullback(CGrLi2(2,4,5,6), {3})
+  //   )
+  // ;
+  // std::cout << to_lyndon_basis(expr);
+
+  // const auto expr =
+  //   + CGrLi3(1,2,3,4,5,6,7,8)
+  //   - (
+  //     + pullback(CGrLi3(2,3,5,6,7,8), {1})
+  //     - pullback(CGrLi3(2,4,5,6,7,8), {1})
+  //     + pullback(CGrLi3(3,4,5,6,7,8), {1})
+  //     - pullback(CGrLi3(1,3,5,6,7,8), {2})
+  //     + pullback(CGrLi3(1,4,5,6,7,8), {2})
+  //     - pullback(CGrLi3(3,4,5,6,7,8), {2})
+  //     + pullback(CGrLi3(1,2,5,6,7,8), {3})
+  //     - pullback(CGrLi3(1,4,5,6,7,8), {3})
+  //     + pullback(CGrLi3(2,4,5,6,7,8), {3})
+  //     - pullback(CGrLi3(1,2,5,6,7,8), {4})
+  //     + pullback(CGrLi3(1,3,5,6,7,8), {4})
+  //     - pullback(CGrLi3(2,3,5,6,7,8), {4})
+  //   )
+  // ;
+  // std::cout << to_lyndon_basis(expr);
 
   const auto expr =
-    + CGrLi2(1,2,3,4,5,6)
+    + CGrLi4(1,2,3,4,5,6,7,8,9,10)
     - (
-      + pullback(CGrLi2(2,4,5,6), {1})
-      - pullback(CGrLi2(3,4,5,6), {1})
-      - pullback(CGrLi2(1,4,5,6), {2})
-      + pullback(CGrLi2(3,4,5,6), {2})
-      + pullback(CGrLi2(1,4,5,6), {3})
-      - pullback(CGrLi2(2,4,5,6), {3})
+      + pullback(CGrLi4(2,3,4,6,7,8,9,10), {1})
+      - pullback(CGrLi4(2,3,5,6,7,8,9,10), {1})
+      + pullback(CGrLi4(2,4,5,6,7,8,9,10), {1})
+      - pullback(CGrLi4(3,4,5,6,7,8,9,10), {1})
+      - pullback(CGrLi4(1,3,4,6,7,8,9,10), {2})
+      + pullback(CGrLi4(1,3,5,6,7,8,9,10), {2})
+      - pullback(CGrLi4(1,4,5,6,7,8,9,10), {2})
+      + pullback(CGrLi4(3,4,5,6,7,8,9,10), {2})
+      + pullback(CGrLi4(1,2,4,6,7,8,9,10), {3})
+      - pullback(CGrLi4(1,2,5,6,7,8,9,10), {3})
+      + pullback(CGrLi4(1,4,5,6,7,8,9,10), {3})
+      - pullback(CGrLi4(2,4,5,6,7,8,9,10), {3})
+      - pullback(CGrLi4(1,2,3,6,7,8,9,10), {4})
+      + pullback(CGrLi4(1,2,5,6,7,8,9,10), {4})
+      - pullback(CGrLi4(1,3,5,6,7,8,9,10), {4})
+      + pullback(CGrLi4(2,3,5,6,7,8,9,10), {4})
+      + pullback(CGrLi4(1,2,3,6,7,8,9,10), {5})
+      - pullback(CGrLi4(1,2,4,6,7,8,9,10), {5})
+      + pullback(CGrLi4(1,3,4,6,7,8,9,10), {5})
+      - pullback(CGrLi4(2,3,4,6,7,8,9,10), {5})
     )
   ;
   std::cout << to_lyndon_basis(expr);

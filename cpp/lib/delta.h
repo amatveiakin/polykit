@@ -148,9 +148,9 @@ public:
 
 private:
   static constexpr int kZeroCode = kMaxDimension - 1;
-// Flip to support more vars at the expense of losing XForm::neg_var.
+// Set to `0` in order to support more vars at the expense of losing XForm::neg_var.
 // TODO: Turn this into a proper compilation flag or find another way to support more vars.
-#if 1
+#if 0
   static constexpr int kNegVarCodeStart = (kZeroCode + 1) / 2;
 #else
   static constexpr int kNegVarCodeStart = kZeroCode;
