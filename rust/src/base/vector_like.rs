@@ -37,17 +37,14 @@ impl<T: Clone, const N: usize> VectorLike<T> for SmallVec<[T; N]> {
     vector_like_impl!(Self, self => self, element_type = T);
 }
 
-macro_rules! count_tts {
-    () => { 0usize };
-    ($_head:tt $($tail:tt)*) => { 1usize + count_tts!( $( $tail )* ) };
-}
-
 #[macro_export]
 macro_rules! vec_like {
+    (#) => { 0usize };
+    (# $_head:tt $($tail:tt)*) => { 1usize + vec_like!(# $( $tail )* ) };
     ($type:ty; $($x:expr),+ $(,)?) => {
         {
             let mut ret = <$type>::new();
-            ret.reserve_exact(count_tts!( $( $x )* ));
+            ret.reserve_exact(vec_like!(# $( $x )* ));
             $(
                 ret.push($x);
             )*

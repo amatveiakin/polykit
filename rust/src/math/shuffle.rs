@@ -1,4 +1,5 @@
-use crate::base::{VectorLike, vec_like};
+use crate::vec_like;
+use crate::base::{VectorLike};
 use crate::math::{Linear, LinearMonom};
 
 
