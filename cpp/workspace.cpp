@@ -1784,10 +1784,51 @@ int main(int /*argc*/, char *argv[]) {
 
   // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 
-  const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
-    return chern_arrow_up(expr, 8);
-  });
-  const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
-  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
-  std::cout << to_string(ranks) << "\n";
+  // const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
+  //   return chern_arrow_up(expr, 8);
+  // });
+  // const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // auto space = concat(
+  //   ChernGrL(3, 4, {1,2,3,4,5,6,7,8}, 1), {
+  //     pullback(CGrLi3(2,3,5,6,7,8), {1}),
+  //     pullback(CGrLi3(2,4,5,6,7,8), {1}),
+  //     pullback(CGrLi3(3,4,5,6,7,8), {1}),
+  //     pullback(CGrLi3(1,3,5,6,7,8), {2}),
+  //     pullback(CGrLi3(1,4,5,6,7,8), {2}),
+  //     pullback(CGrLi3(3,4,5,6,7,8), {2}),
+  //     pullback(CGrLi3(1,2,5,6,7,8), {3}),
+  //     pullback(CGrLi3(1,4,5,6,7,8), {3}),
+  //     pullback(CGrLi3(2,4,5,6,7,8), {3}),
+  //     pullback(CGrLi3(1,2,5,6,7,8), {4}),
+  //     pullback(CGrLi3(1,3,5,6,7,8), {4}),
+  //     pullback(CGrLi3(2,3,5,6,7,8), {4}),
+  //   }
+  // );
+  // const auto expr =
+  //   + CGrLi3(1,2,3,4,5,6,7,8)
+  // ;
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  // std::cout << to_lyndon_basis(
+  //   + CGrLi3(1,2,3,4,5,6,7,8)
+  //   + CGrLi3(1,2,4,3,5,6,7,8)
+  // );
+
+  const auto expr =
+    + CGrLi2(1,2,3,4,5,6)
+    - (
+      + pullback(CGrLi2(2,4,5,6), {1})
+      - pullback(CGrLi2(3,4,5,6), {1})
+      - pullback(CGrLi2(1,4,5,6), {2})
+      + pullback(CGrLi2(3,4,5,6), {2})
+      + pullback(CGrLi2(1,4,5,6), {3})
+      - pullback(CGrLi2(2,4,5,6), {3})
+    )
+  ;
+  std::cout << to_lyndon_basis(expr);
 }
