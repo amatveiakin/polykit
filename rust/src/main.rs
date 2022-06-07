@@ -46,15 +46,27 @@ fn main() {
     // println!("Checksum: {}", checksum);
     // timer.finish("QLi");
 
-    println!("Rust");
+    // println!("Rust");
+    // for _ in 0..5 {
+    //     let mut timer = base::Timer::new();
+    //     let expr = QLi5!(1,2,3,4,5,6,7,8,9,10);
+    //     timer.finish("expr");
+    //     let lyndon = to_lyndon_basis(expr);
+    //     timer.finish("lyndon");
+    //     println!("checksum = {}", lyndon.l1_norm());
+    // }
+
+    let mut timer = base::Timer::new();
+    let mut checksum: Coeff = 0;
+    let expr = delta_expr_to_gamma_expr(QLi6!(1,2,3,4,5,6,7,8));
+    timer.finish("expr");
     for _ in 0..5 {
         let mut timer = base::Timer::new();
-        let expr = QLi5!(1,2,3,4,5,6,7,8,9,10);
-        timer.finish("expr");
-        let lyndon = to_lyndon_basis(expr);
-        timer.finish("lyndon");
-        println!("checksum = {}", lyndon.l1_norm());
+        let d_expr = gamma_expr_to_delta_expr(expr.clone());
+        timer.finish("convert");
+        checksum += d_expr.l1_norm();
     }
+    println!("checksum = {}", checksum);
 
     // println!("{}", QLi2!(1,2,3,4));
     // println!("{}", QLi2!(1,2,3,Inf));

@@ -30,10 +30,6 @@ fn variables_to_bitset(variables: &[i32]) -> Option<Indices> {
     Some(indices)
 }
 
-fn bitset_to_variables(indices: Indices) -> Vec<i32> {
-    indices.iter_ones().map(|idx| (i32::try_from(idx).unwrap() + BITSET_OFFSET)).collect()
-}
-
 impl Gamma {
     pub fn new() -> Self { Gamma{ indices: Indices::ZERO } }
     pub fn from_bitset(indices: Indices) -> Self { Gamma{ indices: indices } }
@@ -46,12 +42,14 @@ impl Gamma {
 
     pub fn is_nil(&self) -> bool { self.indices.not_any() }
     pub fn index_bitset(&self) -> &Indices { &self.indices }
-    pub fn index_vector(&self) -> Vec<i32> { bitset_to_variables(self.indices) }
+    pub fn index_iter(&self) -> impl Iterator<Item = i32> + '_ {
+        self.indices.iter_ones().map(|idx| (i32::try_from(idx).unwrap() + BITSET_OFFSET))
+    }
 }
 
 impl fmt::Display for Gamma {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({})", self.index_vector().iter().map(|d| d.to_string()).join(","))
+        write!(f, "({})", self.index_iter().map(|d| d.to_string()).join(","))
     }
 }
 
@@ -148,9 +146,11 @@ pub fn delta_expr_to_gamma_expr(expr: DeltaExpr) -> GammaExpr {
 pub fn gamma_expr_to_delta_expr(expr: GammaExpr) -> DeltaExpr {
     expr.map(|monom| {
         monom.iter().map(|g| {
-            let variables = g.index_vector();
-            assert_eq!(variables.len(), 2);
-            Delta::new(variables[0], variables[1])
+            if let Some((a, b)) = g.index_iter().collect_tuple() {
+                Delta::new(a, b)
+            } else {
+                panic!("Delta expression requires dimension two, found: {:?}", g.index_iter().collect_vec());
+            }
         }).collect()
     })
 }

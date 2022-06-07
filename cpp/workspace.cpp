@@ -1912,30 +1912,43 @@ int main(int /*argc*/, char *argv[]) {
   // ;
   // std::cout << to_lyndon_basis(expr);
 
-  const auto expr =
-    + CGrLi4(1,2,3,4,5,6,7,8,9,10)
-    - (
-      + pullback(CGrLi4(2,3,4,6,7,8,9,10), {1})
-      - pullback(CGrLi4(2,3,5,6,7,8,9,10), {1})
-      + pullback(CGrLi4(2,4,5,6,7,8,9,10), {1})
-      - pullback(CGrLi4(3,4,5,6,7,8,9,10), {1})
-      - pullback(CGrLi4(1,3,4,6,7,8,9,10), {2})
-      + pullback(CGrLi4(1,3,5,6,7,8,9,10), {2})
-      - pullback(CGrLi4(1,4,5,6,7,8,9,10), {2})
-      + pullback(CGrLi4(3,4,5,6,7,8,9,10), {2})
-      + pullback(CGrLi4(1,2,4,6,7,8,9,10), {3})
-      - pullback(CGrLi4(1,2,5,6,7,8,9,10), {3})
-      + pullback(CGrLi4(1,4,5,6,7,8,9,10), {3})
-      - pullback(CGrLi4(2,4,5,6,7,8,9,10), {3})
-      - pullback(CGrLi4(1,2,3,6,7,8,9,10), {4})
-      + pullback(CGrLi4(1,2,5,6,7,8,9,10), {4})
-      - pullback(CGrLi4(1,3,5,6,7,8,9,10), {4})
-      + pullback(CGrLi4(2,3,5,6,7,8,9,10), {4})
-      + pullback(CGrLi4(1,2,3,6,7,8,9,10), {5})
-      - pullback(CGrLi4(1,2,4,6,7,8,9,10), {5})
-      + pullback(CGrLi4(1,3,4,6,7,8,9,10), {5})
-      - pullback(CGrLi4(2,3,4,6,7,8,9,10), {5})
-    )
-  ;
-  std::cout << to_lyndon_basis(expr);
+  // const auto expr =
+  //   + CGrLi4(1,2,3,4,5,6,7,8,9,10)
+  //   - (
+  //     + pullback(CGrLi4(2,3,4,6,7,8,9,10), {1})
+  //     - pullback(CGrLi4(2,3,5,6,7,8,9,10), {1})
+  //     + pullback(CGrLi4(2,4,5,6,7,8,9,10), {1})
+  //     - pullback(CGrLi4(3,4,5,6,7,8,9,10), {1})
+  //     - pullback(CGrLi4(1,3,4,6,7,8,9,10), {2})
+  //     + pullback(CGrLi4(1,3,5,6,7,8,9,10), {2})
+  //     - pullback(CGrLi4(1,4,5,6,7,8,9,10), {2})
+  //     + pullback(CGrLi4(3,4,5,6,7,8,9,10), {2})
+  //     + pullback(CGrLi4(1,2,4,6,7,8,9,10), {3})
+  //     - pullback(CGrLi4(1,2,5,6,7,8,9,10), {3})
+  //     + pullback(CGrLi4(1,4,5,6,7,8,9,10), {3})
+  //     - pullback(CGrLi4(2,4,5,6,7,8,9,10), {3})
+  //     - pullback(CGrLi4(1,2,3,6,7,8,9,10), {4})
+  //     + pullback(CGrLi4(1,2,5,6,7,8,9,10), {4})
+  //     - pullback(CGrLi4(1,3,5,6,7,8,9,10), {4})
+  //     + pullback(CGrLi4(2,3,5,6,7,8,9,10), {4})
+  //     + pullback(CGrLi4(1,2,3,6,7,8,9,10), {5})
+  //     - pullback(CGrLi4(1,2,4,6,7,8,9,10), {5})
+  //     + pullback(CGrLi4(1,3,4,6,7,8,9,10), {5})
+  //     - pullback(CGrLi4(2,3,4,6,7,8,9,10), {5})
+  //   )
+  // ;
+  // std::cout << to_lyndon_basis(expr);
+
+
+  Profiler profiler;
+  int checksum = 0;
+  const auto expr = delta_expr_to_gamma_expr(QLi6(1,2,3,4,5,6,7,8));
+  profiler.finish("expr");
+  for (EACH: range(5)) {
+    Profiler profiler;
+    const auto d_expr = gamma_expr_to_delta_expr(expr);
+    profiler.finish("expr");
+    checksum += d_expr.l1_norm();
+  }
+  std::cout << "checksum = " << checksum << "\n";
 }
