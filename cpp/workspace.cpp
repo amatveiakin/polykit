@@ -1887,14 +1887,6 @@ int main(int /*argc*/, char *argv[]) {
     }
   }
 
-  // TODO: Helper function to keep one component !!!
-  // std::cout << (lhs - rhs).filtered([](const auto& coexpr) {
-  //   const auto form = mapped(coexpr, [](const auto& expr) { return static_cast<int>(expr.size()); });
-  //   CHECK_EQ(form.size(), 2);
-  //   CHECK_EQ(sum(form), 4);
-  //   return form == std::vector{2, 2};
-  // });
-
 
   // const auto expr =
   //   + CGrLi2(1,2,3,4,5,6)

@@ -242,7 +242,6 @@ auto ncomultiply_impl(const CoExprT& coexpr, std::vector<int> form) {
         << "Cannot comultiply an expression of weight " << weight
         << " into parts " << str_join(form, " + ") << " = " << sum(form);
     CHECK(form.size() == coexpr.element().first.size() + 1) << dump_to_string(form);
-    absl::c_sort(form);
   }
 
   using ExprT = Linear<typename CoExprT::Param::PartExprParam>;
@@ -271,11 +270,7 @@ auto ncomultiply_impl(const CoExprT& coexpr, std::vector<int> form) {
     }
   });
   if (!form.empty()) {
-    ret = ret.filtered([&](const auto& term) {
-      const auto sizes = mapped(term, [](const auto& v) -> int { return v.size(); });
-      CHECK(absl::c_is_sorted(sizes));
-      return sizes == form;
-    });
+    ret = keep_coexpr_form(ret, form);
   }
   return ret.copy_annotations_mapped(
     coexpr, [](const std::string& annotation) {
@@ -319,6 +314,22 @@ auto expand_into_glued_pairs(const ExprT& expr) {
   });
 }
 
+
+template<typename CoExprT>
+auto keep_coexpr_form(const CoExprT& expr, std::vector<int> form) {
+  if (expr.is_zero()) {
+    return CoExprT{};
+  }
+  const int weight = expr.weight();
+  CHECK_EQ(sum(form), weight) << dump_to_string(form);
+  CHECK_EQ(form.size(), expr.element().first.size()) << dump_to_string(form);
+  absl::c_sort(form);
+  return expr.filtered([&](const auto& term) {
+    const auto sizes = mapped(term, [](const auto& v) -> int { return v.size(); });
+    CHECK(absl::c_is_sorted(sizes));
+    return sizes == form;
+  });
+}
 
 template<typename CoExprT, typename F>
 CoExprT filter_coexpr_predicate(const CoExprT& expr, int part, const F& predicate) {
