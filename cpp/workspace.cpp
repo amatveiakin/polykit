@@ -125,7 +125,8 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
 }
 
 
-// TODO: Factor out, sync with CasimirDim3 and with casimir_components in CGrLi definition
+// Note. Synced with casimir_components in CGrLi definition.
+// TODO: Factor out, sync with CasimirDim3 and with cross_product.
 GammaExpr casimir(const std::vector<int>& points) {
   CHECK(points.size() % 2 == 0);
   const int p = div_int(points.size(), 2);
@@ -135,8 +136,8 @@ GammaExpr casimir(const std::vector<int>& points) {
   return (
     + G(args(to_vector(range_incl(1, p))))
     + G(args(to_vector(range_incl(p+1, 2*p))))
-    - G(args(to_vector(range_incl(2, p+1))))
-    - G(args(concat(to_vector(range_incl(p+2, 2*p)), {1})))
+    - G(args(concat({2*p}, to_vector(range_incl(1, p-1)))))
+    - G(args(to_vector(range_incl(p, 2*p-1))))
   ).annotate(
     fmt::function_num_args(fmt::opname("Cas"), points)
   );
