@@ -1844,40 +1844,40 @@ int main(int /*argc*/, char *argv[]) {
   //   + CGrLi3(2,3,4,5,6,7,8,9)
   // );
 
-  // for (const int weight : range_incl(2, 4)) {
-  //   const int p = weight + 1;
-  //   const int num_points = p * 2;
-  //   const auto points = to_vector(range_incl(1, num_points));
-  //   const auto lhs = ncomultiply(CGrLiVec(weight, points));
-  //   // auto rhs = ncoproduct(casimir(points), CGrLiVec(weight - 1, points))
-  //   GammaNCoExpr rhs;
-  //   for (const int k : range_incl(1, p - 2)) {
-  //     for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
-  //       for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
-  //         // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
-  //         // const int sign = permutation_sign(concat(i, i_complement)) * permutation_sign(concat(j, j_complement));
-  //         const int sign = permutation_sign(concat(i, j, i_complement, j_complement));
-  //         // std::cout << dump_to_string(i) << " ~ " << dump_to_string(i_complement) << "; ";
-  //         // std::cout << dump_to_string(j) << " ~ " << dump_to_string(j_complement) << " => ";
-  //         // std::cout << sign << "\n";
-  //         const std::vector points_p = {points.at(p - 1)};
-  //         const std::vector points_2p = {points.at(2 * p - 1)};
-  //         rhs += sign * ncoproduct(
-  //           pullback(CGrLiVec(p - k - 1, concat(i_complement, points_p, j, points_2p)), i),
-  //           pullback(CGrLiVec(k,         concat(i, points_p, j_complement, points_2p)), j)
-  //         );
-  //       }
-  //     }
-  //   }
-  //   std::cout << lhs - rhs;
-  // }
-  // // TODO: Helper function to keep one component !!!
-  // // std::cout << (lhs - rhs).filtered([](const auto& coexpr) {
-  // //   const auto form = mapped(coexpr, [](const auto& expr) { return static_cast<int>(expr.size()); });
-  // //   CHECK_EQ(form.size(), 2);
-  // //   CHECK_EQ(sum(form), 4);
-  // //   return form == std::vector{2, 2};
-  // // });
+  for (const int weight : range_incl(2, 5)) {
+    const int p = weight + 1;
+    const int num_points = p * 2;
+    const auto points = to_vector(range_incl(1, num_points));
+    Profiler profiler;
+    const auto lhs = ncomultiply(CGrLiVec(weight, points));
+    profiler.finish("lhs");
+    GammaNCoExpr rhs;
+    // auto rhs = ncoproduct(casimir(points), CGrLiVec(weight - 1, points))
+    for (const int k : range_incl(1, p - 2)) {
+      for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
+        for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
+          // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
+          const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
+          const std::vector points_p = {points.at(p - 1)};
+          const std::vector points_2p = {points.at(2 * p - 1)};
+          rhs += sign * ncoproduct(
+            pullback(CGrLiVec(p - k - 1, concat(i_complement, points_p, j, points_2p)), i),
+            pullback(CGrLiVec(k,         concat(i, points_p, j_complement, points_2p)), j)
+          );
+        }
+      }
+    }
+    profiler.finish("rhs");
+    std::cout << lhs - rhs;
+  }
+
+  // TODO: Helper function to keep one component !!!
+  // std::cout << (lhs - rhs).filtered([](const auto& coexpr) {
+  //   const auto form = mapped(coexpr, [](const auto& expr) { return static_cast<int>(expr.size()); });
+  //   CHECK_EQ(form.size(), 2);
+  //   CHECK_EQ(sum(form), 4);
+  //   return form == std::vector{2, 2};
+  // });
 
 
   // const auto expr =
@@ -1940,15 +1940,11 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << to_lyndon_basis(expr);
 
 
-  Profiler profiler;
-  int checksum = 0;
-  const auto expr = delta_expr_to_gamma_expr(QLi6(1,2,3,4,5,6,7,8));
-  profiler.finish("expr");
-  for (EACH: range(5)) {
-    Profiler profiler;
-    const auto d_expr = gamma_expr_to_delta_expr(expr);
-    profiler.finish("expr");
-    checksum += d_expr.l1_norm();
-  }
-  std::cout << "checksum = " << checksum << "\n";
+  // for (const int weight : range_incl(2, 5)) {
+  //   const auto expr =
+  //     + CGrLiVec(weight, {1,2,3,4})
+  //     - delta_expr_to_gamma_expr(QLiVec(weight, {1,2,3,4}))
+  //   ;
+  //   std::cout << to_lyndon_basis(expr);  // ZERO
+  // }
 }
