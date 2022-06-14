@@ -89,9 +89,8 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
   // TODO: What does this mean for operations on GammaExpr in general?
   //   Should other functions (like GrQLi) do the same?
   CHECK(all_unique_unsorted(points)) << "Unimplemented: duplicate CGrLi points: " << dump_to_string(points);
-  CHECK(points.size() % 2 == 0);
-  const int n = points.size() / 2;
-  CHECK_GE(weight, n - 1);
+  CHECK(are_CGrLi_args_ok(weight, points.size())) << weight << ", " << dump_to_string(points);
+  const int n = div_int(points.size(), 2);
   const auto inc_arg = [&](int& a) {
     if (a == n || a == 2*n) {
       return;  // 2 and 2n are fixed
@@ -205,4 +204,8 @@ GammaExpr SymmCGrLi4_wip(const std::vector<int>& points) {
       points
     )
   );
+}
+
+bool are_CGrLi_args_ok(int weight, int num_points) {
+  return num_points % 2 == 0 && weight >= num_points / 2 - 1;
 }

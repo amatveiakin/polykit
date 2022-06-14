@@ -9,6 +9,8 @@ GammaExpr SymmCGrLi3(const std::vector<int>& points);
 // TODO: Finish symmetrizing.
 GammaExpr SymmCGrLi4_wip(const std::vector<int>& points);
 
+bool are_CGrLi_args_ok(int weight, int num_points);
+
 
 namespace internal {
 template<typename... Args>

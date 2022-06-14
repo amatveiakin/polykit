@@ -1847,13 +1847,10 @@ int main(int /*argc*/, char *argv[]) {
   //   + CGrLi3(2,3,4,5,6,7,8,9)
   // );
 
-  static auto is_valid_cgrli_weight = [](int weight, int num_points) {
-    return weight >= div_int(num_points, 2) - 1;
-  };
   for (const int weight : range_incl(2, 5)) {
     for (const int p : range_incl(2, 5)) {
       const int num_points = p * 2;
-      if (!is_valid_cgrli_weight(weight, num_points)) {
+      if (!are_CGrLi_args_ok(weight, num_points)) {
         continue;
       }
       const auto points = to_vector(range_incl(1, num_points));
@@ -1875,7 +1872,7 @@ int main(int /*argc*/, char *argv[]) {
               const int w_2 = weight - w_1;
               const auto args_1 = concat(i_complement, points_p, j, points_2p);
               const auto args_2 = concat(i, points_p, j_complement, points_2p);
-              if (is_valid_cgrli_weight(w_1, args_1.size()) && is_valid_cgrli_weight(w_2, args_2.size())) {
+              if (are_CGrLi_args_ok(w_1, args_1.size()) && are_CGrLi_args_ok(w_2, args_2.size())) {
                 rhs += sign * ncoproduct(
                   pullback(CGrLiVec(w_1, args_1), i),
                   pullback(CGrLiVec(w_2, args_2), j)
