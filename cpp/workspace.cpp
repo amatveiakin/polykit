@@ -132,12 +132,14 @@ GammaExpr casimir(const std::vector<int>& points) {
   const auto args = [&](const std::vector<int>& indices) {
     return choose_indices_one_based(points, indices);
   };
-  return
+  return (
     + G(args(to_vector(range_incl(1, p))))
     + G(args(to_vector(range_incl(p+1, 2*p))))
     - G(args(to_vector(range_incl(2, p+1))))
     - G(args(concat(to_vector(range_incl(p+2, 2*p)), {1})))
-  ;
+  ).annotate(
+    fmt::function_num_args(fmt::opname("Cas"), points)
+  );
 }
 
 // TODO: Factor out
@@ -1844,31 +1846,47 @@ int main(int /*argc*/, char *argv[]) {
   //   + CGrLi3(2,3,4,5,6,7,8,9)
   // );
 
+  static auto is_valid_cgrli_weight = [](int weight, int num_points) {
+    return weight >= div_int(num_points, 2) - 1;
+  };
   for (const int weight : range_incl(2, 5)) {
-    const int p = weight + 1;
-    const int num_points = p * 2;
-    const auto points = to_vector(range_incl(1, num_points));
-    Profiler profiler;
-    const auto lhs = ncomultiply(CGrLiVec(weight, points));
-    profiler.finish("lhs");
-    GammaNCoExpr rhs;
-    // auto rhs = ncoproduct(casimir(points), CGrLiVec(weight - 1, points))
-    for (const int k : range_incl(1, p - 2)) {
-      for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
-        for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
-          // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
-          const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
-          const std::vector points_p = {points.at(p - 1)};
-          const std::vector points_2p = {points.at(2 * p - 1)};
-          rhs += sign * ncoproduct(
-            pullback(CGrLiVec(p - k - 1, concat(i_complement, points_p, j, points_2p)), i),
-            pullback(CGrLiVec(k,         concat(i, points_p, j_complement, points_2p)), j)
-          );
+    for (const int p : range_incl(2, 5)) {
+      const int num_points = p * 2;
+      if (!is_valid_cgrli_weight(weight, num_points)) {
+        continue;
+      }
+      const auto points = to_vector(range_incl(1, num_points));
+      Profiler profiler(false);
+      const auto lhs = ncomultiply(CGrLiVec(weight, points));
+      profiler.finish("lhs");
+      GammaNCoExpr rhs;
+      if (weight >= p) {
+        rhs -= ncoproduct(CGrLiVec(weight - 1, points), casimir(points));
+      }
+      for (const int k : range_incl(1, p - 2)) {
+        for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
+          for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
+            // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
+            const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
+            const std::vector points_p = {points.at(p - 1)};
+            const std::vector points_2p = {points.at(2 * p - 1)};
+            for (const int w_1 : range(1, weight)) {
+              const int w_2 = weight - w_1;
+              const auto args_1 = concat(i_complement, points_p, j, points_2p);
+              const auto args_2 = concat(i, points_p, j_complement, points_2p);
+              if (is_valid_cgrli_weight(w_1, args_1.size()) && is_valid_cgrli_weight(w_2, args_2.size())) {
+                rhs += sign * ncoproduct(
+                  pullback(CGrLiVec(w_1, args_1), i),
+                  pullback(CGrLiVec(w_2, args_2), j)
+                );
+              }
+            }
+          }
         }
       }
+      profiler.finish("rhs");
+      std::cout << lhs - rhs;
     }
-    profiler.finish("rhs");
-    std::cout << lhs - rhs;
   }
 
   // TODO: Helper function to keep one component !!!
