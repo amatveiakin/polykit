@@ -76,18 +76,18 @@ GammaExpr ChernCocycle_4_3_8(const std::vector<int>& points) {
     return choose_indices_one_based(points, indices);
   };
   return
-    - CGrLiVec(weight, args({2,3,4,6,7,8}))
-    + CGrLiVec(weight, args({2,3,4,5,7,8}))
-    - CGrLiVec(weight, args({2,3,4,5,6,8}))
-    + CGrLiVec(weight, args({2,3,4,5,6,7}))
-    + CGrLiVec(weight, args({1,3,4,6,7,8}))
-    - CGrLiVec(weight, args({1,3,4,5,7,8}))
-    + CGrLiVec(weight, args({1,3,4,5,6,8}))
-    - CGrLiVec(weight, args({1,3,4,5,6,7}))
-    - CGrLiVec(weight, args({1,2,4,6,7,8}))
-    + CGrLiVec(weight, args({1,2,4,5,7,8}))
-    - CGrLiVec(weight, args({1,2,4,5,6,8}))
-    + CGrLiVec(weight, args({1,2,4,5,6,7}))
+    + CGrLiVec(weight, args({2,3,4,6,7,8}))
+    - CGrLiVec(weight, args({2,3,4,5,7,8}))
+    + CGrLiVec(weight, args({2,3,4,5,6,8}))
+    - CGrLiVec(weight, args({2,3,4,5,6,7}))
+    - CGrLiVec(weight, args({1,3,4,6,7,8}))
+    + CGrLiVec(weight, args({1,3,4,5,7,8}))
+    - CGrLiVec(weight, args({1,3,4,5,6,8}))
+    + CGrLiVec(weight, args({1,3,4,5,6,7}))
+    + CGrLiVec(weight, args({1,2,4,6,7,8}))
+    - CGrLiVec(weight, args({1,2,4,5,7,8}))
+    + CGrLiVec(weight, args({1,2,4,5,6,8}))
+    - CGrLiVec(weight, args({1,2,4,5,6,7}))
   ;
 }
 
@@ -124,7 +124,7 @@ TEST(ChernCocycleTest, DimensionMinusOneEquation_Weight3) {
 TEST(ChernCocycleTest, LARGE_DimensionMinusOneEquation_Weight4) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + chern_arrow_left(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), 9)
-    - chern_arrow_up(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9)
+    + chern_arrow_up(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9)
   );
 }
 

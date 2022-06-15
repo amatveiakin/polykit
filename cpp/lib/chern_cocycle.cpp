@@ -71,6 +71,7 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
         ret += sign * CGrLiVec(weight, removed_indices(points, {before, after}));
       }
     }
+    ret *= neg_one_pow(weight + 1);
   } else {
     FATAL(absl::Substitute("Not implemented: ChernCocycle with weight=$0, dimension=$1", weight, dimension));
   }
