@@ -15,7 +15,6 @@ private:
   bool old_value = false;
 };
 
-// TODO: Templatize.
 template<typename MarkerT>
 struct SpaceCharacteristics {
   int weight = 0;
@@ -24,6 +23,12 @@ struct SpaceCharacteristics {
     return weight == other.weight && marker == other.marker;
   }
 };
+
+template<typename ExprT>
+auto expression_characteristics(const ExprT& expr) {
+  using Marker = std::decay_t<decltype(expr.uniformity_marker())>;
+  return SpaceCharacteristics<Marker>{expr.weight(), expr.uniformity_marker()};
+}
 
 template<typename MarkerT>
 std::string to_string(const SpaceCharacteristics<MarkerT>& characteristics) {
@@ -34,15 +39,56 @@ std::string to_string(const SpaceCharacteristics<MarkerT>& characteristics) {
   }
 }
 
+template<typename ExprT>
+struct GetSpaceElementCharacteristics {
+  static auto characteristics(const ExprT& expr) { return expression_characteristics(expr); }
+  static bool should_check(const ExprT& expr) { return !expr.is_zero(); }
+  static std::string description(const ExprT& expr) { return annotations_one_liner(expr.annotations()); }
+};
+
+template<typename... ExprT>
+struct GetSpaceElementCharacteristics<std::tuple<ExprT...>> {
+  static auto characteristics(const std::tuple<ExprT...>& exprs) {
+    return characteristics_impl(exprs, std::make_index_sequence<std::tuple_size_v<std::tuple<ExprT...>>>{});
+  }
+  static bool should_check(const std::tuple<ExprT...>&) {
+    // For simplicity, assume tuple elements are always non-zero
+    return true;
+  }
+  static std::string description(const std::tuple<ExprT...>& exprs) {
+    return absl::StrCat("(", str_join(exprs, ", ", [](const auto& expr) {
+      return annotations_one_liner(expr.annotations());
+    }), ")");
+  }
+private:
+  template<typename std::size_t... Idx>
+  static auto characteristics_impl(const std::tuple<ExprT...>& exprs, std::index_sequence<Idx...>) {
+    return std::tuple{expression_characteristics(std::get<Idx>(exprs))...};
+  }
+};
+
+template<typename ExprT>
+auto get_space_element_characteristics(const ExprT& expr) {
+  return GetSpaceElementCharacteristics<ExprT>::characteristics(expr);
+}
+
+template<typename ExprT>
+bool should_check_space_element_characteristics(const ExprT& expr) {
+  return GetSpaceElementCharacteristics<ExprT>::should_check(expr);
+}
+
+template<typename ExprT>
+std::string space_element_description(const ExprT& expr) {
+  return GetSpaceElementCharacteristics<ExprT>::description(expr);
+}
+
 // Verifies that each element has the same weight and dimension.
 // Use ScopedDisableSpaceHomogeneityCheck if this check not required.
 template<typename... SpaceTs>
 void check_spaces(const SpaceTs&... spaces) {
-  // TODO: Fix for spaces of tuples.
   if (space_homogeneity_check_enabled()) {
     check_space_homogeneity([](const auto& expr) {
-      using Marker = std::decay_t<decltype(expr.uniformity_marker())>;
-      return SpaceCharacteristics<Marker>{expr.weight(), expr.uniformity_marker()};
+      return get_space_element_characteristics(expr);
     }, spaces...);
   }
 }
@@ -57,15 +103,15 @@ void check_space_homogeneity(const F& func, const SpaceTs&... spaces) {
   for (const auto& space : spaces_list) {
     for (const auto& expr : space.get()) {
       // TODO: Benchmark if checking each term of an expression is too slow.
-      if (!expr.is_zero()) {
+      if (should_check_space_element_characteristics(expr)) {
         const auto new_value = func(expr);
         if (exemplar.has_value()) {
           CHECK(exemplar == new_value)
             << "  space not homogeneous:\n"
             << dump_to_string(exemplar.value()) << " vs " << dump_to_string(new_value) << "\n"
             << "  for\n"
-            << annotations_one_liner(exemplar_ptr->annotations())
-            << " vs " << annotations_one_liner(expr.annotations());
+            << space_element_description(*exemplar_ptr)
+            << " vs " << space_element_description(expr);
         } else {
           exemplar = new_value;
           exemplar_ptr = &expr;
