@@ -28,6 +28,11 @@
 
 #define HAS_DELTA_EXPR 1
 
+// Set to `0` in order to support more vars at the expense of losing XForm::neg_var.
+// TODO: Find a better way to support more vars: this implementation is inconvenient and
+//   it disables tests involving negative vars when this is set to 0.
+#define ENABLE_NEGATIVE_DELTA_VARIABLES 0
+
 // TODO: Implement integratability criterion
 
 // Represents (x_i - x_j).
@@ -148,9 +153,7 @@ public:
 
 private:
   static constexpr int kZeroCode = kMaxDimension - 1;
-// Set to `0` in order to support more vars at the expense of losing XForm::neg_var.
-// TODO: Turn this into a proper compilation flag or find another way to support more vars.
-#if 0
+#if ENABLE_NEGATIVE_DELTA_VARIABLES
   static constexpr int kNegVarCodeStart = (kZeroCode + 1) / 2;
 #else
   static constexpr int kNegVarCodeStart = kZeroCode;

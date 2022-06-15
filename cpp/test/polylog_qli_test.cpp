@@ -260,6 +260,7 @@ TEST(QLiTest, QLi2_Arg6_SuffleDecompose) {
 }
 
 
+#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(QLiTest, KummersEquation) {
   EXPECT_EXPR_EQ_AFTER_LYNDON(
     + QLiSymm3( x1, x2, x3,-x1,-x2,-x3)
@@ -340,6 +341,7 @@ TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
     )
   );
 }
+#endif
 
 
 TEST(QLiTest, A2_DihedralSymmetry) {

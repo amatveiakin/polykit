@@ -7,6 +7,7 @@
 #include "test_util/matchers.h"
 
 
+#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(TypeCQLiTest, TypeCQLiSymm4_Sum) {
   const int weight = 4;
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
@@ -105,3 +106,4 @@ TEST(TypeCQLiTest, TypeCQLiSymm4_Sum) {
     )
   );
 }
+#endif

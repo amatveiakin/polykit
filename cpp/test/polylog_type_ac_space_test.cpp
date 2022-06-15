@@ -169,6 +169,7 @@ TEST(PolylogSpaceTest, HUGE_ClusterCoL_Weight5) {
   EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoRanks{0, 0}));
 }
 
+#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
   const std::vector points = {x1,x2,x3,-x1,-x2,-x3};
   auto cl1 = CL1_inv(points);
@@ -189,3 +190,4 @@ TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
   // Note. Testing against previously computed result; no alternative proof known.
   EXPECT_EQ(ranks.intersected(), 42);
 }
+#endif
