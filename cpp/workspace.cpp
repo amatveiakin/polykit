@@ -100,14 +100,21 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
   const int n = 6;
   CHECK_EQ(args.size(), n+1);
   Gr_NCoSpace space;
-  for (const auto& points : combinations(args, n)) {
-    const auto cgrli = CGrLiVec(weight - 1, points);
-    for (const int first : range(n)) {
-      const int second = (first + 1) % n;
-      const int third = (first + 2) % n;
-      space.push_back(ncoproduct(cgrli, G({points.at(first), points.at(second), points.at(third)})));
-    }
-  }
+  // for (const auto& points : combinations(args, n)) {
+  //   const auto cgrli = CGrLiVec(weight - 1, points);
+  //   for (const int shift : {0, -1}) {
+  //     GammaNCoExpr expr;
+  //     for (const int start : {0, 3}) {
+  //       const std::vector g_points = slice(rotated_vector(points, shift + start), 0, 3);
+  //       const auto g = G(g_points).annotate(
+  //         absl::StrCat("|", str_join(g_points, ","), "|")
+  //       );
+  //       expr += ncoproduct(cgrli, g);
+  //     }
+  //     std::cout << annotations_one_liner(expr.annotations()) << "\n";
+  //     space.push_back(expr);
+  //   }
+  // }
   for (const int pb_index : range(args.size())) {
     const auto& [pb_args, main_args] = split_indices(args, {pb_index});
     const auto& pullback_args = pb_args;
@@ -1847,45 +1854,45 @@ int main(int /*argc*/, char *argv[]) {
   //   + CGrLi3(2,3,4,5,6,7,8,9)
   // );
 
-  for (const int weight : range_incl(2, 5)) {
-    for (const int p : range_incl(2, 5)) {
-      const int num_points = p * 2;
-      if (!are_CGrLi_args_ok(weight, num_points)) {
-        continue;
-      }
-      const auto points = to_vector(range_incl(1, num_points));
-      Profiler profiler(false);
-      const auto lhs = ncomultiply(CGrLiVec(weight, points));
-      profiler.finish("lhs");
-      GammaNCoExpr rhs;
-      if (weight >= p) {
-        rhs -= ncoproduct(CGrLiVec(weight - 1, points), casimir(points));
-      }
-      for (const int k : range_incl(1, p - 2)) {
-        for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
-          for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
-            // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
-            const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
-            const std::vector points_p = {points.at(p - 1)};
-            const std::vector points_2p = {points.at(2 * p - 1)};
-            for (const int w_1 : range(1, weight)) {
-              const int w_2 = weight - w_1;
-              const auto args_1 = concat(i_complement, points_p, j, points_2p);
-              const auto args_2 = concat(i, points_p, j_complement, points_2p);
-              if (are_CGrLi_args_ok(w_1, args_1.size()) && are_CGrLi_args_ok(w_2, args_2.size())) {
-                rhs += sign * ncoproduct(
-                  pullback(CGrLiVec(w_1, args_1), i),
-                  pullback(CGrLiVec(w_2, args_2), j)
-                );
-              }
-            }
-          }
-        }
-      }
-      profiler.finish("rhs");
-      std::cout << lhs - rhs;
-    }
-  }
+  // for (const int weight : range_incl(2, 5)) {
+  //   for (const int p : range_incl(2, 5)) {
+  //     const int num_points = p * 2;
+  //     if (!are_CGrLi_args_ok(weight, num_points)) {
+  //       continue;
+  //     }
+  //     const auto points = to_vector(range_incl(1, num_points));
+  //     Profiler profiler(false);
+  //     const auto lhs = ncomultiply(CGrLiVec(weight, points));
+  //     profiler.finish("lhs");
+  //     GammaNCoExpr rhs;
+  //     if (weight >= p) {
+  //       rhs -= ncoproduct(CGrLiVec(weight - 1, points), casimir(points));
+  //     }
+  //     for (const int k : range_incl(1, p - 2)) {
+  //       for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
+  //         for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
+  //           // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
+  //           const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
+  //           const std::vector points_p = {points.at(p - 1)};
+  //           const std::vector points_2p = {points.at(2 * p - 1)};
+  //           for (const int w_1 : range(1, weight)) {
+  //             const int w_2 = weight - w_1;
+  //             const auto args_1 = concat(i_complement, points_p, j, points_2p);
+  //             const auto args_2 = concat(i, points_p, j_complement, points_2p);
+  //             if (are_CGrLi_args_ok(w_1, args_1.size()) && are_CGrLi_args_ok(w_2, args_2.size())) {
+  //               rhs += sign * ncoproduct(
+  //                 pullback(CGrLiVec(w_1, args_1), i),
+  //                 pullback(CGrLiVec(w_2, args_2), j)
+  //               );
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //     profiler.finish("rhs");
+  //     std::cout << lhs - rhs;
+  //   }
+  // }
 
 
   // const auto expr =
@@ -1955,4 +1962,46 @@ int main(int /*argc*/, char *argv[]) {
   //   ;
   //   std::cout << to_lyndon_basis(expr);  // ZERO
   // }
+
+
+  // const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
+  //   return chern_arrow_up(expr, 8);
+  // });
+  // const auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+
+
+  // const auto space = mapped(test_space_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
+  //   return std::tuple{chern_arrow_up(expr, 8), chern_arrow_left(expr, 8)};
+  // });
+  // const auto expr = std::tuple{
+  //   ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1}),
+  //   ncomultiply(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), {3,1}),
+  // };
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+  const auto arrow = [](const auto& expr) {
+    return chern_arrow_up(expr, 8);
+  };
+  auto space = test_space_Dim3({1,2,3,4,5,6,7});
+  const auto space_arrowed = mapped(space, arrow);
+  auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
+  expr += arrow(
+    - (ncoproduct(CGrLi3(1,2,3,4,5,6), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,6), G({4,5,6})))
+    + (ncoproduct(CGrLi3(1,2,3,4,5,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,7), G({4,5,7})))
+    - (ncoproduct(CGrLi3(1,2,3,4,6,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,6,7), G({4,6,7})))
+    + (ncoproduct(CGrLi3(1,2,3,5,6,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,5,6,7), G({5,6,7})))
+    - (ncoproduct(CGrLi3(1,2,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(1,2,4,5,6,7), G({7,1,2})))
+    + (ncoproduct(CGrLi3(1,3,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(1,3,4,5,6,7), G({7,1,3})))
+    - (ncoproduct(CGrLi3(2,3,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(2,3,4,5,6,7), G({7,2,3})))
+  );
+  const auto ranks = space_venn_ranks(space_arrowed, {expr}, DISAMBIGUATE(identity_function));
+  std::cout << to_string(ranks) << "\n";
+  // std::cout << expr.termwise_abs().mapped([](const auto& term) {
+  //   return std::vector{1, term[0]};
+  // });
+  // std::cout << expr;
 }
