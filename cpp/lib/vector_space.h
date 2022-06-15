@@ -4,6 +4,17 @@
 #include "itertools.h"
 
 
+bool space_homogeneity_check_enabled();
+
+// Creating/destroying this is not thread-safe.
+class ScopedDisableSpaceHomogeneityCheck {
+public:
+  ScopedDisableSpaceHomogeneityCheck();
+  ~ScopedDisableSpaceHomogeneityCheck();
+private:
+  bool old_value = false;
+};
+
 // TODO: Templatize.
 template<typename MarkerT>
 struct SpaceCharacteristics {
@@ -23,14 +34,17 @@ std::string to_string(const SpaceCharacteristics<MarkerT>& characteristics) {
   }
 }
 
-// Verifies that each element has the same weight and dimension. Feel free to disable if not required.
+// Verifies that each element has the same weight and dimension.
+// Use ScopedDisableSpaceHomogeneityCheck if this check not required.
 template<typename... SpaceTs>
 void check_spaces(const SpaceTs&... spaces) {
   // TODO: Fix for spaces of tuples.
-  check_space_homogeneity([](const auto& expr) {
-    using Marker = std::decay_t<decltype(expr.uniformity_marker())>;
-    return SpaceCharacteristics<Marker>{expr.weight(), expr.uniformity_marker()};
-  }, spaces...);
+  if (space_homogeneity_check_enabled()) {
+    check_space_homogeneity([](const auto& expr) {
+      using Marker = std::decay_t<decltype(expr.uniformity_marker())>;
+      return SpaceCharacteristics<Marker>{expr.weight(), expr.uniformity_marker()};
+    }, spaces...);
+  }
 }
 
 template<typename F, typename... SpaceTs>

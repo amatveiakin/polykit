@@ -21,3 +21,19 @@
 //       (although it's all read-only access - how bad is that?)
 
 #include "vector_space.h"
+
+
+static thread_local bool space_homogeneity_check_flag = true;
+
+bool space_homogeneity_check_enabled() {
+  return space_homogeneity_check_flag;
+}
+
+ScopedDisableSpaceHomogeneityCheck::ScopedDisableSpaceHomogeneityCheck() {
+  old_value = space_homogeneity_check_flag;
+  space_homogeneity_check_flag = false;
+}
+
+ScopedDisableSpaceHomogeneityCheck::~ScopedDisableSpaceHomogeneityCheck() {
+  space_homogeneity_check_flag = old_value;
+}

@@ -226,6 +226,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
 
 // TODO: Test compute_cohomologies instead
 TEST(PolylogSpaceTest, LARGE_CGrLCohomology) {
+  ScopedDisableSpaceHomogeneityCheck dshc;
   const auto compute_ranks = [](int weight, int num_points) {
     const auto points = to_vector(range_incl(1, num_points));
     const auto ranks = space_mapping_ranks(
