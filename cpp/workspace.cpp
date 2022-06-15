@@ -124,7 +124,7 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
     });
     const auto fx_space = mapped(GrFx(dimension, args), DISAMBIGUATE(to_lyndon_basis));
     append_vector(space, filtered(
-      mapped_parallel(cartesian_product(chern_space, fx_space), applied(DISAMBIGUATE(ncoproduct))),
+      space_ncoproduct(chern_space, fx_space),
       DISAMBIGUATE(is_totally_weakly_separated)
     ));
   }
@@ -267,8 +267,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space_triplets.push_back(substitute_variables(triplet_tmpl, indices));
   //   }
   //   Gr_Space fx = mapped(GrFx(dimension, points), pr);
-  //   Gr_NCoSpace second_space = mapped(cartesian_product(space_triplets, fx), applied(DISAMBIGUATE(ncoproduct)));
-  //   // TODO: Space coproduct helper function !!!
+  //   Gr_NCoSpace second_space = space_ncoproduct(space_triplets, fx);
   //   const auto ranks = space_venn_ranks(
   //     space_comult,
   //     second_space,

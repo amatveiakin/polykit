@@ -89,13 +89,8 @@ TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
   const int num_points = 5;
   const int dimension = 3;
   const auto points = to_vector(range_incl(1, num_points));
-  const Gr_Space fx = GrFx(dimension, points);
-  const Gr_Space l2 = GrL2(dimension, points);
-  const Gr_NCoSpace space = mapped(
-    cartesian_product(l2, fx),
-    applied(DISAMBIGUATE(ncoproduct))
-  );
-  const Gr_NCoSpace grqli3_space = mapped(
+  const auto space = space_ncoproduct(GrFx(dimension, points), GrL2(dimension, points));
+  const auto grqli3_space = mapped(
     range(num_points),
     [&](int bonus_arg_idx) {
       const auto bonus_args = std::vector{points[bonus_arg_idx]};
@@ -110,15 +105,13 @@ TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
   const int num_points = 5;
   const int dimension = 3;
   const auto points = to_vector(range_incl(1, num_points));
-  const Gr_Space fx = GrFx(dimension, points);
-  const Gr_Space l2 = GrL2(dimension, points);
-  Gr_NCoSpace space;
-  for (const auto& [a, b] : cartesian_product(l2, fx)) {
-    const auto expr = ncoproduct(a, b);
-    if (is_totally_weakly_separated(expr)) {
-      space.push_back(ncomultiply(expr));
-    }
-  };
+  Gr_NCoSpace space = mapped(
+    filtered(
+      space_ncoproduct(GrFx(dimension, points), GrL2(dimension, points)),
+      DISAMBIGUATE(is_totally_weakly_separated)
+    ),
+    DISAMBIGUATE(ncomultiply)
+  );
   const auto expr = sum_looped_vec(R_4_3, 5, {1,2,3,4});
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
 }

@@ -129,6 +129,16 @@ SpaceT normalize_space_remove_consecutive(const SpaceT& space, int dimension, in
   });
 }
 
+template<typename SpaceF>
+auto space_ncoproduct(const SpaceF& space_a, const SpaceF& space_b) {
+  // Precompute Lyndon to speed up coproduct.
+  const auto space_a_lyndon = mapped(space_a, DISAMBIGUATE(to_lyndon_basis));
+  const auto space_b_lyndon = mapped(space_b, DISAMBIGUATE(to_lyndon_basis));
+  return mapped_parallel(
+    cartesian_product(space_a_lyndon, space_b_lyndon),
+    applied(DISAMBIGUATE(ncoproduct))
+  );
+}
 
 template<typename SpaceF, typename CombineF>
 auto abstract_co_space(int weight, int num_coparts, const SpaceF& get_space, const CombineF& combine) {

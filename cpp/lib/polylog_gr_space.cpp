@@ -277,11 +277,11 @@ Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points)
 }
 
 Gr_NCoSpace wedge_ChernGrL(int weight, int dimension, const std::vector<int>& points) {
-  // Precompute Lyndon to speed up coproduct.
-  const auto chern_space = mapped(ChernGrL(weight - 1, dimension, points), DISAMBIGUATE(to_lyndon_basis));
-  const auto fx_space = mapped(GrFx(dimension, points), DISAMBIGUATE(to_lyndon_basis));
   return filtered(
-    mapped_parallel(cartesian_product(chern_space, fx_space), applied(DISAMBIGUATE(ncoproduct))),
+    space_ncoproduct(
+      ChernGrL(weight - 1, dimension, points),
+      GrFx(dimension, points)
+    ),
     DISAMBIGUATE(is_totally_weakly_separated)
   );
 }
