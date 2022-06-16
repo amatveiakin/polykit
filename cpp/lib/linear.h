@@ -677,6 +677,9 @@ public:
   const BasicLinearMain& main() const { return main_; };
   const LinearAnnotation& annotations() const { return annotations_; };
 
+  // TODO: In order to make things less error-prone, split into:
+  //   - "set annotation": remove existing annotations and annotate;
+  //   - "add annotation": current behavior (chances are we never need this).
   Linear& annotate(const std::string& annotation) {
     annotations_.expression.add_to_key(annotation, 1);
     return *this;

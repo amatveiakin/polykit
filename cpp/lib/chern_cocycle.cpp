@@ -80,7 +80,7 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
 
 // TODO: How does `dimension` parameter in ChernCocycle relate to Grassmannian dimension?
 GammaNCoExpr ChernCocycle(int weight, int dimension, const std::vector<int>& points) {
-  return ChernCocycle_impl(weight, dimension, points).annotate(
+  return ChernCocycle_impl(weight, dimension, points).without_annotations().annotate(
     fmt::function_num_args(
       fmt::function_num_args(
         fmt::sub_num(fmt::opname("ChernCocycle"), {weight}),

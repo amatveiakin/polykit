@@ -19,6 +19,7 @@
 #include "lib/projection.h"
 #include "lib/range.h"
 #include "lib/sequence_iteration.h"
+#include "lib/set_util.h"
 #include "lib/space_algebra.h"
 #include "lib/summation.h"
 
@@ -157,6 +158,81 @@ int permutation_sign(Container c) {
 }
 
 
+// Optimization potential: If some expressions in `needle` contain unique terms, use these
+//   to determine whether the expressions need to be included, without rank computations.
+// Optimization potential: Fewer rank computations
+// Optimization potential: Re-use matrix builder
+template<typename SpaceT>
+SpaceT minimal_containing_subspace(const SpaceT& haystack, const SpaceT& needle) {
+  CHECK(space_contains(haystack, needle, DISAMBIGUATE(identity_function)));
+  auto ret = haystack;
+  int idx = 0;
+  while (idx < ret.size()) {
+    auto new_ret = ret;
+    new_ret.erase(new_ret.begin() + idx);
+    if (space_contains(new_ret, needle, DISAMBIGUATE(identity_function))) {
+      ret = std::move(new_ret);
+    } else {
+      ++idx;
+    }
+  }
+  return ret;
+}
+
+// Optimization potential: If some expressions in `space` contain unique terms, use these
+//   to compute the coefficient.
+// Note. If `coeff_candidates` does not include 0, the option of not including this summand
+//   will not be considered.
+template<typename ExprT>
+ExprT find_equation(ExprT expr, std::vector<ExprT> space, const std::vector<int>& coeff_candidates = {1, -1}) {
+  CHECK(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
+  while (!space.empty()) {
+    const auto summand = std::move(space.back());
+    space.pop_back();
+    bool found_coeff = false;
+    for (const int coeff : coeff_candidates) {
+      auto candidate_expr = expr + coeff * summand;
+      if (space_contains(space, {candidate_expr}, DISAMBIGUATE(identity_function))) {
+        expr = std::move(candidate_expr);
+        found_coeff = true;
+        break;
+      }
+    }
+    CHECK(found_coeff) << "Cannot find coeff for " << summand;
+  }
+  return expr;
+}
+
+
+std::vector<int> common_vars(const std::vector<Gamma>& term) {
+  auto indices = term[0].index_bitset();
+  for (const Gamma& g : term) {
+    indices &= g.index_bitset();
+  }
+  return bitset_to_vector(indices, Gamma::kBitsetOffset);
+}
+
+std::vector<int> all_vars(const std::vector<Gamma>& term) {
+  auto indices = term[0].index_bitset();
+  for (const Gamma& g : term) {
+    indices |= g.index_bitset();
+  }
+  return bitset_to_vector(indices, Gamma::kBitsetOffset);
+}
+
+struct GammaAltNCoExprParam : internal::GammaNCoExprParam {
+  static std::string object_to_string(const ObjectT& obj) {
+    const auto vars = common_vars(obj[1]);
+    return absl::StrCat(
+      str_join(obj, fmt::coprod_normal(), internal::GammaExprParam::object_to_string),
+      "   ",
+      str_join(vars, ",")
+    );
+  }
+};
+using GammaAltNCoExpr = Linear<GammaAltNCoExprParam>;
+
+
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -168,8 +244,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
-    // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(30)
+    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    // .set_expression_line_limit(300)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -1985,22 +2061,236 @@ int main(int /*argc*/, char *argv[]) {
   const auto arrow = [](const auto& expr) {
     return chern_arrow_up(expr, 8);
   };
-  auto space = test_space_Dim3({1,2,3,4,5,6,7});
-  const auto space_arrowed = mapped(space, arrow);
+  // auto space = test_space_Dim3({1,2,3,4,5,6,7});
+  // const auto space_arrowed = mapped(space, arrow);
   auto expr = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {3,1});
   expr += arrow(
-    - (ncoproduct(CGrLi3(1,2,3,4,5,6), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,6), G({4,5,6})))
-    + (ncoproduct(CGrLi3(1,2,3,4,5,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,7), G({4,5,7})))
-    - (ncoproduct(CGrLi3(1,2,3,4,6,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,6,7), G({4,6,7})))
-    + (ncoproduct(CGrLi3(1,2,3,5,6,7), G({1,2,3})) + ncoproduct(CGrLi3(1,2,3,5,6,7), G({5,6,7})))
-    - (ncoproduct(CGrLi3(1,2,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(1,2,4,5,6,7), G({7,1,2})))
-    + (ncoproduct(CGrLi3(1,3,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(1,3,4,5,6,7), G({7,1,3})))
-    - (ncoproduct(CGrLi3(2,3,4,5,6,7), G({4,5,6})) + ncoproduct(CGrLi3(2,3,4,5,6,7), G({7,2,3})))
+    - (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})))
+    + (ncoproduct(CGrLi3(1,2,3,4,5,7), plucker({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,5,7), plucker({4,5,7})))
+    - (ncoproduct(CGrLi3(1,2,3,4,6,7), plucker({1,2,3})) + ncoproduct(CGrLi3(1,2,3,4,6,7), plucker({4,6,7})))
+    + (ncoproduct(CGrLi3(1,2,3,5,6,7), plucker({1,2,3})) + ncoproduct(CGrLi3(1,2,3,5,6,7), plucker({5,6,7})))
+    - (ncoproduct(CGrLi3(1,2,4,5,6,7), plucker({4,5,6})) + ncoproduct(CGrLi3(1,2,4,5,6,7), plucker({7,1,2})))
+    + (ncoproduct(CGrLi3(1,3,4,5,6,7), plucker({4,5,6})) + ncoproduct(CGrLi3(1,3,4,5,6,7), plucker({7,1,3})))
+    - (ncoproduct(CGrLi3(2,3,4,5,6,7), plucker({4,5,6})) + ncoproduct(CGrLi3(2,3,4,5,6,7), plucker({7,2,3})))
   );
-  const auto ranks = space_venn_ranks(space_arrowed, {expr}, DISAMBIGUATE(identity_function));
-  std::cout << to_string(ranks) << "\n";
+  std::cout << expr;
+  // const auto ranks = space_venn_ranks(space_arrowed, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
   // std::cout << expr.termwise_abs().mapped([](const auto& term) {
   //   return std::vector{1, term[0]};
   // });
+  // expr = filter_coexpr(expr, 0, std::vector{Gamma({1,2,5,8})});
   // std::cout << expr;
+
+  // static const auto num_variables = [](const std::vector<std::vector<Gamma>>& term) {
+  //   return num_distinct_elements_unsorted(flatten(mapped(term[1], [](const Gamma& g) {
+  //     return g.index_vector();
+  //   })));
+  // };
+  // to_ostream_grouped(
+  //   std::cout,
+  //   expr.cast_to<GammaAltNCoExpr>(),
+  //   std::less<>{},
+  //   num_variables, std::less<>{},
+  //   [](int num_vars) {
+  //     return absl::StrCat(num_vars, " vars");
+  //   },
+  //   LinearNoContext{}
+  // );
+
+  // const auto rhs = expr.termwise_abs().filtered([](const auto& term) {
+  //   return
+  //     num_variables(term) == 6 &&
+  //     set_intersection_size(common_vars(term[1]), {5,6}) == 2
+  //   ;
+  // }).mapped<StringExpr>([](const auto& term) {
+  //   return str_join(sorted(set_difference(all_vars(term[1]), {5,6})), ",");
+  // }).without_annotations();
+  // std::cout << rhs;
+
+  // Gr_NCoSpace space;
+  // StringExpr rhs;
+  // for (const auto& left_side : combinations({1,2,3,4,5,6,7,8}, 4)) {
+  //   const auto expr_filtered = filter_coexpr(expr, 0, std::vector{Gamma(left_side)});
+  //   for (const auto& pb_vars : combinations({1,2,3,4,5,6,7,8}, 2)) {
+  //     expr_filtered.termwise_abs().filtered([&](const auto& term) {
+  //       return num_variables(term) == 6 && set_contains(common_vars(term[1]), pb_vars);
+  //     }).foreach([&](const auto& term, int coeff) {
+  //       const auto main_vars = sorted(set_difference(all_vars(term[1]), pb_vars));
+  //       // TODO: Don't insert duplicate functions
+  //       CHECK_EQ(main_vars.size(), 4);
+  //       space.push_back(ncoproduct(
+  //         G(left_side),
+  //         pullback(CGrLiVec(3, main_vars), pb_vars)
+  //       ));
+  //       rhs.add_to(absl::StrCat(
+  //         " ",
+  //         str_join(left_side, ","),
+  //         " ", fmt::coprod_normal(), " ",
+  //         str_join(pb_vars, ","),
+  //         " / ",
+  //         str_join(main_vars, ",")
+  //       ), coeff);
+  //     });
+  //   }
+  // }
+  // std::cout << rhs;
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+  // static const auto remove_var = [](const std::vector<int>& vars, int v) {
+  //   return filtered_mapped(vars, [&](int x) {
+  //     return x == v
+  //       ? std::nullopt
+  //       : std::optional(x < v ? x : x - 1);
+  //   });
+  // };
+  // StringExpr rhs;
+  // absl::flat_hash_map<std::string, GammaNCoExpr> space_expressions;
+  // for (const auto& left_side : combinations({1,2,3,4,5,6,7,8}, 4)) {
+  //   const auto expr_filtered = filter_coexpr(expr, 0, std::vector{Gamma(left_side)});
+  //   for (const auto& pb_vars : combinations({1,2,3,4,5,6,7,8}, 2)) {
+  //     expr_filtered.termwise_abs().filtered([&](const auto& term) {
+  //       return num_variables(term) == 6 && set_contains(common_vars(term[1]), pb_vars);
+  //     }).foreach([&](const auto& term, int coeff) {
+  //       const auto main_vars = sorted(set_difference(all_vars(term[1]), pb_vars));
+  //       CHECK_EQ(main_vars.size(), 4);
+  //       const auto common_vars = set_intersection(left_side, pb_vars);
+  //       for (const int common_var : common_vars) {
+  //         const auto left_side_prime = remove_var(left_side, common_var);
+  //         const auto pb_vars_prime = remove_var(pb_vars, common_var);
+  //         const auto main_vars_prime = remove_var(main_vars, common_var);
+  //         const std::string str_key = absl::StrCat(
+  //           " ",
+  //           str_join(left_side_prime, ","),
+  //           " ", fmt::coprod_normal(), " ",
+  //           str_join(pb_vars_prime, ","),
+  //           " / ",
+  //           str_join(main_vars_prime, ",")
+  //         );
+  //         rhs.add_to(str_key, coeff);
+  //         if (!space_expressions.contains(str_key)) {
+  //           space_expressions[str_key] = ncoproduct(
+  //             plucker(left_side_prime),
+  //             pullback(CGrLiVec(3, main_vars_prime), pb_vars_prime)
+  //           );
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
+  // const auto space = mapped(space_expressions, [](const auto& key_value) {
+  //   return key_value.second;
+  // });
+  // std::cout << rhs;
+  // Profiler profiler;
+  // const auto space_arrowed = mapped(space, arrow);
+  // profiler.finish("arrow");
+  // const auto ranks = space_venn_ranks(space_arrowed, {expr}, DISAMBIGUATE(identity_function));
+  // profiler.finish("ranks");
+  // std::cout << to_string(ranks) << "\n";
+  // const auto min_space = minimal_containing_subspace(space_arrowed, {expr});
+  // profiler.finish("min_space");
+  // std::cout << "\n" << dump_to_string(min_space) << "\n\n";
+
+  const auto space = {
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,4,5,6), {2})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,4,5,6), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,4,6,7), {2})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,4,6,7), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,5,6,7), {2})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(1,5,6,7), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,4,5,6), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,4,5,6), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,4,5,7), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,4,6,7), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,4,6,7), {3})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(2,5,6,7), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,5,6), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,5,6), {2})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,5,7), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,5,7), {2})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,6,7), {1})),
+    ncoproduct(plucker({1,2,3}), pullback(CGrLi3(3,4,6,7), {2})),
+    ncoproduct(plucker({1,2,4}), pullback(CGrLi3(1,3,5,7), {4})),
+    ncoproduct(plucker({1,2,4}), pullback(CGrLi3(1,5,6,7), {2})),
+    ncoproduct(plucker({1,2,4}), pullback(CGrLi3(1,5,6,7), {4})),
+    ncoproduct(plucker({1,2,4}), pullback(CGrLi3(2,5,6,7), {1})),
+    ncoproduct(plucker({1,2,5}), pullback(CGrLi3(1,3,4,7), {5})),
+    ncoproduct(plucker({1,2,5}), pullback(CGrLi3(1,4,6,7), {5})),
+    ncoproduct(plucker({1,2,6}), pullback(CGrLi3(1,3,4,7), {6})),
+    ncoproduct(plucker({1,2,6}), pullback(CGrLi3(1,4,5,7), {6})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(1,3,4,6), {7})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(1,4,5,7), {6})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(1,4,6,7), {5})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(2,4,5,6), {7})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(2,4,5,7), {6})),
+    ncoproduct(plucker({1,2,7}), pullback(CGrLi3(2,4,6,7), {5})),
+    ncoproduct(plucker({1,3,4}), pullback(CGrLi3(1,5,6,7), {3})),
+    ncoproduct(plucker({1,3,4}), pullback(CGrLi3(1,5,6,7), {4})),
+    ncoproduct(plucker({1,3,5}), pullback(CGrLi3(1,4,6,7), {5})),
+    ncoproduct(plucker({1,3,6}), pullback(CGrLi3(1,4,5,7), {6})),
+    ncoproduct(plucker({1,3,7}), pullback(CGrLi3(1,4,5,7), {6})),
+    ncoproduct(plucker({1,3,7}), pullback(CGrLi3(1,4,6,7), {5})),
+    ncoproduct(plucker({1,3,7}), pullback(CGrLi3(3,4,5,6), {7})),
+    ncoproduct(plucker({1,3,7}), pullback(CGrLi3(3,4,5,7), {6})),
+    ncoproduct(plucker({1,3,7}), pullback(CGrLi3(3,4,6,7), {5})),
+    ncoproduct(plucker({1,5,6}), pullback(CGrLi3(3,4,6,7), {1})),
+    ncoproduct(plucker({1,5,7}), pullback(CGrLi3(3,4,5,7), {1})),
+    ncoproduct(plucker({1,6,7}), pullback(CGrLi3(2,4,6,7), {1})),
+    ncoproduct(plucker({1,6,7}), pullback(CGrLi3(3,4,6,7), {1})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(2,4,5,6), {7})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(2,4,5,7), {6})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(2,4,6,7), {5})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(3,4,5,6), {7})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(3,4,5,7), {6})),
+    ncoproduct(plucker({2,3,7}), pullback(CGrLi3(3,4,6,7), {5})),
+    ncoproduct(plucker({2,5,6}), pullback(CGrLi3(3,4,6,7), {2})),
+    ncoproduct(plucker({2,5,7}), pullback(CGrLi3(3,4,5,7), {2})),
+    ncoproduct(plucker({2,6,7}), pullback(CGrLi3(1,4,6,7), {2})),
+    ncoproduct(plucker({2,6,7}), pullback(CGrLi3(3,4,6,7), {2})),
+    ncoproduct(plucker({3,5,6}), pullback(CGrLi3(2,4,6,7), {3})),
+    ncoproduct(plucker({3,5,7}), pullback(CGrLi3(2,4,5,7), {3})),
+    ncoproduct(plucker({3,6,7}), pullback(CGrLi3(1,4,6,7), {3})),
+    ncoproduct(plucker({3,6,7}), pullback(CGrLi3(2,4,6,7), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,4,7), {5})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,4,7), {6})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,5,7), {4})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,5,7), {6})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,6,7), {4})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,3,6,7), {5})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,5,6), {2})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,5,6), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,5,7), {2})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,5,7), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,6,7), {2})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(1,4,6,7), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,3,4,7), {5})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,3,4,7), {6})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,3,5,7), {4})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,5,6), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,5,6), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,5,7), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,5,7), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,6,7), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(2,4,6,7), {3})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,5,6), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,5,6), {2})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,5,7), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,5,7), {2})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,6,7), {1})),
+    ncoproduct(plucker({4,5,6}), pullback(CGrLi3(3,4,6,7), {2})),
+    ncoproduct(plucker({4,5,7}), pullback(CGrLi3(1,3,4,6), {7})),
+    ncoproduct(plucker({4,5,7}), pullback(CGrLi3(1,3,4,7), {5})),
+    ncoproduct(plucker({4,5,7}), pullback(CGrLi3(1,3,5,6), {7})),
+    ncoproduct(plucker({4,5,7}), pullback(CGrLi3(1,3,5,7), {4})),
+    ncoproduct(plucker({4,5,7}), pullback(CGrLi3(2,3,4,6), {7})),
+    ncoproduct(plucker({4,6,7}), pullback(CGrLi3(1,3,4,6), {7})),
+    ncoproduct(plucker({4,6,7}), pullback(CGrLi3(1,3,4,7), {6})),
+  };
+  const auto space_arrowed = mapped(space, arrow);
+  // const auto ranks = space_venn_ranks(space_arrowed, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+  const auto eqn = find_equation(expr, space_arrowed);
+  std::cout << eqn;
 }

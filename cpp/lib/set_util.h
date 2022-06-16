@@ -57,3 +57,8 @@ std::vector<T> set_difference(const std::vector<T>& a, const std::vector<T>& b) 
   absl::c_set_difference(sorted(a), sorted(b), std::back_inserter(ret));
   return ret;
 }
+
+template<typename T>
+bool set_contains(const std::vector<T>& haystack, const std::vector<T>& needle) {
+  return set_intersection_size(haystack, needle) == needle.size();
+}

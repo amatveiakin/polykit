@@ -151,6 +151,11 @@ inline GammaExpr G(const std::vector<int>& vars) {
   Gamma g(vars);
   return g.is_nil() ? GammaExpr{} : GammaExpr::single({g});
 }
+inline GammaExpr plucker(const std::vector<int>& vars) {
+  // Standard notation for Plucker coordinates.
+  // TODO: Factor out fmt::bars for this.
+  return G(vars).annotate(absl::StrCat("|", str_join(vars, ","), "|"));
+}
 
 
 GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points);
