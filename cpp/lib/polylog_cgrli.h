@@ -1,3 +1,5 @@
+// TODO: Helper functions for CGrLi + pullback (like GrQLi)
+
 #include "gamma.h"
 
 
