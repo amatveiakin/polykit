@@ -1,10 +1,12 @@
-// TODO: Helper functions for CGrLi + pullback (like GrQLi)
-
 #include "gamma.h"
 
 
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
 GammaExpr CGrLiVec(int weight, const std::vector<int>& points);
+
+// Equivalent to `pullback(CGrLiVec(weight, li_points), pb_points)`
+// TODO: Short notation for this.
+GammaExpr CGrLiVec(int weight, const std::vector<int>& pb_points, const std::vector<int>& li_points);
 
 GammaExpr SymmCGrLi3(const std::vector<int>& points);
 // Only partially symmetrized.

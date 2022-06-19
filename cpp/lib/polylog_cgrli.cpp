@@ -138,6 +138,21 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
   );
 }
 
+GammaExpr CGrLiVec(int weight, const std::vector<int>& pb_points, const std::vector<int>& li_points) {
+  return pullback(CGrLiVec(weight, li_points), pb_points).without_annotations().annotate(
+    fmt::function(
+      fmt::sub_num(fmt::opname("CGrLi"), {weight}),
+      {str_join_skip_empty(
+        std::array{
+          str_join(sorted(pb_points), ","),
+          str_join(li_points, ",")
+        },
+        " / "
+      )}
+    )
+  );
+}
+
 
 GammaExpr SymmCGrLi3(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 6);
