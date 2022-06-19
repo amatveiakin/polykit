@@ -244,8 +244,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
-    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    // .set_expression_line_limit(300)
+    // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    .set_expression_line_limit(30)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -2030,4 +2030,20 @@ int main(int /*argc*/, char *argv[]) {
   //   ;
   //   std::cout << to_lyndon_basis(expr);  // ZERO
   // }
+
+
+  for (const int weight : range_incl(2, 5)) {
+    const int p = weight + 1;
+    const int num_points = 2 * p;
+    const auto points = to_vector(range_incl(1, num_points));
+    GammaExpr rhs;
+    for (const int i : range(p)) {
+      for (const int j : range(p, 2 * p)) {
+        const int sign = neg_one_pow(points[i] + points[j]);
+        rhs += sign * CGrLiVec(weight, {points[j]}, removed_indices(points, {i, j}));
+      }
+    }
+    const auto lhs = CGrLiVec(weight, points);
+    std::cout << to_lyndon_basis(lhs - neg_one_pow(weight) * rhs);
+  }
 }
