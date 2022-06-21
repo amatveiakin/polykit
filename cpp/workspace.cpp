@@ -157,6 +157,11 @@ int permutation_sign(Container c) {
   return sort_with_sign(c);
 }
 
+template<typename Container>
+bool is_strictly_increasing(const Container& c) {
+  return absl::c_adjacent_find(c, std::greater_equal<>()) == c.end();
+}
+
 
 // Optimization potential: If some expressions in `needle` contain unique terms, use these
 //   to determine whether the expressions need to be included, without rank computations.
@@ -220,11 +225,23 @@ std::vector<int> all_vars(const std::vector<Gamma>& term) {
   return bitset_to_vector(indices, Gamma::kBitsetOffset);
 }
 
+struct GammaAltExprParam : internal::GammaExprParam {
+  static std::string object_to_string(const ObjectT& obj) {
+    const auto vars = common_vars(obj);
+    return absl::StrCat(
+      internal::GammaExprParam::object_to_string(obj),
+      "   ",
+      str_join(vars, ",")
+    );
+  }
+};
+using GammaAltExpr = Linear<GammaAltExprParam>;
+
 struct GammaAltNCoExprParam : internal::GammaNCoExprParam {
   static std::string object_to_string(const ObjectT& obj) {
     const auto vars = common_vars(obj[1]);
     return absl::StrCat(
-      str_join(obj, fmt::coprod_normal(), internal::GammaExprParam::object_to_string),
+      internal::GammaNCoExprParam::object_to_string(obj),
       "   ",
       str_join(vars, ",")
     );
@@ -244,8 +261,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
-    // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(30)
+    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    // .set_expression_line_limit(30)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -1933,4 +1950,80 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
+
+  // const auto prepare = [](const GammaExpr& expr) {
+  //   return expr.filtered([](const auto& term) {
+  //     return all_vars(term).size() == 5 && common_vars(term).size() == 1;
+  //   }).cast_to<GammaAltExpr>();
+  // };
+  // auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
+  // // static const auto num_variables = [](const auto& term) {
+  // //   return all_vars(term).size();
+  // // };
+  // // to_ostream_grouped(
+  // //   std::cout,
+  // //   expr.cast_to<GammaAltNCoExpr>(),
+  // //   std::less<>{},
+  // //   num_variables,
+  // //   std::less<>{},
+  // //   [](int num_vars) {
+  // //     return absl::StrCat(num_vars, " vars");
+  // //   },
+  // //   LinearNoContext{}
+  // // );
+  // lhs = lhs.filtered([](const auto& term) {
+  //   const auto v = mapped(term, [](const Gamma& g) { return g.index_vector(); });
+  //   // TODO: `transpose` helper function
+  //   return
+  //     is_strictly_increasing(std::vector{v[0][0], v[1][0], v[2][0]}) &&
+  //     is_strictly_increasing(std::vector{v[0][1], v[1][1], v[2][1]}) &&
+  //     is_strictly_increasing(std::vector{v[0][2], v[1][2], v[2][2]})
+  //   ;
+  // });
+  // std::cout << prepare(lhs);
+
+  // GammaExpr rhs;
+  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+  //   rhs += sign * tensor_product(absl::MakeConstSpan({
+  //     G(choose_indices_one_based(points, {1,2,3})),
+  //     G(choose_indices_one_based(points, {2,3,4})),
+  //     G(choose_indices_one_based(points, {3,4,5})),
+  //   }));
+  // }
+  // rhs = to_lyndon_basis(rhs)
+  //   .dived_int(2)
+  //   .filtered(DISAMBIGUATE(is_weakly_separated))
+  // ;
+  // std::cout << prepare(rhs);
+  // std::cout << prepare(lhs - rhs);
+
+
+  // GammaExpr p, q;
+  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4})) {
+  //   p += sign * tensor_product(absl::MakeConstSpan({
+  //     G(choose_indices_one_based(points, {1,2})),
+  //     G(choose_indices_one_based(points, {2,3})),
+  //   }));
+  //   q += sign * CGrLiVec(2, points);
+  // }
+  // p = to_lyndon_basis(p);
+  // q = to_lyndon_basis(q).without_annotations();
+  // std::cout << p;
+  // std::cout << q;
+  // std::cout << p.dived_int(2) + q.dived_int(24);
+
+  // GammaExpr p, q;
+  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+  //   p += sign * tensor_product(absl::MakeConstSpan({
+  //     G(choose_indices_one_based(points, {1,2,3})),
+  //     G(choose_indices_one_based(points, {2,3,4})),
+  //     G(choose_indices_one_based(points, {3,4,5})),
+  //   }));
+  //   q += sign * CGrLiVec(3, points);
+  // }
+  // p = to_lyndon_basis(p);
+  // q = to_lyndon_basis(q).without_annotations();
+  // std::cout << p;
+  // std::cout << q;
+  // std::cout << p.dived_int(2) - q.dived_int(240);
 }
