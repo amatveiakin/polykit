@@ -1981,4 +1981,31 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << p;
   // std::cout << q;
   // std::cout << p.dived_int(2) - q.dived_int(240);
+
+
+  // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
+  // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
+  for (const int weight : range_incl(3, 4)) {
+    const int p = weight + 1;
+    const int num_points = 2 * p;
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto lhs = ncomultiply(CGrLiVec(weight, points), {1, weight - 1});
+    GammaNCoExpr rhs;
+    for (const int i : range(p)) {
+      for (const int j : range(p, 2 * p)) {
+        const int sign = neg_one_pow(points[i] + points[j]);
+        rhs += sign * (
+          + ncoproduct(
+            CGrLiVec(weight - 1, {points[j]}, removed_indices(points, {i, j})),
+            plucker(concat({points[j]}, removed_index(slice(points, 0, p), i)))
+          )
+          - ncoproduct(
+            CGrLiVec(weight - 1, {points[i]}, removed_indices(points, {i, j})),
+            plucker(concat({points[i]}, removed_index(slice(points, p), j - p)))
+          )
+        );
+      }
+    }
+    std::cout << lhs + neg_one_pow(weight) * rhs;
+  }
 }
