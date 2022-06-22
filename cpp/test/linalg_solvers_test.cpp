@@ -1,4 +1,4 @@
-#include "lib/space_algebra.h"
+#include "lib/linalg_solvers.h"
 
 #include "gtest/gtest.h"
 
@@ -7,7 +7,7 @@
 #include "lib/polylog_qli.h"
 
 
-TEST(PolylogSpaceTest, SpaceBasis) {
+TEST(LinalgSolversTest, SpaceBasis) {
   const auto check_space = [](const auto& full) {
     const int rank = space_rank(full, DISAMBIGUATE(to_lyndon_basis));
     const auto basis = space_basis(full, DISAMBIGUATE(to_lyndon_basis));

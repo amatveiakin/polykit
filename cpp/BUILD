@@ -172,6 +172,7 @@ cc_library(
     hdrs = [
         "lib/expr_matrix_builder.h",
         "lib/linalg.h",
+        "lib/linalg_solvers.h",
         "lib/polylog_type_ac_space.h",
         "lib/polylog_type_d_space.h",
         "lib/polylog_gr_space.h",

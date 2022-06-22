@@ -2,6 +2,8 @@
 //
 //   TODO: Be consistent about parallelisation.
 //
+//   Optimization potential: Pre-compute basis.
+//
 //   Optimization potential: Convert spaces to Lyndon basis on construction.
 //   Pros:
 //     + Less verbose, don't have to pass to_lyndon_basis to each rank computations.

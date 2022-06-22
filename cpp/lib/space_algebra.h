@@ -124,23 +124,6 @@ SpaceMappingRanks space_mapping_ranks(const SpaceT& raw_space, const PrepareF& p
   return SpaceMappingRanks{space_rank, image_rank};
 }
 
-// TODO: Optimize: don't compute rank on each step.
-// Optimization potential: pre-apply for common spaces.
-template<typename SpaceT, typename PrepareF>
-SpaceT space_basis(const SpaceT& space, const PrepareF& prepare) {
-  SpaceT ret;
-  int rank = 0;
-  for (const auto& expr : mapped(space, prepare)) {
-    ret.push_back(expr);
-    const int new_rank = space_rank(ret, DISAMBIGUATE(identity_function));
-    if (new_rank == rank) {
-      ret.pop_back();
-    }
-    rank = new_rank;
-  }
-  return ret;
-}
-
 template<typename SpaceT>
 SpaceMappingRanks space_ncomultiply_mapping_ranks(const SpaceT& space) {
   return space_mapping_ranks(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));

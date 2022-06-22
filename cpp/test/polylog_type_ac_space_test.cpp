@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/itertools.h"
+#include "lib/linalg_solvers.h"
 #include "lib/polylog_qli.h"
 #include "lib/summation.h"
 #include "test_util/space_helpers.h"
