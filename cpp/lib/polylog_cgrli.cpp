@@ -1,3 +1,5 @@
+// TODO: Rename CGrLi to GLi
+
 #include "polylog_cgrli.h"
 
 #include "call_cache.h"

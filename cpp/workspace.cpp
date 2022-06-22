@@ -216,8 +216,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_rich_text_format(RichTextFormat::console)
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
-    .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    // .set_expression_line_limit(30)
+    // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
+    .set_expression_line_limit(300)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -1983,29 +1983,133 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << p.dived_int(2) - q.dived_int(240);
 
 
-  // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
-  // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
-  for (const int weight : range_incl(3, 4)) {
-    const int p = weight + 1;
-    const int num_points = 2 * p;
-    const auto points = to_vector(range_incl(1, num_points));
-    const auto lhs = ncomultiply(CGrLiVec(weight, points), {1, weight - 1});
-    GammaNCoExpr rhs;
-    for (const int i : range(p)) {
-      for (const int j : range(p, 2 * p)) {
-        const int sign = neg_one_pow(points[i] + points[j]);
-        rhs += sign * (
-          + ncoproduct(
-            CGrLiVec(weight - 1, {points[j]}, removed_indices(points, {i, j})),
-            plucker(concat({points[j]}, removed_index(slice(points, 0, p), i)))
-          )
-          - ncoproduct(
-            CGrLiVec(weight - 1, {points[i]}, removed_indices(points, {i, j})),
-            plucker(concat({points[i]}, removed_index(slice(points, p), j - p)))
-          )
-        );
-      }
-    }
-    std::cout << lhs + neg_one_pow(weight) * rhs;
-  }
+  // // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
+  // // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
+  // for (const int weight : range_incl(3, 4)) {
+  //   const int p = weight + 1;
+  //   const int num_points = 2 * p;
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   const auto lhs = ncomultiply(CGrLiVec(weight, points), {1, weight - 1});
+  //   GammaNCoExpr rhs;
+  //   for (const int i : range(p)) {
+  //     for (const int j : range(p, 2 * p)) {
+  //       const int sign = neg_one_pow(points[i] + points[j]);
+  //       rhs += sign * (
+  //         + ncoproduct(
+  //           CGrLiVec(weight - 1, {points[j]}, removed_indices(points, {i, j})),
+  //           plucker(concat({points[j]}, removed_index(slice(points, 0, p), i)))
+  //         )
+  //         - ncoproduct(
+  //           CGrLiVec(weight - 1, {points[i]}, removed_indices(points, {i, j})),
+  //           plucker(concat({points[i]}, removed_index(slice(points, p), j - p)))
+  //         )
+  //       );
+  //     }
+  //   }
+  //   std::cout << lhs + neg_one_pow(weight) * rhs;
+  // }
+
+
+  Profiler profiler;
+  const auto expr = CGrLi5(1,2,3,4,5,6,7,8);
+  profiler.finish("expr");
+  auto coexpr = ncomultiply(expr, {1,4});
+  profiler.finish("comult");
+  std::cout << "\n";
+  // This zeroes out terms where we take three points from {1,2,3,4} and one point from {5,6,7,8}.
+  // Should also do vice versa to the the full equation.
+  coexpr +=
+    + ncoproduct(CGrLi4(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+    + ncoproduct(
+      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+      - CGrLiVec(4, {6}, {1,2,4,5,7,8})
+      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+      ,
+      plucker({1,2,4,8})
+    )
+    - ncoproduct(
+      + CGrLiVec(4, {5}, {1,3,4,6,7,8})
+      - CGrLiVec(4, {6}, {1,3,4,5,7,8})
+      + CGrLiVec(4, {7}, {1,3,4,5,6,8})
+      ,
+      plucker({1,3,4,8})
+    )
+    + ncoproduct(
+      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+      - CGrLiVec(4, {6}, {2,3,4,5,7,8})
+      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+      ,
+      plucker({2,3,4,8})
+    )
+    + ncoproduct(
+      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+      - CGrLiVec(4, {5}, {1,3,4,6,7,8})
+      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+      ,
+      plucker({1,2,3,5})
+    )
+    - ncoproduct(
+      + CGrLiVec(4, {6}, {1,2,4,5,7,8})
+      - CGrLiVec(4, {6}, {1,3,4,5,7,8})
+      + CGrLiVec(4, {6}, {2,3,4,5,7,8})
+      ,
+      plucker({1,2,3,6})
+    )
+    + ncoproduct(
+      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+      - CGrLiVec(4, {7}, {1,3,4,5,6,8})
+      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+      ,
+      plucker({1,2,3,7})
+    )
+    - ncoproduct(CGrLiVec(4, {5}, {1,2,4,6,7,8}), plucker({1,2,4,5}))
+    + ncoproduct(CGrLiVec(4, {6}, {1,2,4,5,7,8}), plucker({1,2,4,6}))
+    - ncoproduct(CGrLiVec(4, {7}, {1,2,4,5,6,8}), plucker({1,2,4,7}))
+    + ncoproduct(CGrLiVec(4, {5}, {1,3,4,6,7,8}), plucker({1,3,4,5}))
+    - ncoproduct(CGrLiVec(4, {6}, {1,3,4,5,7,8}), plucker({1,3,4,6}))
+    + ncoproduct(CGrLiVec(4, {7}, {1,3,4,5,6,8}), plucker({1,3,4,7}))
+    - ncoproduct(CGrLiVec(4, {5}, {2,3,4,6,7,8}), plucker({2,3,4,5}))
+    + ncoproduct(CGrLiVec(4, {6}, {2,3,4,5,7,8}), plucker({2,3,4,6}))
+    - ncoproduct(CGrLiVec(4, {7}, {2,3,4,5,6,8}), plucker({2,3,4,7}))
+    - ncoproduct(
+      + CGrLiVec(4, {1,2,3,4,5,6,7,8})
+      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+      - CGrLiVec(4, {5}, {1,3,4,6,7,8})
+      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+      - CGrLiVec(4, {6}, {2,3,4,5,7,8})
+      + CGrLiVec(4, {6}, {1,3,4,5,7,8})
+      - CGrLiVec(4, {6}, {1,2,4,5,7,8})
+      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+      - CGrLiVec(4, {7}, {1,3,4,5,6,8})
+      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+      ,
+      plucker({1,2,3,8})
+    )
+  ;
+  std::cout << coexpr;
+  std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+    return term.at(0);
+  });
+  // const auto lhs = filter_coexpr(coexpr, 0, std::vector{Gamma({1,2,3,8})});
+  // const auto rhs = ;
+  // std::cout << lhs;
+  // std::cout << rhs;
+  // std::cout << lhs + rhs;
+
+
+  // const auto expr =
+  //   + CGrLi4(1,2,3,4,5,6,7,8)
+  //   - CGrLi4(1,2,3,4,5,6,7,9)
+  //   + CGrLi4(1,2,3,4,5,6,8,9)
+  //   - CGrLi4(1,2,3,4,5,7,8,9)
+  //   + CGrLi4(1,2,3,4,6,7,8,9)
+  // ;
+  // auto coexpr = ncomultiply(expr, {1,});
+  // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+  //   return term.at(0);
+  // });
+  // // std::cout << to_lyndon_basis(
+  // //   + expr
+  // //   + substitute_variables(expr, {1,2,4,3,5,6,7,8,9})
+  // // );
 }
