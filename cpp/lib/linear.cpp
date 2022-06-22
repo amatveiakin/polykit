@@ -22,15 +22,16 @@ std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) 
 }
 
 std::string annotations_one_liner(const LinearAnnotation& annotations) {
+  const int num_terms = annotations.expression.num_terms();
+  const int max_terms = *current_formatting_config().max_terms_in_annotations_one_liner;
   if (annotations.empty() || annotations.has_errors()) {
     return "<?>";
-  } else if (annotations.expression.num_terms() == 1) {
+  } else if (num_terms <= max_terms) {
     ScopedFormatting sf(FormattingConfig().set_compact_expression(true));
     std::stringstream ss;
     ss << annotations.expression;
-    return trimed(ss.str());
+    return num_terms > 1 ? fmt::parens(ss.str()) : ss.str();
   } else {
-    return absl::StrCat("<", annotations.expression.num_terms(), " ",
-        en_plural(annotations.expression.num_terms(), "term"), ">");
+    return absl::StrCat("<", num_terms, " ", en_plural(num_terms, "term"), ">");
   }
 }

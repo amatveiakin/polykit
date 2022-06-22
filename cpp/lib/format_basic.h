@@ -60,6 +60,7 @@ struct FormattingConfig {
   std::optional<bool> parsable_expression;
   std::optional<bool> compact_expression;
   std::optional<bool> compact_x;
+  std::optional<int> max_terms_in_annotations_one_liner;
   std::optional<bool> new_line_after_expression;
 
   FormattingConfig& set_encoder(Encoder v) { encoder = v; return *this; }
@@ -71,6 +72,7 @@ struct FormattingConfig {
   FormattingConfig& set_parsable_expression(bool v) { parsable_expression = v; return *this; }
   FormattingConfig& set_compact_expression(bool v) { compact_expression = v; return *this; }
   FormattingConfig& set_compact_x(bool v) { compact_x = v; return *this; }
+  FormattingConfig& set_max_terms_in_annotations_one_liner(int v) { max_terms_in_annotations_one_liner = v; return *this; }
   FormattingConfig& set_new_line_after_expression(bool v) { new_line_after_expression = v; return *this; }
 
   void apply_overrides(const FormattingConfig& src);
@@ -176,6 +178,7 @@ public:
 
   virtual std::string num(int v) = 0;
   virtual std::string coeff(int v) = 0;
+  virtual std::string coeff_one_liner(int v, bool first_term) = 0;
 
   virtual std::string sub(
       const std::string& main,
@@ -268,6 +271,9 @@ inline std::string num(int v) {
 }
 inline std::string coeff(int v) {
   return current_encoder()->coeff(v);
+}
+inline std::string coeff_one_liner(int v, bool first_term) {
+  return current_encoder()->coeff_one_liner(v, first_term);
 }
 
 inline std::string sub(

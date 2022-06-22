@@ -485,31 +485,45 @@ std::ostream& to_ostream(
     const BasicLinear<ParamT>& linear,
     const CompareF& sorting_cmp,
     const ContextT& context) {
+  const bool compact_expression = *current_formatting_config().compact_expression;
+  const int line_limit = *current_formatting_config().expression_line_limit;
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
   int max_coeff_length = 0;
   linear.foreach([&](const auto& obj, int coeff) {
     dump.push_back({obj, coeff});
     // TODO: Use "figure space" (U+2007) for Unicode.
-    max_coeff_length = std::max<int>(max_coeff_length, strlen_utf8(fmt::coeff(coeff)));
+    if (!compact_expression) {
+      max_coeff_length = std::max<int>(max_coeff_length, strlen_utf8(fmt::coeff(coeff)));
+    }
   });
   std::sort(dump.begin(), dump.end(), [&](const auto& a, const auto& b) {
     return sorting_cmp(a.first, b.first);
   });
-  const int line_limit = *current_formatting_config().expression_line_limit;
   if (line_limit > 0) {
     int line = 0;
     for (const auto& [obj, coeff] : dump) {
       ++line;
       if (line > line_limit) {
-        os << "..." << fmt::newline();
+        os << "...";
+        if (!compact_expression) {
+          os << fmt::newline();
+        }
         return os;
       }
       // TODO: Fix how padding works for parsable expressions
-      os << pad_left(fmt::coeff(coeff), max_coeff_length);
-      if constexpr (std::is_same_v<ContextT, LinearNoContext>) {
-        os << ParamT::object_to_string(obj) << fmt::newline();
+      if (compact_expression) {
+        const bool first_term = line == 1;
+        os << fmt::coeff_one_liner(coeff, first_term);
       } else {
-        os << ParamT::object_to_string(obj, context) << fmt::newline();
+        os << pad_left(fmt::coeff(coeff), max_coeff_length);
+      }
+      if constexpr (std::is_same_v<ContextT, LinearNoContext>) {
+        os << ParamT::object_to_string(obj);
+      } else {
+        os << ParamT::object_to_string(obj, context);
+      }
+      if (!compact_expression) {
+        os << fmt::newline();
       }
     }
   }
@@ -827,6 +841,7 @@ std::ostream& to_ostream(
     const Linear<ParamT>& linear,
     const CompareF& sorting_cmp,
     const ContextT& context) {
+  const bool compact_expression = *current_formatting_config().compact_expression;
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.is_zero()) {
     const int num_terms = linear.num_terms();
@@ -849,10 +864,13 @@ std::ostream& to_ostream(
       *current_formatting_config().expression_include_annotations) {
     ScopedFormatting sf(FormattingConfig()
       .set_expression_line_limit(FormattingConfig::kNoLineLimit));
+    if (compact_expression) {
+      os << fmt::newline();  // trailing newline is not included in the compact expression
+    }
     os << "~~~" << fmt::newline();
     os << annotations;
   }
-  if (*current_formatting_config().new_line_after_expression) {
+  if (*current_formatting_config().new_line_after_expression || compact_expression) {
     os << fmt::newline();
   }
   os.flush();

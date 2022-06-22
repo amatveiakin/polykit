@@ -221,6 +221,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
+    .set_max_terms_in_annotations_one_liner(100)
   );
 
 

@@ -30,6 +30,7 @@ static const FormattingConfig default_formatting_config = FormattingConfig()
   .set_parsable_expression(false)
   .set_compact_expression(false)
   .set_compact_x(false)
+  .set_max_terms_in_annotations_one_liner(1)
   .set_new_line_after_expression(true)
 ;
 
@@ -136,6 +137,7 @@ void FormattingConfig::apply_overrides(const FormattingConfig& src) {
   apply_field_override(parsable_expression, src.parsable_expression);
   apply_field_override(compact_expression, src.compact_expression);
   apply_field_override(compact_x, src.compact_x);
+  apply_field_override(max_terms_in_annotations_one_liner, src.max_terms_in_annotations_one_liner);
   apply_field_override(new_line_after_expression, src.new_line_after_expression);
 }
 
@@ -272,6 +274,8 @@ class AsciiEncoder : public AbstractEncoder {
     return absl::StrCat(v);
   }
   std::string coeff(int v) override {
+    // TODO: Remove left padding here (and in other formatters), this is done
+    //   by `to_ostream` for in linear.cpp.
     if (*current_formatting_config().parsable_expression) {
       // Allows to copy annotations from the output and use them in code.
       // Should not start with whitespace, because that would mess up identation.
@@ -282,18 +286,25 @@ class AsciiEncoder : public AbstractEncoder {
       else if (v == -1) { return "-  "; }
       else if (v > 0)   { return absl::StrCat("+", v, "*"); }
       else              { return absl::StrCat(v, "*"); }
-    } else if (*current_formatting_config().compact_expression) {
-      if      (v == 0)  { return "0 "; }
-      else if (v == 1)  { return ""; }
-      else if (v == -1) { return "-"; }
-      else if (v > 0)   { return absl::StrCat(v, " "); }
-      else              { return absl::StrCat(v, " "); }
     } else {
       if      (v == 0)  { return " 0 "; }
       else if (v == 1)  { return " + "; }
       else if (v == -1) { return " - "; }
       else if (v > 0)   { return absl::StrCat("+", v, " "); }
       else              { return absl::StrCat(v, " "); }
+    }
+  }
+  std::string coeff_one_liner(int v, bool first_term) override {
+    if (first_term) {
+      if      (v == 1)  { return ""; }
+      else if (v == -1) { return "-"; }
+      else if (v >= 0)  { return absl::StrCat(v, " "); }
+      else              { return absl::StrCat(v, " "); }
+    } else {
+      if      (v == 1)  { return " + "; }
+      else if (v == -1) { return " - "; }
+      else if (v >= 0)  { return absl::StrCat(" +", v, " "); }
+      else              { return absl::StrCat(" ", v, " "); }
     }
   }
 
@@ -398,19 +409,24 @@ class UnicodeEncoder : public AbstractEncoder {
     return fix_minus(absl::StrCat(v));
   }
   std::string coeff(int v) override {
-    if (*current_formatting_config().compact_expression) {
-      if      (v == 0)  { return "0"; }
-      else if (v == 1)  { return ""; }
+    // TODO: Use using "figure space" (U+2007) here.
+    if      (v == 0)  { return absl::StrCat(" 0", kThinNbsp); }
+    else if (v == 1)  { return absl::StrCat(" +", kThinNbsp); }
+    else if (v == -1) { return absl::StrCat(" ", kMinusSign, kThinNbsp); }
+    else if (v > 0)   { return absl::StrCat("+", v, kThinNbsp); }
+    else              { return fix_minus(absl::StrCat(v, kThinNbsp)); }
+  }
+  std::string coeff_one_liner(int v, bool first_term) override {
+    if (first_term) {
+      if      (v == 1)  { return ""; }
       else if (v == -1) { return kMinusSign; }
-      else if (v > 0)   { return absl::StrCat(v); }
-      else              { return fix_minus(absl::StrCat(v)); }
-    } else {
-      // TODO: Use using "figure space" (U+2007) here.
-      if      (v == 0)  { return absl::StrCat(" 0", kThinNbsp); }
-      else if (v == 1)  { return absl::StrCat(" +", kThinNbsp); }
-      else if (v == -1) { return absl::StrCat(" ", kMinusSign, kThinNbsp); }
-      else if (v > 0)   { return absl::StrCat("+", v, kThinNbsp); }
+      else if (v >= 0)  { return absl::StrCat(v, kThinNbsp); }
       else              { return fix_minus(absl::StrCat(v, kThinNbsp)); }
+    } else {
+      if      (v == 1)  { return absl::StrCat(" +", kThinNbsp); }
+      else if (v == -1) { return absl::StrCat(" ", kMinusSign, kThinNbsp); }
+      else if (v >= 0)  { return absl::StrCat(" ", v, kThinNbsp); }
+      else              { return fix_minus(absl::StrCat(" ", v, kThinNbsp)); }
     }
   }
 
@@ -526,17 +542,22 @@ class LatexEncoder : public AbstractEncoder {
     return absl::StrCat(v);
   }
   std::string coeff(int v) override {
-    if (*current_formatting_config().compact_expression) {
-      if      (v == 0)  { return "0"; }
-      else if (v == 1)  { return ""; }
+    if      (v == 0)  { return "0"; }
+    else if (v == 1)  { return "+"; }
+    else if (v == -1) { return "-"; }
+    else if (v > 0)   { return absl::StrCat("+", v); }
+    else              { return absl::StrCat(v); }
+  }
+  std::string coeff_one_liner(int v, bool first_term) override {
+    if (first_term) {
+      if      (v == 1)  { return ""; }
       else if (v == -1) { return "-"; }
-      else if (v > 0)   { return absl::StrCat(v); }
+      else if (v >= 0)  { return absl::StrCat(v); }
       else              { return absl::StrCat(v); }
     } else {
-      if      (v == 0)  { return "0"; }
-      else if (v == 1)  { return "+"; }
+      if      (v == 1)  { return "+"; }
       else if (v == -1) { return "-"; }
-      else if (v > 0)   { return absl::StrCat("+", v); }
+      else if (v >= 0)  { return absl::StrCat("+", v); }
       else              { return absl::StrCat(v); }
     }
   }
