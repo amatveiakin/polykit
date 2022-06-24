@@ -85,6 +85,13 @@ TEST(MappedTest, MappedNested) {
   );
 }
 
+TEST(TransposedTest, Basic) {
+  EXPECT_EQ(
+    transposed(std::vector<std::vector<int>>{{1, 2}, {3, 4}, {5, 6}}),
+    (std::vector<std::vector<int>>{{1, 3, 5}, {2, 4, 6}})
+  );
+}
+
 TEST(IncreasingDecreasingTest, Basic) {
   EXPECT_TRUE(is_strictly_increasing(std::vector{1, 2}));
   EXPECT_FALSE(is_strictly_increasing(std::vector{1, 1}));

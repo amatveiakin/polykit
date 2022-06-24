@@ -433,6 +433,22 @@ Container reversed(Container c) {
 }
 
 template<typename T>
+std::vector<std::vector<T>> transposed(const std::vector<std::vector<T>>& v) {
+  if (v.empty()) {
+    return {};
+  }
+  const int n = v[0].size();
+  std::vector<std::vector<T>> ret(n);
+  for (const auto& row : v) {
+    CHECK_EQ(row.size(), n);
+    for (const int i : range(n)) {
+      ret[i].push_back(row[i]);
+    }
+  }
+  return ret;
+}
+
+template<typename T>
 void keep_unique_sorted(std::vector<T>& v) {
   v.erase(std::unique(v.begin(), v.end()), v.end());
 }

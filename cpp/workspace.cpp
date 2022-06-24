@@ -1812,13 +1812,10 @@ int main(int /*argc*/, char *argv[]) {
   };
   auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
   lhs = lhs.filtered([](const auto& term) {
-    const auto v = mapped(term, [](const Gamma& g) { return g.index_vector(); });
-    // TODO: `transpose` helper function
-    return
-      is_strictly_increasing(std::vector{v[0][0], v[1][0], v[2][0]}) &&
-      is_strictly_increasing(std::vector{v[0][1], v[1][1], v[2][1]}) &&
-      is_strictly_increasing(std::vector{v[0][2], v[1][2], v[2][2]})
-    ;
+    return absl::c_all_of(
+      transposed(mapped(term, [](const Gamma& g) { return g.index_vector(); })),
+      DISAMBIGUATE(is_strictly_increasing)
+    );
   });
   std::cout << prepare(lhs);
 
