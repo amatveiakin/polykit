@@ -134,25 +134,6 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
 }
 
 
-// Note. Synced with casimir_components in CGrLi definition.
-// TODO: Factor out, sync with CasimirDim3 and with cross_product.
-GammaExpr casimir(const std::vector<int>& points) {
-  CHECK(points.size() % 2 == 0);
-  const int p = div_int(points.size(), 2);
-  const auto args = [&](const std::vector<int>& indices) {
-    return choose_indices_one_based(points, indices);
-  };
-  return (
-    + G(args(to_vector(range_incl(1, p))))
-    + G(args(to_vector(range_incl(p+1, 2*p))))
-    - G(args(concat({2*p}, to_vector(range_incl(1, p-1)))))
-    - G(args(to_vector(range_incl(p, 2*p-1))))
-  ).annotate(
-    fmt::function_num_args(fmt::opname("Cas"), points)
-  );
-}
-
-
 struct GammaAltExprParam : internal::GammaExprParam {
   static std::string object_to_string(const ObjectT& obj) {
     const auto vars = common_vars(obj);
@@ -1839,47 +1820,6 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 
 
-  // for (const int weight : range_incl(2, 5)) {
-  //   for (const int p : range_incl(2, 5)) {
-  //     const int num_points = p * 2;
-  //     if (!are_CGrLi_args_ok(weight, num_points)) {
-  //       continue;
-  //     }
-  //     const auto points = to_vector(range_incl(1, num_points));
-  //     Profiler profiler(false);
-  //     const auto lhs = ncomultiply(CGrLiVec(weight, points));
-  //     profiler.finish("lhs");
-  //     GammaNCoExpr rhs;
-  //     if (weight >= p) {
-  //       rhs -= ncoproduct(CGrLiVec(weight - 1, points), casimir(points));
-  //     }
-  //     for (const int k : range_incl(1, p - 2)) {
-  //       for (const auto& [i, i_complement] : index_splits(slice(points, 0, p - 1), k)) {
-  //         for (const auto& [j, j_complement] : index_splits(slice(points, p, 2 * p - 1), p - k - 1)) {
-  //           // TODO: Fix permutation sign in case of custom point order (should look at indices, not point numbers!)
-  //           const int sign = permutation_sign(concat(i_complement, i)) * permutation_sign(concat(j, j_complement));
-  //           const std::vector points_p = {points.at(p - 1)};
-  //           const std::vector points_2p = {points.at(2 * p - 1)};
-  //           for (const int w_1 : range(1, weight)) {
-  //             const int w_2 = weight - w_1;
-  //             const auto args_1 = concat(i_complement, points_p, j, points_2p);
-  //             const auto args_2 = concat(i, points_p, j_complement, points_2p);
-  //             if (are_CGrLi_args_ok(w_1, args_1.size()) && are_CGrLi_args_ok(w_2, args_2.size())) {
-  //               rhs += sign * ncoproduct(
-  //                 pullback(CGrLiVec(w_1, args_1), i),
-  //                 pullback(CGrLiVec(w_2, args_2), j)
-  //               );
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //     profiler.finish("rhs");
-  //     std::cout << lhs - rhs;
-  //   }
-  // }
-
-
   // const auto prepare = [](const GammaExpr& expr) {
   //   return expr.filtered([](const auto& term) {
   //     return all_vars(term).size() == 5 && common_vars(term).size() == 1;
@@ -1955,33 +1895,6 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << p;
   // std::cout << q;
   // std::cout << p.dived_int(2) - q.dived_int(240);
-
-
-  // // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
-  // // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
-  // for (const int weight : range_incl(3, 4)) {
-  //   const int p = weight + 1;
-  //   const int num_points = 2 * p;
-  //   const auto points = to_vector(range_incl(1, num_points));
-  //   const auto lhs = ncomultiply(CGrLiVec(weight, points), {1, weight - 1});
-  //   GammaNCoExpr rhs;
-  //   for (const int i : range(p)) {
-  //     for (const int j : range(p, 2 * p)) {
-  //       const int sign = neg_one_pow(points[i] + points[j]);
-  //       rhs += sign * (
-  //         + ncoproduct(
-  //           CGrLiVec(weight - 1, {points[j]}, removed_indices(points, {i, j})),
-  //           plucker(concat({points[j]}, removed_index(slice(points, 0, p), i)))
-  //         )
-  //         - ncoproduct(
-  //           CGrLiVec(weight - 1, {points[i]}, removed_indices(points, {i, j})),
-  //           plucker(concat({points[i]}, removed_index(slice(points, p), j - p)))
-  //         )
-  //       );
-  //     }
-  //   }
-  //   std::cout << lhs + neg_one_pow(weight) * rhs;
-  // }
 
 
   Profiler profiler;
