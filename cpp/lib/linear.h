@@ -193,9 +193,6 @@ struct VectorLinearParam : SimpleLinearParam<typename BaseParamT::VectorT> {
 };
 
 
-struct LinearNoContext {};
-
-
 template<typename, typename = void>
 struct is_linear : std::false_type {};
 template<typename T>
@@ -207,6 +204,7 @@ inline constexpr bool is_linear_v = is_linear<T>::value;
 template<typename ParamT>
 class BasicLinear {
 public:
+  using Param = ParamT;
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
 #if DISABLE_PACKING
@@ -479,12 +477,12 @@ BasicLinear<ParamT> operator*(int scalar, const BasicLinear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT, typename CompareF, typename ContextT>
+template<typename ParamT, typename CompareF, typename ToStringF>
 std::ostream& to_ostream(
     std::ostream& os,
     const BasicLinear<ParamT>& linear,
     const CompareF& sorting_cmp,
-    const ContextT& context) {
+    const ToStringF& object_to_string) {
   const bool compact_expression = *current_formatting_config().compact_expression;
   const int line_limit = *current_formatting_config().expression_line_limit;
   std::vector<std::pair<typename ParamT::ObjectT, int>> dump;
@@ -517,11 +515,7 @@ std::ostream& to_ostream(
       } else {
         os << pad_left(fmt::coeff(coeff), max_coeff_length);
       }
-      if constexpr (std::is_same_v<ContextT, LinearNoContext>) {
-        os << ParamT::object_to_string(obj);
-      } else {
-        os << ParamT::object_to_string(obj, context);
-      }
+      os << object_to_string(obj);
       if (!compact_expression) {
         os << fmt::newline();
       }
@@ -532,7 +526,7 @@ std::ostream& to_ostream(
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const BasicLinear<ParamT>& linear) {
-  return to_ostream(os, linear, std::less<>{}, LinearNoContext{});
+  return to_ostream(os, linear, std::less<>{}, &ParamT::object_to_string);
 }
 
 
@@ -835,12 +829,12 @@ LinearKeyView<ParamT> key_view(const Linear<ParamT>& linear) {
 template<typename ParamT>
 LinearKeyView<ParamT> key_view(const Linear<ParamT>&& linear) = delete;
 
-template<typename ParamT, typename CompareF, typename ContextT>
+template<typename ParamT, typename CompareF, typename ToStringF>
 std::ostream& to_ostream(
     std::ostream& os,
     const Linear<ParamT>& linear,
     const CompareF& sorting_cmp,
-    const ContextT& context) {
+    const ToStringF& object_to_string) {
   const bool compact_expression = *current_formatting_config().compact_expression;
   const int line_limit = *current_formatting_config().expression_line_limit;
   if (!linear.is_zero()) {
@@ -849,7 +843,7 @@ std::ostream& to_ostream(
     os << ", |coeff| = " << linear.l1_norm();
     if (line_limit > 0) {
       os << ":" << fmt::newline();
-      to_ostream(os, linear.main(), sorting_cmp, context);
+      to_ostream(os, linear.main(), sorting_cmp, object_to_string);
     } else {
       os << fmt::newline();
     }
@@ -878,7 +872,7 @@ std::ostream& to_ostream(
 }
 
 template<typename ParamT, typename TermCompareF, typename GroupByF,
-         typename GroupCompareF, typename GroupHeaderF, typename ContextT>
+         typename GroupCompareF, typename GroupHeaderF, typename ToStringF>
 std::ostream& to_ostream_grouped(
     std::ostream& os,
     const Linear<ParamT>& linear,
@@ -886,12 +880,12 @@ std::ostream& to_ostream_grouped(
     const GroupByF& group_by,
     const GroupCompareF& group_sorting_cmp,
     const GroupHeaderF& group_header,
-    const ContextT& context) {
+    const ToStringF& object_to_string) {
   using LinearT = Linear<ParamT>;
   using GroupT = std::invoke_result_t<GroupByF, typename ParamT::ObjectT>;
   const auto piece_to_ostream = [&](const LinearT& linear_piece) {
     ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
-    to_ostream(os, linear_piece, term_sorting_cmp, context);
+    to_ostream(os, linear_piece, term_sorting_cmp, object_to_string);
   };
   if (linear.is_zero()) {
     piece_to_ostream(linear);
@@ -922,7 +916,7 @@ std::ostream& to_ostream_grouped(
 
 template<typename ParamT>
 std::ostream& operator<<(std::ostream& os, const Linear<ParamT>& linear) {
-  return to_ostream(os, linear, std::less<>{}, LinearNoContext{});
+  return to_ostream(os, linear, std::less<>{}, &ParamT::object_to_string);
 }
 
 // Dump for vector spaces.
@@ -964,38 +958,51 @@ Linear<ParamT> keep_non_weakly_separated(const Linear<ParamT>& expr) {
 }
 
 
+namespace internal {
+
 template<typename ParamT>
 struct PrintableLinear {
   Linear<ParamT> expression;
   FormattingConfig formatting_config;
+  std::function<std::string(typename ParamT::ObjectT)> object_to_string;
 };
 
 template<typename ParamT>
-PrintableLinear<ParamT> decorate_linear(
-    Linear<ParamT> expression,
-    FormattingConfig formatting_config) {
-  return PrintableLinear<ParamT>{std::move(expression), std::move(formatting_config)};
+PrintableLinear<ParamT> to_printable_linear(PrintableLinear<ParamT> printable_expression) {
+  return printable_expression;
+}
+template<typename ParamT>
+PrintableLinear<ParamT> to_printable_linear(Linear<ParamT> expression) {
+  return PrintableLinear<ParamT>{std::move(expression), FormattingConfig{}, &ParamT::object_to_string};
 }
 
-template<typename ParamT>
-PrintableLinear<ParamT> decorate_linear(
-    PrintableLinear<ParamT> printable_expression,
-    const FormattingConfig& formatting_config) {
+template<typename T>
+T add_linear_formatting(T expression, const FormattingConfig& formatting_config) {
+  auto printable_expression = to_printable_linear(std::move(expression));
   printable_expression.formatting_config.apply_overrides(formatting_config);
   return printable_expression;
 }
 
+}  // namespace internal
+
 template<typename ParamT>
-std::ostream& operator<<(std::ostream& os, const PrintableLinear<ParamT>& printable_linear) {
+std::ostream& operator<<(std::ostream& os, const internal::PrintableLinear<ParamT>& printable_linear) {
   ScopedFormatting sf(printable_linear.formatting_config);
-  return os << printable_linear.expression;
+  return to_ostream(os, printable_linear.expression, std::less<>{}, printable_linear.object_to_string);
 }
 
 namespace prnt {
 
+template<typename T, typename ToStringF>
+auto set_object_to_string(T expression, ToStringF object_to_string) {
+  auto printable_expression = to_printable_linear(std::move(expression));
+  printable_expression.object_to_string = object_to_string;
+  return printable_expression;
+}
+
 template<typename T>
 auto header_only(T expression) {
-  return decorate_linear(std::move(expression), FormattingConfig()
+  return internal::add_linear_formatting(std::move(expression), FormattingConfig()
     .set_expression_line_limit(0)
     .set_expression_include_annotations(false)
   );
@@ -1003,7 +1010,7 @@ auto header_only(T expression) {
 
 template<typename T>
 auto line_limit(int limit, T expression) {
-  return decorate_linear(std::move(expression), FormattingConfig()
+  return internal::add_linear_formatting(std::move(expression), FormattingConfig()
     .set_expression_line_limit(limit)
   );
 }

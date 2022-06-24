@@ -134,31 +134,6 @@ Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
 }
 
 
-struct GammaAltExprParam : internal::GammaExprParam {
-  static std::string object_to_string(const ObjectT& obj) {
-    const auto vars = common_vars(obj);
-    return absl::StrCat(
-      internal::GammaExprParam::object_to_string(obj),
-      "   ",
-      str_join(vars, ",")
-    );
-  }
-};
-using GammaAltExpr = Linear<GammaAltExprParam>;
-
-struct GammaAltNCoExprParam : internal::GammaNCoExprParam {
-  static std::string object_to_string(const ObjectT& obj) {
-    const auto vars = common_vars(obj[1]);
-    return absl::StrCat(
-      internal::GammaNCoExprParam::object_to_string(obj),
-      "   ",
-      str_join(vars, ",")
-    );
-  }
-};
-using GammaAltNCoExpr = Linear<GammaAltNCoExprParam>;
-
-
 
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
@@ -1820,51 +1795,47 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 
 
-  // const auto prepare = [](const GammaExpr& expr) {
-  //   return expr.filtered([](const auto& term) {
-  //     return all_vars(term).size() == 5 && common_vars(term).size() == 1;
-  //   }).cast_to<GammaAltExpr>();
-  // };
-  // auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
-  // // static const auto num_variables = [](const auto& term) {
-  // //   return all_vars(term).size();
-  // // };
-  // // to_ostream_grouped(
-  // //   std::cout,
-  // //   expr.cast_to<GammaAltNCoExpr>(),
-  // //   std::less<>{},
-  // //   num_variables,
-  // //   std::less<>{},
-  // //   [](int num_vars) {
-  // //     return absl::StrCat(num_vars, " vars");
-  // //   },
-  // //   LinearNoContext{}
-  // // );
-  // lhs = lhs.filtered([](const auto& term) {
-  //   const auto v = mapped(term, [](const Gamma& g) { return g.index_vector(); });
-  //   // TODO: `transpose` helper function
-  //   return
-  //     is_strictly_increasing(std::vector{v[0][0], v[1][0], v[2][0]}) &&
-  //     is_strictly_increasing(std::vector{v[0][1], v[1][1], v[2][1]}) &&
-  //     is_strictly_increasing(std::vector{v[0][2], v[1][2], v[2][2]})
-  //   ;
-  // });
-  // std::cout << prepare(lhs);
+  const auto prepare = [](const GammaExpr& expr) {
+    return prnt::set_object_to_string(
+      expr.filtered([](const auto& term) {
+        return all_vars(term).size() == 5 && common_vars(term).size() == 1;
+      }),
+      [](const auto& term) {
+        const auto vars = common_vars(term);
+        return absl::StrCat(
+          internal::GammaExprParam::object_to_string(term),
+          "   ",
+          str_join(vars, ",")
+        );
+      }
+    );
+  };
+  auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
+  lhs = lhs.filtered([](const auto& term) {
+    const auto v = mapped(term, [](const Gamma& g) { return g.index_vector(); });
+    // TODO: `transpose` helper function
+    return
+      is_strictly_increasing(std::vector{v[0][0], v[1][0], v[2][0]}) &&
+      is_strictly_increasing(std::vector{v[0][1], v[1][1], v[2][1]}) &&
+      is_strictly_increasing(std::vector{v[0][2], v[1][2], v[2][2]})
+    ;
+  });
+  std::cout << prepare(lhs);
 
-  // GammaExpr rhs;
-  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
-  //   rhs += sign * tensor_product(absl::MakeConstSpan({
-  //     G(choose_indices_one_based(points, {1,2,3})),
-  //     G(choose_indices_one_based(points, {2,3,4})),
-  //     G(choose_indices_one_based(points, {3,4,5})),
-  //   }));
-  // }
-  // rhs = to_lyndon_basis(rhs)
-  //   .dived_int(2)
-  //   .filtered(DISAMBIGUATE(is_weakly_separated))
-  // ;
-  // std::cout << prepare(rhs);
-  // std::cout << prepare(lhs - rhs);
+  GammaExpr rhs;
+  for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+    rhs += sign * tensor_product(absl::MakeConstSpan({
+      G(choose_indices_one_based(points, {1,2,3})),
+      G(choose_indices_one_based(points, {2,3,4})),
+      G(choose_indices_one_based(points, {3,4,5})),
+    }));
+  }
+  rhs = to_lyndon_basis(rhs)
+    .dived_int(2)
+    .filtered(DISAMBIGUATE(is_weakly_separated))
+  ;
+  std::cout << prepare(rhs);
+  std::cout << prepare(lhs - rhs);
 
 
   // GammaExpr p, q;
@@ -1897,91 +1868,91 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << p.dived_int(2) - q.dived_int(240);
 
 
-  Profiler profiler;
-  const auto expr = CGrLi5(1,2,3,4,5,6,7,8);
-  profiler.finish("expr");
-  auto coexpr = ncomultiply(expr, {1,4});
-  profiler.finish("comult");
-  std::cout << "\n";
-  // This zeroes out terms where we take three points from {1,2,3,4} and one point from {5,6,7,8}.
-  // Should also do vice versa to the the full equation.
-  coexpr +=
-    + ncoproduct(CGrLi4(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
-    + ncoproduct(
-      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
-      - CGrLiVec(4, {6}, {1,2,4,5,7,8})
-      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
-      ,
-      plucker({1,2,4,8})
-    )
-    - ncoproduct(
-      + CGrLiVec(4, {5}, {1,3,4,6,7,8})
-      - CGrLiVec(4, {6}, {1,3,4,5,7,8})
-      + CGrLiVec(4, {7}, {1,3,4,5,6,8})
-      ,
-      plucker({1,3,4,8})
-    )
-    + ncoproduct(
-      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
-      - CGrLiVec(4, {6}, {2,3,4,5,7,8})
-      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
-      ,
-      plucker({2,3,4,8})
-    )
-    + ncoproduct(
-      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
-      - CGrLiVec(4, {5}, {1,3,4,6,7,8})
-      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
-      ,
-      plucker({1,2,3,5})
-    )
-    - ncoproduct(
-      + CGrLiVec(4, {6}, {1,2,4,5,7,8})
-      - CGrLiVec(4, {6}, {1,3,4,5,7,8})
-      + CGrLiVec(4, {6}, {2,3,4,5,7,8})
-      ,
-      plucker({1,2,3,6})
-    )
-    + ncoproduct(
-      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
-      - CGrLiVec(4, {7}, {1,3,4,5,6,8})
-      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
-      ,
-      plucker({1,2,3,7})
-    )
-    - ncoproduct(CGrLiVec(4, {5}, {1,2,4,6,7,8}), plucker({1,2,4,5}))
-    + ncoproduct(CGrLiVec(4, {6}, {1,2,4,5,7,8}), plucker({1,2,4,6}))
-    - ncoproduct(CGrLiVec(4, {7}, {1,2,4,5,6,8}), plucker({1,2,4,7}))
-    + ncoproduct(CGrLiVec(4, {5}, {1,3,4,6,7,8}), plucker({1,3,4,5}))
-    - ncoproduct(CGrLiVec(4, {6}, {1,3,4,5,7,8}), plucker({1,3,4,6}))
-    + ncoproduct(CGrLiVec(4, {7}, {1,3,4,5,6,8}), plucker({1,3,4,7}))
-    - ncoproduct(CGrLiVec(4, {5}, {2,3,4,6,7,8}), plucker({2,3,4,5}))
-    + ncoproduct(CGrLiVec(4, {6}, {2,3,4,5,7,8}), plucker({2,3,4,6}))
-    - ncoproduct(CGrLiVec(4, {7}, {2,3,4,5,6,8}), plucker({2,3,4,7}))
-    - ncoproduct(
-      + CGrLiVec(4, {1,2,3,4,5,6,7,8})
-      + CGrLiVec(4, {5}, {2,3,4,6,7,8})
-      - CGrLiVec(4, {5}, {1,3,4,6,7,8})
-      + CGrLiVec(4, {5}, {1,2,4,6,7,8})
-      - CGrLiVec(4, {6}, {2,3,4,5,7,8})
-      + CGrLiVec(4, {6}, {1,3,4,5,7,8})
-      - CGrLiVec(4, {6}, {1,2,4,5,7,8})
-      + CGrLiVec(4, {7}, {2,3,4,5,6,8})
-      - CGrLiVec(4, {7}, {1,3,4,5,6,8})
-      + CGrLiVec(4, {7}, {1,2,4,5,6,8})
-      ,
-      plucker({1,2,3,8})
-    )
-  ;
-  std::cout << coexpr;
-  std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
-    return term.at(0);
-  });
-  // const auto lhs = filter_coexpr(coexpr, 0, std::vector{Gamma({1,2,3,8})});
-  // const auto rhs = ;
-  // std::cout << lhs;
-  // std::cout << rhs;
-  // std::cout << lhs + rhs;
+  // Profiler profiler;
+  // const auto expr = CGrLi5(1,2,3,4,5,6,7,8);
+  // profiler.finish("expr");
+  // auto coexpr = ncomultiply(expr, {1,4});
+  // profiler.finish("comult");
+  // std::cout << "\n";
+  // // This zeroes out terms where we take three points from {1,2,3,4} and one point from {5,6,7,8}.
+  // // Should also do vice versa to the the full equation.
+  // coexpr +=
+  //   + ncoproduct(CGrLi4(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  //   + ncoproduct(
+  //     + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - CGrLiVec(4, {6}, {1,2,4,5,7,8})
+  //     + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+  //     ,
+  //     plucker({1,2,4,8})
+  //   )
+  //   - ncoproduct(
+  //     + CGrLiVec(4, {5}, {1,3,4,6,7,8})
+  //     - CGrLiVec(4, {6}, {1,3,4,5,7,8})
+  //     + CGrLiVec(4, {7}, {1,3,4,5,6,8})
+  //     ,
+  //     plucker({1,3,4,8})
+  //   )
+  //   + ncoproduct(
+  //     + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+  //     - CGrLiVec(4, {6}, {2,3,4,5,7,8})
+  //     + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+  //     ,
+  //     plucker({2,3,4,8})
+  //   )
+  //   + ncoproduct(
+  //     + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - CGrLiVec(4, {5}, {1,3,4,6,7,8})
+  //     + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+  //     ,
+  //     plucker({1,2,3,5})
+  //   )
+  //   - ncoproduct(
+  //     + CGrLiVec(4, {6}, {1,2,4,5,7,8})
+  //     - CGrLiVec(4, {6}, {1,3,4,5,7,8})
+  //     + CGrLiVec(4, {6}, {2,3,4,5,7,8})
+  //     ,
+  //     plucker({1,2,3,6})
+  //   )
+  //   + ncoproduct(
+  //     + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+  //     - CGrLiVec(4, {7}, {1,3,4,5,6,8})
+  //     + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+  //     ,
+  //     plucker({1,2,3,7})
+  //   )
+  //   - ncoproduct(CGrLiVec(4, {5}, {1,2,4,6,7,8}), plucker({1,2,4,5}))
+  //   + ncoproduct(CGrLiVec(4, {6}, {1,2,4,5,7,8}), plucker({1,2,4,6}))
+  //   - ncoproduct(CGrLiVec(4, {7}, {1,2,4,5,6,8}), plucker({1,2,4,7}))
+  //   + ncoproduct(CGrLiVec(4, {5}, {1,3,4,6,7,8}), plucker({1,3,4,5}))
+  //   - ncoproduct(CGrLiVec(4, {6}, {1,3,4,5,7,8}), plucker({1,3,4,6}))
+  //   + ncoproduct(CGrLiVec(4, {7}, {1,3,4,5,6,8}), plucker({1,3,4,7}))
+  //   - ncoproduct(CGrLiVec(4, {5}, {2,3,4,6,7,8}), plucker({2,3,4,5}))
+  //   + ncoproduct(CGrLiVec(4, {6}, {2,3,4,5,7,8}), plucker({2,3,4,6}))
+  //   - ncoproduct(CGrLiVec(4, {7}, {2,3,4,5,6,8}), plucker({2,3,4,7}))
+  //   - ncoproduct(
+  //     + CGrLiVec(4, {1,2,3,4,5,6,7,8})
+  //     + CGrLiVec(4, {5}, {2,3,4,6,7,8})
+  //     - CGrLiVec(4, {5}, {1,3,4,6,7,8})
+  //     + CGrLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - CGrLiVec(4, {6}, {2,3,4,5,7,8})
+  //     + CGrLiVec(4, {6}, {1,3,4,5,7,8})
+  //     - CGrLiVec(4, {6}, {1,2,4,5,7,8})
+  //     + CGrLiVec(4, {7}, {2,3,4,5,6,8})
+  //     - CGrLiVec(4, {7}, {1,3,4,5,6,8})
+  //     + CGrLiVec(4, {7}, {1,2,4,5,6,8})
+  //     ,
+  //     plucker({1,2,3,8})
+  //   )
+  // ;
+  // std::cout << coexpr;
+  // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+  //   return term.at(0);
+  // });
+  // // const auto lhs = filter_coexpr(coexpr, 0, std::vector{Gamma({1,2,3,8})});
+  // // const auto rhs = ;
+  // // std::cout << lhs;
+  // // std::cout << rhs;
+  // // std::cout << lhs + rhs;
 
 
   // const auto expr =

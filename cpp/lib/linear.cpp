@@ -7,12 +7,12 @@ std::ostream& operator<<(std::ostream& os, const LinearAnnotation& annotations) 
   using namespace cmp;
   switch (*current_formatting_config().annotation_sorting) {
     case AnnotationSorting::lexicographic:
-      to_ostream(os, annotations.expression, std::less<>{}, LinearNoContext{});
+      to_ostream(os, annotations.expression, std::less<>{}, &BasicLinearAnnotation::Param::object_to_string);
       break;
     case AnnotationSorting::length:
       to_ostream(os, annotations.expression, projected([](const std::string& s) {
         return std::tuple{desc_val(s.size()), asc_ref(s)};
-      }), LinearNoContext{});
+      }), &BasicLinearAnnotation::Param::object_to_string);
       break;
   }
   for (const auto& err : annotations.errors) {

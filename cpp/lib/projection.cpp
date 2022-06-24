@@ -70,6 +70,6 @@ void print_sorted_by_num_distinct_variables(std::ostream& os, const ProjectionEx
     [](int num_vars) {
       return absl::StrCat(num_vars, " vars");
     },
-    LinearNoContext{}
+    &ProjectionExpr::Param::object_to_string
   );
 }

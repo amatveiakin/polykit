@@ -69,31 +69,31 @@ static std::string short_form_to_string(const ShortFormRatio& tmpl, CrossRatioN 
   );
 }
 
+static std::string snow_line_to_string(
+    const LiraParamOnes& param, const ShortFormRatioStorage* short_forms) {
+  return fmt::function(
+    lira_param_function_name(param.foreweight(), param.weights()),
+    mapped(param.ratios(), [&](const CrossRatioNOrUnity& ratio) {
+      if (ratio.is_unity()) {
+        return fmt::unity();
+      }
+      if (short_forms) {
+        const auto& points = ratio.as_ratio();
+        auto short_form = short_forms->get_short_form_ratio(points);
+        return short_form.has_value()
+          ? short_form_to_string(*short_form, points)
+          : ratio_to_string(ratio, metavar_to_string_by_name);
+      } else {
+        return ratio_to_string(ratio, metavar_to_string_by_name);
+      }
+    }),
+    HSpacing::sparse
+  );
+}
 
 struct SnowLiraExprParam : LiraExprParam {
   static std::string object_to_string(const LiraParamOnes& param) {
-    return object_to_string(param, nullptr);
-  }
-  static std::string object_to_string(
-      const LiraParamOnes& param, const ShortFormRatioStorage* short_forms) {
-    return fmt::function(
-      lira_param_function_name(param.foreweight(), param.weights()),
-      mapped(param.ratios(), [&](const CrossRatioNOrUnity& ratio) {
-        if (ratio.is_unity()) {
-          return fmt::unity();
-        }
-        if (short_forms) {
-          const auto& points = ratio.as_ratio();
-          auto short_form = short_forms->get_short_form_ratio(points);
-          return short_form.has_value()
-            ? short_form_to_string(*short_form, points)
-            : ratio_to_string(ratio, metavar_to_string_by_name);
-        } else {
-          return ratio_to_string(ratio, metavar_to_string_by_name);
-        }
-      }),
-      HSpacing::sparse
-    );
+    return snow_line_to_string(param, nullptr);
   }
 };
 
@@ -406,7 +406,9 @@ std::ostream& to_ostream(
       }
     });
     short_forms.update_normal_forms();
-    to_ostream(os, snow_expr, std::less<>{}, &short_forms);
+    to_ostream(os, snow_expr, std::less<>{}, [&](const auto& term) {
+      return snow_line_to_string(term, &short_forms);
+    });
   } else {
     os << snow_expr;
   }
