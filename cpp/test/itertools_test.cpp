@@ -8,11 +8,6 @@
 #include "lib/zip.h"
 
 
-template<typename Container>
-int permutation_sign(Container c) {
-  return sort_with_sign(c);
-}
-
 // TODO: Replace with `to_vector` when it works with itertools iterators.
 template<typename Container>
 auto dump_to_vector(const Container& c) {

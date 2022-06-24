@@ -187,3 +187,6 @@ GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_univ
 
 GammaExpr symmetrize_double(const GammaExpr& expr, int num_points);
 GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points);
+
+std::vector<int> common_vars(const GammaExpr::ObjectT& term);
+std::vector<int> all_vars(const GammaExpr::ObjectT& term);

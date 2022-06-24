@@ -84,3 +84,21 @@ TEST(MappedTest, MappedNested) {
     (std::vector<std::vector<std::vector<int>>>{{{11}, {101}}, {{1001}}})
   );
 }
+
+TEST(IncreasingDecreasingTest, Basic) {
+  EXPECT_TRUE(is_strictly_increasing(std::vector{1, 2}));
+  EXPECT_FALSE(is_strictly_increasing(std::vector{1, 1}));
+  EXPECT_FALSE(is_strictly_increasing(std::vector{2, 1}));
+
+  EXPECT_TRUE(is_non_decreasing(std::vector{1, 2}));
+  EXPECT_TRUE(is_non_decreasing(std::vector{1, 1}));
+  EXPECT_FALSE(is_non_decreasing(std::vector{2, 1}));
+
+  EXPECT_FALSE(is_strictly_decreasing(std::vector{1, 2}));
+  EXPECT_FALSE(is_strictly_decreasing(std::vector{1, 1}));
+  EXPECT_TRUE(is_strictly_decreasing(std::vector{2, 1}));
+
+  EXPECT_FALSE(is_non_increasing(std::vector{1, 2}));
+  EXPECT_TRUE(is_non_increasing(std::vector{1, 1}));
+  EXPECT_TRUE(is_non_increasing(std::vector{2, 1}));
+}

@@ -40,3 +40,8 @@ template<typename Container>
 [[nodiscard]] int sort_with_sign(Container& v) {
   return sort_with_sign(v, std::less<>());
 }
+
+template<typename Container>
+int permutation_sign(Container c) {
+  return sort_with_sign(c);
+}

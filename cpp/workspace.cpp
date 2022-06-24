@@ -152,33 +152,6 @@ GammaExpr casimir(const std::vector<int>& points) {
   );
 }
 
-// TODO: Factor out
-template<typename Container>
-int permutation_sign(Container c) {
-  return sort_with_sign(c);
-}
-
-template<typename Container>
-bool is_strictly_increasing(const Container& c) {
-  return absl::c_adjacent_find(c, std::greater_equal<>()) == c.end();
-}
-
-
-std::vector<int> common_vars(const std::vector<Gamma>& term) {
-  auto indices = term[0].index_bitset();
-  for (const Gamma& g : term) {
-    indices &= g.index_bitset();
-  }
-  return bitset_to_vector(indices, Gamma::kBitsetOffset);
-}
-
-std::vector<int> all_vars(const std::vector<Gamma>& term) {
-  auto indices = term[0].index_bitset();
-  for (const Gamma& g : term) {
-    indices |= g.index_bitset();
-  }
-  return bitset_to_vector(indices, Gamma::kBitsetOffset);
-}
 
 struct GammaAltExprParam : internal::GammaExprParam {
   static std::string object_to_string(const ObjectT& obj) {

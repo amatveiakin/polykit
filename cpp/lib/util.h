@@ -518,6 +518,23 @@ bool all_equal(const Container& c, const Projector& projector) {
 }
 
 template<typename Container>
+bool is_strictly_increasing(const Container& c) {
+  return absl::c_adjacent_find(c, std::greater_equal<>()) == c.end();
+}
+template<typename Container>
+bool is_non_decreasing(const Container& c) {
+  return absl::c_adjacent_find(c, std::greater<>()) == c.end();
+}
+template<typename Container>
+bool is_strictly_decreasing(const Container& c) {
+  return absl::c_adjacent_find(c, std::less_equal<>()) == c.end();
+}
+template<typename Container>
+bool is_non_increasing(const Container& c) {
+  return absl::c_adjacent_find(c, std::less<>()) == c.end();
+}
+
+template<typename Container>
 auto sum(const Container& c) {
   return absl::c_accumulate(c, typename Container::value_type());
 }

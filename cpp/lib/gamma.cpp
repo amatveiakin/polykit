@@ -246,3 +246,19 @@ GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
   }
   return ret;
 }
+
+std::vector<int> common_vars(const GammaExpr::ObjectT& term) {
+  auto indices = term[0].index_bitset();
+  for (const Gamma& g : term) {
+    indices &= g.index_bitset();
+  }
+  return bitset_to_vector(indices, Gamma::kBitsetOffset);
+}
+
+std::vector<int> all_vars(const GammaExpr::ObjectT& term) {
+  auto indices = term[0].index_bitset();
+  for (const Gamma& g : term) {
+    indices |= g.index_bitset();
+  }
+  return bitset_to_vector(indices, Gamma::kBitsetOffset);
+}
