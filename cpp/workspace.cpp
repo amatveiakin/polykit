@@ -1795,44 +1795,44 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << ChernCocycle(4, 1, {1,2,3,4,5});
 
 
-  const auto prepare = [](const GammaExpr& expr) {
-    return prnt::set_object_to_string(
-      expr.filtered([](const auto& term) {
-        return all_vars(term).size() == 5 && common_vars(term).size() == 1;
-      }),
-      [](const auto& term) {
-        const auto vars = common_vars(term);
-        return absl::StrCat(
-          internal::GammaExprParam::object_to_string(term),
-          "   ",
-          str_join(vars, ",")
-        );
-      }
-    );
-  };
-  auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
-  lhs = lhs.filtered([](const auto& term) {
-    return absl::c_all_of(
-      transposed(mapped(term, [](const Gamma& g) { return g.index_vector(); })),
-      DISAMBIGUATE(is_strictly_increasing)
-    );
-  });
-  std::cout << prepare(lhs);
+  // const auto prepare = [](const GammaExpr& expr) {
+  //   return prnt::set_object_to_string(
+  //     expr.filtered([](const auto& term) {
+  //       return all_vars(term).size() == 5 && common_vars(term).size() == 1;
+  //     }),
+  //     [](const auto& term) {
+  //       const auto vars = common_vars(term);
+  //       return absl::StrCat(
+  //         internal::GammaExprParam::object_to_string(term),
+  //         "   ",
+  //         str_join(vars, ",")
+  //       );
+  //     }
+  //   );
+  // };
+  // auto lhs = to_lyndon_basis(CGrLi3(1,2,3,4,5,6));
+  // lhs = lhs.filtered([](const auto& term) {
+  //   return absl::c_all_of(
+  //     transposed(mapped(term, [](const Gamma& g) { return g.index_vector(); })),
+  //     DISAMBIGUATE(is_strictly_increasing)
+  //   );
+  // });
+  // std::cout << prepare(lhs);
 
-  GammaExpr rhs;
-  for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
-    rhs += sign * tensor_product(absl::MakeConstSpan({
-      G(choose_indices_one_based(points, {1,2,3})),
-      G(choose_indices_one_based(points, {2,3,4})),
-      G(choose_indices_one_based(points, {3,4,5})),
-    }));
-  }
-  rhs = to_lyndon_basis(rhs)
-    .dived_int(2)
-    .filtered(DISAMBIGUATE(is_weakly_separated))
-  ;
-  std::cout << prepare(rhs);
-  std::cout << prepare(lhs - rhs);
+  // GammaExpr rhs;
+  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+  //   rhs += sign * tensor_product(absl::MakeConstSpan({
+  //     G(choose_indices_one_based(points, {1,2,3})),
+  //     G(choose_indices_one_based(points, {2,3,4})),
+  //     G(choose_indices_one_based(points, {3,4,5})),
+  //   }));
+  // }
+  // rhs = to_lyndon_basis(rhs)
+  //   .dived_int(2)
+  //   .filtered(DISAMBIGUATE(is_weakly_separated))
+  // ;
+  // std::cout << prepare(rhs);
+  // std::cout << prepare(lhs - rhs);
 
 
   // GammaExpr p, q;
@@ -1967,4 +1967,26 @@ int main(int /*argc*/, char *argv[]) {
   // //   + expr
   // //   + substitute_variables(expr, {1,2,4,3,5,6,7,8,9})
   // // );
+
+
+  // TODO: Make `permutations` work with `to_vector`
+  const int p = 4;
+  const auto include_permutation = [](const auto& points) {
+    return
+      absl::c_is_sorted(slice(points, 0, p - 1)) &&
+      absl::c_is_sorted(slice(points, p, 2 * p - 1)) &&
+      points[0] < points[p]
+    ;
+  };
+  std::vector<std::vector<int>> permutations_vec;
+  for (const auto& perm : permutations({1,2,3,4,5,6,7,8})) {
+    if (include_permutation(perm)) {
+      permutations_vec.push_back(perm);
+    }
+  }
+  const auto space = mapped_parallel(permutations_vec, [](const auto& points) {
+    return CGrLiVec(5, points);
+  });
+  const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  std::cout << rank << " / " << space.size() << "\n";
 }
