@@ -1969,24 +1969,45 @@ int main(int /*argc*/, char *argv[]) {
   // // );
 
 
-  // TODO: Make `permutations` work with `to_vector`
-  const int p = 4;
-  const auto include_permutation = [](const auto& points) {
-    return
-      absl::c_is_sorted(slice(points, 0, p - 1)) &&
-      absl::c_is_sorted(slice(points, p, 2 * p - 1)) &&
-      points[0] < points[p]
-    ;
-  };
-  std::vector<std::vector<int>> permutations_vec;
-  for (const auto& perm : permutations({1,2,3,4,5,6,7,8})) {
-    if (include_permutation(perm)) {
-      permutations_vec.push_back(perm);
+  // // TODO: Make `permutations` work with `to_vector`
+  // const int p = 4;
+  // const auto include_permutation = [](const auto& points) {
+  //   return
+  //     absl::c_is_sorted(slice(points, 0, p - 1)) &&
+  //     absl::c_is_sorted(slice(points, p, 2 * p - 1)) &&
+  //     points[0] < points[p]
+  //   ;
+  // };
+  // std::vector<std::vector<int>> permutations_vec;
+  // for (const auto& perm : permutations({1,2,3,4,5,6,7,8})) {
+  //   if (include_permutation(perm)) {
+  //     permutations_vec.push_back(perm);
+  //   }
+  // }
+  // const auto space = mapped_parallel(permutations_vec, [](const auto& points) {
+  //   return CGrLiVec(5, points);
+  // });
+  // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << rank << " / " << space.size() << "\n";
+
+
+  const auto expr =
+    + CGrLi4(1,2,3,4,5,6,7,8)
+    + CGrLi4(2,3,4,5,6,7,8,1)
+  ;
+  Gr_Space space;
+  for (const auto& points : combinations({1,2,3,4,5,6,7,8}, 7)) {
+    for (const auto& [pb_points, li_points] : index_splits(points, 1)) {
+      for (const int shift : range(li_points.size())) {
+        space.push_back(CGrLiVec(4, pb_points, rotated_vector(li_points, shift)));
+      }
     }
   }
-  const auto space = mapped_parallel(permutations_vec, [](const auto& points) {
-    return CGrLiVec(5, points);
-  });
-  const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-  std::cout << rank << " / " << space.size() << "\n";
+  for (const auto& points : combinations({1,2,3,4,5,6,7,8}, 6)) {
+    for (const auto& [pb_points, li_points] : index_splits(points, 2)) {
+      space.push_back(CGrLiVec(4, pb_points, li_points));
+    }
+  }
+  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  std::cout << to_string(ranks) << "\n";
 }
