@@ -237,7 +237,7 @@ TEST(CGrLiTest, LARGE_AomotoPolylogProperties) {
   );
 }
 
-TEST(CGrLiTest, CGrLiViaLowerNumberOfPoints) {
+TEST(CGrLiTest, CGrLiViaLowerDim) {
   // Should be true for any weight
   for (const int weight : range_incl(2, 3)) {
     const int p = weight + 1;
@@ -255,7 +255,7 @@ TEST(CGrLiTest, CGrLiViaLowerNumberOfPoints) {
   }
 }
 
-TEST(CGrLiTest, Comultiplication) {
+TEST(CGrLiTest, LARGE_Comultiplication) {
   for (const int weight : range_incl(2, 4)) {
     for (const int p : range_incl(2, 5)) {
       const int num_points = p * 2;
@@ -294,7 +294,7 @@ TEST(CGrLiTest, Comultiplication) {
   }
 }
 
-TEST(CGrLiTest, ComultiplicationAomoto) {
+TEST(CGrLiTest, LARGE_ComultiplicationAomoto) {
   // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
   // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
   for (const int weight : range_incl(3, 4)) {
@@ -320,6 +320,91 @@ TEST(CGrLiTest, ComultiplicationAomoto) {
     }
     EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, -neg_one_pow(weight) * rhs);
   }
+}
+
+TEST(CGrLiTest, LARGE_CGrLi4ShiftedSumViaLowerDim) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + CGrLi4(1,2,3,4,5,6,7,8)
+    + CGrLi4(2,3,4,5,6,7,8,1)
+    - CGrLi4[{1}](2,3,5,6,7,8)
+    + CGrLi4[{1}](2,4,5,6,7,8)
+    - CGrLi4[{1}](3,4,5,6,7,8)
+    + CGrLi4[{2}](1,3,5,6,7,8)
+    - CGrLi4[{2}](1,4,5,6,7,8)
+    - CGrLi4[{2}](3,4,5,6,7,1)
+    + CGrLi4[{2}](3,4,5,6,7,8)
+    + CGrLi4[{2}](3,4,5,6,8,1)
+    - CGrLi4[{2}](3,4,5,7,8,1)
+    - CGrLi4[{3}](1,2,5,6,7,8)
+    + CGrLi4[{3}](1,4,5,6,7,8)
+    + CGrLi4[{3}](2,4,5,6,7,1)
+    - CGrLi4[{3}](2,4,5,6,7,8)
+    - CGrLi4[{3}](2,4,5,6,8,1)
+    + CGrLi4[{3}](2,4,5,7,8,1)
+    + CGrLi4[{4}](1,2,5,6,7,8)
+    - CGrLi4[{4}](1,3,5,6,7,8)
+    - CGrLi4[{4}](2,3,5,6,7,1)
+    + CGrLi4[{4}](2,3,5,6,7,8)
+    + CGrLi4[{4}](2,3,5,6,8,1)
+    - CGrLi4[{4}](2,3,5,7,8,1)
+    + CGrLi4[{5}](2,3,4,6,7,1)
+    - CGrLi4[{5}](2,3,4,6,8,1)
+    + CGrLi4[{5}](2,3,4,7,8,1)
+    - CGrLi4[{6}](2,3,4,5,7,1)
+    + CGrLi4[{6}](2,3,4,5,8,1)
+    - CGrLi4[{6}](2,3,4,7,8,1)
+    + CGrLi4[{6}](2,3,5,7,8,1)
+    - CGrLi4[{6}](2,4,5,7,8,1)
+    + CGrLi4[{6}](3,4,5,7,8,1)
+    + CGrLi4[{7}](2,3,4,5,6,1)
+    - CGrLi4[{7}](2,3,4,5,8,1)
+    + CGrLi4[{7}](2,3,4,6,8,1)
+    - CGrLi4[{7}](2,3,5,6,8,1)
+    + CGrLi4[{7}](2,4,5,6,8,1)
+    - CGrLi4[{7}](3,4,5,6,8,1)
+    - CGrLi4[{8}](2,3,4,5,6,1)
+    + CGrLi4[{8}](2,3,4,5,7,1)
+    - CGrLi4[{8}](2,3,4,6,7,1)
+    + CGrLi4[{8}](2,3,5,6,7,1)
+    - CGrLi4[{8}](2,4,5,6,7,1)
+    + CGrLi4[{8}](3,4,5,6,7,1)
+    - CGrLi4[{2,6}](1,3,5,7)
+    + CGrLi4[{2,6}](1,3,5,8)
+    + CGrLi4[{2,6}](1,4,5,7)
+    - CGrLi4[{2,6}](1,4,5,8)
+    + CGrLi4[{2,7}](1,3,5,6)
+    - CGrLi4[{2,7}](1,3,5,8)
+    - CGrLi4[{2,7}](1,4,5,6)
+    + CGrLi4[{2,7}](1,4,5,8)
+    - CGrLi4[{2,8}](1,3,5,6)
+    + CGrLi4[{2,8}](1,3,5,7)
+    + CGrLi4[{2,8}](1,4,5,6)
+    - CGrLi4[{2,8}](1,4,5,7)
+    + CGrLi4[{3,6}](1,2,5,7)
+    - CGrLi4[{3,6}](1,2,5,8)
+    - CGrLi4[{3,6}](1,4,5,7)
+    + CGrLi4[{3,6}](1,4,5,8)
+    - CGrLi4[{3,7}](1,2,5,6)
+    + CGrLi4[{3,7}](1,2,5,8)
+    + CGrLi4[{3,7}](1,4,5,6)
+    - CGrLi4[{3,7}](1,4,5,8)
+    + CGrLi4[{3,8}](1,2,5,6)
+    - CGrLi4[{3,8}](1,2,5,7)
+    - CGrLi4[{3,8}](1,4,5,6)
+    + CGrLi4[{3,8}](1,4,5,7)
+    - CGrLi4[{4,6}](1,2,5,7)
+    + CGrLi4[{4,6}](1,2,5,8)
+    + CGrLi4[{4,6}](1,3,5,7)
+    - CGrLi4[{4,6}](1,3,5,8)
+    + CGrLi4[{4,7}](1,2,5,6)
+    - CGrLi4[{4,7}](1,2,5,8)
+    - CGrLi4[{4,7}](1,3,5,6)
+    + CGrLi4[{4,7}](1,3,5,8)
+    - CGrLi4[{4,8}](1,2,5,6)
+    + CGrLi4[{4,8}](1,2,5,7)
+    + CGrLi4[{4,8}](1,3,5,6)
+    - CGrLi4[{4,8}](1,3,5,7)
+  );
 }
 
 TEST(CGrLiTest, CGrLi3Equation) {

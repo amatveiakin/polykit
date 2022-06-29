@@ -1991,7 +1991,7 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << rank << " / " << space.size() << "\n";
 
 
-  const auto expr =
+  auto expr =
     + CGrLi4(1,2,3,4,5,6,7,8)
     + CGrLi4(2,3,4,5,6,7,8,1)
   ;
@@ -2008,6 +2008,11 @@ int main(int /*argc*/, char *argv[]) {
       space.push_back(CGrLiVec(4, pb_points, li_points));
     }
   }
-  const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  std::cout << to_string(ranks) << "\n";
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  expr = to_lyndon_basis(expr);
+  space = mapped(space, DISAMBIGUATE(to_lyndon_basis));
+  const auto eqn = find_equation(expr, space, {0,1,-1});
+  std::cout << eqn;
 }
