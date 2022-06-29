@@ -1991,28 +1991,136 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << rank << " / " << space.size() << "\n";
 
 
-  auto expr =
-    + CGrLi4(1,2,3,4,5,6,7,8)
-    + CGrLi4(2,3,4,5,6,7,8,1)
-  ;
-  Gr_Space space;
-  for (const auto& points : combinations({1,2,3,4,5,6,7,8}, 7)) {
-    for (const auto& [pb_points, li_points] : index_splits(points, 1)) {
-      for (const int shift : range(li_points.size())) {
-        space.push_back(CGrLiVec(4, pb_points, rotated_vector(li_points, shift)));
-      }
-    }
-  }
-  for (const auto& points : combinations({1,2,3,4,5,6,7,8}, 6)) {
-    for (const auto& [pb_points, li_points] : index_splits(points, 2)) {
-      space.push_back(CGrLiVec(4, pb_points, li_points));
-    }
-  }
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  // std::cout << to_string(ranks) << "\n";
+  const auto lhs = ncomultiply(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {1,3});
 
-  expr = to_lyndon_basis(expr);
-  space = mapped(space, DISAMBIGUATE(to_lyndon_basis));
-  const auto eqn = find_equation(expr, space, {0,1,-1});
-  std::cout << eqn;
+  // const auto up = [](const auto& f) {
+  //   return chern_arrow_up(f(std::vector{1,2,3,4,5,6,7}), 8);
+  // };
+  const auto up = [](const auto& f) {
+    const int num_dst_points = 8;
+    GammaNCoExpr ret;
+    const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
+    for (const int i : range(num_dst_points)) {
+      const auto [removed_points, dst_points] = split_indices(all_dst_points, {i});
+      ret += neg_one_pow(i) * pullback(f(dst_points), removed_points);
+    }
+    return ret;
+  };
+
+  const auto rhs = up([](const auto& points) {
+    const auto args = [&](const std::vector<int>& indices) {
+      return choose_indices_one_based(points, indices);
+    };
+    return
+      - ncoproduct(CGrLiVec(3, args({1,2,3,4,5,6})), plucker(args({1,2,3})))
+      - ncoproduct(CGrLiVec(3, args({1,2,3,4,5,6})), plucker(args({4,5,6})))
+      + ncoproduct(CGrLiVec(3, args({1,2,3,4,5,7})), plucker(args({1,2,3})))
+      + ncoproduct(CGrLiVec(3, args({1,2,3,4,5,7})), plucker(args({4,5,7})))
+      - ncoproduct(CGrLiVec(3, args({1,2,3,4,6,7})), plucker(args({1,2,3})))
+      - ncoproduct(CGrLiVec(3, args({1,2,3,4,6,7})), plucker(args({4,6,7})))
+      + ncoproduct(CGrLiVec(3, args({1,2,3,5,6,7})), plucker(args({1,2,3})))
+      + ncoproduct(CGrLiVec(3, args({1,2,3,5,6,7})), plucker(args({5,6,7})))
+      - ncoproduct(CGrLiVec(3, args({1,2,4,5,6,7})), plucker(args({4,5,6})))
+      - ncoproduct(CGrLiVec(3, args({1,2,4,5,6,7})), plucker(args({7,1,2})))
+      + ncoproduct(CGrLiVec(3, args({1,3,4,5,6,7})), plucker(args({4,5,6})))
+      + ncoproduct(CGrLiVec(3, args({1,3,4,5,6,7})), plucker(args({7,1,3})))
+      - ncoproduct(CGrLiVec(3, args({2,3,4,5,6,7})), plucker(args({4,5,6})))
+      - ncoproduct(CGrLiVec(3, args({2,3,4,5,6,7})), plucker(args({7,2,3})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({1,4,5,6})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({1,4,5,6})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({1,5,6,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({1,5,6,7})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({2,4,5,6})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({2,4,5,6})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({2,4,5,7})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({3}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({2,5,6,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({3,4,5,6})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({3,4,5,6})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({1}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({1,2,3})), CGrLiVec(3, args({2}), args({3,4,6,7})))
+      + ncoproduct(plucker(args({1,2,4})), CGrLiVec(3, args({4}), args({1,3,5,7})))
+      + ncoproduct(plucker(args({1,2,4})), CGrLiVec(3, args({2}), args({1,5,6,7})))
+      - ncoproduct(plucker(args({1,2,4})), CGrLiVec(3, args({4}), args({1,5,6,7})))
+      - ncoproduct(plucker(args({1,2,4})), CGrLiVec(3, args({1}), args({2,5,6,7})))
+      - ncoproduct(plucker(args({1,2,5})), CGrLiVec(3, args({5}), args({1,3,4,7})))
+      + ncoproduct(plucker(args({1,2,5})), CGrLiVec(3, args({5}), args({1,4,6,7})))
+      + ncoproduct(plucker(args({1,2,6})), CGrLiVec(3, args({6}), args({1,3,4,7})))
+      - ncoproduct(plucker(args({1,2,6})), CGrLiVec(3, args({6}), args({1,4,5,7})))
+      - ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({7}), args({1,3,4,6})))
+      + ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({6}), args({1,4,5,7})))
+      - ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({5}), args({1,4,6,7})))
+      + ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({7}), args({2,4,5,6})))
+      - ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({6}), args({2,4,5,7})))
+      + ncoproduct(plucker(args({1,2,7})), CGrLiVec(3, args({5}), args({2,4,6,7})))
+      - ncoproduct(plucker(args({1,3,4})), CGrLiVec(3, args({3}), args({1,5,6,7})))
+      + ncoproduct(plucker(args({1,3,4})), CGrLiVec(3, args({4}), args({1,5,6,7})))
+      - ncoproduct(plucker(args({1,3,5})), CGrLiVec(3, args({5}), args({1,4,6,7})))
+      + ncoproduct(plucker(args({1,3,6})), CGrLiVec(3, args({6}), args({1,4,5,7})))
+      - ncoproduct(plucker(args({1,3,7})), CGrLiVec(3, args({6}), args({1,4,5,7})))
+      + ncoproduct(plucker(args({1,3,7})), CGrLiVec(3, args({5}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({1,3,7})), CGrLiVec(3, args({7}), args({3,4,5,6})))
+      + ncoproduct(plucker(args({1,3,7})), CGrLiVec(3, args({6}), args({3,4,5,7})))
+      - ncoproduct(plucker(args({1,3,7})), CGrLiVec(3, args({5}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({1,5,6})), CGrLiVec(3, args({1}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({1,5,7})), CGrLiVec(3, args({1}), args({3,4,5,7})))
+      - ncoproduct(plucker(args({1,6,7})), CGrLiVec(3, args({1}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({1,6,7})), CGrLiVec(3, args({1}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({7}), args({2,4,5,6})))
+      + ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({6}), args({2,4,5,7})))
+      - ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({5}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({7}), args({3,4,5,6})))
+      - ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({6}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({2,3,7})), CGrLiVec(3, args({5}), args({3,4,6,7})))
+      + ncoproduct(plucker(args({2,5,6})), CGrLiVec(3, args({2}), args({3,4,6,7})))
+      + ncoproduct(plucker(args({2,5,7})), CGrLiVec(3, args({2}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({2,6,7})), CGrLiVec(3, args({2}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({2,6,7})), CGrLiVec(3, args({2}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({3,5,6})), CGrLiVec(3, args({3}), args({2,4,6,7})))
+      - ncoproduct(plucker(args({3,5,7})), CGrLiVec(3, args({3}), args({2,4,5,7})))
+      - ncoproduct(plucker(args({3,6,7})), CGrLiVec(3, args({3}), args({1,4,6,7})))
+      + ncoproduct(plucker(args({3,6,7})), CGrLiVec(3, args({3}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({5}), args({1,3,4,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({6}), args({1,3,4,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({4}), args({1,3,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({6}), args({1,3,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({4}), args({1,3,6,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({5}), args({1,3,6,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({1,4,5,6})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({1,4,5,6})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({1,4,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({1,4,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({1,4,6,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({5}), args({2,3,4,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({6}), args({2,3,4,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({4}), args({2,3,5,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({2,4,5,6})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({2,4,5,6})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({2,4,5,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({2,4,5,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({3}), args({2,4,6,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({3,4,5,6})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({3,4,5,6})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({3,4,5,7})))
+      + ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({1}), args({3,4,6,7})))
+      - ncoproduct(plucker(args({4,5,6})), CGrLiVec(3, args({2}), args({3,4,6,7})))
+      + ncoproduct(plucker(args({4,5,7})), CGrLiVec(3, args({7}), args({1,3,4,6})))
+      - ncoproduct(plucker(args({4,5,7})), CGrLiVec(3, args({5}), args({1,3,4,7})))
+      - ncoproduct(plucker(args({4,5,7})), CGrLiVec(3, args({7}), args({1,3,5,6})))
+      + ncoproduct(plucker(args({4,5,7})), CGrLiVec(3, args({4}), args({1,3,5,7})))
+      - ncoproduct(plucker(args({4,5,7})), CGrLiVec(3, args({7}), args({2,3,4,6})))
+      - ncoproduct(plucker(args({4,6,7})), CGrLiVec(3, args({7}), args({1,3,4,6})))
+      + ncoproduct(plucker(args({4,6,7})), CGrLiVec(3, args({6}), args({1,3,4,7})))
+    ;
+  });
+
+  std::cout << to_lyndon_basis(lhs + rhs);
 }
