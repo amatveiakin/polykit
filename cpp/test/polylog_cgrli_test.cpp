@@ -322,6 +322,19 @@ TEST(CGrLiTest, LARGE_ComultiplicationAomoto) {
   }
 }
 
+TEST(CGrLiTest, LARGE_CGrLi4Of8PointsAreIndependent) {
+  const int weight = 4;
+  const auto points = to_vector(range_incl(1, 2 * (weight - 1)));
+  Gr_Space space;
+  for (const auto& args : permutations(points)) {
+    if (is_canonical_CGrLi_arg_order(args)) {
+      space.push_back(CGrLiVec(weight, args));
+    }
+  }
+  const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  EXPECT_EQ(rank, space.size());
+}
+
 TEST(CGrLiTest, LARGE_CGrLi4ShiftedSumViaLowerDim) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + CGrLi4(1,2,3,4,5,6,7,8)

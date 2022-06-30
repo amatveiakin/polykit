@@ -226,3 +226,12 @@ GammaExpr SymmCGrLi4_wip(const std::vector<int>& points) {
 bool are_CGrLi_args_ok(int weight, int num_points) {
   return num_points % 2 == 0 && weight >= num_points / 2 - 1;
 }
+
+bool is_canonical_CGrLi_arg_order(const std::vector<int>& points) {
+  const int p = div_int(points.size(), 2);
+  return
+    absl::c_is_sorted(slice(points, 0, p - 1)) &&
+    absl::c_is_sorted(slice(points, p, 2 * p - 1)) &&
+    points[0] < points[p]
+  ;
+}

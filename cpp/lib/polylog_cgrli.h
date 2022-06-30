@@ -14,6 +14,10 @@ GammaExpr SymmCGrLi4_wip(const std::vector<int>& points);
 
 bool are_CGrLi_args_ok(int weight, int num_points);
 
+// When constructing a set of CGrLi of all possible point orders, it is sufficient to include
+// only canonical orders. Each non-canonical order is equivalent to a canonical one.
+bool is_canonical_CGrLi_arg_order(const std::vector<int>& points);
+
 
 namespace internal {
 struct CGrLiFixedWeightAndPbPoints {

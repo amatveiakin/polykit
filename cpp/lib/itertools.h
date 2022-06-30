@@ -35,6 +35,7 @@
 // Optimization potential: Turn everything into generators.
 //
 // TODO: Have both tuple and vector version of each function.
+// TODO: Make `permutations` work with `to_vector`
 
 #pragma once
 
