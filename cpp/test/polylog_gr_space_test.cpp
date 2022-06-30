@@ -34,6 +34,19 @@ GammaNCoExpr R_4_3(const std::vector<int>& points) {
 }
 
 
+TEST(PolylogSpaceTest, GrFxContainsGrL1) {
+  for (const int dimension : range_incl(2, 3)) {
+    for (const int num_points : range_incl(4, 8)) {
+      const auto points = to_vector(range_incl(1, num_points));
+      EXPECT_POLYLOG_SPACE_CONTAINS(
+        GrFx(dimension, points),
+        GrL1(dimension, points),
+        DISAMBIGUATE(to_lyndon_basis)
+      );
+    }
+  }
+}
+
 // Comparing against results previously computed by the app.
 TEST(PolylogSpaceTest, LARGE_ClusterCoGrL_Dim3_Weight3) {
   EXPECT_EQ(cluster_co_grl_ranks(3, 2, 3, 5), (ClusterCoRanks{5, 5}));
@@ -187,6 +200,21 @@ TEST(PolylogSpaceTest, GrL3Dim4_contains_QLiVec3PluckerDual) {
 }
 
 // TODO: Tests for CGrL ranks (check which ranks are knows for sure)
+
+TEST(PolylogSpaceTest, LARGE_GrL3Dim3ProjectionKernelVsOnePointLess) {
+  for (const int num_points : range_incl(4, 8)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    const auto ranks = space_mapping_ranks(
+      mapped(GrL3(3, points), DISAMBIGUATE(to_lyndon_basis)),
+      DISAMBIGUATE(identity_function),
+      [](const auto& expr) {
+        return project_on(1, expr);
+      }
+    );
+    const auto lower_rank = space_rank(GrL3(3, slice(points, 1)), DISAMBIGUATE(to_lyndon_basis));
+    EXPECT_EQ(ranks.kernel(), lower_rank);
+  }
+}
 
 TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   const int weight = 3;

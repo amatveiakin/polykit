@@ -9,6 +9,7 @@
 #include "lib/itertools.h"
 #include "lib/linalg_solvers.h"
 #include "lib/polylog_qli.h"
+#include "lib/sequence_iteration.h"
 #include "lib/summation.h"
 #include "test_util/space_helpers.h"
 #include "test_util/space_matchers.h"
@@ -192,3 +193,34 @@ TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
   EXPECT_EQ(ranks.intersected(), 42);
 }
 #endif
+
+// TODO: Is this test meaningful? How should it be named?
+TEST(PolylogSpaceTest, LARGE_FixVarDeltaQuasiProjectionKernelRankIsBinomialSum) {
+  for (const int weight : range_incl(2, 6)) {
+    for (const int n : range_incl(1, 8)) {
+      const int fixed_a = 1;
+      const int fixed_b = 2;
+      const int nonfixed_start = 3;
+      TypeAC_Space space;
+      for (const auto& seq : nondecreasing_sequences(n, weight)) {
+        const auto symbol = tensor_product(absl::MakeConstSpan(mapped(seq, [](const int k) {
+          return D(k + nonfixed_start, fixed_a) - D(fixed_b, fixed_a);
+        })));
+        space.push_back(symbol);
+      }
+      const auto ranks = space_mapping_ranks(
+        space,
+        DISAMBIGUATE(identity_function),  // note: no Lyndon
+        [](const auto& expr) {
+          return to_lyndon_basis(expr.filtered([&](const std::vector<Delta>& term) {
+            return count_var(term, fixed_b) == 1;  // note: not equivalent to projection on fixed_b
+          }));
+        }
+      );
+      const int expected = sum(mapped(range_incl(0, weight), [&](const int k) {
+        return binomial(n - 1, k);
+      }));
+      CHECK_EQ(ranks.kernel(), expected);
+    }
+  }
+}
