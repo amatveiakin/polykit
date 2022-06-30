@@ -8,4 +8,5 @@
         "//cpp:test_util",
     ],
     copts = ["-Icpp"],
+    size = "enormous",  # for HUGE tests
 ) for f in glob(["*.cpp"])]

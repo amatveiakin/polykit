@@ -3,6 +3,7 @@
 
 #include "gtest/gtest.h"
 
+#include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/chern_arrow.h"
 #include "lib/itertools.h"
 #include "lib/polylog_cgrli.h"
@@ -13,10 +14,6 @@
 #include "test_util/space_helpers.h"
 #include "test_util/space_matchers.h"
 
-
-std::tuple<int, int> to_image_kernel_pair(const SpaceMappingRanks& ranks) {
-  return {ranks.image(), ranks.kernel()};
-}
 
 ClusterCoRanks cluster_co_grl_ranks(int weight, int num_coparts, int dimension, int num_points) {
   return cluster_co_ranks(simple_co_GrL(weight, num_coparts, dimension, num_points));
@@ -245,43 +242,39 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   EXPECT_EQ(ranks.intersected(), ...);  // TODO: What is this?
 #endif
 
-// TODO: Test compute_cohomologies instead
-TEST(PolylogSpaceTest, LARGE_CGrLCohomology) {
-  ScopedDisableSpaceHomogeneityCheck dshc;
-  const auto compute_ranks = [](int weight, int num_points) {
-    const auto points = to_vector(range_incl(1, num_points));
-    const auto ranks = space_mapping_ranks(
-      concat(
-        CGrL_test_space(weight, 2, points),
-        CGrL_test_space(weight, 3, points),
-        CGrL_test_space(weight, 4, points),
-        CGrL_test_space(weight, 5, points)
-      ),
-      DISAMBIGUATE(to_lyndon_basis),
-      [&](const auto& expr) {
-        // Note. This is actually a condition on complex cohomology, which is way more complicated
-        //   in theory, but for practical intents and purposes we can do this since each element
-        //   lies on one the source space bases.
-        const auto x = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
-        const auto y = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
-        const auto _ = GammaExpr();
-        switch (expr.dimension()) {
-          case 2: return std::tuple{x, y, _, _, _};
-          case 3: return std::tuple{_, x, y, _, _};
-          case 4: return std::tuple{_, _, x, y, _};
-          case 5: return std::tuple{_, _, _, x, y};
-          default: FATAL("Unexpected dimension");
-        };
-      }
-    );
-    return to_image_kernel_pair(ranks);
+TEST(PolylogSpaceTest, HUGE_CGrLCohomologies) {
+  const auto compute = [](int weight, int dimension, int num_points) {
+    return bigrassmannian_complex_cohomology(dimension, num_points, [&](const int dim, const auto& points) {
+      return CGrL_test_space(weight, dim, points);
+    });
   };
-  EXPECT_EQ(compute_ranks(2, 4), (std::tuple{0, 1}));
-  EXPECT_EQ(compute_ranks(2, 5), (std::tuple{8, 0}));
-  EXPECT_EQ(compute_ranks(2, 6), (std::tuple{30, 9}));
-  EXPECT_EQ(compute_ranks(2, 7), (std::tuple{120, 30}));
-  EXPECT_EQ(compute_ranks(3, 4), (std::tuple{1, 0}));
-  EXPECT_EQ(compute_ranks(3, 5), (std::tuple{9, 1}));
-  EXPECT_EQ(compute_ranks(3, 6), (std::tuple{51, 10}));
-  EXPECT_EQ(compute_ranks(3, 7), (std::tuple{241, 51}));
+  EXPECT_EQ(compute(3, 3, 5), 0);
+  EXPECT_EQ(compute(3, 3, 6), 1);
+  EXPECT_EQ(compute(3, 3, 7), 0);
+  EXPECT_EQ(compute(3, 3, 8), 1);
+  EXPECT_EQ(compute(4, 3, 5), 0);
+  EXPECT_EQ(compute(4, 3, 6), 0);
+  EXPECT_EQ(compute(4, 3, 7), 0);
+  EXPECT_EQ(compute(4, 3, 8), 2);
+  EXPECT_EQ(compute(3, 4, 5), 0);
+  EXPECT_EQ(compute(3, 4, 6), 0);
+  EXPECT_EQ(compute(3, 4, 7), 0);
+  EXPECT_EQ(compute(3, 4, 8), 1);
+  EXPECT_EQ(compute(4, 4, 5), 0);
+  EXPECT_EQ(compute(4, 4, 6), 0);
+  EXPECT_EQ(compute(4, 4, 7), 0);
+  EXPECT_EQ(compute(4, 4, 8), 2);
+}
+
+TEST(PolylogSpaceTest, HUGE_WedgeChernGrLCohomologies) {
+  for (const int dimension : range_incl(3, 4)) {
+    for (const int weight : range_incl(3, 4)) {
+      for (const int num_points : range_incl(5, 8)) {
+        const auto rank = bigrassmannian_complex_cohomology(dimension, num_points, [&](const int dim, const auto& points) {
+          return wedge_ChernGrL(weight, dim, points);
+        });
+        EXPECT_EQ(rank, 0);
+      }
+    }
+  }
 }

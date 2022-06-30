@@ -170,6 +170,7 @@ cc_library(
 cc_library(
     name = "polylog_linalg",
     hdrs = [
+        "lib/bigrassmannian_complex_cohomologies.h",
         "lib/expr_matrix_builder.h",
         "lib/linalg.h",
         "lib/linalg_solvers.h",
@@ -180,6 +181,7 @@ cc_library(
         "lib/vector_space.h",
     ],
     srcs = [
+        "lib/bigrassmannian_complex_cohomologies.cpp",
         "lib/expr_matrix_builder.cpp",
         "lib/linalg.cpp",
         "lib/polylog_type_ac_space.cpp",

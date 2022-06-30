@@ -27,6 +27,7 @@
 // In order to reduce compilation time enable expressions only when necessary:
 
 #if 1
+#include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
 #include "lib/chern_cocycle.h"
@@ -66,34 +67,6 @@
 #elif defined(HAS_EPSILON_EXPR) || defined(HAS_THETA_EXPR) || defined(HAS_LIRA_EXPR)
 #  error "Expression type leaked: check header structure"
 #endif
-
-
-template<typename SpaceF>
-SpaceMappingRanks cohomology_ranks(int dimension, int num_points, const SpaceF& space) {
-  return space_mapping_ranks(
-    mapped_expanding(range_incl(dimension, num_points - 1), [&](const int dim) {
-      return space(dim, to_vector(range_incl(1, num_points)));
-    }),
-    DISAMBIGUATE(to_lyndon_basis),
-    [&](const auto& expr) {
-      std::vector<std::decay_t<decltype(expr)>> row(num_points - 1);
-      const int dim_index = expr.dimension() - dimension;
-      row.at(dim_index) = to_lyndon_basis(chern_arrow_left(expr, num_points + 1));
-      row.at(dim_index + 1) = to_lyndon_basis(chern_arrow_up(expr, num_points + 1));
-      return row;
-    }
-  );
-}
-
-// TODO: Check against LARGE_CGrLCohomology test
-// TODO: Dualize
-template<typename SpaceF>
-int compute_cohomologies(int dimension, int num_points, const SpaceF& space) {
-  return (
-    + cohomology_ranks(dimension, num_points, space).kernel()
-    - cohomology_ranks(dimension, num_points - 1, space).image()
-  );
-}
 
 
 Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
@@ -1432,17 +1405,6 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // std::cout << to_string(ranks) << "\n";
 
-  // for (const int dimension : range_incl(3, 4)) {
-  //   for (const int weight : range_incl(3, 4)) {
-  //     for (const int num_points : range_incl(5, 8)) {
-  //       const auto ranks = compute_cohomologies(dimension, num_points, [&](const int dimension, const auto& points) {
-  //         return wedge_ChernGrL(weight, dimension, points);
-  //       });
-  //       std::cout << "d=" << dimension << ", w=" << weight << ", n=" << num_points << ": ";
-  //       std::cout << to_string(ranks) << "\n";
-  //     }
-  //   }
-  // }
 
 
   // std::cout << dump_to_string(wedge_ChernGrL(3, 2, {1,2,3,4,5})) << "\n";
