@@ -144,7 +144,11 @@ LinearT outer_product(
   if (expressions.empty()) {
     return {};
   }
-  LinearT ret = expressions.front();
+  if (expressions.size() == 1 && std::holds_alternative<ProductAnnotationOperator>(annotation)) {
+    // Keep annotations intact rather than collapsing into a one-liner
+    return expressions.front();
+  }
+  LinearT ret = expressions.front().without_annotations();
   for (const LinearT& expr : expressions.subspan(1)) {
     ret = outer_product<LinearT>(ret, expr, monom_key_product, AnnNone());
   }
