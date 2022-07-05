@@ -28,12 +28,8 @@ Gr_Space gr_free_lie_coalgebra(int weight, int dimension, const std::vector<int>
 }
 
 Gr_Space GrFx(int dimension, const std::vector<int>& args) {
-  return mapped(combinations(args, dimension), DISAMBIGUATE(G));
-  // return mapped(combinations(args, dimension), [](const auto& points) {
-  //   return G(points).annotate(
-  //     fmt::function_num_args("G", points)
-  //   );
-  // });
+  // return mapped(combinations(args, dimension), DISAMBIGUATE(G));
+  return mapped(combinations(args, dimension), DISAMBIGUATE(plucker));
 }
 
 Gr_Space GrL_core(
