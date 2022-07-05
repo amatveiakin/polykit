@@ -57,9 +57,10 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
     for (const int before : range(mid)) {
       for (const int after : range(mid + 1, points.size())) {
         const int sign = neg_one_pow(before + after + weight + 1);
-        ret += sign * pullback(
-          CGrLiVec(weight, removed_indices(points, {before, after})),
-          choose_indices(points, {before})
+        ret += sign * CGrLiVec(
+          weight,
+          choose_indices(points, {before}),
+          removed_indices(points, {before, after})
         );
       }
     }
