@@ -170,7 +170,8 @@ bool compare_length_first(const T& lhs, const T& rhs) {
   }                                                                            \
   static auto object_to_uniformity_marker(const ObjectT& obj) {                \
     CHECK(!obj.empty());                                                       \
-    CHECK(all_equal(obj, [](const auto& v) { return element_uniformity_marker(v); })); \
+    CHECK(all_equal(obj, DISAMBIGUATE(element_uniformity_marker)))             \
+        << object_to_string(obj);                                              \
     return element_uniformity_marker(obj.front());                             \
   }
 
@@ -180,7 +181,8 @@ bool compare_length_first(const T& lhs, const T& rhs) {
   }                                                                            \
   static auto object_to_uniformity_marker(const ObjectT& obj) {                \
     CHECK(!obj.empty());                                                       \
-    CHECK(all_equal(obj, &PartExprParam::object_to_uniformity_marker));        \
+    CHECK(all_equal(obj, &PartExprParam::object_to_uniformity_marker))         \
+        << object_to_string(obj);                                              \
     return PartExprParam::object_to_uniformity_marker(obj.front());            \
   }
 
