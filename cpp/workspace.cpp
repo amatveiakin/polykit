@@ -1756,93 +1756,138 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << eqn;
 
 
-  const auto left = [](const auto& f) {
-    const int num_dst_points = 8;
-    GammaNCoExpr ret;
-    const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
-    for (const int i : range(num_dst_points)) {
-      const auto [removed_points, dst_points] = split_indices(all_dst_points, {i});
-      ret += neg_one_pow(i) * f(dst_points);
-    }
-    return ret;
-  };
+  // const auto left = [](const auto& f) {
+  //   const int num_dst_points = 8;
+  //   GammaNCoExpr ret;
+  //   const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
+  //   for (const int i : range(num_dst_points)) {
+  //     const auto [removed_points, dst_points] = split_indices(all_dst_points, {i});
+  //     ret += neg_one_pow(i) * f(dst_points);
+  //   }
+  //   return ret;
+  // };
 
-  const auto lhs = ncomultiply(cocycle_nodual(4, 4, {1,2,3,4,5,6,7,8}), {1,3});
-  const auto rhs = left([](const auto& points) {
-    const auto pl = [&](const std::vector<int>& indices) {
-      return plucker(choose_indices_one_based(points, indices));
-    };
-    const auto cgrli = [&](const std::vector<int>& pb_indices, const std::vector<int>& li_indices) {
-      return CGrLiVec(3,
-        choose_indices_one_based(points, pb_indices),
-        choose_indices_one_based(points, li_indices)
-      );
-    };
-    return
-      + ncoproduct(pl({1,2,3,4}), cgrli({4}, {1,2,3,5,6,7}))
-      - ncoproduct(pl({1,2,3,5}), cgrli({5}, {1,2,3,4,6,7}))
-      + ncoproduct(pl({1,2,3,6}), cgrli({6}, {1,2,3,4,5,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({4}, {1,2,3,5,6,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({5}, {1,2,3,4,6,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({6}, {1,2,3,4,5,7}))
-      - ncoproduct(pl({1,4,5,6}), cgrli({1}, {2,3,4,5,6,7}))
-      + ncoproduct(pl({2,4,5,6}), cgrli({2}, {1,3,4,5,6,7}))
-      - ncoproduct(pl({3,4,5,6}), cgrli({3}, {1,2,4,5,6,7}))
-      + ncoproduct(pl({4,5,6,7}), cgrli({1}, {2,3,4,5,6,7}))
-      - ncoproduct(pl({4,5,6,7}), cgrli({2}, {1,3,4,5,6,7}))
-      + ncoproduct(pl({4,5,6,7}), cgrli({3}, {1,2,4,5,6,7}))
-      - ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,5,6}))
-      + ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,5,7}))
-      - ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,6,7}))
-      + ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,5,6}))
-      - ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,5,7}))
-      + ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,6,7}))
-      + ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,4,6}))
-      - ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,4,7}))
-      + ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,6,7}))
-      - ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,4,6}))
-      + ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,4,7}))
-      - ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,6,7}))
-      + ncoproduct(pl({1,2,3,6}), cgrli({1,4}, {2,3,5,6}))
-      - ncoproduct(pl({1,2,3,6}), cgrli({1,5}, {2,3,4,6}))
-      + ncoproduct(pl({1,2,3,6}), cgrli({1,6}, {2,3,4,7}))
-      - ncoproduct(pl({1,2,3,6}), cgrli({1,6}, {2,3,5,7}))
-      - ncoproduct(pl({1,2,3,6}), cgrli({2,4}, {1,3,5,6}))
-      + ncoproduct(pl({1,2,3,6}), cgrli({2,5}, {1,3,4,6}))
-      - ncoproduct(pl({1,2,3,6}), cgrli({2,6}, {1,3,4,7}))
-      + ncoproduct(pl({1,2,3,6}), cgrli({2,6}, {1,3,5,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({1,4}, {2,3,5,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({1,4}, {2,3,6,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({1,5}, {2,3,4,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({1,5}, {2,3,6,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({1,6}, {2,3,4,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({1,6}, {2,3,5,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({2,4}, {1,3,5,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({2,4}, {1,3,6,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({2,5}, {1,3,4,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({2,5}, {1,3,6,7}))
-      + ncoproduct(pl({1,2,3,7}), cgrli({2,6}, {1,3,4,7}))
-      - ncoproduct(pl({1,2,3,7}), cgrli({2,6}, {1,3,5,7}))
-      + ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,5,6}))
-      - ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,5,7}))
-      + ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,6,7}))
-      - ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,5,6}))
-      + ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,5,7}))
-      - ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,6,7}))
-      - ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,5,6}))
-      + ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,5,7}))
-      - ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,6,7}))
-      + ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,5,6}))
-      - ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,5,7}))
-      + ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,6,7}))
-      + ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,5,6}))
-      - ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,5,7}))
-      + ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,6,7}))
-      - ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,5,6}))
-      + ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,5,7}))
-      - ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,6,7}))
+  // const auto lhs = ncomultiply(cocycle_nodual(4, 4, {1,2,3,4,5,6,7,8}), {1,3});
+  // const auto rhs = left([](const auto& points) {
+  //   const auto pl = [&](const std::vector<int>& indices) {
+  //     return plucker(choose_indices_one_based(points, indices));
+  //   };
+  //   const auto cgrli = [&](const std::vector<int>& pb_indices, const std::vector<int>& li_indices) {
+  //     return CGrLiVec(3,
+  //       choose_indices_one_based(points, pb_indices),
+  //       choose_indices_one_based(points, li_indices)
+  //     );
+  //   };
+  //   return
+  //     + ncoproduct(pl({1,2,3,4}), cgrli({4}, {1,2,3,5,6,7}))
+  //     - ncoproduct(pl({1,2,3,5}), cgrli({5}, {1,2,3,4,6,7}))
+  //     + ncoproduct(pl({1,2,3,6}), cgrli({6}, {1,2,3,4,5,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({4}, {1,2,3,5,6,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({5}, {1,2,3,4,6,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({6}, {1,2,3,4,5,7}))
+  //     - ncoproduct(pl({1,4,5,6}), cgrli({1}, {2,3,4,5,6,7}))
+  //     + ncoproduct(pl({2,4,5,6}), cgrli({2}, {1,3,4,5,6,7}))
+  //     - ncoproduct(pl({3,4,5,6}), cgrli({3}, {1,2,4,5,6,7}))
+  //     + ncoproduct(pl({4,5,6,7}), cgrli({1}, {2,3,4,5,6,7}))
+  //     - ncoproduct(pl({4,5,6,7}), cgrli({2}, {1,3,4,5,6,7}))
+  //     + ncoproduct(pl({4,5,6,7}), cgrli({3}, {1,2,4,5,6,7}))
+  //     - ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,5,6}))
+  //     + ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,5,7}))
+  //     - ncoproduct(pl({1,2,3,4}), cgrli({1,4}, {2,3,6,7}))
+  //     + ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,5,6}))
+  //     - ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,5,7}))
+  //     + ncoproduct(pl({1,2,3,4}), cgrli({2,4}, {1,3,6,7}))
+  //     + ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,4,6}))
+  //     - ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,4,7}))
+  //     + ncoproduct(pl({1,2,3,5}), cgrli({1,5}, {2,3,6,7}))
+  //     - ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,4,6}))
+  //     + ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,4,7}))
+  //     - ncoproduct(pl({1,2,3,5}), cgrli({2,5}, {1,3,6,7}))
+  //     + ncoproduct(pl({1,2,3,6}), cgrli({1,4}, {2,3,5,6}))
+  //     - ncoproduct(pl({1,2,3,6}), cgrli({1,5}, {2,3,4,6}))
+  //     + ncoproduct(pl({1,2,3,6}), cgrli({1,6}, {2,3,4,7}))
+  //     - ncoproduct(pl({1,2,3,6}), cgrli({1,6}, {2,3,5,7}))
+  //     - ncoproduct(pl({1,2,3,6}), cgrli({2,4}, {1,3,5,6}))
+  //     + ncoproduct(pl({1,2,3,6}), cgrli({2,5}, {1,3,4,6}))
+  //     - ncoproduct(pl({1,2,3,6}), cgrli({2,6}, {1,3,4,7}))
+  //     + ncoproduct(pl({1,2,3,6}), cgrli({2,6}, {1,3,5,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({1,4}, {2,3,5,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({1,4}, {2,3,6,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({1,5}, {2,3,4,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({1,5}, {2,3,6,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({1,6}, {2,3,4,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({1,6}, {2,3,5,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({2,4}, {1,3,5,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({2,4}, {1,3,6,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({2,5}, {1,3,4,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({2,5}, {1,3,6,7}))
+  //     + ncoproduct(pl({1,2,3,7}), cgrli({2,6}, {1,3,4,7}))
+  //     - ncoproduct(pl({1,2,3,7}), cgrli({2,6}, {1,3,5,7}))
+  //     + ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,5,6}))
+  //     - ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,5,7}))
+  //     + ncoproduct(pl({1,4,5,6}), cgrli({1,2}, {3,4,6,7}))
+  //     - ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,5,6}))
+  //     + ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,5,7}))
+  //     - ncoproduct(pl({1,4,5,6}), cgrli({1,3}, {2,4,6,7}))
+  //     - ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,5,6}))
+  //     + ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,5,7}))
+  //     - ncoproduct(pl({2,4,5,6}), cgrli({1,2}, {3,4,6,7}))
+  //     + ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,5,6}))
+  //     - ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,5,7}))
+  //     + ncoproduct(pl({2,4,5,6}), cgrli({2,3}, {1,4,6,7}))
+  //     + ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,5,6}))
+  //     - ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,5,7}))
+  //     + ncoproduct(pl({3,4,5,6}), cgrli({1,3}, {2,4,6,7}))
+  //     - ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,5,6}))
+  //     + ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,5,7}))
+  //     - ncoproduct(pl({3,4,5,6}), cgrli({2,3}, {1,4,6,7}))
+  //   ;
+  // });
+  // std::cout << lhs + rhs;
+
+
+  // // TODO: Test: a-, a+, b-, b+ all zero for Aomoto polylogs
+  // const auto expr = CGrLi3(1,2,3,4,5,6,7,8);
+  // const int n = 9;
+  // std::cout << expr;
+  // std::cout << a_minus(expr, n);
+  // std::cout << a_plus(expr, n);
+  // std::cout << b_minus(expr, n);
+  // std::cout << b_plus(expr, n);
+
+  // // TODO: Test identities for all expressions (including random hand-written ones)
+  // for (const auto& [x, n] : {
+  //   std::pair{CGrLi3(1,2,3,4,5,6), 6},
+  //   std::pair{CGrLi4(1,2,3,4,5,6,7,8), 8},
+  //   std::pair{CGrLi5(1,2,3,4,5,6), 6},
+  // }) {
+  //   CHECK((a_plus(a_minus(x, n+1), n+2) + a_minus(a_plus(x, n+1), n+2)).is_zero());
+  //   CHECK((a_plus(b_minus(x, n+1), n+2) + b_minus(a_plus(x, n+1), n+2)).is_zero());
+  //   CHECK((a_minus(b_plus(x, n+1), n+2) + b_plus(a_minus(x, n+1), n+2)).is_zero());
+  //   CHECK((a_minus(chern_arrow_left(x, n+1), n+2) + a_plus(chern_arrow_left(x, n+1), n+2)).is_zero());
+  //   CHECK(a_minus(chern_arrow_left(x, n+1), n+2) == a_minus(a_plus(x, n+1), n+2));
+  // }
+  // for (const auto& [x, n] : {
+  //   std::pair{tensor_product(CGrLi3(1,2,3,4,5,6,7,8), G({2,4,9})), 9},
+  //   std::pair{tensor_product(CGrLi5(1,2,3,4,5,6), G({1,3,7})), 7},
+  // }) {
+  //   CHECK((a_plus(b_plus(x, n+1), n+2) + b_plus(a_plus(x, n+1), n+2)).is_zero());
+  //   CHECK((a_minus(b_minus(x, n+1), n+2) + b_minus(a_minus(x, n+1), n+2)).is_zero());
+  //   CHECK(a_minus(a_minus(x, n+1), n+2).is_zero());
+  //   CHECK(a_plus(a_plus(x, n+1), n+2).is_zero());
+  //   CHECK(b_minus(b_minus(x, n+1), n+2).is_zero());
+  //   CHECK(b_plus(b_plus(x, n+1), n+2).is_zero());
+  //   CHECK(chern_arrow_left(x, n+1) == a_minus(x, n+1) + a_plus(x, n+1));
+  //   CHECK(chern_arrow_up(x, n+1) == b_minus(x, n+1) + b_plus(x, n+1));
+  // }
+  // std::cout << "ok\n";
+
+  for (const int p : range_incl(4, 5)) {
+    const auto lhs = ncomultiply(CGrLiVec(p-1, to_vector(range_incl(1, 2*p))), {1, p-2});
+    const auto rhs =
+      + a_minus(b_plus(ncoproduct(CGrLiVec(p-2, to_vector(range_incl(1, 2*p-2))), plucker({to_vector(range_incl(1, p-1))})), 2*p-1), 2*p)
+      + a_plus(b_minus(ncoproduct(CGrLiVec(p-2, to_vector(range_incl(1, 2*p-2))), plucker({to_vector(range_incl(p, 2*p-2))})), 2*p-1), 2*p)
     ;
-  });
-  std::cout << lhs + rhs;
-
+    std::cout << lhs + neg_one_pow(p) * rhs;
+  }
 }
