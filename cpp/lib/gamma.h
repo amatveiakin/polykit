@@ -182,8 +182,9 @@ GammaExpr pullback(const DeltaExpr& expr, const std::vector<int>& bonus_points);
 GammaExpr pullback(const GammaExpr& expr, const std::vector<int>& bonus_points);
 GammaNCoExpr pullback(const GammaNCoExpr& expr, const std::vector<int>& bonus_points);
 
-GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe);
+GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
+GammaNCoExpr plucker_dual(const GammaNCoExpr& expr, const std::vector<int>& point_universe);
 
 GammaExpr symmetrize_double(const GammaExpr& expr, int num_points);
 GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points);

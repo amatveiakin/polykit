@@ -211,14 +211,15 @@ GammaNCoExpr pullback(const GammaNCoExpr& expr, const std::vector<int>& bonus_po
   return pullback_impl<2>(expr, bonus_points);
 }
 
-GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe) {
+template<size_t Nesting, typename LinearT>
+LinearT plucker_dual_impl(const LinearT& expr, const std::vector<int>& point_universe) {
   const auto universe_bitset_or = vector_to_bitset_or<Gamma::BitsetT>(point_universe, Gamma::kBitsetOffset);
   if (!universe_bitset_or.has_value()) {
-    return GammaExpr{};
+    return LinearT{};
   }
   const auto& universe_bitset = universe_bitset_or.value();
   return expr.mapped([&](const auto& term) {
-    return mapped(term, [&](const Gamma& g) {
+    return mapped_nested<Nesting>(term, [&](const Gamma& g) {
       CHECK(bitset_contains(universe_bitset, g.index_bitset()));
       return Gamma(bitset_difference(universe_bitset, g.index_bitset()));
     });
@@ -229,6 +230,14 @@ GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_univ
 
 GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_universe) {
   return plucker_dual(delta_expr_to_gamma_expr(expr), point_universe);
+}
+
+GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe) {
+  return plucker_dual_impl<1>(expr, point_universe);
+}
+
+GammaNCoExpr plucker_dual(const GammaNCoExpr& expr, const std::vector<int>& point_universe) {
+  return plucker_dual_impl<2>(expr, point_universe);
 }
 
 GammaExpr symmetrize_double(const GammaExpr& expr, int num_points) {
