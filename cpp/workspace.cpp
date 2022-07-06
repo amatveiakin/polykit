@@ -69,6 +69,14 @@
 #endif
 
 
+std::vector<int> seq(int from, int to) {
+  return to_vector(range(from, to));
+}
+std::vector<int> seq_incl(int from, int to) {
+  return seq_incl(from, to);
+}
+
+
 Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
   const int dimension = 3;
   const int weight = 4;
@@ -1706,4 +1714,132 @@ int main(int /*argc*/, char *argv[]) {
   // // );
 
 
+  // for (const int p : range_incl(3, 5)) {
+  //   const auto lhs = CGrLiVec(p-1, seq_incl(1, 2*p));
+  //   const auto rhs = neg_one_pow(p) * a_minus(b_plus(CGrLiVec(p-1, seq_incl(1, 2*p-2)), 2*p-1), 2*p);
+  //   std::cout << to_lyndon_basis(lhs - rhs);
+  // }
+
+  // for (const int p : range_incl(3, 5)) {
+  //   const auto lhs = CGrLiVec(p-1, seq_incl(1, 2*p));
+  //   const auto x = CGrLiVec(p-1, seq_incl(1, 2*p-2));
+  //   const auto rhs = neg_one_pow(p) * b_minus(a_full(x, 2*p-1) - a_plus(x, 2*p-1), 2*p);
+  //   std::cout << to_lyndon_basis(lhs - rhs);
+  // }
+
+  // for (const int p : range_incl(3, 4)) {
+  //   const auto x = CGrLiVec(p, seq_incl(1, 2*p-2));
+  //   const auto expr = a_full(
+  //     + CGrLiVec(p, seq_incl(1, 2*p))
+  //     + neg_one_pow(p-1) * (
+  //       + a_plus(b_full(x, 2*p-1), 2*p)
+  //       - a_plus(b_plus(x, 2*p-1), 2*p)
+  //     )
+  //     , 2*p+1
+  //   );
+  //   std::cout << to_lyndon_basis(expr);
+  // }
+
+
+
+  // using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
+  // const int n = 5;
+  // const int p = 4;
+  // const std::vector<ArrowF> a_arrows = {
+  //   DISAMBIGUATE(a_full),
+  //   DISAMBIGUATE(a_minus),
+  //   DISAMBIGUATE(a_plus),
+  //   DISAMBIGUATE(a_minus_minus),
+  //   DISAMBIGUATE(a_plus_plus),
+  // };
+  // const std::vector<ArrowF> b_arrows = {
+  //   DISAMBIGUATE(b_full),
+  //   DISAMBIGUATE(b_minus),
+  //   DISAMBIGUATE(b_plus),
+  //   DISAMBIGUATE(b_minus_minus),
+  //   DISAMBIGUATE(b_plus_plus),
+  // };
+  // const auto pluckers_dim_eq = {
+  //   ncoproduct(plucker(seq_incl(1, p))),
+  //   ncoproduct(plucker(seq_incl(p, 2*p-1))),
+  //   ncoproduct(plucker(concat(seq_incl(1, p-1), {2*p-1}))),
+  //   ncoproduct(plucker(concat({p-1}, seq_incl(p+1, 2*p-2)))),
+  // };
+  // const auto pluckers_dim_low = {
+  //   ncoproduct(plucker(seq_incl(1, p-1))),
+  //   ncoproduct(plucker(seq_incl(p, 2*p-2))),
+  // };
+  // const auto gli = ncoproduct(CGrLiVec(n-1, seq_incl(1, 2*p-2)));
+  // Gr_NCoSpace space;
+  // for (const auto& a : a_arrows) {
+  //   for (const auto& b : b_arrows) {
+  //     for (const auto& pl : pluckers_dim_eq) {
+  //       space.push_back(a(ncoproduct(b(gli, 2*p-1), pl), 2*p));
+  //     }
+  //     for (const auto& pl : pluckers_dim_low) {
+  //       space.push_back(b(ncoproduct(a(gli, 2*p-1), pl), 2*p));
+  //       space.push_back(a(b(ncoproduct(gli, pl), 2*p-1), 2*p));
+  //       space.push_back(b(a(ncoproduct(gli, pl), 2*p-1), 2*p));
+  //     }
+  //   }
+  // }
+  // const auto expr = ncomultiply(CGrLi5(1,2,3,4,5,6,7,8), {1,4});
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
+
+  for (const int n : range_incl(4, 5)) {
+    const int p = 4;
+    const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
+    const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
+
+    const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
+    const auto rhs =
+      + ncoproduct(gli_large, plucker(seq_incl(1, p)))
+      + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
+
+      - a_minus(ncoproduct(
+        b_plus(gli_small, 2*p-1),
+        plucker(concat(seq_incl(1, p-1), {2*p-1}))
+      ), 2*p)
+      - a_plus(ncoproduct(
+        b_minus(gli_small, 2*p-1),
+        plucker(seq_incl(p, 2*p-1))
+      ), 2*p)
+
+      + b_plus(ncoproduct(
+        a_minus(gli_small, 2*p-1),
+        plucker(seq_incl(1, p-1))
+      ), 2*p)
+      + b_minus(ncoproduct(
+        a_plus(gli_small, 2*p-1),
+        plucker(seq_incl(p, 2*p-2))
+      ), 2*p)
+
+      + a_minus(b_plus(
+        ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
+      , 2*p-1), 2*p)
+      + a_plus(b_minus(
+        ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
+      , 2*p-1), 2*p)
+
+      - ncoproduct(
+        + gli_large
+        - a_minus(b_plus(gli_small, 2*p-1), 2*p)
+        ,
+        plucker(concat(seq_incl(1, p-1), {2*p}))
+      )
+      - ncoproduct(
+        + gli_large
+        - a_plus(b_minus(gli_small, 2*p-1), 2*p)
+        ,
+        plucker(seq_incl(p, 2*p-1))
+      )
+    ;
+    const auto coexpr = lhs + rhs;
+    // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+    //   return term.at(0);
+    // });
+    std::cout << coexpr;
+  }
 }
