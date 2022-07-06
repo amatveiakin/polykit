@@ -1845,49 +1845,4 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // std::cout << lhs + rhs;
 
-
-  // // TODO: Test: a-, a+, b-, b+ all zero for Aomoto polylogs
-  // const auto expr = CGrLi3(1,2,3,4,5,6,7,8);
-  // const int n = 9;
-  // std::cout << expr;
-  // std::cout << a_minus(expr, n);
-  // std::cout << a_plus(expr, n);
-  // std::cout << b_minus(expr, n);
-  // std::cout << b_plus(expr, n);
-
-  // // TODO: Test identities for all expressions (including random hand-written ones)
-  // for (const auto& [x, n] : {
-  //   std::pair{CGrLi3(1,2,3,4,5,6), 6},
-  //   std::pair{CGrLi4(1,2,3,4,5,6,7,8), 8},
-  //   std::pair{CGrLi5(1,2,3,4,5,6), 6},
-  // }) {
-  //   CHECK((a_plus(a_minus(x, n+1), n+2) + a_minus(a_plus(x, n+1), n+2)).is_zero());
-  //   CHECK((a_plus(b_minus(x, n+1), n+2) + b_minus(a_plus(x, n+1), n+2)).is_zero());
-  //   CHECK((a_minus(b_plus(x, n+1), n+2) + b_plus(a_minus(x, n+1), n+2)).is_zero());
-  //   CHECK((a_minus(chern_arrow_left(x, n+1), n+2) + a_plus(chern_arrow_left(x, n+1), n+2)).is_zero());
-  //   CHECK(a_minus(chern_arrow_left(x, n+1), n+2) == a_minus(a_plus(x, n+1), n+2));
-  // }
-  // for (const auto& [x, n] : {
-  //   std::pair{tensor_product(CGrLi3(1,2,3,4,5,6,7,8), G({2,4,9})), 9},
-  //   std::pair{tensor_product(CGrLi5(1,2,3,4,5,6), G({1,3,7})), 7},
-  // }) {
-  //   CHECK((a_plus(b_plus(x, n+1), n+2) + b_plus(a_plus(x, n+1), n+2)).is_zero());
-  //   CHECK((a_minus(b_minus(x, n+1), n+2) + b_minus(a_minus(x, n+1), n+2)).is_zero());
-  //   CHECK(a_minus(a_minus(x, n+1), n+2).is_zero());
-  //   CHECK(a_plus(a_plus(x, n+1), n+2).is_zero());
-  //   CHECK(b_minus(b_minus(x, n+1), n+2).is_zero());
-  //   CHECK(b_plus(b_plus(x, n+1), n+2).is_zero());
-  //   CHECK(chern_arrow_left(x, n+1) == a_minus(x, n+1) + a_plus(x, n+1));
-  //   CHECK(chern_arrow_up(x, n+1) == b_minus(x, n+1) + b_plus(x, n+1));
-  // }
-  // std::cout << "ok\n";
-
-  for (const int p : range_incl(4, 5)) {
-    const auto lhs = ncomultiply(CGrLiVec(p-1, to_vector(range_incl(1, 2*p))), {1, p-2});
-    const auto rhs =
-      + a_minus(b_plus(ncoproduct(CGrLiVec(p-2, to_vector(range_incl(1, 2*p-2))), plucker({to_vector(range_incl(1, p-1))})), 2*p-1), 2*p)
-      + a_plus(b_minus(ncoproduct(CGrLiVec(p-2, to_vector(range_incl(1, 2*p-2))), plucker({to_vector(range_incl(p, 2*p-2))})), 2*p-1), 2*p)
-    ;
-    std::cout << lhs + neg_one_pow(p) * rhs;
-  }
 }

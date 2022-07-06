@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "lib/chern_arrow.h"
 #include "lib/itertools.h"
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_gr_space.h"
@@ -319,6 +320,35 @@ TEST(CGrLiTest, LARGE_ComultiplicationAomoto) {
       }
     }
     EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, -neg_one_pow(weight) * rhs);
+  }
+}
+
+TEST(CGrLiTest, LARGE_ABOfAomotoIsZero) {
+  for (const int weight : range_incl(3, 4)) {
+    const int p = weight + 1;
+    const auto expr = CGrLiVec(weight, to_vector(range_incl(1, 2*p)));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(a_minus(expr, 2*p+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(a_plus(expr, 2*p+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(b_minus(expr, 2*p+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(b_plus(expr, 2*p+1));
+  }
+}
+
+TEST(CGrLiTest, LARGE_ComultiplicationAomotoViaAB) {
+  for (const int weight : range_incl(3, 4)) {
+    const int p = weight + 1;
+    const auto lhs = ncomultiply(CGrLiVec(weight, to_vector(range_incl(1, 2*p))), {1, p-2});
+    const auto rhs =
+      + a_minus(b_plus(ncoproduct(
+        CGrLiVec(weight-1, to_vector(range_incl(1, 2*p-2))),
+        plucker({to_vector(range_incl(1, p-1))})
+      ), 2*p-1), 2*p)
+      + a_plus(b_minus(ncoproduct(
+        CGrLiVec(weight-1, to_vector(range_incl(1, 2*p-2))),
+        plucker({to_vector(range_incl(p, 2*p-2))})
+      ), 2*p-1), 2*p)
+    ;
+    EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, -neg_one_pow(p) * rhs);
   }
 }
 
