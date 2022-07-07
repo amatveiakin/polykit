@@ -57,11 +57,30 @@ std::vector<int> ab_plus_summation_args(int num_dst_points) {
 
 
 template<typename LinearT>
+LinearT chern_arrow_left_impl(const LinearT& expr, int num_dst_points) {
+  return a_full_impl(
+    expr, num_dst_points
+  ).without_annotations().copy_annotations_mapped(expr, [&](const std::string& annotation) {
+    // TODO: fmt notation for this
+    return "←" + annotation;
+  });
+}
+
+template<typename LinearT>
+LinearT chern_arrow_up_impl(const LinearT& expr, int num_dst_points) {
+  return b_full_impl(
+    expr, num_dst_points
+  ).without_annotations().copy_annotations_mapped(expr, [&](const std::string& annotation) {
+    // TODO: fmt notation for this
+    return "↑" + annotation;
+  });
+}
+
+template<typename LinearT>
 LinearT a_full_impl(const LinearT& expr, int num_dst_points) {
   const auto summation_args = seq_incl(1, num_dst_points);
   return a_sum(expr, num_dst_points, summation_args).copy_annotations_mapped(expr, [&](const std::string& annotation) {
-    // TODO: fmt notation for this
-    return "←" + annotation;
+    return fmt::function("a", {annotation});
   });
 }
 
@@ -69,8 +88,7 @@ template<typename LinearT>
 LinearT b_full_impl(const LinearT& expr, int num_dst_points) {
   const auto summation_args = seq_incl(1, num_dst_points);
   return b_sum(expr, num_dst_points, summation_args).copy_annotations_mapped(expr, [&](const std::string& annotation) {
-    // TODO: fmt notation for this
-    return "↑" + annotation;
+    return fmt::function("b", {annotation});
   });
 }
 
@@ -143,8 +161,8 @@ LinearT b_plus_plus_impl(const LinearT& expr, int num_dst_points) {
 }
 
 
-IMPL(chern_arrow_left, a_full_impl)
-IMPL(chern_arrow_up, b_full_impl)
+IMPL(chern_arrow_left, chern_arrow_left_impl)
+IMPL(chern_arrow_up, chern_arrow_up_impl)
 IMPL(a_full, a_full_impl)
 IMPL(a_minus, a_minus_impl)
 IMPL(a_plus, a_plus_impl)

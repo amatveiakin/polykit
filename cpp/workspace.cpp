@@ -69,6 +69,18 @@
 #endif
 
 
+int detect_num_variables(const GammaExpr& expr) {
+  int max_var = 0;
+  for (const auto& [term, coeff] : expr) {
+    for (const Gamma& g : term) {
+      max_var = std::max(max_var, max_value(g.index_vector()));
+    }
+  }
+  CHECK_GT(max_var, 0) << expr;
+  return max_var;
+}
+
+
 Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
   const int dimension = 3;
   const int weight = 4;
@@ -1734,104 +1746,165 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  // using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
-  // const int n = 5;
-  // const int p = 4;
-  // const std::vector<ArrowF> a_arrows = {
-  //   DISAMBIGUATE(a_full),
-  //   DISAMBIGUATE(a_minus),
-  //   DISAMBIGUATE(a_plus),
-  //   DISAMBIGUATE(a_minus_minus),
-  //   DISAMBIGUATE(a_plus_plus),
-  // };
-  // const std::vector<ArrowF> b_arrows = {
-  //   DISAMBIGUATE(b_full),
-  //   DISAMBIGUATE(b_minus),
-  //   DISAMBIGUATE(b_plus),
-  //   DISAMBIGUATE(b_minus_minus),
-  //   DISAMBIGUATE(b_plus_plus),
-  // };
-  // const auto pluckers_dim_eq = {
-  //   ncoproduct(plucker(seq_incl(1, p))),
-  //   ncoproduct(plucker(seq_incl(p, 2*p-1))),
-  //   ncoproduct(plucker(concat(seq_incl(1, p-1), {2*p-1}))),
-  //   ncoproduct(plucker(concat({p-1}, seq_incl(p+1, 2*p-2)))),
-  // };
-  // const auto pluckers_dim_low = {
-  //   ncoproduct(plucker(seq_incl(1, p-1))),
-  //   ncoproduct(plucker(seq_incl(p, 2*p-2))),
-  // };
-  // const auto gli = ncoproduct(CGrLiVec(n-1, seq_incl(1, 2*p-2)));
-  // Gr_NCoSpace space;
-  // for (const auto& a : a_arrows) {
-  //   for (const auto& b : b_arrows) {
-  //     for (const auto& pl : pluckers_dim_eq) {
-  //       space.push_back(a(ncoproduct(b(gli, 2*p-1), pl), 2*p));
-  //     }
-  //     for (const auto& pl : pluckers_dim_low) {
-  //       space.push_back(b(ncoproduct(a(gli, 2*p-1), pl), 2*p));
-  //       space.push_back(a(b(ncoproduct(gli, pl), 2*p-1), 2*p));
-  //       space.push_back(b(a(ncoproduct(gli, pl), 2*p-1), 2*p));
-  //     }
-  //   }
+  // for (const int n : range_incl(4, 5)) {
+  //   const int p = 4;
+  //   const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
+  //   const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
+
+  //   const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
+  //   const auto rhs =
+  //     + ncoproduct(gli_large, plucker(seq_incl(1, p)))
+  //     + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
+
+  //     - a_minus(ncoproduct(
+  //       b_plus(gli_small, 2*p-1),
+  //       plucker(concat(seq_incl(1, p-1), {2*p-1}))
+  //     ), 2*p)
+  //     - a_plus(ncoproduct(
+  //       b_minus(gli_small, 2*p-1),
+  //       plucker(seq_incl(p, 2*p-1))
+  //     ), 2*p)
+
+  //     + b_plus(ncoproduct(
+  //       a_minus(gli_small, 2*p-1),
+  //       plucker(seq_incl(1, p-1))
+  //     ), 2*p)
+  //     + b_minus(ncoproduct(
+  //       a_plus(gli_small, 2*p-1),
+  //       plucker(seq_incl(p, 2*p-2))
+  //     ), 2*p)
+
+  //     + a_minus(b_plus(
+  //       ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
+  //     , 2*p-1), 2*p)
+  //     + a_plus(b_minus(
+  //       ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
+  //     , 2*p-1), 2*p)
+
+  //     - ncoproduct(
+  //       + gli_large
+  //       - a_minus(b_plus(gli_small, 2*p-1), 2*p)
+  //       ,
+  //       plucker(concat(seq_incl(1, p-1), {2*p}))
+  //     )
+  //     - ncoproduct(
+  //       + gli_large
+  //       - a_plus(b_minus(gli_small, 2*p-1), 2*p)
+  //       ,
+  //       plucker(seq_incl(p, 2*p-1))
+  //     )
+  //   ;
+  //   const auto coexpr = lhs + rhs;
+  //   // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+  //   //   return term.at(0);
+  //   // });
+  //   std::cout << coexpr;
   // }
-  // const auto expr = ncomultiply(CGrLi5(1,2,3,4,5,6,7,8), {1,4});
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
-  // std::cout << to_string(ranks) << "\n";
 
 
-  for (const int n : range_incl(4, 5)) {
-    const int p = 4;
-    const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
-    const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
-
-    const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
-    const auto rhs =
-      + ncoproduct(gli_large, plucker(seq_incl(1, p)))
-      + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
-
-      - a_minus(ncoproduct(
-        b_plus(gli_small, 2*p-1),
-        plucker(concat(seq_incl(1, p-1), {2*p-1}))
-      ), 2*p)
-      - a_plus(ncoproduct(
-        b_minus(gli_small, 2*p-1),
-        plucker(seq_incl(p, 2*p-1))
-      ), 2*p)
-
-      + b_plus(ncoproduct(
-        a_minus(gli_small, 2*p-1),
-        plucker(seq_incl(1, p-1))
-      ), 2*p)
-      + b_minus(ncoproduct(
-        a_plus(gli_small, 2*p-1),
-        plucker(seq_incl(p, 2*p-2))
-      ), 2*p)
-
-      + a_minus(b_plus(
-        ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
-      , 2*p-1), 2*p)
-      + a_plus(b_minus(
-        ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
-      , 2*p-1), 2*p)
-
-      - ncoproduct(
-        + gli_large
-        - a_minus(b_plus(gli_small, 2*p-1), 2*p)
-        ,
-        plucker(concat(seq_incl(1, p-1), {2*p}))
-      )
-      - ncoproduct(
-        + gli_large
-        - a_plus(b_minus(gli_small, 2*p-1), 2*p)
-        ,
-        plucker(seq_incl(p, 2*p-1))
-      )
-    ;
-    const auto coexpr = lhs + rhs;
-    // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
-    //   return term.at(0);
-    // });
-    std::cout << coexpr;
+  std::vector exprs_odd_num_points = {
+    CGrLi2[{5}](1,2,3,4),
+    GrQLi2(5)(1,2,3,4),
+    GrLi(5)(1,2,3,4),
+    G({1,2,3,4,5}),
+    tensor_product(G({1,2,3}), G({3,4,5})),
+  };
+  std::vector exprs_even_num_points = {
+    CGrLi2(1,2,3,4),
+    GrQLi2()(1,2,3,4),
+    GrLi(5,6)(1,2,3,4),
+    G({1,2,3,4,5,6}),
+    tensor_product(G({1,2,3,4}), G({3,4,5,6})),
+  };
+  for (const auto& expr : exprs_odd_num_points) {
+    const int n = detect_num_variables(expr);
+    CHECK(a_minus_minus(expr, n+1) == a_minus(expr, n+1));
+    CHECK(a_plus_plus(expr, n+1) == a_plus(expr, n+1));
+    CHECK(b_minus_minus(expr, n+1) == b_minus(expr, n+1));
+    CHECK(b_plus_plus(expr, n+1) == b_plus(expr, n+1));
+  }
+  using ArrowF = std::function<GammaExpr(const GammaExpr&, int)>;
+  const std::vector<ArrowF> basic_arrows = {
+    DISAMBIGUATE(a_full),
+    DISAMBIGUATE(a_minus),
+    DISAMBIGUATE(a_plus),
+    DISAMBIGUATE(b_full),
+    DISAMBIGUATE(b_minus),
+    DISAMBIGUATE(b_plus),
+  };
+  const std::vector<ArrowF> extra_arrows = {
+    DISAMBIGUATE(a_minus_minus),
+    DISAMBIGUATE(a_plus_plus),
+    DISAMBIGUATE(b_minus_minus),
+    DISAMBIGUATE(b_plus_plus),
+  };
+  for (const bool even_num_point : {false, true}) {
+    std::cout << "\n\n# " << (even_num_point ? "Even" : "Odd") << " num points:\n\n";
+    const auto& test_exprs = even_num_point ? exprs_even_num_points : exprs_odd_num_points;
+    // TODO: Only use extra arrows when makes sense
+    // const auto arrows = <?> ? basic_arrows : concat(basic_arrows, extra_arrows);
+    const auto arrows = concat(basic_arrows, extra_arrows);
+    absl::flat_hash_set<std::pair<int, int>> zeros;
+    for (const int out : range(arrows.size())) {
+      for (const int in : range(arrows.size())) {
+        const auto make_eqn = [&](const auto& expr, const int n) {
+          return arrows[out](arrows[in](expr, n+1), n+2);
+        };
+        bool eqn_holds = true;
+        for (const auto& expr : test_exprs) {
+          const int n = detect_num_variables(expr);
+          const auto eqn = make_eqn(expr, n);
+          if (!eqn.is_zero()) {
+            eqn_holds = false;
+            break;
+          }
+        }
+        if (eqn_holds) {
+          const auto expr = GammaExpr().annotate("x");
+          const auto eqn = make_eqn(expr, 0);
+          std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
+          zeros.insert({out, in});
+        }
+      }
+    }
+    std::cout << "\n";
+    for (const int l_out : range(arrows.size())) {
+      for (const int l_in : range(arrows.size())) {
+        for (const int r_out : range(arrows.size())) {
+          for (const int r_in : range(arrows.size())) {
+            const bool is_trivial =
+              std::tie(l_out, l_in) >= std::tie(r_out, r_in)
+              || zeros.contains({l_out, l_in})
+              || zeros.contains({r_out, r_in})
+            ;
+            if (is_trivial) {
+              continue;
+            }
+            for (const int sign : {-1, 1}) {
+              const auto make_eqn = [&](const auto& expr, const int n) {
+                return
+                  + arrows[l_out](arrows[l_in](expr, n+1), n+2)
+                  + sign * arrows[r_out](arrows[r_in](expr, n+1), n+2)
+                ;
+              };
+              bool eqn_holds = true;
+              for (const auto& expr : test_exprs) {
+                const int n = detect_num_variables(expr);
+                const auto eqn = make_eqn(expr, n);
+                if (!eqn.is_zero()) {
+                  eqn_holds = false;
+                  break;
+                }
+              }
+              if (eqn_holds) {
+                const auto expr = GammaExpr().annotate("x");
+                const auto eqn = make_eqn(expr, 0);
+                std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
