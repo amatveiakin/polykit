@@ -246,7 +246,7 @@ SplittingTree::Node* SplittingTree::Node::descend(const std::vector<int>& subpoi
 
 SplittingTree::SplittingTree(int num_variables)
   : root_(absl::make_unique<Node>(
-      nullptr, to_vector(range_incl(1, num_variables)), new_node_index())) {}
+      nullptr, seq_incl(1, num_variables), new_node_index())) {}
 
 SplittingTree::Node* SplittingTree::node_for_points(const std::vector<int>& points) {
   SplittingTree::Node* current = root();
@@ -274,7 +274,7 @@ ShortFormRatioStorage SplittingTree::generate_short_form_ratios() const {
     if (4 <= valency && valency <= 6) {
       const std::string letter = index_to_letter(node->node_index);
       for (const auto& seq : increasing_sequences(valency, valency - 4)) {
-        auto points = removed_indices(to_vector(range_incl(1, valency)), seq);
+        auto points = removed_indices(seq_incl(1, valency), seq);
         auto missing = mapped(seq, [](int x) { return x + 1; });
         ret.push_back(ShortFormRatio{
           // fmt::sub_num(letter, missing),

@@ -251,7 +251,7 @@ Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, 
 
 
 Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   return co_space(weight, num_coparts, [&](const int w) {
     return mapped(GrL(w, dimension, points), [&](const auto& expr) {
       // Precompute Lyndon basis to speed up coproduct.
@@ -261,7 +261,7 @@ Gr_NCoSpace simple_co_GrL(int weight, int num_coparts, int dimension, int num_po
 }
 
 Gr_NCoSpace simple_co_CGrL_test_space(int weight, int dimension, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   return co_space(weight, 2, [&](int w) {
     return normalize_space_remove_consecutive([&]() {
       // if (w == 1) {

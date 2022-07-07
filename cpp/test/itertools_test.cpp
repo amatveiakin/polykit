@@ -123,7 +123,7 @@ TEST(ItertoolsTest, PermutationsWithSign_SyncedWithNormal) {
 
 TEST(ItertoolsTest, PermutationsWithSign_PositiveStart) {
   for (const int num_values : range_incl(0, 6)) {
-    const auto values = to_vector(range_incl(1, num_values));
+    const auto values = seq_incl(1, num_values);
     for (const auto& [p, sign] : permutations_with_sign(values)) {
       EXPECT_EQ(sign, permutation_sign(p));
     }

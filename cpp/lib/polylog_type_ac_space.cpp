@@ -278,7 +278,7 @@ TypeAC_Space CL2_inv(const XArgs& xargs) {
 }
 
 TypeAC_NCoSpace simple_co_L(int weight, int num_coparts, int num_points) {
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   return co_space(weight, num_coparts, [&](const int w) {
     return mapped(L(w, points), [&](const auto& expr) {
       // Precompute Lyndon basis to speed up coproduct.

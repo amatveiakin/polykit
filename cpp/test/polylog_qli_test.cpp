@@ -439,7 +439,7 @@ TEST(QLiTest, WeaklySeparated) {
   // Should be true for any weight and number of points
   for (const int weight : range_incl(3, 4)) {
     for (const int num_points : {4, 6, 8}) {
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       EXPECT_TRUE(is_totally_weakly_separated(QLiVec(weight, points)));
     }
   }

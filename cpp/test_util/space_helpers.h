@@ -9,7 +9,7 @@
 template<typename SpaceF>
 int simple_space_rank(const SpaceF& space, int num_points) {
   return matrix_rank(space_matrix(
-    space(to_vector(range_incl(1, num_points))),
+    space(seq_incl(1, num_points)),
     DISAMBIGUATE(to_lyndon_basis)
   ));
 }

@@ -96,7 +96,7 @@ TEST_P(PolylogSpaceTest_Weight_NumPoints, LSameAsLInf) {
 TEST(PolylogSpaceTest, CB2SameAsNaive) {
   const int weight = 2;
   for (int num_points : range_incl(4, 6)) {
-    auto points = to_vector(range_incl(1, num_points));
+    auto points = seq_incl(1, num_points);
     EXPECT_POLYLOG_SPACE_EQ(
       CB(weight, points),
       CB_naive_via_QLi_fours(weight, points),
@@ -132,7 +132,7 @@ TEST(PolylogSpaceTest, LARGE_RankCB3) {
 TEST(PolylogSpaceTest, LARGE_CLIsClusterL) {
   for (const int weight : range_incl(1, 5)) {
     for (const int num_points : range_incl(5, 6)) {
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       const auto cl = mapped(CL(weight, points), DISAMBIGUATE(to_lyndon_basis));
       const auto l = mapped(L(weight, points), DISAMBIGUATE(to_lyndon_basis));
       const int cl_rank = space_rank(cl, DISAMBIGUATE(identity_function));

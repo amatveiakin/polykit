@@ -34,7 +34,7 @@ GammaNCoExpr R_4_3(const std::vector<int>& points) {
 TEST(PolylogSpaceTest, GrFxContainsGrL1) {
   for (const int dimension : range_incl(2, 3)) {
     for (const int num_points : range_incl(4, 8)) {
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       EXPECT_POLYLOG_SPACE_CONTAINS(
         GrFx(dimension, points),
         GrL1(dimension, points),
@@ -69,7 +69,7 @@ TEST(PolylogSpaceTest, LARGE_GrL1IndependentOfFixedPoints) {
   };
   for (const int dimension : range_incl(2, 4)) {
     for (const int num_points : range_incl(5, 7)) {
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       EXPECT_POLYLOG_SPACE_EQ(
         GrL1(dimension, points),
         GrL1_zero_fixed_points(dimension, points),
@@ -85,7 +85,7 @@ TEST(PolylogSpaceTest, LARGE_GrL2IndependentOfFixedPoints) {
   };
   for (const int dimension : range_incl(2, 4)) {
     for (const int num_points : range_incl(5, 7)) {
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       EXPECT_POLYLOG_SPACE_EQ(
         GrL2(dimension, points),
         GrL2_zero_fixed_points(dimension, points),
@@ -98,7 +98,7 @@ TEST(PolylogSpaceTest, LARGE_GrL2IndependentOfFixedPoints) {
 TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
   const int num_points = 5;
   const int dimension = 3;
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   const auto space = space_ncoproduct(GrFx(dimension, points), GrL2(dimension, points));
   const auto grqli3_space = mapped(
     range(num_points),
@@ -114,7 +114,7 @@ TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
 TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
   const int num_points = 5;
   const int dimension = 3;
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   Gr_NCoSpace space = mapped(
     filtered(
       space_ncoproduct(GrFx(dimension, points), GrL2(dimension, points)),
@@ -143,7 +143,7 @@ INSTANTIATE_TEST_SUITE_P(HUGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
 
 TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
   const int num_points = dimension() * 2;
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   const auto expr = CGrLiVec(weight(), points);
   const auto space = GrL(weight(), dimension(), points);
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
@@ -151,7 +151,7 @@ TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
 
 TEST_P(CGrLiVsSpacesTest, CoCGrL_contains_CGrLiNcomultiplied) {
   const int num_points = dimension() * 2;
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   const auto expr = CGrLiVec(weight(), points);
   const auto co_space = simple_co_CGrL_test_space(weight(), dimension(), num_points);
   EXPECT_TRUE(space_contains(
@@ -167,7 +167,7 @@ TEST_P(CGrLiVsSpacesTest, CoGrL_contains_CGrLiExpandedIntoGluedPairs) {
     return;
   }
   const int num_points = dimension() * 2;
-  const auto points = to_vector(range_incl(1, num_points));
+  const auto points = seq_incl(1, num_points);
   const auto expr = CGrLiVec(weight(), points);
   const auto co_space = abstract_co_space(
     weight(),
@@ -200,7 +200,7 @@ TEST(PolylogSpaceTest, GrL3Dim4_contains_QLiVec3PluckerDual) {
 
 TEST(PolylogSpaceTest, LARGE_GrL3Dim3ProjectionKernelVsOnePointLess) {
   for (const int num_points : range_incl(4, 8)) {
-    const auto points = to_vector(range_incl(1, num_points));
+    const auto points = seq_incl(1, num_points);
     const auto ranks = space_mapping_ranks(
       mapped(GrL3(3, points), DISAMBIGUATE(to_lyndon_basis)),
       DISAMBIGUATE(identity_function),
@@ -218,7 +218,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   const int dimension = 3;
   // Checked up to 10 points.
   for (const int num_points : range_incl(5, 8)) {
-    const auto points = to_vector(range_incl(1, num_points));
+    const auto points = seq_incl(1, num_points);
     const auto co_space = simple_co_CGrL_test_space(weight, dimension, num_points);
     const auto mapping_ranks = space_mapping_ranks(co_space, DISAMBIGUATE(identity_function), [](const auto& expr) {
       return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};

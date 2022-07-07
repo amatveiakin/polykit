@@ -44,20 +44,35 @@ private:
   value_type to_;
 };
 
-inline Range range(int to) {
-  return Range(0, to);
-}
 inline Range range(int from, int to) {
   return Range(from, to);
 }
-
-inline Range range_incl(int to) {
-  return Range(0, to + 1);
+inline Range range(int to) {
+  return Range(0, to);
 }
+
 inline Range range_incl(int from, int to) {
   return Range(from, to + 1);
 }
+inline Range range_incl(int to) {
+  return Range(0, to + 1);
+}
 
+inline std::vector<int> seq(int from, int to) {
+  const auto r = range(from, to);
+  return std::vector(r.begin(), r.end());
+}
+inline std::vector<int> seq(int to) {
+  return seq(0, to);
+}
+
+inline std::vector<int> seq_incl(int from, int to) {
+  const auto r = range_incl(from, to);
+  return std::vector(r.begin(), r.end());
+}
+inline std::vector<int> seq_incl(int to) {
+  return seq_incl(0, to);
+}
 
 // Usage:
 //   for (EACH : range(...)) { ... }

@@ -104,7 +104,7 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
     CHECK_LT(a, 2*n);
   };
   const auto f = [&](const std::vector<int>& arguments) {
-    std::vector<int> args_indices = concat(reversed(to_vector(range_incl(2, n-1))), {1, n, n+1, 2*n});
+    std::vector<int> args_indices = concat(reversed(seq_incl(2, n-1)), {1, n, n+1, 2*n});
     std::vector<std::pair<std::vector<int>, std::vector<int>>> sub_arguments;
     for (const int i_component : range(n - 1)) {
       if (i_component != 0) {

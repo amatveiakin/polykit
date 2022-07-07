@@ -24,7 +24,7 @@ void add_quadrangles(
 }
 
 std::vector<std::vector<TriangulationQuadrangle>> get_triangulation_quadrangle_indices(int num_vertices) {
-  const std::vector<int> vertices = to_vector(range(num_vertices));
+  const std::vector<int> vertices = seq(num_vertices);
   const auto triangulations = get_triangulations(absl::MakeConstSpan(vertices));
   return mapped(triangulations, [&](const auto& triangulation) {
     // TODO: Use a vector instead of absl::flat_hash_map.

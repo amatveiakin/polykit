@@ -69,14 +69,6 @@
 #endif
 
 
-std::vector<int> seq(int from, int to) {
-  return to_vector(range(from, to));
-}
-std::vector<int> seq_incl(int from, int to) {
-  return seq_incl(from, to);
-}
-
-
 Gr_NCoSpace test_space_Dim3(const std::vector<int>& args) {
   const int dimension = 3;
   const int weight = 4;
@@ -166,7 +158,7 @@ int main(int /*argc*/, char *argv[]) {
 
 
   // const int num_points = 6;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // const auto ranks = space_mapping_ranks(CL4(points), DISAMBIGUATE(to_lyndon_basis), [](const auto& expr) {
   //   return std::tuple{
   //     to_lyndon_basis(substitute_variables(expr, {1,1,3,4,5,6})),
@@ -183,7 +175,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int weight : range_incl(2, 4)) {
   // // for (const int weight : {4}) {
   //   for (const int half_num_points : range_incl(2, 4)) {
-  //     const auto points_raw = to_vector(range_incl(1, half_num_points));
+  //     const auto points_raw = seq_incl(1, half_num_points);
   //     const auto& points_inv = concat(
   //       mapped(points_raw, [](const int idx) { return X(idx); }),
   //       mapped(points_raw, [](const int idx) { return -X(idx); })
@@ -331,7 +323,7 @@ int main(int /*argc*/, char *argv[]) {
 
   // for (const int weight : range_incl(2, 4)) {
   //   for (const int half_num_points : range_incl(2, 6)) {
-  //     const auto points_raw = to_vector(range_incl(1, half_num_points));
+  //     const auto points_raw = seq_incl(1, half_num_points);
   //     const auto& points_inv = concat(
   //       mapped(points_raw, [](const int idx) { return X(idx); }),
   //       mapped(points_raw, [](const int idx) { return -X(idx); })
@@ -345,7 +337,7 @@ int main(int /*argc*/, char *argv[]) {
 #if 0
   // constexpr int dimension = 3;
   constexpr int num_points = 6;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
 
   static constexpr auto kappa_y_to_x = [](const KappaExpr& expr) {
     return expr.mapped([&](const auto& term) {
@@ -431,7 +423,7 @@ int main(int /*argc*/, char *argv[]) {
   );
 
   const auto fx = concat(
-    mapped(combinations(to_vector(range_incl(1, num_points)), 3), [](const auto& points) {
+    mapped(combinations(seq_incl(1, num_points), 3), [](const auto& points) {
       return KappaExpr::single({Kappa(Gamma(points))});
     }),
     {K_X(), K_Y()}
@@ -439,7 +431,7 @@ int main(int /*argc*/, char *argv[]) {
   CHECK_EQ(fx.size(), 20 + 2);
 
   const auto b2_full = concat(
-    mapped(GrL2(3, to_vector(range_incl(1, num_points))), gamma_expr_to_kappa_expr),
+    mapped(GrL2(3, seq_incl(1, num_points)), gamma_expr_to_kappa_expr),
     mapped(b2_generators, [](const auto& gen) {
       // (a-c) * (b-c) == a*b + b*c + c*a
       return n_log(2, to_array<3>(gen));
@@ -1038,7 +1030,7 @@ int main(int /*argc*/, char *argv[]) {
   // for (const int weight : range_incl(1, 5)) {
   //   for (const int dimension : range_incl(2, 4)) {
   //     for (const int num_points : range_incl(4, 8)) {
-  //       const auto points = to_vector(range_incl(1, num_points));
+  //       const auto points = seq_incl(1, num_points);
   //       const auto space = OldChernGrL(weight, dimension, points);
   //       std::cout << "w=" << weight << ", d=" << dimension << ", n=" << num_points << ": ";
   //       std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
@@ -1075,7 +1067,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 3;
   // const int dimension = 3;
   // const int num_points = 6;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // const auto space = OldChernGrL(weight, dimension, points);
   // const auto ranks = space_mapping_ranks(
   //   space,
@@ -1102,7 +1094,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 4;
   // const int dimension = 4;
   // const int num_points = 8;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // // const auto space = OldChernGrL(weight, dimension, points);
   // const auto space = CGrL_test_space(weight, dimension, points);
   // const auto ranks = space_mapping_ranks(
@@ -1144,7 +1136,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 4;
   // const int dimension = 3;
   // const int num_points = 7;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // Profiler profiler;
   // const auto space = mapped_parallel(
   //   OldChernGrL(weight, dimension, points),
@@ -1200,7 +1192,7 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 4;
   // const int dimension = 3;
   // const int num_points = 6;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // Profiler profiler;
   // const auto space = mapped_parallel(
   //   OldChernGrL(weight, dimension, points),
@@ -1296,7 +1288,7 @@ int main(int /*argc*/, char *argv[]) {
   // // TODO: Try to dyhedralize and find space basis
   // for (const int weight : range_incl(3, 4)) {
   //   for (const int num_points : range_incl(8, 8)) {
-  //     const auto points = to_vector(range_incl(1, num_points));
+  //     const auto points = seq_incl(1, num_points);
   //     Profiler profiler;
   //     const auto space = concat(
   //       wedge_OldChernGrL(weight, 4, points),
@@ -1339,15 +1331,15 @@ int main(int /*argc*/, char *argv[]) {
   // const int weight = 5;
   // const int mid_point = weight + 1;
   // const int num_points = mid_point * 2 - 1;
-  // const auto points = to_vector(range_incl(1, num_points));
+  // const auto points = seq_incl(1, num_points);
   // const int num_pullbacks = 1;
   // const int num_before = 1;
   // const int num_after = 1;
   // Profiler profiler;
   // GammaExpr a;
-  // for (const auto& pb: combinations(to_vector(range(mid_point - 1)), num_pullbacks)) {
-  //   for (const auto& before: combinations(to_vector(range(mid_point - 1 - num_pullbacks)), num_before)) {
-  //     for (auto after: combinations(to_vector(range(mid_point - 1)), num_after)) {
+  // for (const auto& pb: combinations(seq(mid_point - 1), num_pullbacks)) {
+  //   for (const auto& before: combinations(seq(mid_point - 1 - num_pullbacks), num_before)) {
+  //     for (auto after: combinations(seq(mid_point - 1), num_after)) {
   //       const int num_pbs = num_pullbacks;  // workaround: lambdas cannot capture structured bindings
   //       after = mapped(after, [&](const int p) { return p + mid_point - num_pbs; });
   //       const int sign = neg_one_pow(sum(pb) + sum(before) + sum(after));

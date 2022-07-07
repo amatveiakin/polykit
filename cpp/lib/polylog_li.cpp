@@ -74,7 +74,7 @@ LiParam dots_to_li_params(const std::vector<int>& dots_orig) {
     if (is_var(dot)) {
       ++cur_weight;
       weights.push_back(cur_weight);
-      points.push_back(to_vector(range_incl(common_vars+prev_vars+1, common_vars+dot)));
+      points.push_back(seq_incl(common_vars+prev_vars+1, common_vars+dot));
       CHECK_LT(prev_vars, dot) << dump_to_string(dots_orig);
       prev_vars = dot;
       cur_weight = 0;

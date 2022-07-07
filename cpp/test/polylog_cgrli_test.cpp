@@ -50,10 +50,10 @@ GammaExpr Casimir(const std::vector<int>& points) {
     return choose_indices_one_based(points, indices);
   };
   return (
-    + G(args(to_vector(range_incl(1, p))))
-    + G(args(to_vector(range_incl(p+1, 2*p))))
-    - G(args(concat({2*p}, to_vector(range_incl(1, p-1)))))
-    - G(args(to_vector(range_incl(p, 2*p-1))))
+    + G(args(seq_incl(1, p)))
+    + G(args(seq_incl(p+1, 2*p)))
+    - G(args(concat({2*p}, seq_incl(1, p-1))))
+    - G(args(seq_incl(p, 2*p-1)))
   ).annotate(
     fmt::function_num_args(fmt::opname("Cas"), points)
   );
@@ -170,7 +170,7 @@ TEST(CGrLiTest, IsTotallyWeaklySeparated) {
   // Should be true for any weight and dimension.
   for (const int dimension : range_incl(2, 4)) {
     for (const int weight : range_incl(3, 4)) {
-      const auto points = to_vector(range_incl(1, 2 * dimension));
+      const auto points = seq_incl(1, 2 * dimension);
       EXPECT_TRUE(is_totally_weakly_separated(CGrLiVec(weight, points)));
     }
   }
@@ -243,7 +243,7 @@ TEST(CGrLiTest, CGrLiViaLowerDim) {
   for (const int weight : range_incl(2, 3)) {
     const int p = weight + 1;
     const int num_points = 2 * p;
-    const auto points = to_vector(range_incl(1, num_points));
+    const auto points = seq_incl(1, num_points);
     const auto lhs = CGrLiVec(weight, points);
     GammaExpr rhs;
     for (const int i : range(p)) {
@@ -263,7 +263,7 @@ TEST(CGrLiTest, LARGE_Comultiplication) {
       if (!are_CGrLi_args_ok(weight, num_points)) {
         continue;
       }
-      const auto points = to_vector(range_incl(1, num_points));
+      const auto points = seq_incl(1, num_points);
       const auto lhs = ncomultiply(CGrLiVec(weight, points));
       GammaNCoExpr rhs;
       if (weight >= p) {
@@ -301,7 +301,7 @@ TEST(CGrLiTest, LARGE_ComultiplicationAomoto) {
   for (const int weight : range_incl(3, 4)) {
     const int p = weight + 1;
     const int num_points = 2 * p;
-    const auto points = to_vector(range_incl(1, num_points));
+    const auto points = seq_incl(1, num_points);
     const auto lhs = ncomultiply(CGrLiVec(weight, points), {1, weight - 1});
     GammaNCoExpr rhs;
     for (const int i : range(p)) {
@@ -326,7 +326,7 @@ TEST(CGrLiTest, LARGE_ComultiplicationAomoto) {
 TEST(CGrLiTest, LARGE_ABOfAomotoIsZero) {
   for (const int weight : range_incl(3, 4)) {
     const int p = weight + 1;
-    const auto expr = CGrLiVec(weight, to_vector(range_incl(1, 2*p)));
+    const auto expr = CGrLiVec(weight, seq_incl(1, 2*p));
     EXPECT_EXPR_ZERO_AFTER_LYNDON(a_minus(expr, 2*p+1));
     EXPECT_EXPR_ZERO_AFTER_LYNDON(a_plus(expr, 2*p+1));
     EXPECT_EXPR_ZERO_AFTER_LYNDON(b_minus(expr, 2*p+1));
@@ -337,15 +337,15 @@ TEST(CGrLiTest, LARGE_ABOfAomotoIsZero) {
 TEST(CGrLiTest, LARGE_ComultiplicationAomotoViaAB) {
   for (const int weight : range_incl(3, 4)) {
     const int p = weight + 1;
-    const auto lhs = ncomultiply(CGrLiVec(weight, to_vector(range_incl(1, 2*p))), {1, p-2});
+    const auto lhs = ncomultiply(CGrLiVec(weight, seq_incl(1, 2*p)), {1, p-2});
     const auto rhs =
       + a_minus(b_plus(ncoproduct(
-        CGrLiVec(weight-1, to_vector(range_incl(1, 2*p-2))),
-        plucker({to_vector(range_incl(1, p-1))})
+        CGrLiVec(weight-1, seq_incl(1, 2*p-2)),
+        plucker({seq_incl(1, p-1)})
       ), 2*p-1), 2*p)
       + a_plus(b_minus(ncoproduct(
-        CGrLiVec(weight-1, to_vector(range_incl(1, 2*p-2))),
-        plucker({to_vector(range_incl(p, 2*p-2))})
+        CGrLiVec(weight-1, seq_incl(1, 2*p-2)),
+        plucker({seq_incl(p, 2*p-2)})
       ), 2*p-1), 2*p)
     ;
     EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, -neg_one_pow(p) * rhs);

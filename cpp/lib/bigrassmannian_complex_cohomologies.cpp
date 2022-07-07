@@ -10,7 +10,7 @@ SpaceMappingRanks cohomology_ranks(int dimension, int num_points, const SpaceF& 
   ScopedDisableSpaceHomogeneityCheck dshc;
   return space_mapping_ranks(
     mapped_expanding(range_incl(dimension, num_points - 1), [&](const int dim) {
-      return space(dim, to_vector(range_incl(1, num_points)));
+      return space(dim, seq_incl(1, num_points));
     }),
     DISAMBIGUATE(to_lyndon_basis),
     [&](const auto& expr) {

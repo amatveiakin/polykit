@@ -15,7 +15,7 @@
 
 template<typename LinearT>
 LinearT a_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& summation_args) {
-  const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
+  const auto all_dst_points = seq_incl(1, num_dst_points);
   LinearT ret;
   for (int idx : summation_args) {
     idx--;
@@ -29,7 +29,7 @@ LinearT a_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& s
 
 template<typename LinearT>
 LinearT b_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& summation_args) {
-  const auto all_dst_points = to_vector(range_incl(1, num_dst_points));
+  const auto all_dst_points = seq_incl(1, num_dst_points);
   LinearT ret;
   for (int idx : summation_args) {
     idx--;
@@ -43,14 +43,14 @@ LinearT b_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& s
 
 std::vector<int> ab_minus_summation_args(int num_dst_points) {
   return (num_dst_points % 2 == 0)
-    ? to_vector(range_incl(1, num_dst_points / 2))
+    ? seq_incl(1, num_dst_points / 2)
     : to_vector(range_incl(1, (num_dst_points + 1) / 2))
   ;
 }
 
 std::vector<int> ab_plus_summation_args(int num_dst_points) {
   return (num_dst_points % 2 == 0)
-    ? to_vector(range_incl(num_dst_points / 2 + 1, num_dst_points))
+    ? seq_incl(num_dst_points / 2 + 1, num_dst_points)
     : to_vector(range_incl((num_dst_points + 1) / 2, num_dst_points))
   ;
 }
@@ -58,7 +58,7 @@ std::vector<int> ab_plus_summation_args(int num_dst_points) {
 
 template<typename LinearT>
 LinearT a_full_impl(const LinearT& expr, int num_dst_points) {
-  const auto summation_args = to_vector(range_incl(1, num_dst_points));
+  const auto summation_args = seq_incl(1, num_dst_points);
   return a_sum(expr, num_dst_points, summation_args).copy_annotations_mapped(expr, [&](const std::string& annotation) {
     // TODO: fmt notation for this
     return "←" + annotation;
@@ -67,7 +67,7 @@ LinearT a_full_impl(const LinearT& expr, int num_dst_points) {
 
 template<typename LinearT>
 LinearT b_full_impl(const LinearT& expr, int num_dst_points) {
-  const auto summation_args = to_vector(range_incl(1, num_dst_points));
+  const auto summation_args = seq_incl(1, num_dst_points);
   return b_sum(expr, num_dst_points, summation_args).copy_annotations_mapped(expr, [&](const std::string& annotation) {
     // TODO: fmt notation for this
     return "↑" + annotation;

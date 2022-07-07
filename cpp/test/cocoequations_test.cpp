@@ -20,7 +20,7 @@ TEST(CocoequationsTest, LARGE_LiQuadSum_Comult_2_2_2) {
       return LiQuad(num_points / 2 - 1, args);
     },
     num_points,
-    to_vector(range_incl(1, num_points - 1))
+    seq_incl(1, num_points - 1)
   );
   auto lira_expr = theta_expr_to_lira_expr_without_products(theta_expr);
   EXPECT_EXPR_ZERO(lira_expr_comultiply(lira_expr));
@@ -43,7 +43,7 @@ TEST(CocoequationsTest, HUGE_QLi6_Arg8_Sum_Comult_2_2_2) {
       return QLiVec(6, args);
     },
     num_points,
-    to_vector(range_incl(1, num_points - 1))
+    seq_incl(1, num_points - 1)
   );
   auto qli_comult = icomultiply(qli_expr, {2,2,2});
   EXPECT_EXPR_ZERO(qli_comult);
