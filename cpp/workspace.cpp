@@ -1781,6 +1781,7 @@ int main(int /*argc*/, char *argv[]) {
   //       ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
   //     , 2*p-1), 2*p)
 
+  //     // TODO: try changing the sign inside !!!
   //     - ncoproduct(
   //       + gli_large
   //       - a_minus(b_plus(gli_small, 2*p-1), 2*p)
@@ -1802,109 +1803,141 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  std::vector exprs_odd_num_points = {
-    CGrLi2[{5}](1,2,3,4),
-    GrQLi2(5)(1,2,3,4),
-    GrLi(5)(1,2,3,4),
-    G({1,2,3,4,5}),
-    tensor_product(G({1,2,3}), G({3,4,5})),
-  };
-  std::vector exprs_even_num_points = {
-    CGrLi2(1,2,3,4),
-    GrQLi2()(1,2,3,4),
-    GrLi(5,6)(1,2,3,4),
-    G({1,2,3,4,5,6}),
-    tensor_product(G({1,2,3,4}), G({3,4,5,6})),
-  };
-  for (const auto& expr : exprs_odd_num_points) {
-    const int n = detect_num_variables(expr);
-    CHECK(a_minus_minus(expr, n+1) == a_minus(expr, n+1));
-    CHECK(a_plus_plus(expr, n+1) == a_plus(expr, n+1));
-    CHECK(b_minus_minus(expr, n+1) == b_minus(expr, n+1));
-    CHECK(b_plus_plus(expr, n+1) == b_plus(expr, n+1));
-  }
-  using ArrowF = std::function<GammaExpr(const GammaExpr&, int)>;
-  const std::vector<ArrowF> basic_arrows = {
-    DISAMBIGUATE(a_full),
-    DISAMBIGUATE(a_minus),
-    DISAMBIGUATE(a_plus),
-    DISAMBIGUATE(b_full),
-    DISAMBIGUATE(b_minus),
-    DISAMBIGUATE(b_plus),
-  };
-  const std::vector<ArrowF> extra_arrows = {
-    DISAMBIGUATE(a_minus_minus),
-    DISAMBIGUATE(a_plus_plus),
-    DISAMBIGUATE(b_minus_minus),
-    DISAMBIGUATE(b_plus_plus),
-  };
-  for (const bool even_num_point : {false, true}) {
-    std::cout << "\n\n# " << (even_num_point ? "Even" : "Odd") << " num points:\n\n";
-    const auto& test_exprs = even_num_point ? exprs_even_num_points : exprs_odd_num_points;
-    // TODO: Only use extra arrows when makes sense
-    // const auto arrows = <?> ? basic_arrows : concat(basic_arrows, extra_arrows);
-    const auto arrows = concat(basic_arrows, extra_arrows);
-    absl::flat_hash_set<std::pair<int, int>> zeros;
-    for (const int out : range(arrows.size())) {
-      for (const int in : range(arrows.size())) {
-        const auto make_eqn = [&](const auto& expr, const int n) {
-          return arrows[out](arrows[in](expr, n+1), n+2);
+  // std::vector exprs_odd_num_points = {
+  //   CGrLi2[{5}](1,2,3,4),
+  //   GrQLi2(5)(1,2,3,4),
+  //   GrLi(5)(1,2,3,4),
+  //   G({1,2,3,4,5}),
+  //   tensor_product(G({1,2,3}), G({3,4,5})),
+  // };
+  // std::vector exprs_even_num_points = {
+  //   CGrLi2(1,2,3,4),
+  //   GrQLi2()(1,2,3,4),
+  //   GrLi(5,6)(1,2,3,4),
+  //   G({1,2,3,4,5,6}),
+  //   tensor_product(G({1,2,3,4}), G({3,4,5,6})),
+  // };
+  // for (const auto& expr : exprs_odd_num_points) {
+  //   const int n = detect_num_variables(expr);
+  //   CHECK(a_minus_minus(expr, n+1) == a_minus(expr, n+1));
+  //   CHECK(a_plus_plus(expr, n+1) == a_plus(expr, n+1));
+  //   CHECK(b_minus_minus(expr, n+1) == b_minus(expr, n+1));
+  //   CHECK(b_plus_plus(expr, n+1) == b_plus(expr, n+1));
+  // }
+  // using ArrowF = std::function<GammaExpr(const GammaExpr&, int)>;
+  // const std::vector<ArrowF> basic_arrows = {
+  //   DISAMBIGUATE(a_full),
+  //   DISAMBIGUATE(a_minus),
+  //   DISAMBIGUATE(a_plus),
+  //   DISAMBIGUATE(b_full),
+  //   DISAMBIGUATE(b_minus),
+  //   DISAMBIGUATE(b_plus),
+  // };
+  // const std::vector<ArrowF> extra_arrows = {
+  //   DISAMBIGUATE(a_minus_minus),
+  //   DISAMBIGUATE(a_plus_plus),
+  //   DISAMBIGUATE(b_minus_minus),
+  //   DISAMBIGUATE(b_plus_plus),
+  // };
+  // for (const bool even_num_point : {false, true}) {
+  //   std::cout << "\n\n# " << (even_num_point ? "Even" : "Odd") << " num points:\n\n";
+  //   const auto& test_exprs = even_num_point ? exprs_even_num_points : exprs_odd_num_points;
+  //   // TODO: Only use extra arrows when makes sense
+  //   // const auto arrows = <?> ? basic_arrows : concat(basic_arrows, extra_arrows);
+  //   const auto arrows = concat(basic_arrows, extra_arrows);
+  //   absl::flat_hash_set<std::pair<int, int>> zeros;
+  //   for (const int out : range(arrows.size())) {
+  //     for (const int in : range(arrows.size())) {
+  //       const auto make_eqn = [&](const auto& expr, const int n) {
+  //         return arrows[out](arrows[in](expr, n+1), n+2);
+  //       };
+  //       bool eqn_holds = true;
+  //       for (const auto& expr : test_exprs) {
+  //         const int n = detect_num_variables(expr);
+  //         const auto eqn = make_eqn(expr, n);
+  //         if (!eqn.is_zero()) {
+  //           eqn_holds = false;
+  //           break;
+  //         }
+  //       }
+  //       if (eqn_holds) {
+  //         const auto expr = GammaExpr().annotate("x");
+  //         const auto eqn = make_eqn(expr, 0);
+  //         std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
+  //         zeros.insert({out, in});
+  //       }
+  //     }
+  //   }
+  //   std::cout << "\n";
+  //   for (const int l_out : range(arrows.size())) {
+  //     for (const int l_in : range(arrows.size())) {
+  //       for (const int r_out : range(arrows.size())) {
+  //         for (const int r_in : range(arrows.size())) {
+  //           const bool is_trivial =
+  //             std::tie(l_out, l_in) >= std::tie(r_out, r_in)
+  //             || zeros.contains({l_out, l_in})
+  //             || zeros.contains({r_out, r_in})
+  //           ;
+  //           if (is_trivial) {
+  //             continue;
+  //           }
+  //           for (const int sign : {-1, 1}) {
+  //             const auto make_eqn = [&](const auto& expr, const int n) {
+  //               return
+  //                 + arrows[l_out](arrows[l_in](expr, n+1), n+2)
+  //                 + sign * arrows[r_out](arrows[r_in](expr, n+1), n+2)
+  //               ;
+  //             };
+  //             bool eqn_holds = true;
+  //             for (const auto& expr : test_exprs) {
+  //               const int n = detect_num_variables(expr);
+  //               const auto eqn = make_eqn(expr, n);
+  //               if (!eqn.is_zero()) {
+  //                 eqn_holds = false;
+  //                 break;
+  //               }
+  //             }
+  //             if (eqn_holds) {
+  //               const auto expr = GammaExpr().annotate("x");
+  //               const auto eqn = make_eqn(expr, 0);
+  //               std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+
+  for (const int dimension : range_incl(3, 5)) {
+    const int weight = dimension - 1;
+    const int num_points = dimension * 2;
+    const auto points = seq_incl(1, num_points);
+    const auto space = ChernGrL(weight, dimension, points);
+    const auto ranks = space_mapping_ranks(
+      space,
+      DISAMBIGUATE(to_lyndon_basis),
+      [&](const auto& expr) {
+        return std::tuple{
+          to_lyndon_basis(a_minus(expr, num_points + 1)),
+          to_lyndon_basis(a_plus(expr, num_points + 1)),
+          to_lyndon_basis(b_minus(expr, num_points + 1)),
+          to_lyndon_basis(b_plus(expr, num_points + 1)),
+          to_lyndon_basis(expr + neg_one_pow(dimension) * plucker_dual(expr, points)),
         };
-        bool eqn_holds = true;
-        for (const auto& expr : test_exprs) {
-          const int n = detect_num_variables(expr);
-          const auto eqn = make_eqn(expr, n);
-          if (!eqn.is_zero()) {
-            eqn_holds = false;
-            break;
-          }
-        }
-        if (eqn_holds) {
-          const auto expr = GammaExpr().annotate("x");
-          const auto eqn = make_eqn(expr, 0);
-          std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
-          zeros.insert({out, in});
-        }
       }
-    }
-    std::cout << "\n";
-    for (const int l_out : range(arrows.size())) {
-      for (const int l_in : range(arrows.size())) {
-        for (const int r_out : range(arrows.size())) {
-          for (const int r_in : range(arrows.size())) {
-            const bool is_trivial =
-              std::tie(l_out, l_in) >= std::tie(r_out, r_in)
-              || zeros.contains({l_out, l_in})
-              || zeros.contains({r_out, r_in})
-            ;
-            if (is_trivial) {
-              continue;
-            }
-            for (const int sign : {-1, 1}) {
-              const auto make_eqn = [&](const auto& expr, const int n) {
-                return
-                  + arrows[l_out](arrows[l_in](expr, n+1), n+2)
-                  + sign * arrows[r_out](arrows[r_in](expr, n+1), n+2)
-                ;
-              };
-              bool eqn_holds = true;
-              for (const auto& expr : test_exprs) {
-                const int n = detect_num_variables(expr);
-                const auto eqn = make_eqn(expr, n);
-                if (!eqn.is_zero()) {
-                  eqn_holds = false;
-                  break;
-                }
-              }
-              if (eqn_holds) {
-                const auto expr = GammaExpr().annotate("x");
-                const auto eqn = make_eqn(expr, 0);
-                std::cout << annotations_one_liner(eqn.annotations()) << " == 0\n";
-              }
-            }
-          }
-        }
-      }
-    }
+    );
+    std::cout << to_string(ranks) << "\n";
+    // for (const auto& expr : space) {
+    //   if (
+    //     to_lyndon_basis(a_minus(expr, num_points + 1)).is_zero() &&
+    //     to_lyndon_basis(a_plus(expr, num_points + 1)).is_zero() &&
+    //     to_lyndon_basis(b_minus(expr, num_points + 1)).is_zero() &&
+    //     to_lyndon_basis(b_plus(expr, num_points + 1)).is_zero()
+    //   ) {
+    //     std::cout << expr;
+    //   }
+    // }
   }
 }
