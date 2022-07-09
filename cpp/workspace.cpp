@@ -1746,61 +1746,66 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  // for (const int n : range_incl(4, 5)) {
-  //   const int p = 4;
-  //   const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
-  //   const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
+  for (const int n : range_incl(4, 5)) {
+    for (const int p : range_incl(3, 5)) {
+      if (!are_CGrLi_args_ok(n-1, 2*p)) {
+        continue;
+      }
 
-  //   const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
-  //   const auto rhs =
-  //     + ncoproduct(gli_large, plucker(seq_incl(1, p)))
-  //     + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
+      const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
+      const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
 
-  //     - a_minus(ncoproduct(
-  //       b_plus(gli_small, 2*p-1),
-  //       plucker(concat(seq_incl(1, p-1), {2*p-1}))
-  //     ), 2*p)
-  //     - a_plus(ncoproduct(
-  //       b_minus(gli_small, 2*p-1),
-  //       plucker(seq_incl(p, 2*p-1))
-  //     ), 2*p)
+      const auto s = neg_one_pow(p);
+      const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
+      const auto rhs =
+        + ncoproduct(gli_large, plucker(seq_incl(1, p)))
+        + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
 
-  //     + b_plus(ncoproduct(
-  //       a_minus(gli_small, 2*p-1),
-  //       plucker(seq_incl(1, p-1))
-  //     ), 2*p)
-  //     + b_minus(ncoproduct(
-  //       a_plus(gli_small, 2*p-1),
-  //       plucker(seq_incl(p, 2*p-2))
-  //     ), 2*p)
+        - s * a_minus(ncoproduct(
+          b_plus(gli_small, 2*p-1),
+          plucker(concat(seq_incl(1, p-1), {2*p-1}))
+        ), 2*p)
+        - s * a_plus(ncoproduct(
+          b_minus(gli_small, 2*p-1),
+          plucker(seq_incl(p, 2*p-1))
+        ), 2*p)
 
-  //     + a_minus(b_plus(
-  //       ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
-  //     , 2*p-1), 2*p)
-  //     + a_plus(b_minus(
-  //       ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
-  //     , 2*p-1), 2*p)
+        + s * b_plus(ncoproduct(
+          a_minus(gli_small, 2*p-1),
+          plucker(seq_incl(1, p-1))
+        ), 2*p)
+        + s * b_minus(ncoproduct(
+          a_plus(gli_small, 2*p-1),
+          plucker(seq_incl(p, 2*p-2))
+        ), 2*p)
 
-  //     // TODO: try changing the sign inside !!!
-  //     - ncoproduct(
-  //       + gli_large
-  //       - a_minus(b_plus(gli_small, 2*p-1), 2*p)
-  //       ,
-  //       plucker(concat(seq_incl(1, p-1), {2*p}))
-  //     )
-  //     - ncoproduct(
-  //       + gli_large
-  //       - a_plus(b_minus(gli_small, 2*p-1), 2*p)
-  //       ,
-  //       plucker(seq_incl(p, 2*p-1))
-  //     )
-  //   ;
-  //   const auto coexpr = lhs + rhs;
-  //   // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
-  //   //   return term.at(0);
-  //   // });
-  //   std::cout << coexpr;
-  // }
+        + s *  a_minus(b_plus(
+          ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
+        , 2*p-1), 2*p)
+        + s * a_plus(b_minus(
+          ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
+        , 2*p-1), 2*p)
+
+        - ncoproduct(
+          + gli_large
+          - s * a_minus(b_plus(gli_small, 2*p-1), 2*p)
+          ,
+          plucker(concat(seq_incl(1, p-1), {2*p}))
+        )
+        - ncoproduct(
+          + gli_large
+          - s * a_plus(b_minus(gli_small, 2*p-1), 2*p)
+          ,
+          plucker(seq_incl(p, 2*p-1))
+        )
+      ;
+      const auto coexpr = lhs + rhs;
+      // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+      //   return term.at(0);
+      // });
+      std::cout << coexpr;
+    }
+  }
 
 
   // std::vector exprs_odd_num_points = {
@@ -1910,34 +1915,34 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  for (const int dimension : range_incl(3, 5)) {
-    const int weight = dimension - 1;
-    const int num_points = dimension * 2;
-    const auto points = seq_incl(1, num_points);
-    const auto space = ChernGrL(weight, dimension, points);
-    const auto ranks = space_mapping_ranks(
-      space,
-      DISAMBIGUATE(to_lyndon_basis),
-      [&](const auto& expr) {
-        return std::tuple{
-          to_lyndon_basis(a_minus(expr, num_points + 1)),
-          to_lyndon_basis(a_plus(expr, num_points + 1)),
-          to_lyndon_basis(b_minus(expr, num_points + 1)),
-          to_lyndon_basis(b_plus(expr, num_points + 1)),
-          to_lyndon_basis(expr + neg_one_pow(dimension) * plucker_dual(expr, points)),
-        };
-      }
-    );
-    std::cout << to_string(ranks) << "\n";
-    // for (const auto& expr : space) {
-    //   if (
-    //     to_lyndon_basis(a_minus(expr, num_points + 1)).is_zero() &&
-    //     to_lyndon_basis(a_plus(expr, num_points + 1)).is_zero() &&
-    //     to_lyndon_basis(b_minus(expr, num_points + 1)).is_zero() &&
-    //     to_lyndon_basis(b_plus(expr, num_points + 1)).is_zero()
-    //   ) {
-    //     std::cout << expr;
-    //   }
-    // }
-  }
+  // for (const int dimension : range_incl(3, 5)) {
+  //   const int weight = dimension - 1;
+  //   const int num_points = dimension * 2;
+  //   const auto points = seq_incl(1, num_points);
+  //   const auto space = ChernGrL(weight, dimension, points);
+  //   const auto ranks = space_mapping_ranks(
+  //     space,
+  //     DISAMBIGUATE(to_lyndon_basis),
+  //     [&](const auto& expr) {
+  //       return std::tuple{
+  //         to_lyndon_basis(a_minus(expr, num_points + 1)),
+  //         to_lyndon_basis(a_plus(expr, num_points + 1)),
+  //         to_lyndon_basis(b_minus(expr, num_points + 1)),
+  //         to_lyndon_basis(b_plus(expr, num_points + 1)),
+  //         to_lyndon_basis(expr + neg_one_pow(dimension) * plucker_dual(expr, points)),
+  //       };
+  //     }
+  //   );
+  //   std::cout << to_string(ranks) << "\n";
+  //   // for (const auto& expr : space) {
+  //   //   if (
+  //   //     to_lyndon_basis(a_minus(expr, num_points + 1)).is_zero() &&
+  //   //     to_lyndon_basis(a_plus(expr, num_points + 1)).is_zero() &&
+  //   //     to_lyndon_basis(b_minus(expr, num_points + 1)).is_zero() &&
+  //   //     to_lyndon_basis(b_plus(expr, num_points + 1)).is_zero()
+  //   //   ) {
+  //   //     std::cout << expr;
+  //   //   }
+  //   // }
+  // }
 }
