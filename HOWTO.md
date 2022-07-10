@@ -2,7 +2,7 @@
 
 **For pure C++ code**
 
-1. Install Bazel: https://bazel.build/.
+1. Install Bazelisk: https://bazel.build/install/bazelisk.
 2. Install a C++ compiler with C++17 support.
    I've tested with Clang 10.0.0 and MSVC 14.0 (C/C++ compiler version
    19.27.29112), but other modern compilers should work as well.
@@ -20,7 +20,7 @@ on first run.
 1. Install Python3. Note that PyPy has better performance than the default
    (CPython) interpreter.
 2. Do one of the two:
-   * Install Bazel: https://bazel.build/. If running Python code via Bazel, it
+   * Install Bazelisk: https://bazel.build/install/bazelisk. If running Python code via Bazel, it
      will take care of the dependencies.
    * Install dependencies manually, namely “sortedcontainers” module.
      For CPython via PyPI: `pip install sortedcontainers` (you may need to
@@ -43,6 +43,19 @@ itself. Python packages installed in the system will not be available to Bazel
 and vice versa. In order to add a new Python dependency for pybind code, add it
 to `pybind/requirements.txt`.
 
+## Alternative docker setup
+
+Build container with all the deps
+```
+sudo docker build -t polykit:latest .
+```
+
+Run the container and mount the polykit directory
+```
+docker run -it -v $(pwd):/polykit polykit:latest
+```
+
+The working directory would be under `/polykit`.
 
 # Execute
 

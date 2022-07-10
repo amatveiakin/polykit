@@ -1,1 +1,1 @@
-python workspace.py
+python3 workspace.py
