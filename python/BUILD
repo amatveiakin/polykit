@@ -12,6 +12,7 @@ py_library(
     srcs = glob(["polypy/lib/*.py"]),
     deps = [
         requirement("psutil"),
+        requirement("sortedcontainers"),
     ]
 )
 

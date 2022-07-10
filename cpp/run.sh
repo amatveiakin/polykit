@@ -1,1 +1,1 @@
-bazel run -c opt --config=clang :workspace
+bazelisk run -c opt --config=clang :workspace

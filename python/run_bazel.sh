@@ -1,1 +1,1 @@
-bazel run :workspace
+bazelisk run :workspace
