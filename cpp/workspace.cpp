@@ -1746,66 +1746,66 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  for (const int n : range_incl(4, 5)) {
-    for (const int p : range_incl(3, 5)) {
-      if (!are_CGrLi_args_ok(n-1, 2*p)) {
-        continue;
-      }
+  // for (const int n : range_incl(4, 5)) {
+  //   for (const int p : range_incl(3, 5)) {
+  //     if (!are_CGrLi_args_ok(n-1, 2*p)) {
+  //       continue;
+  //     }
 
-      const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
-      const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
+  //     const auto gli_large = CGrLiVec(n-1, seq_incl(1, 2*p));
+  //     const auto gli_small = CGrLiVec(n-1, seq_incl(1, 2*p-2));
 
-      const auto s = neg_one_pow(p);
-      const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
-      const auto rhs =
-        + ncoproduct(gli_large, plucker(seq_incl(1, p)))
-        + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
+  //     const auto s = neg_one_pow(p);
+  //     const auto lhs = ncomultiply(CGrLiVec(n, seq_incl(1, 2*p)), {1,n-1});
+  //     const auto rhs =
+  //       + ncoproduct(gli_large, plucker(seq_incl(1, p)))
+  //       + ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
 
-        - s * a_minus(ncoproduct(
-          b_plus(gli_small, 2*p-1),
-          plucker(concat(seq_incl(1, p-1), {2*p-1}))
-        ), 2*p)
-        - s * a_plus(ncoproduct(
-          b_minus(gli_small, 2*p-1),
-          plucker(seq_incl(p, 2*p-1))
-        ), 2*p)
+  //       - s * a_minus(ncoproduct(
+  //         b_plus(gli_small, 2*p-1),
+  //         plucker(concat(seq_incl(1, p-1), {2*p-1}))
+  //       ), 2*p)
+  //       - s * a_plus(ncoproduct(
+  //         b_minus(gli_small, 2*p-1),
+  //         plucker(seq_incl(p, 2*p-1))
+  //       ), 2*p)
 
-        + s * b_plus(ncoproduct(
-          a_minus(gli_small, 2*p-1),
-          plucker(seq_incl(1, p-1))
-        ), 2*p)
-        + s * b_minus(ncoproduct(
-          a_plus(gli_small, 2*p-1),
-          plucker(seq_incl(p, 2*p-2))
-        ), 2*p)
+  //       + s * b_plus(ncoproduct(
+  //         a_minus(gli_small, 2*p-1),
+  //         plucker(seq_incl(1, p-1))
+  //       ), 2*p)
+  //       + s * b_minus(ncoproduct(
+  //         a_plus(gli_small, 2*p-1),
+  //         plucker(seq_incl(p, 2*p-2))
+  //       ), 2*p)
 
-        + s *  a_minus(b_plus(
-          ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
-        , 2*p-1), 2*p)
-        + s * a_plus(b_minus(
-          ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
-        , 2*p-1), 2*p)
+  //       + s *  a_minus(b_plus(
+  //         ncoproduct(gli_small, plucker(seq_incl(1, p-1)))
+  //       , 2*p-1), 2*p)
+  //       + s * a_plus(b_minus(
+  //         ncoproduct(gli_small, plucker(seq_incl(p, 2*p-2)))
+  //       , 2*p-1), 2*p)
 
-        - ncoproduct(
-          + gli_large
-          - s * a_minus(b_plus(gli_small, 2*p-1), 2*p)
-          ,
-          plucker(concat(seq_incl(1, p-1), {2*p}))
-        )
-        - ncoproduct(
-          + gli_large
-          - s * a_plus(b_minus(gli_small, 2*p-1), 2*p)
-          ,
-          plucker(seq_incl(p, 2*p-1))
-        )
-      ;
-      const auto coexpr = lhs + rhs;
-      // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
-      //   return term.at(0);
-      // });
-      std::cout << coexpr;
-    }
-  }
+  //       - ncoproduct(
+  //         + gli_large
+  //         - s * a_minus(b_plus(gli_small, 2*p-1), 2*p)
+  //         ,
+  //         plucker(concat(seq_incl(1, p-1), {2*p}))
+  //       )
+  //       - ncoproduct(
+  //         + gli_large
+  //         - s * a_plus(b_minus(gli_small, 2*p-1), 2*p)
+  //         ,
+  //         plucker(seq_incl(p, 2*p-1))
+  //       )
+  //     ;
+  //     const auto coexpr = lhs + rhs;
+  //     // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+  //     //   return term.at(0);
+  //     // });
+  //     std::cout << coexpr;
+  //   }
+  // }
 
 
   // std::vector exprs_odd_num_points = {
@@ -1945,4 +1945,522 @@ int main(int /*argc*/, char *argv[]) {
   //   //   }
   //   // }
   // }
+
+
+  // const int n = 6;
+  // const auto x = ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}));
+  // const auto y =
+  //   + b_minus(a_minus_minus(x, n+1), n+2)
+  //   + a_plus(b_plus_plus(x, n+1), n+2)
+  //   + a_plus(b_minus(x, n+1), n+2)
+  //   - a_plus(b_minus_minus(x, n+1), n+2)
+  // ;
+  // std::cout << to_lyndon_basis(a_full(y, n+3));
+
+
+  // TODO: TeX this proof (Proposition 4.10, former 5.9)
+
+  // std::cout <<
+  // + ncomultiply(CGrLi4(1,2,3,4,5,6,7,8), {1,3})
+  // - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))
+  // - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))
+  // - a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
+  // - a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  // + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
+  // + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
+  // + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  // + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
+  // ;
+  // std::cout <<
+  // + ncomultiply(CGrLi4(1,2,3,4,5,6), {1,3})
+  // - ncoproduct(CGrLi3(1,2,3,4,5,6) + a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  // - ncoproduct(CGrLi3(1,2,3,4,5,6) + a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  // + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  // + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  // - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  // - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  // - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  // + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  // + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  // ;
+
+  // const auto x =
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))
+  //   - a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
+  //   - a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
+  //   + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
+  // ;
+  // const auto y =
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6) + a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6) + a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))  // zero
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(CGrLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))  // zero
+  //   - a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
+  //   - a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
+  //   + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))  // rewrite
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))  // rewrite
+  //   - a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
+  //   - a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
+  //   + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x =
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)  // changed
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)  // changed
+  //   - a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)  // next
+  //   - a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
+  //   + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+
+  // const auto x =
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(ncoproduct(b_plus_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)  // changed
+  //   // - a_plus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6,7})), 8)  // reminder, zero after a_full
+  //   + a_minus(ncoproduct(b_minus_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)  // changed
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)  // reminder
+  //   + b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)  // next
+  //   + b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)  // next
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x =
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(ncoproduct(b_plus_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
+  //   + a_minus(ncoproduct(b_minus_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)
+  //   - b_plus(ncoproduct(a_plus_plus(CGrLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)  // changed
+  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)  // reminder
+  //   - b_minus(ncoproduct(a_minus_minus(CGrLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)  // changed
+  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)  // reminder
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x =
+  //   // sort amd move ncoproduct inside
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(b_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   - b_plus(a_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - b_minus(a_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)
+  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)
+  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)
+  // ;
+  // const auto y =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout <<
+  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
+  // ;
+
+  // const auto x6 =
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(b_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   - b_plus(a_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - b_minus(a_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // ;
+  // const auto x4 =
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)
+  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)
+  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)
+  // ;
+  // const auto y6 =
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3}))
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5}))
+  //   - ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6}))
+  // ;
+  // const auto y4 =
+  //   - ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
+  //   - ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   + a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
+  //   + a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
+  //   - b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6)
+  //   - b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6)
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6)
+  //   - a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6)
+  // ;
+  // std::cout << a_full(x6 - a_plus(b_minus_minus(y6, 7), 8), 9);
+  // std::cout << a_full(x4 - a_plus(b_minus_minus(y4, 7), 8), 9);
+
+  // const auto xy6 =
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(b_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   - b_plus(a_plus_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - b_minus(a_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - b_plus (a_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+
+  //   - b_minus(a_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - b_plus (a_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+  //   + a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_full       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_full       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_plus (b_full       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_minus(b_full       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_full (b_full       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   - a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+  // const auto xy6 =
+  //   + a_full (b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,6})), 7), 8)
+  //   + a_full (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({3,4,5})), 7), 8)
+
+  //   - a_plus (b_minus_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_minus      (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_minus(b_plus       (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  //   + a_plus (b_plus_plus  (ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
+  // ;
+  // std::cout << a_full(xy6, 9);
+
+
+  // std::cout <<
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)
+  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)
+  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)
+  //   - (
+  //   - a_plus(b_minus_minus(ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5})), 7), 8)
+  //   - a_plus(b_minus_minus(ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6})), 7), 8)
+  //   + a_plus(b_minus_minus(a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6), 7), 8)
+  //   + a_plus(b_minus_minus(a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6), 7), 8)
+  //   - a_plus(b_minus_minus(b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8)
+  //   - a_plus(b_minus_minus(b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6), 7), 8)
+  //   - a_plus(b_minus_minus(a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6), 7), 8)
+  //   - a_plus(b_minus_minus(a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8)
+  //   )
+  // ;
+
+  const auto space = {
+    a_full(a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8), 9),
+    a_full(b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9),
+    a_full(b_minus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8), 9),
+    a_full(a_plus(b_minus_minus(ncoproduct(a_plus(b_minus(CGrLi3(1,2,3,4), 5), 6), plucker({3,4,5})), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(ncoproduct(a_minus(b_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,6})), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(a_plus(ncoproduct(b_minus(CGrLi3(1,2,3,4), 5), plucker({3,4,5})), 6), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({3,4})), 6), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({3,4})), 5), 6), 7), 8), 9),
+    a_full(a_plus(b_minus_minus(a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9),
+  };
+  std::cout << space_rank(space, DISAMBIGUATE(identity_function)) << "\n";
+
+
+  // for (const int p : range_incl(3, 4)) {
+  //   std::cout << to_lyndon_basis(
+  //     + CGrLiVec(p, seq_incl(1, 2*p+2))
+  //     - neg_one_pow(p-1) * a_plus(b_minus(CGrLiVec(p, seq_incl(1, 2*p)), 2*p+1), 2*p+2)
+  //   );
+  // }
+
+  // using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
+  // const std::vector<ArrowF> arrows = {
+  //   DISAMBIGUATE(a_full),
+  //   DISAMBIGUATE(a_minus),
+  //   DISAMBIGUATE(a_plus),
+  //   DISAMBIGUATE(b_full),
+  //   DISAMBIGUATE(b_minus),
+  //   DISAMBIGUATE(b_plus),
+  //   DISAMBIGUATE(a_minus_minus),
+  //   DISAMBIGUATE(a_plus_plus),
+  //   DISAMBIGUATE(b_minus_minus),
+  //   DISAMBIGUATE(b_plus_plus),
+  // };
+  // for (const auto p : range_incl(3, 4)) {
+  //   for (const auto& out : arrows) {
+  //     for (const auto& in : arrows) {
+  //       for (const int sign : {-1, 1}) {
+  //         const auto eqn = to_lyndon_basis(
+  //           + CGrLiVec(p, seq_incl(1, 2*p+2))
+  //           + sign * neg_one_pow(p) * out(in(CGrLiVec(p, seq_incl(1, 2*p)), 2*p+1), 2*p+2)
+  //         );
+  //         if (eqn.is_zero()) {
+  //           std::cout << annotations_one_liner(eqn.annotations()) << " = 0\n";
+  //         }
+  //       }
+  //     }
+  //   }
+  //   std::cout << "\n";
+  // }
+
+  // for (const auto p : range_incl(3, 4)) {
+  //   std::cout << to_lyndon_basis(
+  //     a_full(
+  //       + CGrLiVec(p, seq_incl(1, 2*p))
+  //       + neg_one_pow(p-1) * a_plus(b_minus_minus(CGrLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
+  //       2*p+1
+  //     )
+  //   );
+  // }
+  // for (const auto p : range_incl(3, 4)) {
+  //   std::cout << to_lyndon_basis(
+  //     b_full(
+  //       + CGrLiVec(p, seq_incl(1, 2*p))
+  //       + neg_one_pow(p) * b_plus(a_minus_minus(CGrLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
+  //       2*p+1
+  //     )
+  //   );
+  // }
+
+  // std::cout << to_lyndon_basis(
+  //   + ncoproduct(CGrLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  //   - a_plus(b_minus(ncoproduct(CGrLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
+  // );
 }
