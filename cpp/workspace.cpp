@@ -132,8 +132,8 @@ int main(int /*argc*/, char *argv[]) {
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
     .set_expression_line_limit(30)
-    .set_annotation_sorting(AnnotationSorting::length)
-    // .set_annotation_sorting(AnnotationSorting::lexicographic)
+    // .set_annotation_sorting(AnnotationSorting::length)
+    .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
     .set_max_terms_in_annotations_one_liner(100)
   );
@@ -2385,6 +2385,7 @@ int main(int /*argc*/, char *argv[]) {
   //   + a_plus(b_minus_minus(a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8)
   // , 9);  // zero
 
+  // expr "Q"
   // std::cout << a_full(
   //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)
   //   + a_plus(b_minus_minus(b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8)
@@ -2428,46 +2429,108 @@ int main(int /*argc*/, char *argv[]) {
   //   - a_plus(b_minus_minus(a_minus(ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5})), 6), 7), 8)
   // , 9);  // zero
 
-  // Did not work :(
-  using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
-  enum class ArrowKind { A, B };
-  const std::vector<std::pair<ArrowF, ArrowKind>> arrows = {
-    {DISAMBIGUATE(a_full), ArrowKind::A},
-    {DISAMBIGUATE(a_minus), ArrowKind::A},
-    {DISAMBIGUATE(a_plus), ArrowKind::A},
-    {DISAMBIGUATE(b_full), ArrowKind::B},
-    {DISAMBIGUATE(b_minus), ArrowKind::B},
-    {DISAMBIGUATE(b_plus), ArrowKind::B},
-    {DISAMBIGUATE(a_minus_minus), ArrowKind::A},
-    {DISAMBIGUATE(a_plus_plus), ArrowKind::A},
-    {DISAMBIGUATE(b_minus_minus), ArrowKind::B},
-    {DISAMBIGUATE(b_plus_plus), ArrowKind::B},
-  };
-  const auto target_expr =
-    a_full(a_minus(ncoproduct(b_full(b_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8), 9)
-  ;
-  int iter = 0;
-  for (const auto& arrow_seq : cartesian_power(arrows, 4)) {
-    ++iter;
-    if (iter % 100 == 0) {
-      std::cout << (iter / 100) << "..." << std::flush;
-    }
-    if (absl::c_count_if(arrow_seq, [](const auto& ar) { return ar.second == ArrowKind::B; }) != 2) {
-      continue;
-    }
-    auto expr = ncoproduct(b_plus(CGrLi3(1,2,3,4), 5), plucker({1,2,5}));
-    int n = 5;
-    for (const auto& ar : arrow_seq) {
-      expr = ar.first(expr, ++n);
-    }
-    for (const int sign : {1, -1}) {
-      const auto candidate = sign * expr;
-      if (target_expr == candidate) {
-        std::cout << "\n" << candidate << "\n";
-      }
-    }
-  }
+  // // consider a term from "Q"
+  // std::cout <<
+  //   + a_full(a_plus(b_minus_minus(a_minus(b_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  // ;
 
+  // a = a- + a++ = a-- + a+
+  // a- = a-- + a+ - a++
+  //   but a-- term is zero
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   - a_full(b_full(b_minus(a_minus(a_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   + a_full(b_full(b_minus(a_minus(a_plus_plus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   - a_full(b_full(b_minus(a_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   + a_full(b_full(b_minus(a_minus(ncoproduct(a_plus_plus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   + a_full(b_full(a_minus(b_minus(ncoproduct(a_plus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   - a_full(b_full(a_minus(b_minus(ncoproduct(a_plus_plus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // // move b_minus inside
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   + a_full(b_full(a_minus(ncoproduct(b_minus(a_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
+  //   - a_full(b_full(a_minus(ncoproduct(b_minus(a_plus_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
+  // ;
+
+  // // temporary swap b_full and a_minus, change a_minus to a_plus_plus because a_full(a_full(x)) == 0 and swap back
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   - a_full(b_full(a_plus_plus(ncoproduct(b_minus(a_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
+  //   + a_full(b_full(a_plus_plus(ncoproduct(b_minus(a_plus_plus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(CGrLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
+  //   - a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_plus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   + a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_plus_plus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  // ;
+
+  // // now consider another term from "Q"
+  // std::cout <<
+  //   + a_full(a_plus(b_minus_minus(b_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   - a_full(b_full(b_minus_minus(a_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   + a_full(b_full(a_plus_plus(b_minus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(CGrLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   + a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  // ;
+
+  // // now consider the last term from "Q"
+  // std::cout <<
+  //   - a_full(b_plus(ncoproduct(a_full(a_plus(b_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   - a_full(b_plus(ncoproduct(b_minus_minus(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_plus(ncoproduct(b_minus_minus(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   - a_full(b_plus(b_minus_minus(ncoproduct(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2})), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_plus(b_minus_minus(ncoproduct(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2})), 7), 8), 9)
+  //   + a_full(b_full(b_minus_minus(ncoproduct(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2})), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   + a_full(b_full(b_minus_minus(ncoproduct(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), plucker({1,2})), 7), 8), 9)
+  //   - a_full(b_full(ncoproduct(b_minus_minus(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  // ;
+
+  // // now collect all terms from "Q" together
+  // std::cout <<
+  //   - a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_plus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   + a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_plus_plus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   + a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  //   + a_full(b_full(ncoproduct(b_minus_minus(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  // ;
+
+  std::cout <<
+    + a_full(b_full(ncoproduct(a_plus_plus(b_minus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+    + a_full(b_full(ncoproduct(b_minus_minus(a_plus(a_minus_minus(CGrLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8), 9)
+  ;
+  // Q.E.D.
 
 
   // for (const int p : range_incl(3, 4)) {
