@@ -271,3 +271,14 @@ std::vector<int> all_vars(const GammaExpr::ObjectT& term) {
   }
   return bitset_to_vector(indices, Gamma::kBitsetOffset);
 }
+
+int detect_num_variables(const GammaExpr& expr) {
+  int max_var = 0;
+  for (const auto& [term, coeff] : expr) {
+    for (const Gamma& g : term) {
+      max_var = std::max(max_var, max_value(g.index_vector()));
+    }
+  }
+  CHECK_GT(max_var, 0) << expr;
+  return max_var;
+}

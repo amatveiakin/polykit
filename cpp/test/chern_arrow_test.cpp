@@ -3,7 +3,6 @@
 
 #include "gtest/gtest.h"
 
-#include "test_util/gamma_helpers.h"
 #include "test_util/matchers.h"
 #include "lib/polylog_cgrli.h"
 #include "lib/polylog_grli.h"

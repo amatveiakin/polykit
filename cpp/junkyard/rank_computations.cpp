@@ -25,9 +25,6 @@
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_gr_space.h"
 
-#include "lib/kappa.h"
-#include "lib/polylog_type_d_space.h"
-
 
 void computations_archive() {
   // const auto triplet_tmpl =

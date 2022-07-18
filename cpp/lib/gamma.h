@@ -191,3 +191,12 @@ GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points);
 
 std::vector<int> common_vars(const GammaExpr::ObjectT& term);
 std::vector<int> all_vars(const GammaExpr::ObjectT& term);
+
+// Returns maximum variable index in expr. Can be used to detect the number of variables in
+// the space that contains the function. Useful in conjunction with chern arrows.
+// Beware! It's possible to construct such x that
+//   num_variables(chern_arrow(x)) == num_variables(x)
+// Moreover, this scenario is realistic and can happend with CGrLi. Always prefer to track
+// the actual space size instead of using this function.
+// TODO: Find a way to attach space metainformation to each expression.
+int detect_num_variables(const GammaExpr& expr);

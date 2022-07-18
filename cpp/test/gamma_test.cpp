@@ -7,7 +7,6 @@
 #include "lib/polylog_grqli.h"
 #include "lib/itertools.h"
 #include "lib/set_util.h"
-#include "test_util/gamma_helpers.h"
 #include "test_util/matchers.h"
 
 
