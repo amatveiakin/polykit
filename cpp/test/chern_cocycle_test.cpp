@@ -1,3 +1,6 @@
+// TODO: Test that the following is always true:
+//   comultiply(cocycle(w, d, n)) == +/- left(cocycle(w, d, n-1)) +/- up(cocycle(w, d-1, n-1))
+
 #include "lib/chern_cocycle.h"
 
 #include "gtest/gtest.h"
@@ -8,6 +11,40 @@
 #include "test_util/matchers.h"
 #include "test_util/space_matchers.h"
 
+
+GammaNCoExpr ChernCocycle_3_2_5(const std::vector<int>& points) {
+  const int weight = 3;
+  CHECK_EQ(points.size(), 5);
+  const auto args = [&](const std::vector<int>& indices) {
+    return choose_indices_one_based(points, indices);
+  };
+  return
+    + ncoproduct(GLiVec(weight-1, args({1,2,3,5})), G(args({3,4})))
+    - ncoproduct(GLiVec(weight-1, args({1,2,4,5})), G(args({3,4})))
+    - ncoproduct(GLiVec(weight-1, args({1,2,3,5})), G(args({3,5})))
+    + ncoproduct(GLiVec(weight-1, args({1,2,4,5})), G(args({4,5})))
+    + ncoproduct(GLiVec(weight-1, args({1,3,4,5})), G(args({1,2})))
+    - ncoproduct(GLiVec(weight-1, args({2,3,4,5})), G(args({1,2})))
+    - ncoproduct(GLiVec(weight-1, args({1,3,4,5})), G(args({1,5})))
+    + ncoproduct(GLiVec(weight-1, args({2,3,4,5})), G(args({2,5})))
+  ;
+}
+
+GammaExpr ChernCocycle_3_2_6(const std::vector<int>& points) {
+  const int weight = 3;
+  CHECK_EQ(points.size(), 6);
+  const auto args = [&](const std::vector<int>& indices) {
+    return choose_indices_one_based(points, indices);
+  };
+  return
+    - GLiVec(weight, args({2,3,5,6}))
+    + GLiVec(weight, args({2,3,4,6}))
+    - GLiVec(weight, args({2,3,4,5}))
+    + GLiVec(weight, args({1,3,5,6}))
+    - GLiVec(weight, args({1,3,4,6}))
+    + GLiVec(weight, args({1,3,4,5}))
+  ;
+}
 
 GammaExpr ChernCocycle_3_3_6(const std::vector<int>& points) {
   const int weight = 3;
@@ -28,19 +65,25 @@ GammaExpr ChernCocycle_3_3_6(const std::vector<int>& points) {
   );
 }
 
-GammaExpr ChernCocycle_3_2_6(const std::vector<int>& points) {
-  const int weight = 3;
-  CHECK_EQ(points.size(), 6);
+GammaExpr ChernCocycle_4_3_8(const std::vector<int>& points) {
+  const int weight = 4;
+  CHECK_EQ(points.size(), 8);
   const auto args = [&](const std::vector<int>& indices) {
     return choose_indices_one_based(points, indices);
   };
   return
-    - GLiVec(weight, args({2,3,5,6}))
-    + GLiVec(weight, args({2,3,4,6}))
-    - GLiVec(weight, args({2,3,4,5}))
-    + GLiVec(weight, args({1,3,5,6}))
-    - GLiVec(weight, args({1,3,4,6}))
-    + GLiVec(weight, args({1,3,4,5}))
+    + GLiVec(weight, args({2,3,4,6,7,8}))
+    - GLiVec(weight, args({2,3,4,5,7,8}))
+    + GLiVec(weight, args({2,3,4,5,6,8}))
+    - GLiVec(weight, args({2,3,4,5,6,7}))
+    - GLiVec(weight, args({1,3,4,6,7,8}))
+    + GLiVec(weight, args({1,3,4,5,7,8}))
+    - GLiVec(weight, args({1,3,4,5,6,8}))
+    + GLiVec(weight, args({1,3,4,5,6,7}))
+    + GLiVec(weight, args({1,2,4,6,7,8}))
+    - GLiVec(weight, args({1,2,4,5,7,8}))
+    + GLiVec(weight, args({1,2,4,5,6,8}))
+    - GLiVec(weight, args({1,2,4,5,6,7}))
   ;
 }
 
@@ -69,59 +112,45 @@ GammaExpr ChernCocycle_4_4_8(const std::vector<int>& points) {
   );
 }
 
-GammaExpr ChernCocycle_4_3_8(const std::vector<int>& points) {
-  const int weight = 4;
-  CHECK_EQ(points.size(), 8);
-  const auto args = [&](const std::vector<int>& indices) {
-    return choose_indices_one_based(points, indices);
-  };
-  return
-    + GLiVec(weight, args({2,3,4,6,7,8}))
-    - GLiVec(weight, args({2,3,4,5,7,8}))
-    + GLiVec(weight, args({2,3,4,5,6,8}))
-    - GLiVec(weight, args({2,3,4,5,6,7}))
-    - GLiVec(weight, args({1,3,4,6,7,8}))
-    + GLiVec(weight, args({1,3,4,5,7,8}))
-    - GLiVec(weight, args({1,3,4,5,6,8}))
-    + GLiVec(weight, args({1,3,4,5,6,7}))
-    + GLiVec(weight, args({1,2,4,6,7,8}))
-    - GLiVec(weight, args({1,2,4,5,7,8}))
-    + GLiVec(weight, args({1,2,4,5,6,8}))
-    - GLiVec(weight, args({1,2,4,5,6,7}))
-  ;
-}
-
 
 TEST(ChernCocycleTest, EqualsExplicit_Weight3) {
+  std::vector points5 = {3,4,5,1,2};
   std::vector points6 = {3,4,5,6,1,2};
-  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_3_6(points6)), ChernCocycle(3, 3, points6));
+  EXPECT_EXPR_EQ(ChernCocycle_3_2_5(points5), ChernCocycle(3, 2, points5));
   EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_2_6(points6)), ChernCocycle(3, 2, points6));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_3_6(points6)), ChernCocycle(3, 3, points6));
 }
 
 TEST(ChernCocycleTest, LARGE_EqualsExplicit_Weight4) {
   std::vector points8 = {3,4,5,6,7,8,1,2};
-  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_4_8(points8)), ChernCocycle(4, 4, points8));
   EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_3_8(points8)), ChernCocycle(4, 3, points8));
+  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_4_8(points8)), ChernCocycle(4, 4, points8));
 }
 
-TEST(ChernCocycleTest, InteractionWithArrows_Weight3) {
+TEST(ChernCocycleTest, ArrowEquations_Weight3) {
   EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_up(ChernCocycle(3, 3, {1,2,3,4,5,6}), 7));
   EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_left(ChernCocycle(3, 2, {1,2,3,4,5,6}), 7));
-}
-
-TEST(ChernCocycleTest, LARGE_InteractionWithArrows_Weight4) {
-  EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_up(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), 9));
-  EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_left(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9));
-}
-
-TEST(ChernCocycleTest, DimensionMinusOneEquation_Weight3) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5}))
+    - chern_arrow_left(ChernCocycle(3, 1, {1,2,3,4}), 5)
+  );
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6}))
+    - chern_arrow_left(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+  );
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6}))
+    - chern_arrow_up(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+  );
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + chern_arrow_left(ChernCocycle(3, 3, {1,2,3,4,5,6}), 7)
     + chern_arrow_up(ChernCocycle(3, 2, {1,2,3,4,5,6}), 7)
   );
 }
 
-TEST(ChernCocycleTest, LARGE_DimensionMinusOneEquation_Weight4) {
+TEST(ChernCocycleTest, LARGE_ArrowEquations_Weight4) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_up(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), 9));
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(chern_arrow_left(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9));
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + chern_arrow_left(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), 9)
     + chern_arrow_up(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9)

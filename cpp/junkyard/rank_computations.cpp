@@ -569,4 +569,255 @@ void computations_archive() {
   // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(ranks) << "\n";
 
+
+  // const int weight = 3;
+  // const int dimension = 3;
+  // const int num_points = 6;
+  // const auto points = seq_incl(1, num_points);
+  // const auto space = OldChernGrL(weight, dimension, points);
+  // const auto ranks = space_mapping_ranks(
+  //   space,
+  //   DISAMBIGUATE(to_lyndon_basis),
+  //   [&](const auto& expr) {
+  //     return std::tuple {
+  //       to_lyndon_basis(expr + substitute_variables(expr, {2,3,4,5,6,1})),
+  //       to_lyndon_basis(expr + substitute_variables(expr, {6,5,4,3,2,1})),
+  //       to_lyndon_basis(
+  //         + substitute_variables(expr, {1,2,3,4,5,6})
+  //         - substitute_variables(expr, {1,2,3,4,5,7})
+  //         + substitute_variables(expr, {1,2,3,4,6,7})
+  //         - substitute_variables(expr, {1,2,3,5,6,7})
+  //         + substitute_variables(expr, {1,2,4,5,6,7})
+  //         - substitute_variables(expr, {1,3,4,5,6,7})
+  //         + substitute_variables(expr, {2,3,4,5,6,7})
+  //       ),
+  //       to_lyndon_basis(expr + plucker_dual(expr, points)),
+  //     };
+  //   }
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+  // const int weight = 4;
+  // const int dimension = 4;
+  // const int num_points = 8;
+  // const auto points = seq_incl(1, num_points);
+  // // const auto space = OldChernGrL(weight, dimension, points);
+  // const auto space = CGrL_test_space(weight, dimension, points);
+  // const auto ranks = space_mapping_ranks(
+  //   space,
+  //   DISAMBIGUATE(to_lyndon_basis),
+  //   [&](const auto& expr) {
+  //     return std::tuple {
+  //       to_lyndon_basis(expr + substitute_variables(expr, {2,3,4,5,6,7,8,1})),
+  //       to_lyndon_basis(expr - substitute_variables(expr, {8,7,6,5,4,3,2,1})),
+  //       to_lyndon_basis(
+  //         + substitute_variables(expr, {1,2,3,4,5,6,7,8})
+  //         - substitute_variables(expr, {1,2,3,4,5,6,7,9})
+  //         + substitute_variables(expr, {1,2,3,4,5,6,8,9})
+  //         - substitute_variables(expr, {1,2,3,4,5,7,8,9})
+  //         + substitute_variables(expr, {1,2,3,4,6,7,8,9})
+  //         - substitute_variables(expr, {1,2,3,5,6,7,8,9})
+  //         + substitute_variables(expr, {1,2,4,5,6,7,8,9})
+  //         - substitute_variables(expr, {1,3,4,5,6,7,8,9})
+  //         + substitute_variables(expr, {2,3,4,5,6,7,8,9})
+  //       ),
+  //       to_lyndon_basis(
+  //         + pullback(substitute_variables(expr, {1,2,3,4,5,6,7,8}), {9})
+  //         - pullback(substitute_variables(expr, {1,2,3,4,5,6,7,9}), {8})
+  //         + pullback(substitute_variables(expr, {1,2,3,4,5,6,8,9}), {7})
+  //         - pullback(substitute_variables(expr, {1,2,3,4,5,7,8,9}), {6})
+  //         + pullback(substitute_variables(expr, {1,2,3,4,6,7,8,9}), {5})
+  //         - pullback(substitute_variables(expr, {1,2,3,5,6,7,8,9}), {4})
+  //         + pullback(substitute_variables(expr, {1,2,4,5,6,7,8,9}), {3})
+  //         - pullback(substitute_variables(expr, {1,3,4,5,6,7,8,9}), {2})
+  //         + pullback(substitute_variables(expr, {2,3,4,5,6,7,8,9}), {1})
+  //       ),
+  //       // to_lyndon_basis(expr - plucker_dual(expr, points)),
+  //     };
+  //   }
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+  // const int weight = 4;
+  // const int dimension = 3;
+  // const int num_points = 7;
+  // const auto points = seq_incl(1, num_points);
+  // Profiler profiler;
+  // const auto space = mapped_parallel(
+  //   OldChernGrL(weight, dimension, points),
+  //   [&](const auto& a) {
+  //     const auto b =
+  //       + substitute_variables(a, {1,2,3,4,5,6,7})
+  //       + substitute_variables(a, {2,3,4,5,6,7,1})
+  //       + substitute_variables(a, {3,4,5,6,7,1,2})
+  //       + substitute_variables(a, {4,5,6,7,1,2,3})
+  //       + substitute_variables(a, {5,6,7,1,2,3,4})
+  //       + substitute_variables(a, {6,7,1,2,3,4,5})
+  //       + substitute_variables(a, {7,1,2,3,4,5,6})
+  //     ;
+  //     const auto c = b - substitute_variables(b, {7,6,5,4,3,2,1});
+  //     const auto d =
+  //       + substitute_variables(c, {1,2,3,4,5,6,7})
+  //       - substitute_variables(c, {1,2,3,4,5,6,8})
+  //       + substitute_variables(c, {1,2,3,4,5,7,8})
+  //       - substitute_variables(c, {1,2,3,4,6,7,8})
+  //       + substitute_variables(c, {1,2,3,5,6,7,8})
+  //       - substitute_variables(c, {1,2,4,5,6,7,8})
+  //       + substitute_variables(c, {1,3,4,5,6,7,8})
+  //       - substitute_variables(c, {2,3,4,5,6,7,8})
+  //     ;
+  //     // const auto e = d + plucker_dual(d, {1,2,3,4,5,6,7,8});
+  //     const auto& expr = d;
+  //     CHECK(to_lyndon_basis(expr + substitute_variables(expr, {2,3,4,5,6,7,8,1})).is_zero());
+  //     CHECK(to_lyndon_basis(expr - substitute_variables(expr, {8,7,6,5,4,3,2,1})).is_zero());
+  //     CHECK(to_lyndon_basis(
+  //       + substitute_variables(expr, {1,2,3,4,5,6,7,8})
+  //       - substitute_variables(expr, {1,2,3,4,5,6,7,9})
+  //       + substitute_variables(expr, {1,2,3,4,5,6,8,9})
+  //       - substitute_variables(expr, {1,2,3,4,5,7,8,9})
+  //       + substitute_variables(expr, {1,2,3,4,6,7,8,9})
+  //       - substitute_variables(expr, {1,2,3,5,6,7,8,9})
+  //       + substitute_variables(expr, {1,2,4,5,6,7,8,9})
+  //       - substitute_variables(expr, {1,3,4,5,6,7,8,9})
+  //       + substitute_variables(expr, {2,3,4,5,6,7,8,9})
+  //     ).is_zero());
+  //     // CHECK(to_lyndon_basis(expr - plucker_dual(expr, {1,2,3,4,5,6,7,8})).is_zero());
+  //     return to_lyndon_basis(expr);
+  //   }
+  // );
+  // profiler.finish("space");
+  // const auto rank = space_rank(space, DISAMBIGUATE(identity_function));
+  // profiler.finish("rank");
+  // std::cout << rank << "\n";
+
+
+  // const int weight = 5;
+  // const int mid_point = weight + 1;
+  // const int num_points = mid_point * 2 - 1;
+  // const auto points = seq_incl(1, num_points);
+  // const int num_pullbacks = 1;
+  // const int num_before = 1;
+  // const int num_after = 1;
+  // Profiler profiler;
+  // GammaExpr a;
+  // for (const auto& pb: combinations(seq(mid_point - 1), num_pullbacks)) {
+  //   for (const auto& before: combinations(seq(mid_point - 1 - num_pullbacks), num_before)) {
+  //     for (auto after: combinations(seq(mid_point - 1), num_after)) {
+  //       const int num_pbs = num_pullbacks;  // workaround: lambdas cannot capture structured bindings
+  //       after = mapped(after, [&](const int p) { return p + mid_point - num_pbs; });
+  //       const int sign = neg_one_pow(sum(pb) + sum(before) + sum(after));
+  //       const auto [pb_point, non_pb_points] = split_indices(points, pb);
+  //       const auto main_points = removed_indices(non_pb_points, concat(before, after));
+  //       a += sign * pullback(GLiVec(weight, main_points), pb_point);
+  //     }
+  //   }
+  // }
+  // profiler.finish("a");
+  // GammaExpr b;
+  // for (const int p: range(num_points)) {
+  //   const int sign = neg_one_pow(p);
+  //   b += sign * GLiVec(weight, removed_index(points, p));
+  // }
+  // profiler.finish("b");
+  // const auto sum = to_lyndon_basis(a - b);
+  // profiler.finish("lyndon");
+  // std::cout << sum;
+
+
+  // const auto expr = GLi4(1,2,3,4,5,6,7,8);
+  // Gr_Space space;
+  // const std::vector points = {1,2,3,4,5,6,7,8};
+  // for (const int pb_arg : range_incl(1, 3)) {
+  //   const auto main_args_pool = removed_index(points, pb_arg - 1);
+  //   for (const auto& main_args : combinations(main_args_pool, 6)) {
+  //     space.push_back(pullback(GLiVec(4, main_args), {pb_arg}));
+  //   }
+  // }
+  // const auto ranks = space_venn_ranks(space, {expr}, [](const auto& expr) {
+  //   return to_lyndon_basis(chern_arrow_left(expr, 9));
+  // });
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // const std::vector wedge_chern_space = {
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,4})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({2,3})),
+  //   ncoproduct(GLi2(1,2,3,4), G({3,4})),
+  //   ncoproduct(GLi2(1,2,3,4), G({4,5})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({2,3})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({3,4})),
+  //   ncoproduct(GLi2(1,2,3,5), G({3,5})),
+  //   ncoproduct(GLi2(1,2,3,5), G({4,5})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({2,3})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({2,4})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({3,4})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({4,5})),
+  //   ncoproduct(GLi2(1,3,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,3,4,5), G({1,3})),
+  //   ncoproduct(GLi2(1,3,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,3,4,5), G({2,3})),
+  //   ncoproduct(GLi2(1,3,4,5), G({3,4})),
+  //   ncoproduct(GLi2(1,3,4,5), G({4,5})),
+  //   ncoproduct(GLi2(2,3,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(2,3,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(2,3,4,5), G({2,3})),
+  //   ncoproduct(GLi2(2,3,4,5), G({2,5})),
+  //   ncoproduct(GLi2(2,3,4,5), G({3,4})),
+  //   ncoproduct(GLi2(2,3,4,5), G({4,5})),
+  // };
+  // const std::vector wedge_chern_space = {
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,4})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({2,3})),
+  //   // ncoproduct(GLi2(1,2,3,4), G({3,4})), #
+  //   // ncoproduct(GLi2(1,2,3,4), G({4,5})), *
+  //   // ncoproduct(GLi2(1,2,3,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({2,3})),
+  //   ncoproduct(GLi2(1,2,3,5), G({3,4})),
+  //   ncoproduct(GLi2(1,2,3,5), G({3,5})),
+  //   // ncoproduct(GLi2(1,2,3,5), G({4,5})), *
+  //   // ncoproduct(GLi2(1,2,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({2,3})),
+  //   // ncoproduct(GLi2(1,2,4,5), G({2,4})),
+  //   ncoproduct(GLi2(1,2,4,5), G({3,4})),
+  //   ncoproduct(GLi2(1,2,4,5), G({4,5})),
+  //   ncoproduct(GLi2(1,3,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(1,3,4,5), G({1,3})),
+  //   ncoproduct(GLi2(1,3,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(1,3,4,5), G({2,3})),
+  //   // ncoproduct(GLi2(1,3,4,5), G({3,4})), #
+  //   // ncoproduct(GLi2(1,3,4,5), G({4,5})), *
+  //   ncoproduct(GLi2(2,3,4,5), G({1,2})),
+  //   // ncoproduct(GLi2(2,3,4,5), G({1,5})),
+  //   // ncoproduct(GLi2(2,3,4,5), G({2,3})),
+  //   ncoproduct(GLi2(2,3,4,5), G({2,5})),
+  //   // ncoproduct(GLi2(2,3,4,5), G({3,4})), #
+  //   // ncoproduct(GLi2(2,3,4,5), G({4,5})), *
+  // };
+  // const auto space = mapped(
+  //   wedge_chern_space,
+  //   // wedge_ChernGrL(3, 2, {1,2,3,4,5}),
+  //   [](const auto& expr) {
+  //     return std::tuple {
+  //       chern_arrow_left(expr, 6),
+  //       chern_arrow_up(expr, 6),
+  //     };
+  //   }
+  // );
+  // const auto pair = std::tuple {
+  //   ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6})),
+  //   ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6})),
+  // };
+  // const auto ranks = space_venn_ranks(space, {pair}, DISAMBIGUATE(identity_function));
+  // std::cout << to_string(ranks) << "\n";
+
 }
