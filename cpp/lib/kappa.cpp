@@ -81,3 +81,13 @@ KappaExpr gamma_expr_to_kappa_expr(const GammaExpr& expr) {
     return mapped(term, convert_to<Kappa>);
   });
 }
+
+KappaExpr NLog(int weight, const std::array<KappaExpr, 3>& triple) {
+  const auto &[a, b, c] = triple;
+  CHECK_GE(weight, 2);
+  KappaExpr ret = tensor_product(a - c, b - c);
+  for (EACH : range(weight - 2)) {
+    ret = tensor_product(b - c, ret);
+  }
+  return ret;
+}

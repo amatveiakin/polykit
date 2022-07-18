@@ -115,3 +115,5 @@ bool is_weakly_separated(const KappaExpr::ObjectT& term);
 bool is_weakly_separated(const KappaNCoExpr::ObjectT& term);
 
 KappaExpr gamma_expr_to_kappa_expr(const GammaExpr& expr);
+
+KappaExpr NLog(int weight, const std::array<KappaExpr, 3>& triple);

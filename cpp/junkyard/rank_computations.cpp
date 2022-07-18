@@ -25,6 +25,9 @@
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_gr_space.h"
 
+#include "lib/kappa.h"
+#include "lib/polylog_type_d_space.h"
+
 
 void computations_archive() {
   // const auto triplet_tmpl =
@@ -303,5 +306,35 @@ void computations_archive() {
   // std::cout << to_string(ranks) << "\n";
 
 
-
+  // const auto fx = typeD_Fx();
+  // const auto b2_generators = typeD_B2_generators();
+  // const auto b2 = typeD_B2();
+  // for (const int weight : range_incl(2, 6)) {
+  //   const auto space_words = mapped(
+  //     filtered(
+  //       typeD_free_lie_coalgebra(weight),
+  //       DISAMBIGUATE(is_totally_weakly_separated)
+  //     ),
+  //     DISAMBIGUATE(expand_into_glued_pairs)
+  //   );
+  //   const auto space_l = mapped(
+  //     cartesian_combinations(concat(
+  //       std::vector{std::pair{b2, 1}},
+  //       std::vector(weight-2, std::pair{fx, 1})
+  //     )),
+  //     DISAMBIGUATE(acoproduct_vec)
+  //   );
+  //   const auto ranks = space_venn_ranks(
+  //     space_words,
+  //     space_l,
+  //     DISAMBIGUATE(identity_function)
+  //   );
+  //   std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
+  //   const auto new_space = mapped(b2_generators, [&](const auto& gen) {
+  //     return expand_into_glued_pairs(NLog(weight, gen));
+  //   });
+  //   CHECK(space_contains(space_words, new_space, DISAMBIGUATE(identity_function)));
+  //   CHECK(space_contains(space_l, new_space, DISAMBIGUATE(identity_function)));
+  //   std::cout << "Contains: OK\n";
+  // }
 }
