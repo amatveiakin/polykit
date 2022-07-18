@@ -235,7 +235,7 @@ void computations_archive() {
   // //         DeltaNCoExpr(),
   // //       };
   // //     }
-  // //     const int num_coparts = expr.element().first.size();  // TODO: add a helper function for this
+  // //     const int num_coparts = expr.element().first.size();
   // //     if (num_coparts == 1) {
   // //       return std::tuple{
   // //         keep_non_weakly_separated_inv(expr),
@@ -337,4 +337,236 @@ void computations_archive() {
   //   CHECK(space_contains(space_l, new_space, DISAMBIGUATE(identity_function)));
   //   std::cout << "Contains: OK\n";
   // }
+
+
+  // for (const int num_vars : range_incl(2, 4)) {
+  //   for (const int weight : range_incl(2, 5)) {
+  //     const auto& args = concat(
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return X(idx); }),
+  //       mapped(range_incl(1, num_vars), [](const int idx) { return -X(idx); })
+  //       // std::vector{Inf}
+  //     );
+  //     auto space = L(weight, args);
+  //     space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(identity_function),
+  //       DISAMBIGUATE(keep_non_weakly_separated_inv)
+  //     );
+  //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
+  //     std::cout << to_string(ranks) << "\n";
+  //   }
+  // }
+
+  // const int weight = 4;
+  // auto space = typeC_CL(weight, {x1,x2,x3,x4,x5,-x1,-x2,-x3,-x4,-x5});
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // space.push_back(typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}));
+  // space.push_back(typeC_QLi(weight, {x1,x2,x3,x5,-x1,-x2,-x3,-x5}));
+  // space.push_back(typeC_QLi(weight, {x1,x2,x4,x5,-x1,-x2,-x4,-x5}));
+  // space.push_back(typeC_QLi(weight, {x1,x3,x4,x5,-x1,-x3,-x4,-x5}));
+  // space.push_back(typeC_QLi(weight, {x2,x3,x4,x5,-x2,-x3,-x4,-x5}));
+  // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+
+  // // const auto prepare = [](const auto& expr) {
+  // //   return to_lyndon_basis(project_on_x1(expr)).filtered([](const auto& term) {
+  // //     return absl::c_count(term, Zero) == 0;
+  // //   });
+  // // };
+  // // const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // // const int weight = 4;
+  //
+  // // std::cout << prepare(
+  // //   +  typeC_QLi(weight, points)
+  // //   -4*QLi3(x1,-x2,-x3,-x4)
+  // //   -4*QLi3(x1,x2,x3,-x4)
+  // // );
+  // // std::cout << prepare(QLi3(x1,x2,x3,-x1));
+  // // std::cout << prepare(QLi3(-x4,x1,x2,x4));
+  // // std::cout << prepare(QLi3(-x3,-x4,x1,x3));
+  // // std::cout << prepare(QLi3(x1,-x1,-x3,-x4));
+  // // std::cout << prepare(QLi3(x2,x1,-x4,-x2));
+  // // std::cout << prepare(QLi3(x3,x2,x1,-x3));
+  //
+  // // std::cout << prepare(
+  // //   +  typeC_QLi(weight, points)
+  // //   -4*QLi3(x1,-x2,-x3,-x4)
+  // //   -4*QLi3(x1,x2,x3,-x4)
+  // //   +4*QLi3(x1,x2,x3,-x1)
+  // //   +4*QLi3(-x4,x1,x2,x4)
+  // //   +4*QLi3(x2,x1,-x4,-x2)
+  // // );
+  //
+  // // std::cout << to_lyndon_basis(
+  // //   + typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
+  // //   - typeC_QLi(weight, {x2,x3,x4,-x1,-x2,-x3,-x4,x1})
+  // //   + 2 * (
+  // //     + QLi3(x1,x2,x3,x4)
+  // //     - QLi3(x2,x3,x4,-x1)
+  // //     + QLi3(x3,x4,-x1,-x2)
+  // //     - QLi3(x4,-x1,-x2,-x3)
+  // //     + QLi3(-x1,-x2,-x3,-x4)
+  // //     - QLi3(-x2,-x3,-x4,x1)
+  // //     + QLi3(-x3,-x4,x1,x2)
+  // //     - QLi3(-x4,x1,x2,x3)
+  // //   )
+  // // );
+
+  // for (const int weight : range_incl(2, 7)) {
+  //   const auto space = mapped_parallel(
+  //     typeC_CL(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}), DISAMBIGUATE(to_lyndon_basis)
+  //   );
+  //   const auto a = to_lyndon_basis(typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}));
+  //   const auto b = to_lyndon_basis(typeC_QLi(weight, {x2,x3,x4,-x1,-x2,-x3,-x4,x1}));
+  //   std::cout << "w=" << weight << "\n";
+  //   std::cout << "diff lies in = " << space_contains(space, {a - b}, DISAMBIGUATE(identity_function)) << "\n";
+  //   std::cout << "sum lies in = " << space_contains(space, {a + b}, DISAMBIGUATE(identity_function)) << "\n";
+  //   std::cout << "\n";
+  // }
+
+
+  // const std::vector points = {1,2,3};
+  // const int weight = 5;
+  // const auto coords = mapped(combinations(points, 2), [](const auto& pair) {
+  //   const auto [a, b] = to_array<2>(pair);
+  //   return Delta(a, b);
+  // });
+  // const auto space = mapped(
+  //   filtered(
+  //     cartesian_power(coords, weight),
+  //     [](auto term) {
+  //       keep_unique_sorted(term);
+  //       return all_unique_unsorted(term);
+  //     }
+  //   ),
+  //   [](const auto& term) {
+  //     return DeltaExpr::single(term);
+  //   }
+  // );
+  // // const auto expr = QLiVec(weight, points);
+  // const auto expr = DeltaExpr::single({Delta(1,2), Delta(1,2), Delta(1,3), Delta(1,2), Delta(2,3)});
+  // std::cout << to_lyndon_basis(expr);
+  // CHECK_EQ(expr.weight(), weight);
+  // std::cout << to_string(space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis))) << "\n";
+
+  // const std::vector points = {1,2,3,4,5,6};
+  // const int weight = 5;
+  // const int dimension = 3;
+  // const auto coords = mapped(combinations(points, dimension), [](const auto& points) {
+  //   return Gamma(points);
+  // });
+  // Profiler profiler;
+  // auto space = mapped(
+  //   filtered(
+  //     cartesian_power(coords, weight),
+  //     [](auto term) {
+  //       keep_unique_sorted(term);
+  //       return all_unique_unsorted(term) && is_weakly_separated(term);
+  //     }
+  //   ),
+  //   [](const auto& term) {
+  //     return GammaExpr::single(term);
+  //   }
+  // );
+  // profiler.finish("space");
+  // space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
+  // profiler.finish("lyndon");
+  // const auto expr = to_lyndon_basis(CGrLiVec(weight, points));
+  // profiler.finish("expr");
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(identity_function));
+  // profiler.finish("ranks");
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // const auto cgrl_dim3_reduced = [](int weight, const std::vector<int>& points) {
+  //   Gr_Space space;
+  //   for (const int bonus_point_idx : range(points.size())) {
+  //     const auto bonus_args = choose_indices(points, {bonus_point_idx});
+  //     const auto main_args = removed_index(points, bonus_point_idx);
+  //     append_vector(space, mapped(CB(weight, main_args), [&](const auto& expr) {
+  //       return pullback(expr, bonus_args);
+  //     }));
+  //   }
+  //   for (const auto& args : combinations(points, 6)) {
+  //     for (const int shift : {0, 1, 2}) {
+  //       space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
+  //     }
+  //   }
+  //   return space;
+  // };
+  // // std::cout << space_rank(CGrL_Dim3_naive_test_space(4, {1,2,3,4,5,6,7}), DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // // std::cout << space_rank(cgrl_dim3_reduced(4, {1,2,3,4,5,6,7}), DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // // std::cout << "\n";
+  //
+  // const int weight = 4;
+  // const std::vector points = {1,2,3,4,5,6,7,8,9};
+  // // const auto space = CGrL_test_space(weight, dimension, points);
+  // Gr_Space space;
+  // for (const int bonus_point_idx : range(points.size())) {
+  //   const auto bonus_args = choose_indices(points, {bonus_point_idx});
+  //   const auto main_args = removed_index(points, bonus_point_idx);
+  //   append_vector(space, mapped(cgrl_dim3_reduced(weight, main_args), [&](const auto& expr) {
+  //     return pullback(expr, bonus_args);
+  //   }));
+  // }
+  // // for (const auto& args : combinations(points, 8)) {
+  // //   space.push_back(CGrLiVec(weight, args));
+  // // }
+  //
+  // // std::cout << space_rank(space, DISAMBIGUATE(to_lyndon_basis)) << "\n";
+  // // const auto expr = CGrLiVec(weight, {8,7,6,5,4,3,2,1});  // TODO: Test: lies in space on 8 points
+  // const auto expr =
+  //   + CGrLiVec(weight, {1,2,3,4,5,6,7,8})
+  //   - CGrLiVec(weight, {1,2,3,4,5,6,7,9})
+  //   + CGrLiVec(weight, {1,2,3,4,5,6,8,9})
+  //   - CGrLiVec(weight, {1,2,3,4,5,7,8,9})
+  //   + CGrLiVec(weight, {1,2,3,4,6,7,8,9})
+  //   - CGrLiVec(weight, {1,2,3,5,6,7,8,9})
+  //   + CGrLiVec(weight, {1,2,4,5,6,7,8,9})
+  //   - CGrLiVec(weight, {1,3,4,5,6,7,8,9})
+  //   + CGrLiVec(weight, {2,3,4,5,6,7,8,9})
+  // ;
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  // const int weight = 4;
+  // const int dimension = 4;
+  // const std::vector points = {1,2,3,4,5,6,7,8};
+  // Gr_Space space;
+  // for (const int bonus_point_idx : range(points.size())) {
+  //   const auto bonus_args = choose_indices(points, {bonus_point_idx});
+  //   const auto main_args = removed_index(points, bonus_point_idx);
+  //   append_vector(space, mapped(cgrl_dim3_reduced(weight, main_args), [&](const auto& expr) {
+  //     return pullback(expr, bonus_args);
+  //   }));
+  // }
+  // for (const auto& args : combinations(points, 8)) {
+  //   space.push_back(CGrLiVec(weight, args));
+  // }
+  // // const auto expr = CGrLiVec(weight, {8,7,6,5,4,3,2,1});
+  // // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // const auto space_new = OldChernGrL(weight, dimension, points);
+  // const auto ranks = space_venn_ranks(space, space_new, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // // TODO: Compute on the cluster
+  // const int weight = 5;
+  // const int dimension = 5;
+  // const std::vector points = {1,2,3,4,5,6,7,8,9,10};
+  // Gr_Space space;
+  // for (const int bonus_point_idx : range(points.size())) {
+  //   const auto bonus_args = choose_indices(points, {bonus_point_idx});
+  //   const auto main_args = removed_index(points, bonus_point_idx);
+  //   append_vector(space, mapped(OldChernGrL(weight, dimension - 1, main_args), [&](const auto& expr) {
+  //     return pullback(expr, bonus_args);
+  //   }));
+  // }
+  // const auto expr =
+  //   + CGrLi5(1,2,3,4,5,6,7,8,9,10)
+  //   + CGrLi5(2,3,4,5,6,7,8,9,10,1)
+  // ;
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
 }

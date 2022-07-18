@@ -52,7 +52,7 @@ ExprT find_equation(ExprT expr, const std::vector<ExprT>& space, const std::vect
         const int numerator = expr.coeff_for_key(term);
         const int denominator = coeff;
         CHECK(numerator % denominator == 0)
-            << "need non-integer coeff" << numerator << "/" << denominator << " for summand " << expr;
+            << "need non-integer coeff " << numerator << "/" << denominator << " for summand " << expr;
         expr -= div_int(numerator, denominator) * summand;
         found_coeff = true;
         break;
