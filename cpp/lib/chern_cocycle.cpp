@@ -2,7 +2,7 @@
 
 #include "absl/strings/substitute.h"
 
-#include "polylog_cgrli.h"
+#include "polylog_gli.h"
 
 
 GammaNCoExpr ChernCocycle_Dim1(int weight, const std::vector<int>& points) {
@@ -28,16 +28,16 @@ GammaNCoExpr ChernCocycle_3_2(const std::vector<int>& points) {
     return choose_indices_one_based(points, indices);
   };
   return
-    - ncoproduct(CGrLiVec(weight-1, args({1,2,3,5})), G(args({1,2})))
-    - ncoproduct(CGrLiVec(weight-1, args({1,2,3,5})), G(args({3,5})))
-    - ncoproduct(CGrLiVec(weight-1, args({1,3,4,5})), G(args({1,5})))
-    - ncoproduct(CGrLiVec(weight-1, args({1,3,4,5})), G(args({3,4})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,3,4})), G(args({1,2})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,3,4})), G(args({3,4})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({1,2})))
-    + ncoproduct(CGrLiVec(weight-1, args({1,2,4,5})), G(args({4,5})))
-    + ncoproduct(CGrLiVec(weight-1, args({2,3,4,5})), G(args({2,5})))
-    + ncoproduct(CGrLiVec(weight-1, args({2,3,4,5})), G(args({3,4})))
+    - ncoproduct(GLiVec(weight-1, args({1,2,3,5})), G(args({1,2})))
+    - ncoproduct(GLiVec(weight-1, args({1,2,3,5})), G(args({3,5})))
+    - ncoproduct(GLiVec(weight-1, args({1,3,4,5})), G(args({1,5})))
+    - ncoproduct(GLiVec(weight-1, args({1,3,4,5})), G(args({3,4})))
+    + ncoproduct(GLiVec(weight-1, args({1,2,3,4})), G(args({1,2})))
+    + ncoproduct(GLiVec(weight-1, args({1,2,3,4})), G(args({3,4})))
+    + ncoproduct(GLiVec(weight-1, args({1,2,4,5})), G(args({1,2})))
+    + ncoproduct(GLiVec(weight-1, args({1,2,4,5})), G(args({4,5})))
+    + ncoproduct(GLiVec(weight-1, args({2,3,4,5})), G(args({2,5})))
+    + ncoproduct(GLiVec(weight-1, args({2,3,4,5})), G(args({3,4})))
   ;
 }
 
@@ -53,11 +53,11 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
   const int mid = points.size() / 2 - 1;
   GammaExpr ret;
   if (dimension == weight) {
-    ret += CGrLiVec(weight, points);
+    ret += GLiVec(weight, points);
     for (const int before : range(mid)) {
       for (const int after : range(mid + 1, points.size())) {
         const int sign = neg_one_pow(before + after + weight + 1);
-        ret += sign * CGrLiVec(
+        ret += sign * GLiVec(
           weight,
           choose_indices(points, {before}),
           removed_indices(points, {before, after})
@@ -69,7 +69,7 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
     for (const int before : range(mid)) {
       for (const int after : range(mid + 1, points.size())) {
         const int sign = neg_one_pow(before + after + weight + 1);
-        ret += sign * CGrLiVec(weight, removed_indices(points, {before, after}));
+        ret += sign * GLiVec(weight, removed_indices(points, {before, after}));
       }
     }
     ret *= neg_one_pow(weight + 1);

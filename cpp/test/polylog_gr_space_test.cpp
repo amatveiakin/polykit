@@ -6,7 +6,7 @@
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/chern_arrow.h"
 #include "lib/itertools.h"
-#include "lib/polylog_cgrli.h"
+#include "lib/polylog_gli.h"
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_qli.h"
 #include "lib/space_algebra.h"
@@ -127,32 +127,32 @@ TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
 }
 
 
-class CGrLiVsSpacesTest : public ::testing::TestWithParam<std::pair<int, int>> {
+class GLiVsSpacesTest : public ::testing::TestWithParam<std::pair<int, int>> {
 public:
   int weight() const { return GetParam().first; }
   int dimension() const { return GetParam().second; }
 };
-// Note: CGrLi requires that (weight >= dimension - 1).
-INSTANTIATE_TEST_SUITE_P(LARGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
+// Note: GLi requires that (weight >= dimension - 1).
+INSTANTIATE_TEST_SUITE_P(LARGE_Cases, GLiVsSpacesTest, ::testing::Values(
   std::pair{2, 3},
   std::pair{3, 3}
 ));
-INSTANTIATE_TEST_SUITE_P(HUGE_Cases, CGrLiVsSpacesTest, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(HUGE_Cases, GLiVsSpacesTest, ::testing::Values(
   std::pair{4, 3}
 ));
 
-TEST_P(CGrLiVsSpacesTest, GrL_contains_CGrLi) {
+TEST_P(GLiVsSpacesTest, GrL_contains_GLi) {
   const int num_points = dimension() * 2;
   const auto points = seq_incl(1, num_points);
-  const auto expr = CGrLiVec(weight(), points);
+  const auto expr = GLiVec(weight(), points);
   const auto space = GrL(weight(), dimension(), points);
   EXPECT_TRUE(space_contains(space, {expr}, DISAMBIGUATE(to_lyndon_basis)));
 }
 
-TEST_P(CGrLiVsSpacesTest, CoCGrL_contains_CGrLiNcomultiplied) {
+TEST_P(GLiVsSpacesTest, CoCGrL_contains_GLiNcomultiplied) {
   const int num_points = dimension() * 2;
   const auto points = seq_incl(1, num_points);
-  const auto expr = CGrLiVec(weight(), points);
+  const auto expr = GLiVec(weight(), points);
   const auto co_space = simple_co_CGrL_test_space(weight(), dimension(), num_points);
   EXPECT_TRUE(space_contains(
     co_space,
@@ -161,14 +161,14 @@ TEST_P(CGrLiVsSpacesTest, CoCGrL_contains_CGrLiNcomultiplied) {
   ));
 }
 
-TEST_P(CGrLiVsSpacesTest, CoGrL_contains_CGrLiExpandedIntoGluedPairs) {
+TEST_P(GLiVsSpacesTest, CoGrL_contains_GLiExpandedIntoGluedPairs) {
   if (weight() != dimension() - 1) {
     // TODO: Is it the right condition for when this should hold?
     return;
   }
   const int num_points = dimension() * 2;
   const auto points = seq_incl(1, num_points);
-  const auto expr = CGrLiVec(weight(), points);
+  const auto expr = GLiVec(weight(), points);
   const auto co_space = abstract_co_space(
     weight(),
     weight() - 1,

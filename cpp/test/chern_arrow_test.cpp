@@ -4,13 +4,13 @@
 #include "gtest/gtest.h"
 
 #include "test_util/matchers.h"
-#include "lib/polylog_cgrli.h"
+#include "lib/polylog_gli.h"
 #include "lib/polylog_grli.h"
 #include "lib/polylog_grqli.h"
 
 
 static std::vector exprs_odd_num_points = {
-  CGrLi2[{7}](1,2,3,4,5,6),
+  GLi2[{7}](1,2,3,4,5,6),
   GrQLi2(7)(1,2,3,4,5,6),
   GrLi(5)(1,2,3,4),
   G({1,2,3,4,5}),
@@ -18,7 +18,7 @@ static std::vector exprs_odd_num_points = {
 };
 
 static std::vector exprs_even_num_points = {
-  CGrLi2(1,2,3,4,5,6),
+  GLi2(1,2,3,4,5,6),
   GrQLi2()(1,2,3,4,5,6),
   GrLi(5,6)(1,2,3,4),
   G({1,2,3,4,5,6}),

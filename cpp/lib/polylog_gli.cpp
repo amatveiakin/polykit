@@ -1,6 +1,6 @@
-// TODO: Rename CGrLi to GLi
+// TODO: Rename GLi to GLi
 
-#include "polylog_cgrli.h"
+#include "polylog_gli.h"
 
 #include "call_cache.h"
 #include "itertools.h"
@@ -53,7 +53,7 @@ auto sum_alternating(const F& f, const std::vector<int>& points, const std::vect
 //   BC * ((1-B)*(1-C)) + (1-B) * (C*(1-C)) = BC*(1-B)*(1-C) + (1-B)*C*(1-C)
 //
 // The answer is in the right-most column, the row depends on the weight.
-GammaExpr CGrLi_component(
+GammaExpr GLi_component(
   int target_row,
   int target_col,
   absl::Span<const GammaExpr> qli_components,
@@ -84,14 +84,14 @@ GammaExpr CGrLi_component(
 };
 
 // Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
-GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
-  // TODO: Define via CGrLiVec(ascending points) + substitute variables.
+GammaExpr GLiVec(int weight, const std::vector<int>& points) {
+  // TODO: Define via GLiVec(ascending points) + substitute variables.
   //   Directly substituting duplicate points is not equivalent (why?)
   //   ... or maybe this shouldn't work (consult Danya)
   // TODO: What does this mean for operations on GammaExpr in general?
   //   Should other functions (like GrQLi) do the same?
-  CHECK(all_unique_unsorted(points)) << "Unimplemented: duplicate CGrLi points: " << dump_to_string(points);
-  CHECK(are_CGrLi_args_ok(weight, points.size())) << weight << ", " << dump_to_string(points);
+  CHECK(all_unique_unsorted(points)) << "Unimplemented: duplicate GLi points: " << dump_to_string(points);
+  CHECK(are_GLi_args_ok(weight, points.size())) << weight << ", " << dump_to_string(points);
   const int n = div_int(points.size(), 2);
   const auto inc_arg = [&](int& a) {
     if (a == n || a == 2*n) {
@@ -127,23 +127,23 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& points) {
     const std::vector<GammaExpr> casimir_components = mapped(range(n - 1), [&](const int k) {
       return sum(slice(log_components, k));
     });
-    return CGrLi_component(weight-n+1, n-2, qli_components, casimir_components);
+    return GLi_component(weight-n+1, n-2, qli_components, casimir_components);
   };
   const auto f1 = [&](const std::vector<int>& arguments) {
     return sum_alternating(f, arguments, slice(arguments, 0, n-1));
   };
   return sum_alternating(f1, points, slice(points, n, 2*n-1)).without_annotations().annotate(
     fmt::function_num_args(
-      fmt::sub_num(fmt::opname("CGrLi"), {weight}),
+      fmt::sub_num(fmt::opname("GLi"), {weight}),
       points
     )
   );
 }
 
-GammaExpr CGrLiVec(int weight, const std::vector<int>& pb_points, const std::vector<int>& li_points) {
-  return pullback(CGrLiVec(weight, li_points), pb_points).without_annotations().annotate(
+GammaExpr GLiVec(int weight, const std::vector<int>& pb_points, const std::vector<int>& li_points) {
+  return pullback(GLiVec(weight, li_points), pb_points).without_annotations().annotate(
     fmt::function(
-      fmt::sub_num(fmt::opname("CGrLi"), {weight}),
+      fmt::sub_num(fmt::opname("GLi"), {weight}),
       {str_join_skip_empty(
         std::array{
           str_join(sorted(pb_points), ","),
@@ -156,14 +156,14 @@ GammaExpr CGrLiVec(int weight, const std::vector<int>& pb_points, const std::vec
 }
 
 
-GammaExpr SymmCGrLi3(const std::vector<int>& points) {
+GammaExpr SymmGLi3(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 6);
   constexpr int weight = 3;
   const auto args = [&](const std::vector<int>& indices) {
     return choose_indices_one_based(points, indices);
   };
   auto expr =
-    + CGrLiVec(weight, args({1,2,3,4,5,6}))
+    + GLiVec(weight, args({1,2,3,4,5,6}))
   ;
   expr +=
     - GrQLiVec(weight, args({2}), args({3,4,5,6}))
@@ -187,47 +187,47 @@ GammaExpr SymmCGrLi3(const std::vector<int>& points) {
   ;
   return expr.without_annotations().annotate(
     fmt::function_num_args(
-      fmt::sub_num(fmt::opname("SymmCGrLi"), {weight}),
+      fmt::sub_num(fmt::opname("SymmGLi"), {weight}),
       points
     )
   );
 }
 
-GammaExpr SymmCGrLi4_wip(const std::vector<int>& points) {
+GammaExpr SymmGLi4_wip(const std::vector<int>& points) {
   CHECK_EQ(points.size(), 6);
   constexpr int weight = 4;
   const auto args = [&](const std::vector<int>& indices) {
     return choose_indices_one_based(points, indices);
   };
   auto expr =
-    + CGrLiVec(weight, args({1,2,3,4,5,6}))
-    - CGrLiVec(weight, args({2,3,4,5,6,1}))
-    + CGrLiVec(weight, args({3,4,5,6,1,2}))
-    - CGrLiVec(weight, args({4,5,6,1,2,3}))
-    + CGrLiVec(weight, args({5,6,1,2,3,4}))
-    - CGrLiVec(weight, args({6,1,2,3,4,5}))
+    + GLiVec(weight, args({1,2,3,4,5,6}))
+    - GLiVec(weight, args({2,3,4,5,6,1}))
+    + GLiVec(weight, args({3,4,5,6,1,2}))
+    - GLiVec(weight, args({4,5,6,1,2,3}))
+    + GLiVec(weight, args({5,6,1,2,3,4}))
+    - GLiVec(weight, args({6,1,2,3,4,5}))
   ;
   expr -=
-    + CGrLiVec(weight, args({1,6,5,4,3,2}))
-    - CGrLiVec(weight, args({6,5,4,3,2,1}))
-    + CGrLiVec(weight, args({5,4,3,2,1,6}))
-    - CGrLiVec(weight, args({4,3,2,1,6,5}))
-    + CGrLiVec(weight, args({3,2,1,6,5,4}))
-    - CGrLiVec(weight, args({2,1,6,5,4,3}))
+    + GLiVec(weight, args({1,6,5,4,3,2}))
+    - GLiVec(weight, args({6,5,4,3,2,1}))
+    + GLiVec(weight, args({5,4,3,2,1,6}))
+    - GLiVec(weight, args({4,3,2,1,6,5}))
+    + GLiVec(weight, args({3,2,1,6,5,4}))
+    - GLiVec(weight, args({2,1,6,5,4,3}))
   ;
   return expr.without_annotations().annotate(
     fmt::function_num_args(
-      fmt::sub_num(fmt::opname("SymmCGrLi"), {weight}),
+      fmt::sub_num(fmt::opname("SymmGLi"), {weight}),
       points
     )
   );
 }
 
-bool are_CGrLi_args_ok(int weight, int num_points) {
+bool are_GLi_args_ok(int weight, int num_points) {
   return num_points % 2 == 0 && weight >= num_points / 2 - 1;
 }
 
-bool is_canonical_CGrLi_arg_order(const std::vector<int>& points) {
+bool is_canonical_GLi_arg_order(const std::vector<int>& points) {
   const int p = div_int(points.size(), 2);
   return
     absl::c_is_sorted(slice(points, 0, p - 1)) &&

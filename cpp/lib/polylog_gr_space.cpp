@@ -2,7 +2,7 @@
 
 #include "itertools.h"
 #include "parallel_util.h"
-#include "polylog_cgrli.h"
+#include "polylog_gli.h"
 #include "polylog_grli.h"
 #include "polylog_grqli.h"
 #include "polylog_qli.h"
@@ -94,7 +94,7 @@ Gr_Space GrL4_Dim3(const std::vector<int>& args) {
   append_vector(
     ret,
     mapped(permutations(args, 6), [&](auto p) {
-      return CGrLiVec(4, p);
+      return GLiVec(4, p);
     })
   );
   return ret;
@@ -127,7 +127,7 @@ Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points) 
   }
   for (const auto& args : combinations(points, 6)) {
     for (const int shift : {0, 1, 2}) {
-      space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
+      space.push_back(GLiVec(weight, rotated_vector(args, shift)));
     }
   }
   return space;
@@ -148,7 +148,7 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points) {
     const auto fixed_args = choose_indices(points, {fixed_points_idx});
     const auto var_args_pool = removed_index(points, fixed_points_idx);
     for (const auto& var_args : combinations(var_args_pool, 5)) {
-      space.push_back(CGrLiVec(weight, concat(fixed_args, var_args)));
+      space.push_back(GLiVec(weight, concat(fixed_args, var_args)));
     }
   }
   return space;
@@ -168,7 +168,7 @@ Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) 
   }
   for (const auto& args : combinations(points, 8)) {
     for (const int shift : range(args.size() / 2)) {
-      space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
+      space.push_back(GLiVec(weight, rotated_vector(args, shift)));
     }
   }
   return space;
@@ -220,7 +220,7 @@ Gr_Space ChernGrL(int weight, int dimension, const std::vector<int>& points, int
       const int num_pb_args = dimension - half_main_args;
       for (const auto& [main_args, other_args] : index_splits(points, num_main_args)) {
         for (const auto& pb_args : combinations(other_args, num_pb_args)) {
-          space.push_back(pullback(CGrLiVec(weight, main_args), pb_args));
+          space.push_back(pullback(GLiVec(weight, main_args), pb_args));
         }
       }
     }
@@ -242,7 +242,7 @@ Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, 
   if (weight >= dimension - 1 && depth >= dimension - 1) {
     for (const auto& args : combinations(points, dimension * 2)) {
       for (const int shift : range(args.size() / 2)) {
-        space.push_back(CGrLiVec(weight, rotated_vector(args, shift)));
+        space.push_back(GLiVec(weight, rotated_vector(args, shift)));
       }
     }
   }

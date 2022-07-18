@@ -196,7 +196,7 @@ std::vector<int> all_vars(const GammaExpr::ObjectT& term);
 // the space that contains the function. Useful in conjunction with chern arrows.
 // Beware! It's possible to construct such x that
 //   num_variables(chern_arrow(x)) == num_variables(x)
-// Moreover, this scenario is realistic and can happend with CGrLi. Always prefer to track
+// Moreover, this scenario is realistic and can happen with GLi. Always prefer to track
 // the actual space size instead of using this function.
 // TODO: Find a way to attach space metainformation to each expression.
 int detect_num_variables(const GammaExpr& expr);
