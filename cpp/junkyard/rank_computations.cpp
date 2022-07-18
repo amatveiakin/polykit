@@ -25,6 +25,9 @@
 #include "lib/polylog_grqli.h"
 #include "lib/polylog_gr_space.h"
 
+#include "lib/kappa.h"
+#include "lib/polylog_type_d_space.h"
+
 
 void computations_archive() {
   // const auto triplet_tmpl =
@@ -94,21 +97,6 @@ void computations_archive() {
   //   std::cout << " = " << (lambda3_l1_rank - ranks.image()) << "\n";
   // }
 
-  // for (const int num_points : range_incl(4, 8)) {
-  //   const auto points = to_vector(range_incl(1, num_points));
-  //   const int rank = space_rank(mapped(GrFx(dimension, points), pr), DISAMBIGUATE(to_lyndon_basis));
-  //   std::cout << "p=" << num_points << ": " << rank << "\n";
-  // }
-
-
-  // std::cout << space_rank(GrL4_Dim3({1,2,3,4,5,6,7}), DISAMBIGUATE(to_lyndon_basis)) << "\n";
-  // std::cout << space_rank(
-  //   mapped(GrL4_Dim3({1,2,3,4,5,6,7}), [](const auto& expr) {
-  //     return project_on(7, expr);
-  //   }),
-  //   DISAMBIGUATE(to_lyndon_basis)
-  // ) << "\n";
-
 
   // const int dimension = 3;
   // const std::vector points = {1,2,3,4,5,6};
@@ -161,4 +149,162 @@ void computations_archive() {
   //   DISAMBIGUATE(identity_function)
   // );
   // std::cout << to_string(ranks) << "\n";
+
+  // const int weight = 4;
+  // const int dimension = 3;
+  // const std::vector points = {1,2,3,4,5,6};
+  // const auto coords = combinations(slice(points, 1), dimension - 1);
+  // Gr_ACoSpace space_words = mapped(
+  //   gr_free_lie_coalgebra(weight, dimension, points),
+  //   // DISAMBIGUATE(expand_into_glued_pairs)
+  //   [](const auto& expr) {
+  //     return expand_into_glued_pairs(project_on(1, expr));
+  //   }
+  // );
+  // const auto space_l = mapped(
+  //   cartesian_combinations(std::vector{
+  //     std::pair{GrL2(dimension, points), 1},
+  //     std::pair{GrL1(dimension, points), 1},
+  //     std::pair{GrL1(dimension, points), 1},
+  //   }),
+  //   // DISAMBIGUATE(acoproduct_vec)
+  //   [](const auto& exprs) {
+  //     return acoproduct_vec(mapped(exprs, [](const auto& expr) {
+  //       return project_on(1, expr);
+  //     }));
+  //   }
+  // );
+  // const auto ranks = space_venn_ranks(
+  //   space_words,
+  //   space_l,
+  //   DISAMBIGUATE(identity_function)
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+
+  // for (const int weight : range_incl(2, 4)) {
+  //   for (const int half_num_points : range_incl(2, 4)) {
+  //     const auto points_raw = seq_incl(1, half_num_points);
+  //     const auto& points_inv = concat(
+  //       mapped(points_raw, [](const int idx) { return X(idx); }),
+  //       mapped(points_raw, [](const int idx) { return -X(idx); })
+  //     );
+  //     const auto space = mapped(L(weight, points_inv), DISAMBIGUATE(to_lyndon_basis));
+  //     const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //       return std::tuple{
+  //         keep_non_weakly_separated_inv(expr),
+  //         // ncomultiply(expr, {2,2}),
+  //       };
+  //     });
+  //     std::cout << "w=" << weight << ", n=" << points_inv.size() << ": ";
+  //     std::cout << to_string(ranks) << "\n";
+  //   }
+  // }
+
+
+  // const std::vector points_inv = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
+  // // const auto space_a = mapped(CL4(points_inv), DISAMBIGUATE(ncoproduct));
+  // auto space_a = CL4(points_inv);
+  // for (const int i : range(points_inv.size())) {
+  //   auto p = points_inv;
+  //   p[i] = Inf;
+  //   append_vector(space_a, CL4(p));
+  // }
+  //
+  // // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1}), 2), DISAMBIGUATE(ncoproduct_vec));
+  // // const auto space_b = mapped(cartesian_power(L2({x1,x2,x3,x4,-x1,-x2,-x3,-x4}), 2), DISAMBIGUATE(ncoproduct_vec));
+  // const auto new_func_comult =
+  //   + ncoproduct(QLi2(x1,x2,x3,x4), QLi2(x4,-x1,-x4,x1))
+  //   - ncoproduct(QLi2(x2,x3,x4,-x1), QLi2(-x1,-x2,x1,x2))
+  //   + ncoproduct(QLi2(x3,x4,-x1,-x2), QLi2(-x2,-x3,x2,x3))
+  //   - ncoproduct(QLi2(x4,-x1,-x2,-x3), QLi2(-x3,-x4,x3,x4))
+  // ;
+  // // const std::vector space_b = {new_func_comult};
+  //
+  // // const auto ranks = space_mapping_ranks(
+  // //   concat(
+  // //     space_a,
+  // //     space_b
+  // //   ),
+  // //   // space_a,
+  // //   DISAMBIGUATE(identity_function),
+  // //   [](const auto& expr) {
+  // //     if (expr.is_zero()) {
+  // //       return std::tuple{
+  // //         DeltaNCoExpr(),
+  // //         DeltaNCoExpr(),
+  // //       };
+  // //     }
+  // //     const int num_coparts = expr.element().first.size();  // TODO: add a helper function for this
+  // //     if (num_coparts == 1) {
+  // //       return std::tuple{
+  // //         keep_non_weakly_separated_inv(expr),
+  // //         ncomultiply(expr, {2,2}),
+  // //       };
+  // //     } else if (num_coparts == 2) {
+  // //       return std::tuple{
+  // //         DeltaNCoExpr(),
+  // //         -expr,
+  // //       };
+  // //     } else {
+  // //       FATAL(absl::StrCat("Unexpected num_coparts: ", num_coparts));
+  // //     }
+  // //   }
+  // // );
+  // // std::cout << to_string(ranks) << "\n";
+  //
+  // // const auto ranks = space_mapping_ranks(
+  // //   mapped(space_a, DISAMBIGUATE(to_lyndon_basis)),
+  // //   DISAMBIGUATE(identity_function),
+  // //   DISAMBIGUATE(keep_non_weakly_separated_inv)
+  // //   // [&](const auto& expr) {
+  // //   //   return std::tuple{
+  // //   //     keep_non_weakly_separated_inv(expr),
+  // //   //     ncomultiply(expr, {2,2}) - new_func_comult,
+  // //   //   };
+  // //   // }
+  // // );
+  // // std::cout << to_string(ranks) << "\n";
+  //
+  // // const auto ranks = space_venn_ranks(
+  // //   mapped(space_a, [](const auto& expr) { return ncomultiply(expr, {2,2}); }),
+  // //   space_b,
+  // //   DISAMBIGUATE(identity_function)
+  // // );
+  // // std::cout << to_string(ranks) << "\n";
+  //
+  // // CHECK(is_totally_weakly_separated_inv(QLi4(x1,x2,x3,x4,-x1,Inf)));
+  // // std::cout << is_totally_weakly_separated_inv(QLi4(x1,x2,x3,x4,Inf,-x2)) << "\n";
+  // const std::vector space = {
+  //   QLi4(x1,x2,x3,x4,-x1,Inf),
+  //   QLi4(x2,x3,x4,-x1,-x2,Inf),
+  //   QLi4(x3,x4,-x1,-x2,-x3,Inf),
+  //   QLi4(x4,-x1,-x2,-x3,-x4,Inf),
+  //   QLi4(x1,x2,Inf,-x1,-x2,-x3),
+  //   // QLi4(x1,x2,x3,x4,Inf,-x1),
+  //   // QLi4(x2,x3,x4,-x1,Inf,-x2),
+  //   // QLi4(x3,x4,-x1,-x2,Inf,-x3),
+  //   // QLi4(x4,-x1,-x2,-x3,Inf,-x4),
+  //   // QLi4(x1,x2,x3,Inf,x4,-x1),
+  //   // QLi4(x2,x3,x4,Inf,-x1,-x2),
+  //   // QLi4(x3,x4,-x1,Inf,-x2,-x3),
+  //   // QLi4(x4,-x1,-x2,Inf,-x3,-x4),
+  // };
+  // // for (const auto& expr : space) {
+  // //   CHECK(is_totally_weakly_separated_inv(expr));
+  // // }
+  // const auto ranks = space_mapping_ranks(
+  //   mapped(space, DISAMBIGUATE(to_lyndon_basis)),
+  //   DISAMBIGUATE(identity_function),
+  //   [&](const auto& expr) {
+  //     return std::tuple{
+  //       // keep_non_weakly_separated_inv(expr),
+  //       ncomultiply(expr, {2,2}) - new_func_comult,
+  //     };
+  //   }
+  // );
+  // std::cout << to_string(ranks) << "\n";
+
+
+
 }
