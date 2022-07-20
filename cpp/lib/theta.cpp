@@ -29,7 +29,7 @@ ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> indices)
   return TComplement(ratio);
 }
 
-ThetaExpr substitute_ratios(
+ThetaExpr substitute_ratios_1_based(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios) {
   return expr.mapped_expanding([&](const EpsilonPack& term) {
@@ -73,14 +73,14 @@ ThetaExpr substitute_ratios(
   }).without_annotations();
 }
 
-ThetaICoExpr substitute_ratios(
+ThetaICoExpr substitute_ratios_1_based(
     const EpsilonICoExpr& expr,
     const std::vector<CompoundRatio>& ratios) {
   return expr.mapped_expanding([&](const std::vector<EpsilonPack>& term) {
     CHECK_EQ(term.size(), kThetaCoExprParts);
     const std::vector<ThetaExpr> multipliers =
       mapped(term, [&](const EpsilonPack& pack) {
-        return substitute_ratios(EpsilonExpr::single(pack), ratios);
+        return substitute_ratios_1_based(EpsilonExpr::single(pack), ratios);
       });
     static_assert(kThetaCoExprParts == 2);
     return outer_product<ThetaICoExpr>(

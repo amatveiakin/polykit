@@ -56,7 +56,8 @@ void pybind_delta(py::module_& m) {
   m.def("ncomultiply", &ncomultiply<DeltaExpr>, "expr"_a, "form"_a = std::vector<int>{});
   m.def("ncomultiply", &ncomultiply<DeltaNCoExpr>, "expr"_a, "form"_a = std::vector<int>{});
 
-  m.def("substitute_variables", &substitute_variables, "Substitutes variable into a DeltaExpr; can substitute Inf");
+  m.def("substitute_variables_0_based", &substitute_variables_0_based, "Substitutes variable into a DeltaExpr; can substitute Inf");
+  m.def("substitute_variables_1_based", &substitute_variables_1_based, "Substitutes variable into a DeltaExpr; can substitute Inf");
   m.def("involute", &involute, "Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6");
 
   m.def("terms_with_num_distinct_variables", py::overload_cast<const DeltaExpr&, int>(&terms_with_num_distinct_variables));

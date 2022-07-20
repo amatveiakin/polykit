@@ -8,8 +8,8 @@
 class SimpleDelta {
 public:
   SimpleDelta(int a, int b) : a_(a), b_(b) {
-    CHECK_LE(1, a_);
-    CHECK_LE(1, b_);
+    CHECK_LE(X::kMinIndex, a_);
+    CHECK_LE(X::kMinIndex, b_);
     sort_two(a_, b_);
   }
 
@@ -26,8 +26,8 @@ public:
   std::pair<int, int> as_pair() const { return {b_, a_}; }
 
 private:
-  int a_ = 0;
-  int b_ = 0;
+  int a_ = -1;
+  int b_ = -1;
 };
 
 int SimpleDelta::other_point(int point) const {

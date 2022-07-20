@@ -36,7 +36,8 @@ DeltaExpr = pb.DeltaExpr
 DeltaICoExpr = pb.DeltaICoExpr
 ProjectionExpr = pb.ProjectionExpr
 
-substitute_variables = pb.substitute_variables
+substitute_variables_0_based = pb.substitute_variables_0_based
+substitute_variables_1_based = pb.substitute_variables_1_based
 icomultiply = pb.icomultiply
 ncomultiply = pb.ncomultiply
 involute = pb.involute

@@ -198,10 +198,10 @@ inline ThetaExpr TComplement(std::initializer_list<std::initializer_list<int>> i
 inline ThetaExpr TFormalSymbol(const LiraParam& lira_param) { return ThetaExpr::single(lira_param); }
 
 
-ThetaExpr substitute_ratios(
+ThetaExpr substitute_ratios_1_based(
     const EpsilonExpr& expr,
     const std::vector<CompoundRatio>& compound_ratios);
-ThetaICoExpr substitute_ratios(
+ThetaICoExpr substitute_ratios_1_based(
     const EpsilonICoExpr& expr,
     const std::vector<CompoundRatio>& ratios);
 

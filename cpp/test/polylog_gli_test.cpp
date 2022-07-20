@@ -161,7 +161,7 @@ TEST(GLiTest, CustomPointOrder) {
     const std::vector points = {2,1,3,6,5,4};
     EXPECT_EXPR_EQ(
       GLiVec(weight, points),
-      substitute_variables(GLiVec(weight, {1,2,3,4,5,6}), points)
+      substitute_variables_1_based(GLiVec(weight, {1,2,3,4,5,6}), points)
     );
   }
 }

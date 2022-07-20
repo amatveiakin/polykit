@@ -25,7 +25,7 @@ static_assert(kMaxGammaVariables <= sizeof(unsigned long) * CHAR_BIT);  // for s
 class Gamma {
 public:
   using BitsetT = std::bitset<kMaxGammaVariables>;
-  static constexpr int kBitsetOffset = 1;
+  static constexpr int kBitsetOffset = X::kMinIndex;
 
   Gamma() {}
   explicit Gamma(BitsetT indices) : indices_(std::move(indices)) {}
@@ -158,8 +158,10 @@ inline GammaExpr plucker(const std::vector<int>& vars) {
 }
 
 
-GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points);
-GammaNCoExpr substitute_variables(const GammaNCoExpr& expr, const std::vector<int>& new_points);
+GammaExpr substitute_variables_0_based(const GammaExpr& expr, const std::vector<int>& new_points);
+GammaExpr substitute_variables_1_based(const GammaExpr& expr, const std::vector<int>& new_points);
+GammaNCoExpr substitute_variables_0_based(const GammaNCoExpr& expr, const std::vector<int>& new_points);
+GammaNCoExpr substitute_variables_1_based(const GammaNCoExpr& expr, const std::vector<int>& new_points);
 
 GammaExpr project_on(int axis, const GammaExpr& expr);
 
@@ -186,8 +188,8 @@ GammaExpr plucker_dual(const DeltaExpr& expr, const std::vector<int>& point_univ
 GammaExpr plucker_dual(const GammaExpr& expr, const std::vector<int>& point_universe);
 GammaNCoExpr plucker_dual(const GammaNCoExpr& expr, const std::vector<int>& point_universe);
 
-GammaExpr symmetrize_double(const GammaExpr& expr, int num_points);
-GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points);
+GammaExpr symmetrize_double_1_based(const GammaExpr& expr, int num_points);
+GammaExpr symmetrize_loop_1_based(const GammaExpr& expr, int num_points);
 
 std::vector<int> common_vars(const GammaExpr::ObjectT& term);
 std::vector<int> all_vars(const GammaExpr::ObjectT& term);

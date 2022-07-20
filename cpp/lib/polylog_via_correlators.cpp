@@ -1,3 +1,5 @@
+// Optimization potential. Switch to 0-based indexing internally.
+
 #include "polylog_via_correlators.h"
 
 #include "absl/container/flat_hash_set.h"
@@ -85,7 +87,7 @@ CorrExpr CorrQLiSymmImpl(int weight, int num_vars) {
 
 
 CorrExpr CorrQLi(int weight, const std::vector<int>& points) {
-  return substitute_variables(
+  return substitute_variables_1_based(
     CorrQLiImpl(
       weight,
       points.size()
@@ -107,7 +109,7 @@ CorrExpr CorrQLiNeg(int weight, const std::vector<int>& points) {
 }
 
 CorrExpr CorrQLiNegAlt(int weight, const std::vector<int>& points) {
-  return substitute_variables(
+  return substitute_variables_1_based(
     CorrQLiNegAltImpl(
       weight,
       points.size()
@@ -120,7 +122,7 @@ CorrExpr CorrQLiNegAlt(int weight, const std::vector<int>& points) {
 }
 
 CorrExpr CorrQLiSymm(int weight, const std::vector<int>& points) {
-  return substitute_variables(
+  return substitute_variables_1_based(
     CorrQLiSymmImpl(
       weight,
       points.size()

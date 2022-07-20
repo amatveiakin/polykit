@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.sparse
 
-from pybind.polykit import substitute_variables
 from python.polypy.lib.util import to_hashable
 
 

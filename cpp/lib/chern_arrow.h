@@ -1,3 +1,5 @@
+// Note. These functions assume 1-based variable indexing.
+
 #pragma once
 
 #include "gamma.h"

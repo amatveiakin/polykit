@@ -8,12 +8,16 @@ CorrFSymb::CorrFSymb(std::vector<int> points_arg)
   : points(lexicographically_minimal_rotation(points_arg)) {}
 
 
-CorrExpr substitute_variables(const CorrExpr& expr, const std::vector<int>& new_points) {
+CorrExpr substitute_variables_0_based(const CorrExpr& expr, const std::vector<int>& new_points) {
   return expr.mapped([&](const CorrFSymb& term) {
     return CorrFSymb{mapped(term.points, [&](int p) {
-      return new_points.at(p - 1);
+      return new_points.at(p);
     })};
   });
+}
+
+CorrExpr substitute_variables_1_based(const CorrExpr& expr, const std::vector<int>& new_points) {
+  return substitute_variables_0_based(expr, concat({-1}, new_points));
 }
 
 

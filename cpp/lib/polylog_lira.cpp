@@ -15,7 +15,7 @@ ThetaExpr LiraVec(const LiraParam& param) {
   for (int i : range_incl(1, param.ratios().size())) {
     points.push_back({i});
   }
-  return substitute_ratios(
+  return substitute_ratios_1_based(
     LiVec(param.foreweight(), param.weights(), points),
     param.ratios()
   ).annotate(to_string(param));
@@ -33,7 +33,7 @@ ThetaICoExpr CoLiraVec(const LiraParam& param) {
   for (int i : range_incl(1, param.ratios().size())) {
     points.push_back({i});
   }
-  return substitute_ratios(
+  return substitute_ratios_1_based(
     CoLiVec(param.foreweight(), param.weights(), points),
     param.ratios()
   ).annotate(fmt::comult() + to_string(param));;

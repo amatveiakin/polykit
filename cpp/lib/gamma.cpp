@@ -14,11 +14,11 @@ std::string to_string(const GammaUniformityMarker& marker) {
 Gamma monom_substitute_variables(Gamma g, const std::vector<int>& new_points) {
   // Optimization potential: do things on bitset level.
   return Gamma(mapped(g.index_vector(), [&](const int idx) {
-    return new_points.at(idx - 1);
+    return new_points.at(idx);
   }));
 }
 
-GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& new_points) {
+GammaExpr substitute_variables_0_based(const GammaExpr& expr, const std::vector<int>& new_points) {
   return expr.mapped_expanding([&](const GammaExpr::ObjectT& term_old) -> GammaExpr {
     std::vector<Gamma> term_new;
     for (const Gamma& g_old : term_old) {
@@ -32,8 +32,12 @@ GammaExpr substitute_variables(const GammaExpr& expr, const std::vector<int>& ne
   }).without_annotations();
 }
 
-// TODO: Auto-generate substitute_variables functions for all co-exprs.
-GammaNCoExpr substitute_variables(const GammaNCoExpr& expr, const std::vector<int>& new_points) {
+GammaExpr substitute_variables_1_based(const GammaExpr& expr, const std::vector<int>& new_points) {
+  return substitute_variables_0_based(expr, concat({-1}, new_points));
+}
+
+// TODO: Auto-generate variable substitution functions for all co-exprs.
+GammaNCoExpr substitute_variables_0_based(const GammaNCoExpr& expr, const std::vector<int>& new_points) {
   return expr.mapped_expanding([&](const GammaNCoExpr::ObjectT& term_old) -> GammaNCoExpr {
     std::vector<std::vector<Gamma>> term_new;
     for (const auto& copart_old : term_old) {
@@ -49,6 +53,10 @@ GammaNCoExpr substitute_variables(const GammaNCoExpr& expr, const std::vector<in
     }
     return GammaNCoExpr::single(term_new);
   }).without_annotations();
+}
+
+GammaNCoExpr substitute_variables_1_based(const GammaNCoExpr& expr, const std::vector<int>& new_points) {
+  return substitute_variables_0_based(expr, concat({-1}, new_points));
 }
 
 GammaExpr project_on(int axis, const GammaExpr& expr) {
@@ -240,18 +248,18 @@ GammaNCoExpr plucker_dual(const GammaNCoExpr& expr, const std::vector<int>& poin
   return plucker_dual_impl<2>(expr, point_universe);
 }
 
-GammaExpr symmetrize_double(const GammaExpr& expr, int num_points) {
+GammaExpr symmetrize_double_1_based(const GammaExpr& expr, int num_points) {
   const auto points = seq_incl(1, num_points);
   const int sign = neg_one_pow(num_points);
-  return expr + sign * substitute_variables(expr, rotated_vector(points, 1));
+  return expr + sign * substitute_variables_1_based(expr, rotated_vector(points, 1));
 }
 
-GammaExpr symmetrize_loop(const GammaExpr& expr, int num_points) {
+GammaExpr symmetrize_loop_1_based(const GammaExpr& expr, int num_points) {
   const auto points = seq_incl(1, num_points);
   GammaExpr ret;
   for (const int i : range(num_points)) {
     const int sign = num_points % 2 == 1 ? 1 : neg_one_pow(i);
-    ret += sign * substitute_variables(expr, rotated_vector(points, i));
+    ret += sign * substitute_variables_1_based(expr, rotated_vector(points, i));
   }
   return ret;
 }

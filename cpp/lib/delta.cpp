@@ -35,9 +35,9 @@ DeltaAlphabetMapping delta_alphabet_mapping;
 X DeltaAlphabetMapping::alphabet_to_x(int ch) {
   CHECK_LE(0, ch);
   if (ch < kVarCodeEnd) {
-    return X(XForm::var, ch - kVarCodeStart + 1);
+    return X(XForm::var, ch - kVarCodeStart + X::kMinIndex);
   } else if (ch < kNegVarCodeEnd) {
-    return X(XForm::neg_var, ch - kNegVarCodeStart + 1);
+    return X(XForm::neg_var, ch - kNegVarCodeStart + X::kMinIndex);
   } else if (ch == kZeroCode) {
     return Zero;
   } else {
@@ -51,6 +51,7 @@ DeltaAlphabetMapping::DeltaAlphabetMapping() {
   deltas_.resize(kAlphabetSize);
   for (int b : range(0, kMaxDimension)) {
     for (int a : range(0, b)) {
+      CHECK_EQ(x_to_alphabet(alphabet_to_x(b)), b);
       Delta d(alphabet_to_x(a), alphabet_to_x(b));
       deltas_.at(to_alphabet(d)) = d;
     }
@@ -61,9 +62,9 @@ DeltaAlphabetMapping::DeltaAlphabetMapping() {
 static X substitution_result(X orig, const std::vector<X>& new_points) {
   SWITCH_ENUM_OR_DIE_WITH_CONTEXT(orig.form(), "variable substitution", {
     case XForm::var:
-      return new_points.at(orig.idx() - 1);
+      return new_points.at(orig.idx());
     case XForm::neg_var:
-      return new_points.at(orig.idx() - 1).negated();
+      return new_points.at(orig.idx()).negated();
     case XForm::sq_var:
       break;
     case XForm::zero:
@@ -74,14 +75,14 @@ static X substitution_result(X orig, const std::vector<X>& new_points) {
   });
 }
 
-DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {
-  const auto& new_points = new_points_arg.as_x();
+DeltaExpr substitute_variables_0_based(const DeltaExpr& expr, const XArgs& new_points) {
+  const auto& new_points_v = new_points.as_x();
   return expr.mapped_expanding([&](const DeltaExpr::ObjectT& term_old) -> DeltaExpr {
     std::vector<Delta> term_new;
     for (const Delta& d_old : term_old) {
       Delta d_new(
-        substitution_result(d_old.a(), new_points),
-        substitution_result(d_old.b(), new_points)
+        substitution_result(d_old.a(), new_points_v),
+        substitution_result(d_old.b(), new_points_v)
       );
       if (d_new.is_nil()) {
         return {};
@@ -97,7 +98,7 @@ DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_ar
 #if DISABLE_PACKING
 // ...
 #else
-DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_arg) {
+DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_points_arg) {
   constexpr int kMaxChar = std::numeric_limits<unsigned char>::max();
   constexpr int kNoReplacement = kMaxChar;
   constexpr int kNil = kMaxChar - 1;
@@ -137,6 +138,10 @@ DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points_ar
 }
 #endif
 #endif
+
+DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_points) {
+  return substitute_variables_0_based(expr, concat({X::Undefined()}, new_points.as_x()));
+}
 
 DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points) {
   return expr.mapped_expanding([&](const std::vector<Delta>& term) {

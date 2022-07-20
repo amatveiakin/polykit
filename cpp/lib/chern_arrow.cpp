@@ -22,7 +22,7 @@ LinearT a_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& s
     const int removed_point = all_dst_points.at(idx);
     const int sign = neg_one_pow(removed_point + 1);
     const auto dst_points = removed_index(all_dst_points, idx);
-    ret += sign * substitute_variables(expr, dst_points);
+    ret += sign * substitute_variables_1_based(expr, dst_points);
   }
   return ret;
 }
@@ -36,7 +36,7 @@ LinearT b_sum(const LinearT& expr, int num_dst_points, const std::vector<int>& s
     const int removed_point = all_dst_points.at(idx);
     const int sign = neg_one_pow(removed_point + 1);
     const auto dst_points = removed_index(all_dst_points, idx);
-    ret += sign * pullback(substitute_variables(expr, dst_points), {removed_point});
+    ret += sign * pullback(substitute_variables_1_based(expr, dst_points), {removed_point});
   }
   return ret;
 }

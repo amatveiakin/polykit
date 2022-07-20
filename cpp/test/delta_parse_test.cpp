@@ -37,9 +37,9 @@ TEST(ParseDeltaExpressionTest, FormMix) {
 TEST(ParseDeltaExpressionTest, MultidigitNumbers) {
   EXPECT_EXPR_EQ(
     parse_delta_expression(R"(
-      -137 (x05-x11)
+      -137 (x05-x10)
     )"),
-    -137*DeltaExpr::single({{5,11}})
+    -137*DeltaExpr::single({{5,10}})
   );
 }
 

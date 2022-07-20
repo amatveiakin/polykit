@@ -10,11 +10,11 @@ TEST(LiraTest, DifferentSubstitutionsEquivalent) {
   auto cr_a  = CR(2,1,7,8);
   auto cr_b1 = CR(3,4,5,6);
   auto cr_b2 = CR(3,6,1,2);
-  auto separate_vars = substitute_ratios(
+  auto separate_vars = substitute_ratios_1_based(
     Li(2,2)({1},{2,3}), {
     {cr_a}, {cr_b1}, {cr_b2}
   });
-  auto multiply_first = substitute_ratios(
+  auto multiply_first = substitute_ratios_1_based(
     Li(2,2)({1},{2}), {
     {cr_a}, {cr_b1 * cr_b2}
   });
@@ -27,11 +27,11 @@ TEST(CoLiraTest, DifferentSubstitutionsEquivalent) {
   auto cr_a  = CR(2,1,7,8);
   auto cr_b1 = CR(3,4,5,6);
   auto cr_b2 = CR(3,6,1,2);
-  auto separate_vars = substitute_ratios(
+  auto separate_vars = substitute_ratios_1_based(
     CoLi(2,2)({1},{2,3}), {
     {cr_a}, {cr_b1}, {cr_b2}
   });
-  auto multiply_first = substitute_ratios(
+  auto multiply_first = substitute_ratios_1_based(
     CoLi(2,2)({1},{2}), {
     {cr_a}, {cr_b1 * cr_b2}
   });
@@ -44,19 +44,19 @@ TEST(LiraTest, LARGE_HandwrittenLiQuad_StartEven_HasNoMonsters) {
   const int foreweight = 2;  // Should be true for any foreweight
   EXPECT_EXPR_ZERO(
     keep_monsters(
-      + substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
+      + substitute_ratios_1_based(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(3,4,7,2)},
         {CR(5,6,7,4)},
       })
-      - substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
+      - substitute_ratios_1_based(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(3,6,7,2)},
         {CR(3,4,5,6)},
       })
-      + substitute_ratios(LiVec(foreweight, {1,1}, {{1},{2}}), {
+      + substitute_ratios_1_based(LiVec(foreweight, {1,1}, {{1},{2}}), {
         {CR(5,6,7,2)},
         {CR(3,4,5,2)},
       })
-      + substitute_ratios(LiVec(foreweight, {2}, {{1,2}}), {
+      + substitute_ratios_1_based(LiVec(foreweight, {2}, {{1,2}}), {
         {CR(5,6,7,2)},
         {CR(3,4,5,2)},
       })

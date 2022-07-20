@@ -23,6 +23,7 @@ std::string to_string(XForm form);
 
 class X {
 public:
+  static constexpr int kMinIndex = 0;
   static constexpr int kFakeIndex = -1000;
 
   constexpr X(XForm form, int idx);
@@ -30,6 +31,7 @@ public:
   constexpr X(int idx) : X(XForm::var, idx) {}
   static constexpr X Zero() { return X(XForm::zero, kFakeIndex); }
   static constexpr X Inf() { return X(XForm::infinity, kFakeIndex); }
+  static constexpr X Undefined() { return X(); }
 
   constexpr XForm form() const { return form_; }
   // It is guaranteed that `idx` for any constant if different from any valid variable index.
@@ -70,7 +72,7 @@ inline constexpr X::X(XForm form, int idx) : form_(form), idx_(idx) {
     case XForm::var:
     case XForm::neg_var:
     case XForm::sq_var:
-      CHECK_LT(0, idx_) << "where form = " << to_string(form_);
+      CHECK_LE(kMinIndex, idx_) << "where form = " << to_string(form_);
       break;
     case XForm::zero:
     case XForm::infinity:
@@ -134,6 +136,7 @@ inline X X::operator+() const {
 inline static const X Zero = X::Zero();
 inline static const X Inf = X::Inf();
 
+inline static const X x0 = X(0);
 inline static const X x1 = X(1);
 inline static const X x2 = X(2);
 inline static const X x3 = X(3);
@@ -151,6 +154,7 @@ inline static const X x14 = X(14);
 inline static const X x15 = X(15);
 inline static const X x16 = X(16);
 
+inline static const X x0s = X(XForm::sq_var, 0);
 inline static const X x1s = X(XForm::sq_var, 1);
 inline static const X x2s = X(XForm::sq_var, 2);
 inline static const X x3s = X(XForm::sq_var, 3);

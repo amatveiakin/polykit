@@ -259,7 +259,7 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // // std::cout << to_lyndon_basis(
   // //   + expr
-  // //   + substitute_variables(expr, {1,2,4,3,5,6,7,8,9})
+  // //   + substitute_variables_1_based(expr, {1,2,4,3,5,6,7,8,9})
   // // );
 
 

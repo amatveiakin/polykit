@@ -3,7 +3,7 @@
 #include  "algebra.h"
 
 
-EpsilonExpr substitute_variables(
+EpsilonExpr substitute_variables_0_based(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products) {
   return expr.mapped_expanding([&](const EpsilonPack& term) {
@@ -14,7 +14,7 @@ EpsilonExpr substitute_variables(
           [&](const Epsilon& e) -> EpsilonExpr {
             return std::visit(overloaded{
               [&](const EpsilonVariable& v) {
-                const auto& new_indices = new_products.at(v.idx() - 1);
+                const auto& new_indices = new_products.at(v.idx());
                 EpsilonExpr term;
                 for (const int new_idx : new_indices) {
                   term += EVar(new_idx);
@@ -25,7 +25,7 @@ EpsilonExpr substitute_variables(
                 std::bitset<kMaxComplementVariables> term_indices;
                 for (int idx : range(kMaxComplementVariables)) {
                   if (v.indices()[idx]) {
-                    const auto& new_indices = new_products.at(idx - 1);
+                    const auto& new_indices = new_products.at(idx);
                     for (const int new_idx : new_indices) {
                       CHECK_LT(new_idx, kMaxComplementVariables);
                       CHECK(term_indices[new_idx] == 0) << "Epsilon doesn't support duplicate indices.";
@@ -44,7 +44,7 @@ EpsilonExpr substitute_variables(
         for (const std::vector<int>& point_arg: formal_symbol.points()) {
           new_points.push_back({});
           for (const int p : point_arg) {
-            append_vector(new_points.back(), new_products.at(p - 1));
+            append_vector(new_points.back(), new_products.at(p));
           }
         }
         return EFormalSymbolPositive(LiParam(
@@ -52,6 +52,12 @@ EpsilonExpr substitute_variables(
       },
     }, term);
   }).without_annotations();
+}
+
+EpsilonExpr substitute_variables_1_based(
+    const EpsilonExpr& expr,
+    const std::vector<std::vector<int>>& new_products) {
+  return substitute_variables_0_based(expr, concat({{}}, new_products));
 }
 
 static bool is_monster(const EpsilonPack& term) {

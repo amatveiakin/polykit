@@ -16,7 +16,7 @@ from polykit import Encoder, RichTextFormat, AnnotationSorting, set_formatting, 
 from polykit import tensor_product, to_lyndon_basis
 from polykit import icoproduct, ncoproduct, icomultiply, ncomultiply
 from polykit import X, Inf, Zero, x1, x2, x3, x4, x5, x6, x7, x8, x1s, x2s, x3s, x4s, x5s, x6s, x7s, x8s
-from polykit import Delta, DeltaExpr, substitute_variables, involute
+from polykit import Delta, DeltaExpr, substitute_variables_0_based, substitute_variables_1_based, involute
 from polykit import ProjectionExpr, project_on
 from polykit import terms_with_num_distinct_variables, terms_with_min_distinct_variables, terms_containing_only_variables, terms_without_variables
 from polykit import sorted_by_num_distinct_variables
@@ -819,14 +819,14 @@ def describe_cpp(mat):
 #     return to_lyndon_basis(expr)
 # for args in iterate_permutations([1,2,3,4,5,6,7,8]):
 #     func = lambda points: (
-#         + substitute_variables(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [-x1, x2, x3, x1,-x2,-x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [-x1, x2,-x3, x1,-x2, x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [-x1,-x2, x3, x1, x2,-x3,Zero,Inf])
-#         + substitute_variables(QLi3(points), [-x1,-x2,-x3, x1, x2, x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [-x1, x2, x3, x1,-x2,-x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [-x1, x2,-x3, x1,-x2, x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [-x1,-x2, x3, x1, x2,-x3,Zero,Inf])
+#         + substitute_variables_1_based(QLi3(points), [-x1,-x2,-x3, x1, x2, x3,Zero,Inf])
 #     )
 #     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
 # describe(matrix_builder)  # 18
@@ -835,14 +835,14 @@ def describe_cpp(mat):
 #     return to_lyndon_basis(expr)
 # for args in iterate_permutations([1,2,3,4,5,6]):
 #     func = lambda points: (
-#         + substitute_variables(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3])
-#         + substitute_variables(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3])
-#         + substitute_variables(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3])
-#         + substitute_variables(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3])
-#         + substitute_variables(QLi3(points), [-x1, x2, x3, x1,-x2,-x3])
-#         + substitute_variables(QLi3(points), [-x1, x2,-x3, x1,-x2, x3])
-#         + substitute_variables(QLi3(points), [-x1,-x2, x3, x1, x2,-x3])
-#         + substitute_variables(QLi3(points), [-x1,-x2,-x3, x1, x2, x3])
+#         + substitute_variables_1_based(QLi3(points), [ x1, x2, x3,-x1,-x2,-x3])
+#         + substitute_variables_1_based(QLi3(points), [ x1, x2,-x3,-x1,-x2, x3])
+#         + substitute_variables_1_based(QLi3(points), [ x1,-x2, x3,-x1, x2,-x3])
+#         + substitute_variables_1_based(QLi3(points), [ x1,-x2,-x3,-x1, x2, x3])
+#         + substitute_variables_1_based(QLi3(points), [-x1, x2, x3, x1,-x2,-x3])
+#         + substitute_variables_1_based(QLi3(points), [-x1, x2,-x3, x1,-x2, x3])
+#         + substitute_variables_1_based(QLi3(points), [-x1,-x2, x3, x1, x2,-x3])
+#         + substitute_variables_1_based(QLi3(points), [-x1,-x2,-x3, x1, x2, x3])
 #     )
 #     add_expr(matrix_builder, prepare, func, args, [1,2,3,4])
 # describe(matrix_builder)  # 5

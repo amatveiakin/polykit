@@ -52,7 +52,7 @@ static GammaExpr plucker_dual_naive(const GammaExpr& expr, const std::vector<int
 
 TEST(GammaTest, SubstituteVariables) {
   EXPECT_EXPR_EQ(
-    substitute_variables(
+    substitute_variables_1_based(
       + G({1,2,3})
       + G({2,3,4})
       - G({1,3,5}),
@@ -118,6 +118,6 @@ TEST(GammaTest, SymmetrizeComposition) {
   // Should be true for any expressions.
   for (const auto& expr: {GrQLi2(1)(2,3,4,5,6,7), GrLi(1)(2,3,4,5), G({1,2,3,4,5})}) {
     const int n = detect_num_variables(expr);
-    EXPECT_EXPR_ZERO(symmetrize_double(symmetrize_loop(expr, n), n));
+    EXPECT_EXPR_ZERO(symmetrize_double_1_based(symmetrize_loop_1_based(expr, n), n));
   }
 }

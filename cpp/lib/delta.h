@@ -31,7 +31,7 @@
 // Set to `0` in order to support more vars at the expense of losing XForm::neg_var.
 // TODO: Find a better way to support more vars: this implementation is inconvenient and
 //   it disables tests involving negative vars when this is set to 0.
-#define ENABLE_NEGATIVE_DELTA_VARIABLES 0
+#define ENABLE_NEGATIVE_DELTA_VARIABLES 1
 
 // TODO: Implement integratability criterion
 
@@ -90,6 +90,7 @@ inline X Delta::negate_x(X x) {
 }
 
 inline void Delta::simplify() {
+  CHECK(!a_.is(XForm::undefined) && !b_.is(XForm::undefined));
   sort_two(a_, b_);
   if (a_ == Inf || b_ == Inf) {
     a_ = Inf;
@@ -166,7 +167,7 @@ private:
 
   static X alphabet_to_x(int ch);
   static int x_to_alphabet(X x) {
-    const int idx = x.idx() - 1;
+    const int idx = x.idx() - X::kMinIndex;
     switch (x.form()) {
       case XForm::var:
         CHECK_LE(0, idx);
@@ -183,6 +184,9 @@ private:
     }
     FATAL_BAD_ENUM(x.form());
   }
+  // Prevent messing up the functions above using `X(int)` implicit constructor.
+  static void alphabet_to_x(X ch) = delete;
+  static void x_to_alphabet(int x) = delete;
 
   std::vector<Delta> deltas_;
 };
@@ -292,7 +296,8 @@ inline DeltaExpr D(X a, X b) {
 }
 
 
-DeltaExpr substitute_variables(const DeltaExpr& expr, const XArgs& new_points);
+DeltaExpr substitute_variables_0_based(const DeltaExpr& expr, const XArgs& new_points);
+DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_points);
 
 // Expects: points.size() == 6
 // Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6.

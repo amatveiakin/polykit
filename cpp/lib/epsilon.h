@@ -39,7 +39,7 @@ public:
     CHECK(is_valid()) << "EpsilonVariable index = " << idx_;
   }
 
-  bool is_valid() const { return 1 <= idx_ && idx_ < (1 << internal::kEpsilonDataBits); }
+  bool is_valid() const { return X::kMinIndex <= idx_ && idx_ < (1 << internal::kEpsilonDataBits); }
   int idx() const { return idx_; }
 
   bool operator==(const EpsilonVariable& other) const { return idx_ == other.idx_; }
@@ -64,7 +64,6 @@ public:
   bool operator< (const EpsilonComplement& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
 
 private:
-  // TODO: Convert to 0-based and back.
   std::bitset<kMaxComplementVariables> indices_;
 };
 
@@ -276,7 +275,10 @@ inline EpsilonExpr EFormalSymbolSigned(const LiParam& li_param) {
 
 // Gets a list {{y_1_1, y_1_2, ...}, ..., {y_n_1, y_n_2, ...}}, replaces
 // each variable x_i in expr with a product (y_i_1 * y_i_2 * ...)
-EpsilonExpr substitute_variables(
+EpsilonExpr substitute_variables_0_based(
+    const EpsilonExpr& expr,
+    const std::vector<std::vector<int>>& new_products);
+EpsilonExpr substitute_variables_1_based(
     const EpsilonExpr& expr,
     const std::vector<std::vector<int>>& new_products);
 

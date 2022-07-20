@@ -400,25 +400,25 @@ TEST(QLiTest, LARGE_QLiSymm4_Arg6_AsCyclicSums) {
 
 TEST(QLiTest, HUGE_QLiSymm6_Arg8_AsCyclicSums) {
   static const auto qli6sum_a = [](const XArgs& args) {
-    return substitute_variables(
+    return substitute_variables_1_based(
       sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,5,6}, SumSign::alternating),
       args
     );
   };
   static const auto qli6sum_b = [](const XArgs& args) {
-    return substitute_variables(
+    return substitute_variables_1_based(
       sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,5,7}, SumSign::alternating),
       args
     );
   };
   static const auto qli6sum_c = [](const XArgs& args) {
-    return substitute_variables(
+    return substitute_variables_1_based(
       sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,4,6,7}, SumSign::alternating),
       args
     );
   };
   static const auto qli6sum_d = [](const XArgs& args) {
-    return substitute_variables(
+    return substitute_variables_1_based(
       sum_looped(DISAMBIGUATE(QLiSymm6), 8, std::array{1,2,3,5,6,7}, SumSign::alternating),
       args
     );
