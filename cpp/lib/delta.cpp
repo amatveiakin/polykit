@@ -59,30 +59,14 @@ DeltaAlphabetMapping::DeltaAlphabetMapping() {
 }
 
 
-static X substitution_result(X orig, const std::vector<X>& new_points) {
-  SWITCH_ENUM_OR_DIE_WITH_CONTEXT(orig.form(), "variable substitution", {
-    case XForm::var:
-      return new_points.at(orig.idx());
-    case XForm::neg_var:
-      return new_points.at(orig.idx()).negated();
-    case XForm::sq_var:
-      break;
-    case XForm::zero:
-    case XForm::infinity:
-      return orig;
-    case XForm::undefined:
-      break;
-  });
-}
-
 DeltaExpr substitute_variables_0_based(const DeltaExpr& expr, const XArgs& new_points) {
   const auto& new_points_v = new_points.as_x();
   return expr.mapped_expanding([&](const DeltaExpr::ObjectT& term_old) -> DeltaExpr {
     std::vector<Delta> term_new;
     for (const Delta& d_old : term_old) {
       Delta d_new(
-        substitution_result(d_old.a(), new_points_v),
-        substitution_result(d_old.b(), new_points_v)
+        d_old.a().substitution_result_0_based(new_points_v),
+        d_old.b().substitution_result_0_based(new_points_v)
       );
       if (d_new.is_nil()) {
         return {};

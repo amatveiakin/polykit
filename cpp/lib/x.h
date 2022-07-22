@@ -46,6 +46,8 @@ public:
   X operator-() const;  // similar to `negated` but deliberately limited to variables
   X operator+() const;
 
+  X substitution_result_0_based(const std::vector<X>& new_points);
+
   constexpr bool operator==(const X& other) const { return as_pair() == other.as_pair(); }
   constexpr bool operator!=(const X& other) const { return as_pair() != other.as_pair(); }
   constexpr bool operator< (const X& other) const { return as_pair() <  other.as_pair(); }
@@ -131,6 +133,22 @@ inline X X::operator-() const {
 inline X X::operator+() const {
   CHECK(!is_constant()) << "operator+ is not supported for " << to_string(form_);
   return *this;
+}
+
+inline X X::substitution_result_0_based(const std::vector<X>& new_points) {
+  SWITCH_ENUM_OR_DIE_WITH_CONTEXT(form_, "variable substitution", {
+    case XForm::var:
+      return new_points.at(idx_);
+    case XForm::neg_var:
+      return new_points.at(idx_).negated();
+    case XForm::sq_var:
+      break;
+    case XForm::zero:
+    case XForm::infinity:
+      return *this;
+    case XForm::undefined:
+      break;
+  });
 }
 
 inline static const X Zero = X::Zero();

@@ -591,8 +591,8 @@ int main(int /*argc*/, char *argv[]) {
   // ;
 
   // const auto x =
-  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))  // rewrite
-  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))  // rewrite
+  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))  // rewrite via FormulaAomotoViaCluster2
+  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))  // rewrite via FormulaAomotoViaCluster1
   //   - a_plus(ncoproduct(b_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
   //   - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
   //   + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
@@ -1138,4 +1138,91 @@ int main(int /*argc*/, char *argv[]) {
   //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
   //   - a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
   // );
+
+
+  // TODO: factor out sigma_i (a.k.a "co-degeneration maps")
+  static constexpr auto sigma = [](int i, const auto& expr, int dst_vars) {
+    CHECK_LT(i, dst_vars);
+    return substitute_variables_0_based(expr, concat(seq_incl(0, i), seq(i, dst_vars)));
+  };
+  static constexpr auto add_to_each_multiple = [](X new_var, const auto& expr) {
+    return expr.mapped_expanding([&](const auto& term) {
+      return tensor_product(absl::MakeConstSpan(mapped(term, [&](const X var) {
+        return
+          + ProjectionExpr::single({var})
+          + ProjectionExpr::single({new_var})
+        ;
+      })));
+    });
+  };
+  static constexpr auto diffs = [](std::vector<int> v) {
+    absl::c_adjacent_difference(v, v.begin());
+    return slice(v, 1);
+  };
+  static constexpr auto get_unsorted_partitions_allow_zero = [](int n, int num_summands) {
+    const int q = n + num_summands - 1;
+    return mapped(combinations(seq_incl(1, q), num_summands - 1), [&](const auto& s) {
+      return mapped(diffs(concat(std::vector{0}, s, std::vector{q+1})), [](const int k) {
+        return k - 1;
+      });
+    });
+  };
+  static constexpr auto kernel_element = [](const int weight, const int num_points) {
+    return sum(mapped(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
+      // std::cout << dump_to_string(mapped(range(num_points * 2 - 1), [&](const int k) {
+      //   const int i = k / 2;
+      //   return (k % 2 == 0)
+      //     ? absl::StrCat(i, "^", subweights.at(i))
+      //     : absl::StrCat(i, "-", i + 1)
+      //   ;
+      // })) << "\n";
+      return tensor_product(absl::MakeConstSpan(mapped(range(num_points * 2 - 1), [&](const int k) {
+        const int i = k / 2;
+        return (k % 2 == 0)
+          ? ProjectionExpr::single(std::vector(subweights.at(i), X(i)))
+          : ProjectionExpr::single({X(i)}) - ProjectionExpr::single({X(i + 1)})
+        ;
+      })));
+    }));
+  };
+
+  for (const int num_points : range_incl(2, 6)) {
+    for (const int weight : range_incl(2, 6)) {
+      const int m = num_points - 1;
+      const auto coords = seq(num_points);
+      // const auto space = mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+      //   return ProjectionExpr::single(mapped(word, convert_to<X>));
+      // });
+      const auto space = mapped(combinations_with_replacement(coords, weight), [](const auto& word) {
+        return ProjectionExpr::single(mapped(word, convert_to<X>));
+      });
+      const auto ranks = space_mapping_ranks(
+        space,
+        DISAMBIGUATE(to_lyndon_basis),
+        [&](const auto& expr) {
+          return concat(
+            mapped(
+              range(m),
+              [&](const int i) { return to_lyndon_basis(sigma(i, expr, m)); }
+            ),
+            mapped(
+              range(num_points),
+              [&](const int i) { return to_lyndon_basis(expr - add_to_each_multiple(i, expr)); }
+            )
+          );
+        }
+      );
+      std::cout << "m=" << m << ", w=" << weight << ": " << to_string(ranks) << "\n";
+      const auto expr = kernel_element(weight, num_points - 1);
+      for (const int i : range(m - 1)) {
+        CHECK(to_lyndon_basis(sigma(i, expr, m)).is_zero()) << i;
+      }
+      for (const int i : range(num_points - 1)) {
+        CHECK(to_lyndon_basis(expr - add_to_each_multiple(i, expr)).is_zero());
+      }
+      // std::cout << "kernel ok\n";
+    }
+  }
+
+
 }

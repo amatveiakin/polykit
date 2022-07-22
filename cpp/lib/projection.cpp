@@ -48,6 +48,19 @@ DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars)
   });
 }
 
+ProjectionExpr substitute_variables_0_based(const ProjectionExpr& expr, const XArgs& new_points) {
+  const auto& new_points_v = new_points.as_x();
+  return expr.mapped([&](const auto& term) {
+    return mapped(term, [&](X p) {
+      return p.substitution_result_0_based(new_points_v);
+    });
+  });
+}
+
+ProjectionExpr substitute_variables_1_based(const ProjectionExpr& expr, const XArgs& new_points) {
+  return substitute_variables_0_based(expr, concat({X::Undefined()}, new_points.as_x()));
+}
+
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct) {
   return expr.filtered_key([&](const ProjectionExpr::StorageT& term) {
     return num_distinct_elements_unsorted(term) == num_distinct;

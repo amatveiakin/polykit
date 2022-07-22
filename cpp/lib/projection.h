@@ -70,6 +70,9 @@ inline ProjectionExpr project_on_x15(const DeltaExpr& expr) { return project_on(
 DeltaExpr alt_project_on(const Delta& axis, const DeltaExpr& expr, int num_vars);
 
 
+ProjectionExpr substitute_variables_0_based(const ProjectionExpr& expr, const XArgs& new_points);
+ProjectionExpr substitute_variables_1_based(const ProjectionExpr& expr, const XArgs& new_points);
+
 ProjectionExpr terms_with_num_distinct_variables(const ProjectionExpr& expr, int num_distinct);
 ProjectionExpr terms_with_min_distinct_variables(const ProjectionExpr& expr, int min_distinct);
 
