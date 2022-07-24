@@ -7,10 +7,7 @@ int main(int argc, char *argv[]) {
   const int num_args = num_points / 2 - 1;
   auto source = sum_looped_vec(
     [&](const auto& args) {
-      return LiQuad(
-        num_points / 2 - 1,
-        mapped(args, [](X x) { return x.var(); })
-      );
+      return LiQuad(num_points / 2 - 1, args);
     },
     num_points,
     seq_incl(1, num_points - 1)

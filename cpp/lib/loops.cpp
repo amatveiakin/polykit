@@ -103,6 +103,7 @@ std::string LoopsNames::loops_name(const Loops& loops) {
 
 std::string LoopExprParam::object_to_string(const ObjectT& loops) {
   const std::string loops_str = loops_description(loops);
+  // return loops_str;
   const std::string loops_name_str = loops_names.loops_name(loops);
   return absl::StrCat(loops_str, "  ", loops_name_str);
 }
@@ -255,7 +256,7 @@ static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {
 
 static LoopExpr arg11_shuffle_cluster(const LoopExpr& expr) {
   if (expr.is_zero() || expr.element().first.size() != 4) {
-    std::cout << "WARNING: skipping arg11_shuffle_cluster\n";
+    // std::cout << "WARNING: skipping arg11_shuffle_cluster\n";  // TODO: ?
     return expr;  // TODO: Generalize!
   }
 

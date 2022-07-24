@@ -23,10 +23,11 @@
 #include "lib/set_util.h"
 #include "lib/space_algebra.h"
 #include "lib/summation.h"
+#include "lib/zip.h"
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 1
+#if 0
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -54,7 +55,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 0
+#if 1
 #include "lib/epsilon.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
@@ -69,6 +70,325 @@
 #endif
 
 
+
+static constexpr auto cycle = loop_expr_cycle;
+
+LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
+  for (EACH : range(power)) {
+    expr = cycle(expr, cycles);
+  }
+  return expr;
+}
+
+LoopExpr keep_term(const LoopExpr& expr, int type) {
+  return expr.filtered([&](const Loops& loops) {
+    return loops_names.loops_index(loops) == type;
+  });
+}
+
+int num_distinct_term_types(const LoopExpr& expr) {
+  std::vector<int> term_types;
+  expr.foreach([&](const Loops& loops, int) {
+    term_types.push_back(loops_names.loops_index(loops));
+  });
+  return num_distinct_elements_unsorted(term_types);
+}
+
+LoopExpr preshow(const LoopExpr& expr) {
+  return expr;
+  // return keep_term(expr, 7);
+  // return arg11_shuffle_cluster(expr);
+}
+
+std::string permutation_to_string(const std::vector<std::vector<int>>& permutation) {
+  return str_join(
+    mapped(permutation, [&](const std::vector<int>& loop) {
+      return fmt::parens(str_join(loop, ","));
+    }),
+    ""
+  );
+}
+
+LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_type) {
+  static const std::vector<std::vector<std::vector<int>>> symmetries{
+    {{2,4}, {5,8}, {6,7}},
+    {{2,5}, {3,4}, {6,8}},
+    {{2,6}, {3,5}, {7,8}},
+    {{2,7}, {3,6}, {4,5}},
+    {{3,8}, {4,7}, {5,6}},
+    {{2,3}, {4,8}, {5,7}},
+    {{2,8}, {3,7}, {4,6}},
+  };
+  const auto update_victim = [&](const LoopExpr& bonus, int sign, std::string description) {
+    const auto new_victim_candidate = victim + sign * bonus;
+    if (keep_term(new_victim_candidate, target_type).l1_norm() < keep_term(victim, target_type).l1_norm()) {
+      victim = new_victim_candidate;
+      std::cout << fmt::coeff(sign) << description << "\n";
+    }
+  };
+  std::cout << ".\n";
+  for (const auto& permutation : symmetries) {
+    for (int sign : {-1, 1}) {
+      update_victim(
+        cycle(killer, permutation),
+        sign,
+        "symmetry " + permutation_to_string(permutation)
+      );
+    }
+  }
+  for (int rotation_pow : range(1, 8)) {
+    for (int sign : {-1, 1}) {
+      update_victim(
+        cycle_pow(killer, {{2,3,4,5,6,7,8}}, rotation_pow),
+        sign,
+        absl::StrCat("rotate ", rotation_pow, " positions")
+      );
+    }
+  }
+  return victim;
+}
+
+// TODO: Normalize cycles
+std::vector<std::vector<int>> substitutions_to_cycles(absl::flat_hash_map<int, int> substitutions) {
+  std::vector<std::vector<int>> ret;
+  while (!substitutions.empty()) {
+    const int start = substitutions.begin()->first;
+    int next = substitutions.begin()->second;
+    substitutions.erase(start);
+    if (start == next) {
+      continue;
+    } else {
+      std::vector<int> cycle = {start};
+      while (next != start) {
+        cycle.push_back(next);
+        const int prev = next;
+        next = substitutions.at(prev);
+        substitutions.erase(prev);
+      }
+      ret.push_back(std::move(cycle));
+    }
+  }
+  return ret;
+}
+
+absl::flat_hash_map<int, int> get_substitution(const Loops& from, const Loops& to) {
+  absl::flat_hash_map<int, int> ret;
+  for (auto [a, b] : zip(flatten(from), flatten(to))) {
+    if (ret.contains(a)) {
+      CHECK(ret.at(a) == b) << "\n" << LoopExprParam::object_to_string(from) << "\n" << LoopExprParam::object_to_string(to);
+    } else {
+      ret[a] = b;
+    }
+  }
+  return ret;
+}
+
+LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
+  const auto expr_complexity = [&](const LoopExpr& expr) {
+    return std::tuple{
+      keep_term(expr, target_type).l1_norm(),
+      num_distinct_term_types(expr),
+      expr.l1_norm(),
+    };
+  };
+  std::cout << ".\n";
+  std::vector<Loops> killer_terms;
+  killer.foreach([&](const Loops& loops, int) {
+    if (loops_names.loops_index(loops) == target_type) {
+      killer_terms.push_back(loops);
+    }
+  });
+  CHECK(!killer_terms.empty()) << "Term type " << target_type << " not found in\n" << killer;
+  bool stuck = false;
+  while (!stuck) {
+    stuck = true;
+    std::vector<Loops> victim_terms;
+    victim.foreach([&](const Loops& loops, int) {
+      if (loops_names.loops_index(loops) == target_type) {
+        victim_terms.push_back(loops);
+      }
+    });
+    if (victim_terms.empty()) {
+      break;  // everything killed already
+    }
+    std::optional<LoopExpr> best_candidate;
+    std::string best_candidate_description;
+    for (const Loops& killer_term : killer_terms) {
+      for (const Loops& victim_term : victim_terms) {
+        // NOTE. Assumes canonical form.
+        // TODO: take into account different ways of treating symmetries.
+        const auto subst = get_substitution(killer_term, victim_term);
+        const auto killer_subst = loop_expr_substitute(killer, subst);
+        for (int sign : {-1, 1}) {
+          const auto new_candidate = victim + sign * killer_subst;
+          if (keep_term(new_candidate, target_type).l1_norm() < keep_term(victim, target_type).l1_norm()) {
+            // std::cout << ">>> " << absl::StrCat(fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)))
+            //     << " : " << new_candidate << " => " << dump_to_string(expr_complexity(new_candidate)) << "\n\n";
+            if (!best_candidate || expr_complexity(new_candidate) < expr_complexity(*best_candidate)) {
+              best_candidate = new_candidate;
+              best_candidate_description = absl::StrCat(
+                  fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)));
+            }
+          }
+        }
+      }
+    }
+    if (best_candidate) {
+      stuck = false;
+      victim = *best_candidate;
+      std::cout << best_candidate_description << "\n";
+    }
+  }
+  return victim;
+}
+
+StringExpr arg9_expr_type_1_to_column(const LoopExpr& expr) {
+  return expr.mapped<StringExpr>([](const Loops& loops) {
+    std::vector<int> v = concat(
+      loops_unique_common_variable(loops, {0,1,2}),
+      loops_unique_common_variable(loops, {2}),
+      loops_unique_common_variable(loops, {0}),
+      loops_unique_common_variable(loops, {0,1}),
+      loops_unique_common_variable(loops, {1,2})
+    );
+    CHECK_EQ(v.size(), 7);
+    return fmt::brackets(str_join(v, ","));
+  });
+}
+
+StringExpr arg11_expr_type_2_to_column(const LoopExpr& expr) {
+  return expr.mapped<StringExpr>([](const Loops& loops) {
+    CHECK_EQ(loops.size(), 4);
+    std::vector<int> v = concat(
+      loops_unique_common_variable(loops, {0,1,2,3}),  // x2
+      loops_unique_common_variable(loops, {0}),        // x2
+      loops_unique_common_variable(loops, {3}),
+      loops_unique_common_variable(loops, {0,1}),
+      loops_unique_common_variable(loops, {1,2}),
+      loops_unique_common_variable(loops, {2,3})
+    );
+    CHECK_EQ(v.size(), 8);
+    return fmt::brackets(str_join(v, ","));
+  });
+}
+
+using Degenerations = std::vector<std::vector<int>>;
+
+bool is_degenerations_ok(const Degenerations& groups) {
+  for (int i : range(groups.size())) {
+    for (int j : range(i+1, groups.size())) {
+      if (set_intersection_size(groups[i], groups[j]) > 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void normalize_degenerations(Degenerations& groups) {
+  for (auto& group : groups) {
+    absl::c_sort(group);
+  }
+  absl::c_sort(groups);
+}
+
+Degenerations normalized_degenerations(Degenerations groups) {
+  normalize_degenerations(groups);
+  return groups;
+}
+
+Degenerations flip_variables(const Degenerations& groups, int total_vars) {
+  return mapped(groups, [&](const auto& group) {
+    return mapped(group, [&](int v) {
+      return total_vars + 1 - v;
+    });
+  });
+}
+
+Degenerations rotate_variables(const Degenerations& groups, int total_vars, int shift) {
+  return mapped(groups, [&](const auto& group) {
+    return mapped(group, [&](int v) {
+      return (v - 1 + shift) % total_vars + 1;
+    });
+  });
+}
+
+bool contains_only_expression_of_type(const LoopExpr& expr, const std::vector<int>& types) {
+  absl::flat_hash_set<int> types_set(types.begin(), types.end());
+  bool ret = true;
+  expr.foreach([&](const auto& loops, int) {
+    if (!types_set.contains(loops_names.loops_index(loops))) {
+      ret = false;
+      return;
+    }
+  });
+  return ret;
+}
+
+bool has_common_variable_in_each_term(const LoopExpr& expr) {
+  bool ret = true;
+  expr.foreach([&](const auto& loops, int) {
+    if (set_intersection(loops).empty()) {
+      ret = false;
+      return;
+    }
+  });
+  return ret;
+}
+
+void list_all_degenerations(const LoopExpr& expr) {
+  const int N = 11;
+  const int a1 = 1;
+  absl::flat_hash_set<Degenerations> degenerations_seen;
+
+  const auto add_degeneration = [&](Degenerations groups) {
+    if (!is_degenerations_ok(groups)) {
+      return;
+    }
+    normalize_degenerations(groups);
+    auto groups_flipped = flip_variables(groups, N);
+    for (int rotation_pow : range(N)) {
+      if (degenerations_seen.contains(normalized_degenerations(rotate_variables(groups, N, rotation_pow))) ||
+          degenerations_seen.contains(normalized_degenerations(rotate_variables(groups_flipped, N, rotation_pow)))) {
+        return;
+      }
+    }
+    CHECK(degenerations_seen.insert(groups).second);
+    const auto expr_degenerated = loop_expr_degenerate(expr, groups);
+    // if (!expr_degenerated.is_zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
+    if (!expr_degenerated.is_zero() && has_common_variable_in_each_term(expr_degenerated)) {
+      std::cout << permutation_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
+    }
+  };
+
+  for (int a2 : range_incl(a1+2, N)) {
+  for (int b1 : range_incl(1,    N)) {
+  for (int b2 : range_incl(b1+2, N)) {
+  for (int c1 : range_incl(1,    N)) {
+  for (int c2 : range_incl(c1+2, N)) {
+    add_degeneration({{a1, a2}, {b1, b2}, {c1, c2}});
+  }
+  }
+  }
+  }
+  }
+
+  for (int a2 : range_incl(a1+2, N)) {
+  for (int a3 : range_incl(a2+2, N)) {
+  for (int b1 : range_incl(1,    N)) {
+  for (int b2 : range_incl(b1+2, N)) {
+    add_degeneration({{a1, a2, a3}, {b1, b2}});
+  }
+  }
+  }
+  }
+}
+
+
+#define DUMP(expr) std::cout << STRINGIFY(expr) << " " << expr
+
+
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -80,7 +400,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(30)
+    .set_expression_line_limit(300)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -1140,89 +1460,175 @@ int main(int /*argc*/, char *argv[]) {
   // );
 
 
-  // TODO: factor out sigma_i (a.k.a "co-degeneration maps")
-  static constexpr auto sigma = [](int i, const auto& expr, int dst_vars) {
-    CHECK_LT(i, dst_vars);
-    return substitute_variables_0_based(expr, concat(seq_incl(0, i), seq(i, dst_vars)));
-  };
-  static constexpr auto add_to_each_multiple = [](X new_var, const auto& expr) {
-    return expr.mapped_expanding([&](const auto& term) {
-      return tensor_product(absl::MakeConstSpan(mapped(term, [&](const X var) {
-        return
-          + ProjectionExpr::single({var})
-          + ProjectionExpr::single({new_var})
-        ;
-      })));
-    });
-  };
-  static constexpr auto diffs = [](std::vector<int> v) {
-    absl::c_adjacent_difference(v, v.begin());
-    return slice(v, 1);
-  };
-  static constexpr auto get_unsorted_partitions_allow_zero = [](int n, int num_summands) {
-    const int q = n + num_summands - 1;
-    return mapped(combinations(seq_incl(1, q), num_summands - 1), [&](const auto& s) {
-      return mapped(diffs(concat(std::vector{0}, s, std::vector{q+1})), [](const int k) {
-        return k - 1;
-      });
-    });
-  };
-  static constexpr auto kernel_element = [](const int weight, const int num_points) {
-    return sum(mapped(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
-      // std::cout << dump_to_string(mapped(range(num_points * 2 - 1), [&](const int k) {
-      //   const int i = k / 2;
-      //   return (k % 2 == 0)
-      //     ? absl::StrCat(i, "^", subweights.at(i))
-      //     : absl::StrCat(i, "-", i + 1)
-      //   ;
-      // })) << "\n";
-      return tensor_product(absl::MakeConstSpan(mapped(range(num_points * 2 - 1), [&](const int k) {
-        const int i = k / 2;
-        return (k % 2 == 0)
-          ? ProjectionExpr::single(std::vector(subweights.at(i), X(i)))
-          : ProjectionExpr::single({X(i)}) - ProjectionExpr::single({X(i + 1)})
-        ;
-      })));
-    }));
-  };
+  // // TODO: factor out sigma_i (a.k.a "co-degeneration maps")
+  // static constexpr auto sigma = [](int i, const auto& expr, int dst_vars) {
+  //   CHECK_LT(i, dst_vars);
+  //   return substitute_variables_0_based(expr, concat(seq_incl(0, i), seq(i, dst_vars)));
+  // };
+  // static constexpr auto add_to_each_multiple = [](X new_var, const auto& expr) {
+  //   return expr.mapped_expanding([&](const auto& term) {
+  //     return tensor_product(absl::MakeConstSpan(mapped(term, [&](const X var) {
+  //       return
+  //         + ProjectionExpr::single({var})
+  //         + ProjectionExpr::single({new_var})
+  //       ;
+  //     })));
+  //   });
+  // };
+  // static constexpr auto diffs = [](std::vector<int> v) {
+  //   absl::c_adjacent_difference(v, v.begin());
+  //   return slice(v, 1);
+  // };
+  // static constexpr auto get_unsorted_partitions_allow_zero = [](int n, int num_summands) {
+  //   const int q = n + num_summands - 1;
+  //   return mapped(combinations(seq_incl(1, q), num_summands - 1), [&](const auto& s) {
+  //     return mapped(diffs(concat(std::vector{0}, s, std::vector{q+1})), [](const int k) {
+  //       return k - 1;
+  //     });
+  //   });
+  // };
+  // static constexpr auto kernel_element = [](const int weight, const int num_points) {
+  //   return sum(mapped(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
+  //     // std::cout << dump_to_string(mapped(range(num_points * 2 - 1), [&](const int k) {
+  //     //   const int i = k / 2;
+  //     //   return (k % 2 == 0)
+  //     //     ? absl::StrCat(i, "^", subweights.at(i))
+  //     //     : absl::StrCat(i, "-", i + 1)
+  //     //   ;
+  //     // })) << "\n";
+  //     return tensor_product(absl::MakeConstSpan(mapped(range(num_points * 2 - 1), [&](const int k) {
+  //       const int i = k / 2;
+  //       return (k % 2 == 0)
+  //         ? ProjectionExpr::single(std::vector(subweights.at(i), X(i)))
+  //         : ProjectionExpr::single({X(i)}) - ProjectionExpr::single({X(i + 1)})
+  //       ;
+  //     })));
+  //   }));
+  // };
 
-  for (const int num_points : range_incl(2, 6)) {
-    for (const int weight : range_incl(2, 6)) {
-      const int m = num_points - 1;
-      const auto coords = seq(num_points);
-      // const auto space = mapped(get_lyndon_words(coords, weight), [](const auto& word) {
-      //   return ProjectionExpr::single(mapped(word, convert_to<X>));
-      // });
-      const auto space = mapped(combinations_with_replacement(coords, weight), [](const auto& word) {
-        return ProjectionExpr::single(mapped(word, convert_to<X>));
-      });
-      const auto ranks = space_mapping_ranks(
-        space,
-        DISAMBIGUATE(to_lyndon_basis),
-        [&](const auto& expr) {
-          return concat(
-            mapped(
-              range(m),
-              [&](const int i) { return to_lyndon_basis(sigma(i, expr, m)); }
-            ),
-            mapped(
-              range(num_points),
-              [&](const int i) { return to_lyndon_basis(expr - add_to_each_multiple(i, expr)); }
-            )
-          );
-        }
+  // for (const int num_points : range_incl(2, 6)) {
+  //   for (const int weight : range_incl(2, 6)) {
+  //     const int m = num_points - 1;
+  //     const auto coords = seq(num_points);
+  //     // const auto space = mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+  //     //   return ProjectionExpr::single(mapped(word, convert_to<X>));
+  //     // });
+  //     const auto space = mapped(combinations_with_replacement(coords, weight), [](const auto& word) {
+  //       return ProjectionExpr::single(mapped(word, convert_to<X>));
+  //     });
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(to_lyndon_basis),
+  //       [&](const auto& expr) {
+  //         return concat(
+  //           mapped(
+  //             range(m),
+  //             [&](const int i) { return to_lyndon_basis(sigma(i, expr, m)); }
+  //           ),
+  //           mapped(
+  //             range(num_points),
+  //             [&](const int i) { return to_lyndon_basis(expr - add_to_each_multiple(i, expr)); }
+  //           )
+  //         );
+  //       }
+  //     );
+  //     std::cout << "m=" << m << ", w=" << weight << ": " << to_string(ranks) << "\n";
+  //     const auto expr = kernel_element(weight, num_points - 1);
+  //     for (const int i : range(m - 1)) {
+  //       CHECK(to_lyndon_basis(sigma(i, expr, m)).is_zero()) << i;
+  //     }
+  //     for (const int i : range(num_points - 1)) {
+  //       CHECK(to_lyndon_basis(expr - add_to_each_multiple(i, expr)).is_zero());
+  //     }
+  //     // std::cout << "kernel ok\n";
+  //   }
+  // }
+
+
+
+  LoopExpr loop_templates;
+
+  // In Lyndon basis:
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+
+  auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
+    return sum_looped_vec([&](const std::vector<int>& args) {
+      return LoopExpr::single(
+        mapped(loops, [&](const std::vector<int>& loop) {
+          return choose_indices_one_based(args, loop);
+        })
       );
-      std::cout << "m=" << m << ", w=" << weight << ": " << to_string(ranks) << "\n";
-      const auto expr = kernel_element(weight, num_points - 1);
-      for (const int i : range(m - 1)) {
-        CHECK(to_lyndon_basis(sigma(i, expr, m)).is_zero()) << i;
-      }
-      for (const int i : range(num_points - 1)) {
-        CHECK(to_lyndon_basis(expr - add_to_each_multiple(i, expr)).is_zero());
-      }
-      // std::cout << "kernel ok\n";
-    }
-  }
+    }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
+  });
+  // loop_expr = arg9_semi_lyndon(loop_expr);
+  loop_expr = to_canonical_permutation(arg9_semi_lyndon(loop_expr));
 
 
+
+  const auto a = loop_expr_degenerate(loop_expr, {{1,3}, {2,4}});
+  const auto b = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,4}, {2,5}});
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3}, {4,7}});
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
+  const auto g = loop_expr_degenerate(loop_expr, {{1,3}, {2,6}});
+  const auto h = loop_expr_degenerate(loop_expr, {{1,3}, {5,8}});
+  const auto i = loop_expr_degenerate(loop_expr, {{1,4}, {2,6}});
+  const auto j = loop_expr_degenerate(loop_expr, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
+  const auto k = loop_expr_degenerate(loop_expr, {{1,6}, {2,4}});
+  const auto l = loop_expr_degenerate(loop_expr, {{1,6}, {2,5}});
+  const auto x = loop_expr_degenerate(loop_expr, {{1,4}, {2,7}});
+  const auto y = loop_expr_degenerate(loop_expr, {{1,4}, {2,8}});
+  const auto z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
+  const auto u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
+  const auto w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
+  const auto m = loop_expr_degenerate(loop_expr, {{1,3,5}});
+  const auto n = loop_expr_degenerate(loop_expr, {{1,3,6}});
+  const auto o = loop_expr_degenerate(loop_expr, {{1,4,7}});
+
+
+  const auto a1 = cycle(a, {{2,4}, {5,7}});
+  const auto v = n + m - a + a1;
+
+  const auto o0 =
+    + o
+    - cycle(m, {{2,6}, {3,5}})
+    - cycle(m, {{3,7}, {4,6}})
+    - cycle(m, {{2,4}, {5,7}})
+    - a
+    - v
+    + cycle(a, {{2,4}, {5,7}})
+    + cycle(v, {{2,3,4,5,6,7}})
+    - cycle(a, {{2,3}, {4,7}, {5,6}})
+    - cycle(v, {{2,3}, {4,7}, {5,6}})
+  ;
+  const auto m0 = m - cycle(m, {{2,6}});
+  const auto v0 = v + cycle(v, {{1,6}});
+
+  DUMP(a);
+  DUMP(m);
+  DUMP(n);
+  DUMP(o);
+  DUMP(a1);
+  DUMP(v);
+  DUMP(cycle(m, {{2,6}, {3,5}}));
+  DUMP(cycle(m, {{3,7}, {4,6}}));
+  DUMP(cycle(m, {{2,4}, {5,7}}));
+  DUMP(cycle(a, {{2,4}, {5,7}}));
+  DUMP(cycle(v, {{2,3,4,5,6,7}}));
+  DUMP(cycle(a, {{2,3}, {4,7}, {5,6}}));
+  DUMP(cycle(v, {{2,3}, {4,7}, {5,6}}));
+  DUMP(o0);
+  DUMP(m0);
+  DUMP(v0);
+
+  // std::cout << o0;
+  // std::cout << m0;
+  // std::cout << v0;
 }
