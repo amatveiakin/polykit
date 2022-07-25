@@ -1611,24 +1611,45 @@ int main(int /*argc*/, char *argv[]) {
   const auto m0 = m - cycle(m, {{2,6}});
   const auto v0 = v + cycle(v, {{1,6}});
 
-  DUMP(a);
-  DUMP(m);
-  DUMP(n);
-  DUMP(o);
-  DUMP(a1);
-  DUMP(v);
-  DUMP(cycle(m, {{2,6}, {3,5}}));
-  DUMP(cycle(m, {{3,7}, {4,6}}));
-  DUMP(cycle(m, {{2,4}, {5,7}}));
-  DUMP(cycle(a, {{2,4}, {5,7}}));
-  DUMP(cycle(v, {{2,3,4,5,6,7}}));
-  DUMP(cycle(a, {{2,3}, {4,7}, {5,6}}));
-  DUMP(cycle(v, {{2,3}, {4,7}, {5,6}}));
-  DUMP(o0);
-  DUMP(m0);
-  DUMP(v0);
+  // DUMP(a);
+  // DUMP(m);
+  // DUMP(n);
+  // DUMP(o);
+  // DUMP(a1);
+  // DUMP(v);
+  // DUMP(cycle(m, {{2,6}, {3,5}}));
+  // DUMP(cycle(m, {{3,7}, {4,6}}));
+  // DUMP(cycle(m, {{2,4}, {5,7}}));
+  // DUMP(cycle(a, {{2,4}, {5,7}}));
+  // DUMP(cycle(v, {{2,3,4,5,6,7}}));
+  // DUMP(cycle(a, {{2,3}, {4,7}, {5,6}}));
+  // DUMP(cycle(v, {{2,3}, {4,7}, {5,6}}));
+  // DUMP(o0);
+  // DUMP(m0);
+  // DUMP(v0);
 
   // std::cout << o0;
   // std::cout << m0;
   // std::cout << v0;
+
+
+  const auto& d6 = m0;
+  const auto& d7 = v0;
+  const auto& d8 = o0;
+
+  const auto d6a = d6 + cycle(d6, {{1,5}});
+  const auto d6b = cycle(d6a, {{1,2}, {3,5}});
+  const auto d7a = d7 + cycle(d7, {{2,3}});
+  const auto d67 = d7a + d6b;
+
+  const auto d8a = d8 + cycle(d8, {{1,5}});
+  const auto d8b = cycle(d8a, {{3,4}, {5,6,7}});
+  const auto d6c = d6 + cycle(d6, {{1,6}});
+  const auto d68 = d6c - d8b;
+
+  DUMP(d6);
+  DUMP(d7);
+  DUMP(d8);
+  DUMP(d67);
+  DUMP(d68);
 }
