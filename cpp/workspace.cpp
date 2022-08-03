@@ -70,7 +70,7 @@
 #endif
 
 
-
+#if 1
 static constexpr auto cycle = loop_expr_cycle;
 
 LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
@@ -183,6 +183,7 @@ absl::flat_hash_map<int, int> get_substitution(const Loops& from, const Loops& t
   return ret;
 }
 
+// TODO: Add linear algebra support
 LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
   const auto expr_complexity = [&](const LoopExpr& expr) {
     return std::tuple{
@@ -383,6 +384,34 @@ void list_all_degenerations(const LoopExpr& expr) {
   }
   }
 }
+
+LoopExpr reduce_arg9_loop_expr(const LoopExpr& expr) {
+  return expr.filtered([](const Loops& loops) {
+    CHECK_EQ(loops.size(), 3);
+    return loops[1].size() == 4;
+    // CHECK_EQ(loops[1].size(), 4);
+    return true;
+  }).mapped_expanding([&](const Loops& loops) -> LoopExpr {
+    constexpr int kLoopTypeKnownToBeFullyAntisymmetric = 1;
+    if (loops_names.loops_index(loops) == kLoopTypeKnownToBeFullyAntisymmetric) {
+      const Loops canonical_form = {{1,2,3,4}, {1,2,5,3}, {1,2,5,6,7}};
+      CHECK(loop_lengths(loops) == loop_lengths(canonical_form)) << dump_to_string(loops);
+      const int main_sign = permutation_sign(decompose_loops(loops));
+      // Distinguish between what used to be type 1 and type 4.
+      const int bonus_sign = loops_unique_common_variable(loops, {0,2}).empty() ? 1 : -1;
+      return main_sign * bonus_sign * LoopExpr::single(canonical_form);
+    } else {
+      return LoopExpr::single(loops);
+    }
+  });
+}
+
+template<typename... Args> LoopExpr Q(Args... args) { return loops_Q(std::vector{args...}); }
+template<typename... Args> LoopExpr S(Args... args) { return loops_S(std::vector{args...}); }
+template<typename... Args> auto tp(Args... args) { return tensor_product(absl::MakeConstSpan({args...})); }
+#endif
+
+
 
 
 #define DUMP(expr) std::cout << STRINGIFY(expr) << " " << expr
@@ -673,20 +702,22 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  // std::vector exprs_odd_num_points = {
+  // const std::vector exprs_odd_num_points = {
   //   GLi2[{5}](1,2,3,4),
   //   GrQLi2(5)(1,2,3,4),
   //   GrLi(5)(1,2,3,4),
   //   G({1,2,3,4,5}),
   //   tensor_product(G({1,2,3}), G({3,4,5})),
   // };
-  // std::vector exprs_even_num_points = {
+  // const std::vector exprs_even_num_points = {
   //   GLi2(1,2,3,4),
   //   GrQLi2()(1,2,3,4),
   //   GrLi(5,6)(1,2,3,4),
   //   G({1,2,3,4,5,6}),
   //   tensor_product(G({1,2,3,4}), G({3,4,5,6})),
   // };
+  // const auto exprs_any_num_points = concat(exprs_odd_num_points, exprs_even_num_points);
+
   // for (const auto& expr : exprs_odd_num_points) {
   //   const int n = detect_num_variables(expr);
   //   CHECK(a_minus_minus(expr, n+1) == a_minus(expr, n+1));
@@ -779,6 +810,20 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
+  // // TODO: Factor out as tests
+  // for (const auto& expr : exprs_any_num_points) {
+  //   const int n = detect_num_variables(expr);
+  //   CHECK((a_minus(a_minus_minus(expr, n+1), n+2)).is_zero());
+  //   CHECK((a_plus(a_plus_plus(expr, n+1), n+2)).is_zero());
+  //   CHECK((b_minus(b_minus_minus(expr, n+1), n+2)).is_zero());
+  //   CHECK((b_plus(b_plus_plus(expr, n+1), n+2)).is_zero());
+  //   CHECK(a_plus(b_plus_plus(expr, n+1), n+2) == -b_plus(a_plus_plus(expr, n+1), n+2));
+  //   CHECK(a_minus_minus(b_plus(expr, n+1), n+2) == -b_plus_plus(a_minus(expr, n+1), n+2));
+  //   CHECK(a_minus(b_minus_minus(expr, n+1), n+2) == -b_minus(a_minus_minus(expr, n+1), n+2));
+  //   CHECK(a_plus_plus(b_minus(expr, n+1), n+2) == -b_minus_minus(a_plus(expr, n+1), n+2));
+  // }
+  // std::cout << "ok\n";
+
 
   // for (const int dimension : range_incl(3, 5)) {
   //   const int weight = dimension - 1;
@@ -825,66 +870,11 @@ int main(int /*argc*/, char *argv[]) {
 
   // TODO: TeX this proof (Proposition 4.10, former 5.9)
 
-  // std::cout <<
-  // + ncomultiply(GLi4(1,2,3,4,5,6,7,8), {1,3})
-  // - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(GLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))
-  // - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(GLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))
-  // - a_plus(ncoproduct(b_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
-  // - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
-  // + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
-  // + a_minus(b_plus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
-  // + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
-  // + b_minus(ncoproduct(a_plus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
-  // + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
-  // + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
-  // ;
-  // std::cout <<
-  // + ncomultiply(GLi4(1,2,3,4,5,6), {1,3})
-  // - ncoproduct(GLi3(1,2,3,4,5,6) + a_plus(b_minus(GLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
-  // - ncoproduct(GLi3(1,2,3,4,5,6) + a_minus(b_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
-  // + a_plus(ncoproduct(b_minus(GLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
-  // + a_minus(ncoproduct(b_plus(GLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
-  // - a_plus(b_minus(ncoproduct(GLi3(1,2,3,4), plucker({3,4})), 5), 6)
-  // - a_minus(b_plus(ncoproduct(GLi3(1,2,3,4), plucker({1,2})), 5), 6)
-  // - b_plus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6)
-  // - b_minus(ncoproduct(a_plus(GLi3(1,2,3,4), 5), plucker({3,4})), 6)
-  // + ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3}))
-  // + ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6}))
-  // ;
-
-  // const auto x =
-  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(GLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))
-  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(GLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))
-  //   - a_plus(ncoproduct(b_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
-  //   - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
-  //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
-  //   + a_minus(b_plus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
-  //   + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
-  //   + b_minus(ncoproduct(a_plus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
-  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
-  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
-  // ;
-  // const auto y =
-  //   - ncoproduct(GLi3(1,2,3,4,5,6) + a_plus(b_minus(GLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
-  //   - ncoproduct(GLi3(1,2,3,4,5,6) + a_minus(b_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
-  //   + a_plus(ncoproduct(b_minus(GLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
-  //   + a_minus(ncoproduct(b_plus(GLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
-  //   - a_plus(b_minus(ncoproduct(GLi3(1,2,3,4), plucker({3,4})), 5), 6)
-  //   - a_minus(b_plus(ncoproduct(GLi3(1,2,3,4), plucker({1,2})), 5), 6)
-  //   - b_plus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6)
-  //   - b_minus(ncoproduct(a_plus(GLi3(1,2,3,4), 5), plucker({3,4})), 6)
-  //   + ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3}))
-  //   + ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6}))
-  // ;
-  // std::cout <<
-  //   a_full(x - a_plus(b_minus_minus(y, 7), 8), 9)
-  // ;
-
   // const auto x =
   //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
   //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({5,6,7,8}))
-  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(GLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))  // zero
-  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(GLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))  // zero
+  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_plus(b_minus(GLi3(1,2,3,4,5,6), 7), 8), plucker({4,5,6,7}))  // zero by FormulaAomotoViaCluster1
+  //   - ncoproduct(GLi3(1,2,3,4,5,6,7,8) - a_minus(b_plus(GLi3(1,2,3,4,5,6), 7), 8), plucker({1,2,3,8}))  // zero by FormulaAomotoViaCluster2
   //   - a_plus(ncoproduct(b_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)
   //   - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
   //   + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
@@ -895,10 +885,8 @@ int main(int /*argc*/, char *argv[]) {
   // const auto y =
   //   + ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3}))
   //   + ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6}))
-  //   - ncoproduct(GLi3(1,2,3,4,5,6), plucker({3,4,5}))
-  //   - ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,6}))
-  //   - ncoproduct(a_plus(b_minus(GLi3(1,2,3,4), 5), 6), plucker({3,4,5}))
-  //   - ncoproduct(a_minus(b_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,6}))
+  //   - ncoproduct(GLi3(1,2,3,4,5,6) + a_plus(b_minus(GLi3(1,2,3,4), 5), 6), plucker({3,4,5}))  // open brackets
+  //   - ncoproduct(GLi3(1,2,3,4,5,6) + a_minus(b_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,6}))  // open brackets
   //   + a_plus(ncoproduct(b_minus(GLi3(1,2,3,4), 5), plucker({3,4,5})), 6)
   //   + a_minus(ncoproduct(b_plus(GLi3(1,2,3,4), 5), plucker({1,2,5})), 6)
   //   - b_plus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6)
@@ -942,7 +930,7 @@ int main(int /*argc*/, char *argv[]) {
   //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)  // changed
   //   + a_minus(b_plus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)  // changed
   //   - a_plus(ncoproduct(b_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)  // next
-  //   - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
+  //   - a_minus(ncoproduct(b_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)  // next
   //   + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)
   //   + b_minus(ncoproduct(a_plus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)
   //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
@@ -971,9 +959,9 @@ int main(int /*argc*/, char *argv[]) {
   //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
   //   + a_minus(b_plus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
   //   + a_plus(ncoproduct(b_plus_plus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6,7})), 8)  // changed
-  //   // - a_plus(ncoproduct(b_full(b_plus(a_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6,7})), 8)  // reminder, zero after a_full
+  //   // - a_plus(ncoproduct(b_full(b_plus(a_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6,7})), 8)  // remainder, zero after a_full
   //   + a_minus(ncoproduct(b_minus_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)  // changed
-  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)  // reminder
+  //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)  // remainder
   //   + b_plus(ncoproduct(a_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)  // next
   //   + b_minus(ncoproduct(a_plus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)  // next
   //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
@@ -1004,9 +992,9 @@ int main(int /*argc*/, char *argv[]) {
   //   + a_minus(ncoproduct(b_minus_minus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3,7})), 8)
   //   - a_minus(ncoproduct(b_full(b_plus(a_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3,7})), 8)
   //   - b_plus(ncoproduct(a_plus_plus(GLi3(1,2,3,4,5,6), 7), plucker({1,2,3})), 8)  // changed
-  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)  // reminder
+  //   - b_plus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({1,2,3})), 8)  // remainder
   //   - b_minus(ncoproduct(a_minus_minus(GLi3(1,2,3,4,5,6), 7), plucker({4,5,6})), 8)  // changed
-  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)  // reminder
+  //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)  // remainder
   //   + a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6})), 7), 8)
   //   + a_minus(b_plus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
   // ;
@@ -1266,7 +1254,7 @@ int main(int /*argc*/, char *argv[]) {
   //   - a_plus(b_minus_minus(a_minus(ncoproduct(b_plus(GLi3(1,2,3,4), 5), plucker({1,2,5})), 6), 7), 8)
   //   + a_plus(b_minus_minus(b_minus(ncoproduct(a_plus(GLi3(1,2,3,4), 5), plucker({3,4})), 6), 7), 8)
   //   + a_plus(b_minus_minus(a_plus(b_minus(ncoproduct(GLi3(1,2,3,4), plucker({3,4})), 5), 6), 7), 8)
-  // , 9);  // zero (reminder)
+  // , 9);  // zero (remainder)
 
   // std::cout << a_full(
   //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)
@@ -1280,7 +1268,7 @@ int main(int /*argc*/, char *argv[]) {
   //   + a_plus(b_minus_minus(ncoproduct(a_minus(b_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,6})), 7), 8)
   //   - a_plus(b_minus_minus(a_plus(ncoproduct(b_minus(GLi3(1,2,3,4), 5), plucker({3,4,5})), 6), 7), 8)  // zero
   //   - a_plus(b_minus_minus(a_minus(ncoproduct(b_plus(GLi3(1,2,3,4), 5), plucker({1,2,5})), 6), 7), 8)
-  // , 9);  // zero (reminder)
+  // , 9);  // zero (remainder)
 
   // std::cout << a_full(
   //   - b_minus(ncoproduct(a_full(a_plus(b_minus_minus(GLi3(1,2,3,4), 5), 6), 7), plucker({4,5,6})), 8)
@@ -1328,7 +1316,7 @@ int main(int /*argc*/, char *argv[]) {
   //   - a_full(b_full(a_minus(ncoproduct(b_minus(a_plus_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
   // ;
 
-  // // temporary swap b_full and a_minus, change a_minus to a_plus_plus because a_full(a_full(x)) == 0 and swap back
+  // use a++ = a - a-, swap ba = -ab, use aa = 0
   // std::cout <<
   //   + a_full(b_full(b_minus(a_minus(a_minus(ncoproduct(GLi3(1,2,3,4), plucker({1,2})), 5), 6), 7), 8), 9)
   //   - a_full(b_full(a_plus_plus(ncoproduct(b_minus(a_plus(GLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
@@ -1355,6 +1343,11 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout <<
   //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
   //   + a_full(b_full(a_plus_plus(b_minus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  // ;
+
+  // std::cout <<
+  //   - a_full(b_full(b_plus(a_plus(ncoproduct(a_minus(GLi3(1,2,3,4), 5), plucker({1,2})), 6), 7), 8), 9)
+  //   + a_full(b_full(a_plus_plus(ncoproduct(b_minus(a_minus(GLi3(1,2,3,4), 5), 6), plucker({1,2,3})), 7), 8), 9)
   // ;
 
   // std::cout <<
@@ -1406,6 +1399,7 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
   // using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
+  // using ArrowF = std::function<GammaExpr(const GammaExpr&, int)>;
   // const std::vector<ArrowF> arrows = {
   //   DISAMBIGUATE(a_full),
   //   DISAMBIGUATE(a_minus),
@@ -1545,17 +1539,48 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
+  // // TODO: Make this the canonical definition on ChernCocycle,
+  // //   test that it's equal to the old definition.
+  // // TODO: Test the functional equations too.
+  // for (const int n : range_incl(3, 4)) {
+  //   const auto c_n =
+  //     + GLiVec(n, seq_incl(1, 2*n))
+  //     + neg_one_pow(n) * b_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n);
+  //   ;
+  //   const auto c_n1 =
+  //     + neg_one_pow(n) * a_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n);
+  //   ;
+  //   std::cout << to_lyndon_basis(a_full(c_n1, 2*n+1));
+  //   std::cout << to_lyndon_basis(b_full(c_n1, 2*n+1) + a_full(c_n, 2*n+1));
+  //   std::cout << to_lyndon_basis(b_full(c_n, 2*n+1));
+  //   std::cout << to_lyndon_basis(
+  //     + ncoproduct(c_n)
+  //     - neg_one_pow(n) * ChernCocycle(n, n, seq_incl(1, 2*n))
+  //   );
+  //   std::cout << to_lyndon_basis(
+  //     + ncoproduct(c_n1)
+  //     - neg_one_pow(n) * ChernCocycle(n, n-1, seq_incl(1, 2*n))
+  //   );
+  // }
 
+
+#if 0
   LoopExpr loop_templates;
 
-  // In Lyndon basis:
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
-  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
   loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
-  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
+
+  // // In Lyndon basis:
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  // loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  // loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
 
   auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
     return sum_looped_vec([&](const std::vector<int>& args) {
@@ -1566,50 +1591,174 @@ int main(int /*argc*/, char *argv[]) {
       );
     }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
   });
+#if 0
   // loop_expr = arg9_semi_lyndon(loop_expr);
   loop_expr = to_canonical_permutation(arg9_semi_lyndon(loop_expr));
 
+  // Note. It important to first generate these excat expressions in this exact order.
+  //   This helps keep loop names stable.
+  const auto proto_a = loop_expr_degenerate(loop_expr, {{1,3}, {2,4}});
+  const auto proto_b = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}});
+  const auto proto_c = loop_expr_degenerate(loop_expr, {{1,4}, {2,5}});
+  const auto proto_d = loop_expr_degenerate(loop_expr, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
+  const auto proto_e = loop_expr_degenerate(loop_expr, {{1,3}, {4,7}});
+  const auto proto_f = loop_expr_degenerate(loop_expr, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
+  const auto proto_g = loop_expr_degenerate(loop_expr, {{1,3}, {2,6}});
+  const auto proto_h = loop_expr_degenerate(loop_expr, {{1,3}, {5,8}});
+  const auto proto_i = loop_expr_degenerate(loop_expr, {{1,4}, {2,6}});
+  const auto proto_j = loop_expr_degenerate(loop_expr, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
+  const auto proto_k = loop_expr_degenerate(loop_expr, {{1,6}, {2,4}});
+  const auto proto_l = loop_expr_degenerate(loop_expr, {{1,6}, {2,5}});
+  const auto proto_x = loop_expr_degenerate(loop_expr, {{1,4}, {2,7}});
+  const auto proto_y = loop_expr_degenerate(loop_expr, {{1,4}, {2,8}});
+  const auto proto_z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
+  const auto proto_u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
+  const auto proto_w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
+  const auto proto_m = loop_expr_degenerate(loop_expr, {{1,3,5}});
+  const auto proto_n = loop_expr_degenerate(loop_expr, {{1,3,6}});
+  const auto proto_o = loop_expr_degenerate(loop_expr, {{1,4,7}});
 
+  // DUMP(proto_a);
+  // DUMP(proto_b);
+  // DUMP(proto_c);
+  // DUMP(proto_d);
+  // DUMP(proto_e);
+  // DUMP(proto_f);
+  // DUMP(proto_g);
+  // DUMP(proto_h);
+  // DUMP(proto_i);
+  // DUMP(proto_j);
+  // DUMP(proto_k);
+  // DUMP(proto_l);
+  // DUMP(proto_x);
+  // DUMP(proto_y);
+  // DUMP(proto_z);
+  // DUMP(proto_u);
+  // DUMP(proto_w);
+  // DUMP(proto_m);
+  // DUMP(proto_n);
+  // DUMP(proto_o);
+  // return 0;
 
-  const auto a = loop_expr_degenerate(loop_expr, {{1,3}, {2,4}});
-  const auto b = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}});
-  const auto c = loop_expr_degenerate(loop_expr, {{1,4}, {2,5}});
-  const auto d = loop_expr_degenerate(loop_expr, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
-  const auto e = loop_expr_degenerate(loop_expr, {{1,3}, {4,7}});
-  const auto f = loop_expr_degenerate(loop_expr, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
-  const auto g = loop_expr_degenerate(loop_expr, {{1,3}, {2,6}});
-  const auto h = loop_expr_degenerate(loop_expr, {{1,3}, {5,8}});
-  const auto i = loop_expr_degenerate(loop_expr, {{1,4}, {2,6}});
-  const auto j = loop_expr_degenerate(loop_expr, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
-  const auto k = loop_expr_degenerate(loop_expr, {{1,6}, {2,4}});
-  const auto l = loop_expr_degenerate(loop_expr, {{1,6}, {2,5}});
-  const auto x = loop_expr_degenerate(loop_expr, {{1,4}, {2,7}});
-  const auto y = loop_expr_degenerate(loop_expr, {{1,4}, {2,8}});
-  const auto z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
-  const auto u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
-  const auto w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
-  const auto m = loop_expr_degenerate(loop_expr, {{1,3,5}});
-  const auto n = loop_expr_degenerate(loop_expr, {{1,3,6}});
-  const auto o = loop_expr_degenerate(loop_expr, {{1,4,7}});
+  generate_loops_names({
+    proto_a,
+    proto_b,
+    proto_c,
+    proto_d,
+    proto_e,
+    proto_f,
+    proto_g,
+    proto_h,
+    proto_i,
+    proto_j,
+    proto_k,
+    proto_l,
+    proto_x,
+    proto_y,
+    proto_z,
+    proto_u,
+    proto_w,
+    proto_m,
+    proto_n,
+    proto_o,
+  });
 
+  const auto a = reduce_arg9_loop_expr(proto_a);
+  const auto b = reduce_arg9_loop_expr(proto_b);
+  const auto c = reduce_arg9_loop_expr(proto_c);
+  const auto d = reduce_arg9_loop_expr(proto_d);
+  const auto e = reduce_arg9_loop_expr(proto_e);
+  const auto f = reduce_arg9_loop_expr(proto_f);
+  const auto g = reduce_arg9_loop_expr(proto_g);
+  const auto h = reduce_arg9_loop_expr(proto_h);
+  const auto i = reduce_arg9_loop_expr(proto_i);
+  const auto j = reduce_arg9_loop_expr(proto_j);
+  const auto k = reduce_arg9_loop_expr(proto_k);
+  const auto l = reduce_arg9_loop_expr(proto_l);
+  const auto x = reduce_arg9_loop_expr(proto_x);
+  const auto y = reduce_arg9_loop_expr(proto_y);
+  const auto z = reduce_arg9_loop_expr(proto_z);
+  const auto u = reduce_arg9_loop_expr(proto_u);
+  const auto w = reduce_arg9_loop_expr(proto_w);
+  const auto m = reduce_arg9_loop_expr(proto_m);
+  const auto n = reduce_arg9_loop_expr(proto_n);
+  const auto o = reduce_arg9_loop_expr(proto_o);
 
-  const auto a1 = cycle(a, {{2,4}, {5,7}});
-  const auto v = n + m - a + a1;
+  const auto e0 = e + f;  // != d
+  const auto x0 = x - cycle(f, {{4,7}, {5,6}});
 
-  const auto o0 =
-    + o
-    - cycle(m, {{2,6}, {3,5}})
-    - cycle(m, {{3,7}, {4,6}})
-    - cycle(m, {{2,4}, {5,7}})
-    - a
-    - v
-    + cycle(a, {{2,4}, {5,7}})
-    + cycle(v, {{2,3,4,5,6,7}})
-    - cycle(a, {{2,3}, {4,7}, {5,6}})
-    - cycle(v, {{2,3}, {4,7}, {5,6}})
+  // DUMP(a);  // zero
+  // DUMP(b);  // zero
+  DUMP(c);
+  DUMP(d);
+  DUMP(e0);
+  DUMP(f);
+  // DUMP(g);  // zero
+  DUMP(h);
+  DUMP(i);
+  DUMP(j);
+  DUMP(k);
+  DUMP(l);
+  DUMP(x0);
+  // DUMP(y);  // == d after cycle (1,2)(3,7,6,5,4)
+  DUMP(z);
+  DUMP(u);
+  DUMP(w);
+  // DUMP(m);  // zero
+  // DUMP(n);  // zero
+  // DUMP(o);  // zero
+
+  std::vector<LoopExpr> space;
+  // const auto expr = LoopExpr::single(d.element().first);
+  const auto type_3_normalize =  // based on `d`
+    + LoopExpr::single({{3,1,4,2}, {3,5,4,2}, {3,5,1,7,6}})
+    - LoopExpr::single({{3,5,4,2}, {3,1,4,2}, {3,1,5,7,6}})
   ;
-  const auto m0 = m - cycle(m, {{2,6}});
-  const auto v0 = v + cycle(v, {{1,6}});
+  for (const auto& perm : permutations(seq_incl(1, 7))) {
+    for (const auto& expr : {
+      // c,
+      d,
+      // e0,
+      // f,
+      // h,
+      // i,
+      // j,
+      // k,
+      // l,
+      // x0,
+      // z,
+      // u,
+      // w,
+      type_3_normalize,
+    }) {
+      space.push_back(loop_expr_substitute(expr, perm));
+    }
+
+    // space.push_back(loop_expr_substitute(expr, perm));
+  }
+  auto rank = space_rank(space, DISAMBIGUATE(identity_function));
+  std::cout << rank << "\n";
+
+
+
+
+  // const auto a1 = cycle(a, {{2,4}, {5,7}});
+  // const auto v = n + m - a + a1;
+
+  // const auto o0 =
+  //   + o
+  //   - cycle(m, {{2,6}, {3,5}})
+  //   - cycle(m, {{3,7}, {4,6}})
+  //   - cycle(m, {{2,4}, {5,7}})
+  //   - a
+  //   - v
+  //   + cycle(a, {{2,4}, {5,7}})
+  //   + cycle(v, {{2,3,4,5,6,7}})
+  //   - cycle(a, {{2,3}, {4,7}, {5,6}})
+  //   - cycle(v, {{2,3}, {4,7}, {5,6}})
+  // ;
+  // const auto m0 = m - cycle(m, {{2,6}});
+  // const auto v0 = v + cycle(v, {{1,6}});
 
   // DUMP(a);
   // DUMP(m);
@@ -1633,23 +1782,191 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << v0;
 
 
-  const auto& d6 = m0;
-  const auto& d7 = v0;
-  const auto& d8 = o0;
+  // const auto& d6 = m0;
+  // const auto& d7 = v0;
+  // const auto& d8 = o0;
 
-  const auto d6a = d6 + cycle(d6, {{1,5}});
-  const auto d6b = cycle(d6a, {{1,2}, {3,5}});
-  const auto d7a = d7 + cycle(d7, {{2,3}});
-  const auto d67 = d7a + d6b;
+  // const auto d6a = d6 + cycle(d6, {{1,5}});
+  // const auto d6b = cycle(d6a, {{1,2}, {3,5}});
+  // const auto d7a = d7 + cycle(d7, {{2,3}});
+  // const auto d67 = d7a + d6b;
 
-  const auto d8a = d8 + cycle(d8, {{1,5}});
-  const auto d8b = cycle(d8a, {{3,4}, {5,6,7}});
-  const auto d6c = d6 + cycle(d6, {{1,6}});
-  const auto d68 = d6c - d8b;
+  // const auto d8a = d8 + cycle(d8, {{1,5}});
+  // const auto d8b = cycle(d8a, {{3,4}, {5,6,7}});
+  // const auto d6c = d6 + cycle(d6, {{1,6}});
+  // const auto d68 = d6c - d8b;
 
-  DUMP(d6);
-  DUMP(d7);
-  DUMP(d8);
-  DUMP(d67);
-  DUMP(d68);
+  // DUMP(d6);
+  // DUMP(d7);
+  // DUMP(d8);
+  // DUMP(d67);
+  // DUMP(d68);
+#endif
+
+
+  // const auto expr = QLi4(1,2,3,4,5,6);
+  // std::cout << icomultiply(expr, {2,2});
+  // const auto expr = QLi6(1,2,3,4,5,6,7,8);
+  // std::cout << icomultiply(expr, {2,2,2});
+
+  // const auto prepare = [](const auto& expr) {
+  //   // return expr;
+  //   return to_lyndon_basis(fully_normalize_loops(expr));
+  // };
+  // // auto loop_expr = cut_loops({1,2,3,4,5,6,7,8,9});
+  // loop_expr = prepare(loop_expr);
+  // auto s_expr = S({1,2,3,4,5,6,7,8,9});
+  // s_expr = prepare(s_expr);
+  // std::cout << s_expr;
+  // std::cout << loop_expr;
+  // std::cout << s_expr + loop_expr;  // ZERO
+
+  // std::cout << Q({1,2,3,4,5,6});
+  // std::cout << S({1,2,3,4,5,6,7});
+#endif
+
+
+  // // Theorem 1.5.  (3)
+  // for (const int p : range_incl(3, 4)) {
+  //   const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
+  //   GammaExpr rhs;
+  //   for (const int i : range_incl(1, p)) {
+  //     for (const int j : range_incl(p+1, 2*p)) {
+  //       const auto points = removed_indices(seq_incl(1, 2*p), {i-1, j-1});
+  //       rhs += neg_one_pow(i+j) * GLiVec(p-1, {j}, points);
+  //     }
+  //   }
+  //   rhs *= neg_one_pow(p - 1);
+  //   std::cout << to_lyndon_basis(lhs - rhs);
+  // }
+
+  // // Theorem 1.5.  (4)
+  // for (const int p : range_incl(3, 4)) {
+  //   const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
+  //   GammaExpr rhs;
+  //   for (const int i : range(1, p)) {
+  //     for (const int j : range_incl(p+1, 2*p)) {
+  //       const auto points = removed_indices(seq_incl(1, 2*p), {i-1, j-1});
+  //       rhs += neg_one_pow(i+j) * GLiVec(p-1, {i}, points);
+  //     }
+  //   }
+  //   const auto expr = lhs + neg_one_pow(p - 1) * rhs;
+  //   std::cout << to_lyndon_basis(a_full(expr, 2*p+1));
+  // }
+
+
+
+  const auto prepare = [](const auto& expr) {
+    return to_canonical_permutation(to_lyndon_basis(
+      remove_duplicate_loops(remove_loops_with_duplicates(fully_normalize_loops(expr)))
+    ));
+  };
+
+  const auto d1 = -S(0,1,0,1,2,3,4,5,6);  // a
+  std::cout << prepare(
+    - d1
+    + tp(Q(0,1,2,3), Q(0,1,3,4), S(0,1,4,5,6))
+    - tp(Q(0,1,2,3), S(0,1,3,4,5), Q(0,1,5,6))
+    + tp(Q(0,1,5,6), Q(0,1,4,5), S(0,1,2,3,4))
+  );
+
+  const auto d2 = -S(0,1,0,2,0,3,4,5,6);  // m
+  std::cout << prepare(
+    - d2
+    + tp(Q(0,1,5,6), S(0,1,2,4,5), Q(0,2,3,4))
+    + tp(Q(0,1,5,6), Q(0,1,2,5), S(0,2,3,4,5))
+    - tp(Q(0,2,3,4), Q(0,1,2,4), S(0,1,4,5,6))
+  );
+
+  const auto d3 = -S(0,1,0,2,3,0,4,5,6);  // n
+  std::cout << prepare(
+    - d3
+    + tp(Q(1,0,3,2), Q(1,0,4,3), S(1,0,4,6,5))
+    - tp(Q(0,4,2,3), Q(0,5,1,6), S(0,5,1,4,2))
+    - tp(Q(0,5,1,6), Q(0,4,2,3), S(0,4,2,5,1))
+    + tp(Q(1,0,3,2), Q(1,0,5,6), S(1,0,5,3,4))
+    - tp(Q(1,0,5,6), Q(1,0,3,2), S(1,0,3,5,4))
+    - tp(Q(3,0,1,2), Q(3,0,5,4), S(3,0,5,1,6))
+    + tp(Q(3,0,1,2), Q(3,0,6,1), S(3,0,6,5,4))
+    + tp(Q(3,0,5,4), Q(3,0,1,2), S(3,0,1,5,6))
+    - tp(Q(4,0,2,3), Q(4,0,1,2), S(4,0,1,6,5))
+    + tp(Q(5,0,1,6), Q(5,0,2,1), S(5,0,2,4,3))
+    + tp(Q(5,0,1,6), Q(5,0,3,4), S(5,0,3,1,2))
+    - tp(Q(5,0,3,4), Q(5,0,1,6), S(5,0,1,3,2))
+  );
+
+  const auto d4 = -S(0,1,2,0,3,4,0,5,6);  // o
+  std::cout << prepare(
+    - d4
+    + tp(Q(0,3,1,2), Q(0,6,4,5), S(0,6,4,3,1))
+    + tp(Q(0,4,2,3), Q(0,5,1,6), S(0,5,1,4,2))
+    + tp(Q(0,5,1,6), Q(0,4,2,3), S(0,4,2,5,1))
+    + tp(Q(0,5,3,4), Q(0,6,2,1), S(0,6,2,5,3))
+    + tp(Q(0,6,2,1), Q(0,5,3,4), S(0,5,3,6,2))
+    + tp(Q(0,6,4,5), Q(0,3,1,2), S(0,3,1,6,4))
+    + tp(Q(1,0,3,2), Q(1,0,5,6), S(1,0,5,3,4))
+    - tp(Q(1,0,5,6), Q(1,0,3,2), S(1,0,3,5,4))
+    + tp(Q(1,0,5,6), Q(1,0,4,5), S(1,0,4,3,2))
+    + tp(Q(2,0,4,3), Q(2,0,5,4), S(2,0,5,6,1))
+    - tp(Q(2,0,4,3), Q(2,0,6,1), S(2,0,6,4,5))
+    + tp(Q(2,0,6,1), Q(2,0,4,3), S(2,0,4,6,5))
+    - tp(Q(3,0,1,2), Q(3,0,5,4), S(3,0,5,1,6))
+    + tp(Q(3,0,1,2), Q(3,0,6,1), S(3,0,6,5,4))
+    + tp(Q(3,0,5,4), Q(3,0,1,2), S(3,0,1,5,6))
+    + tp(Q(4,0,2,3), Q(4,0,6,5), S(4,0,6,2,1))
+    - tp(Q(4,0,6,5), Q(4,0,1,6), S(4,0,1,3,2))
+    - tp(Q(4,0,6,5), Q(4,0,2,3), S(4,0,2,6,1))
+    + tp(Q(5,0,1,6), Q(5,0,3,4), S(5,0,3,1,2))
+    - tp(Q(5,0,3,4), Q(5,0,1,6), S(5,0,1,3,2))
+    - tp(Q(5,0,3,4), Q(5,0,2,3), S(5,0,2,6,1))
+    - tp(Q(6,0,2,1), Q(6,0,3,2), S(6,0,3,5,4))
+    - tp(Q(6,0,2,1), Q(6,0,4,5), S(6,0,4,2,3))
+    + tp(Q(6,0,4,5), Q(6,0,2,1), S(6,0,2,4,3))
+  );
+
+  const auto d5 = d2 + d3 - d1 + cycle(d1, {{1,3}, {4,6}});
+  std::cout << prepare(
+    - d5
+    + tp(Q(0,1,5,6), S(0,1,2,3,5), Q(0,3,4,5))
+    - tp(Q(0,1,5,6), Q(0,1,4,5), S(0,1,2,3,4))
+    - tp(Q(0,3,4,5), Q(0,3,5,6), S(0,1,2,3,6))
+  );
+
+  const auto d6 = d2 - cycle(d2, {{1,5}});
+  std::cout << prepare(
+    - d6
+    + tp(Q(0,5,1,6), Q(0,5,1,2), S(0,5,2,3,4))
+    - tp(Q(0,1,5,6), Q(0,1,5,2), S(0,1,2,3,4))
+    - tp(Q(0,4,2,3), Q(0,4,2,1), S(0,4,1,5,6))
+    + tp(Q(0,4,2,3), Q(0,4,2,5), S(0,4,5,1,6))
+  );
+
+  const auto d7 = d5 + cycle(d5, {{0,5}});
+  std::cout << prepare(
+    - d7
+    + tp(Q(0,1,5,6), Q(0,1,5,4), S(0,1,4,2,3))
+    + tp(Q(0,3,5,4), Q(0,3,5,6), S(0,3,6,1,2))
+    - tp(Q(1,5,0,6), Q(1,5,0,4), S(1,5,4,2,3))
+    - tp(Q(3,5,0,4), Q(3,5,0,6), S(3,5,6,1,2))
+  );
+
+  const auto d8 =
+    + d4
+    - cycle(d2, {{1,5}, {2,4}})
+    - cycle(d2, {{2,6}, {3,5}})
+    - cycle(d2, {{1,3}, {4,6}})
+    - d1
+    - d5
+    + cycle(d1, {{1,3}, {4,6}})
+    + cycle(d5, {{1,2,3,4,5,6}})
+    - cycle(d1, {{1,2}, {3,6}, {4,5}})
+    - cycle(d5, {{1,2}, {3,6}, {4,5}})
+  ;
+  std::cout << prepare(
+    - d8
+    + tp(Q(0,1,3,2), Q(0,1,3,4), S(0,1,4,5,6))
+    + tp(Q(0,3,1,2), Q(0,3,1,6), S(0,3,6,4,5))
+    + tp(Q(0,4,6,5), Q(0,4,6,1), S(0,4,1,2,3))
+    + tp(Q(0,6,4,5), Q(0,6,4,3), S(0,6,3,1,2))
+  );
 }

@@ -1,3 +1,6 @@
+// TODO: Strong typing and proper group operations for `cycles`.
+// TODO: Reduce the number of normalizations and organize them properly.
+
 #pragma once
 
 #include "format.h"
@@ -5,8 +8,6 @@
 #include "sequence_iteration.h"
 #include "util.h"
 
-
-// TODO: Strong typing and proper group operations for `cycles`.
 
 using Loops = std::vector<std::vector<int>>;
 
@@ -42,6 +43,9 @@ extern LoopsNames loops_names;
 struct LoopExprParam : public SimpleLinearParam<Loops> {
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
+    return concat(lhs, rhs);
+  }
   static std::string object_to_string(const ObjectT& loops);
 };
 
@@ -57,6 +61,9 @@ LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr);
 // Sorts elements within each loop, adjusting signs accordingly.
 LoopExpr fully_normalize_loops(const LoopExpr& expr);
 
+// Removes terms containing a loop with two copies of the same variable.
+LoopExpr remove_loops_with_duplicates(const LoopExpr& expr);
+
 // Removes terms where one loop is equal to or included in another one.
 LoopExpr remove_duplicate_loops(const LoopExpr& expr);
 
@@ -64,6 +71,9 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices);
 LoopExpr loop_expr_cycle(const LoopExpr& expr, const std::vector<std::vector<int>>& cycles);
 LoopExpr loop_expr_degenerate(const LoopExpr& expr, const std::vector<std::vector<int>>& groups);
+
+// Returns length of each loop (e.g. {{1,2,3,4}, {1,2,5,3}, {1,2,5,6,7}} -> {4, 4, 5}).
+std::vector<int> loop_lengths(const Loops& loops);
 
 // Returns variable that are common for all given loop, but not for a larger subset of loops.
 std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<int> loop_indices);
@@ -78,13 +88,18 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr);
 // Sorts elements within each function argument, adjusting signs accordingly.
 LiraExpr lira_expr_sort_args(const LiraExpr& expr);
 
+// TODO: Dedup against loops_Q / loops_S.
 LoopExpr cut_loops(const std::vector<int>& points);
 
 LoopExpr reverse_loops(const LoopExpr& expr);
+
+LoopExpr loops_Q(const std::vector<int>& points);
+LoopExpr loops_S(const std::vector<int>& points);
 
 // There must be 5 vars: 1,2,3,4,5. Each loop must be sorted.
 LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr);
 
 
-// TODO: Clean up this super ad hoc function.
+// TODO: Clean up these super ad hoc functions.
 LoopExpr arg9_semi_lyndon(const LoopExpr& expr);
+LoopExpr arg9_kill_middle(const LoopExpr& expr);

@@ -173,6 +173,11 @@ std::vector<T> slice(const std::vector<T>& v, int from, int to = -1) {
 }
 
 template<typename T>
+std::vector<T> slice_incl(const std::vector<T>& v, int from, int to) {
+  return slice(v, from, to + 1);
+}
+
+template<typename T>
 std::vector<T> removed_slice(std::vector<T> v, int from, int to = -1) {
   if (to == -1) {
     to = v.size();

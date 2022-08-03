@@ -104,6 +104,7 @@ std::string LoopsNames::loops_name(const Loops& loops) {
 std::string LoopExprParam::object_to_string(const ObjectT& loops) {
   const std::string loops_str = loops_description(loops);
   // return loops_str;
+  // TODO: Show warning if a loop name was assigned outside of `generate_loops_names`.
   const std::string loops_name_str = loops_names.loops_name(loops);
   return absl::StrCat(loops_str, "  ", loops_name_str);
 }
@@ -166,6 +167,18 @@ LoopExpr fully_normalize_loops(const LoopExpr& expr) {
   });
 }
 
+LoopExpr remove_loops_with_duplicates(const LoopExpr& expr) {
+  return expr.filtered([&](const auto& loops) {
+    // TODO: Factor out separately
+    for (const auto& loop : loops) {
+      if (!all_unique_unsorted(loop)) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
 LoopExpr remove_duplicate_loops(const LoopExpr& expr) {
   return expr.filtered([&](const auto& loops) {
     for (int i : range(loops.size())) {
@@ -201,6 +214,7 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
     return LoopExpr::single(new_loops);
   });
   return to_canonical_permutation(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst))));
+  // return to_canonical_permutation(arg9_kill_middle(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)))));
   // return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
 }
 
@@ -331,6 +345,10 @@ LoopExpr loop_expr_degenerate(
   return arg11_shuffle_cluster(loop_expr_substitute(expr, substitutions));
 }
 
+std::vector<int> loop_lengths(const Loops& loops) {
+  return mapped(loops, [](const auto& loop) -> int { return loop.size(); });
+}
+
 std::vector<int> loops_unique_common_variable(const Loops& loops, std::vector<int> loop_indices) {
   absl::c_sort(loop_indices);
   Loops target_batch = choose_indices(loops, loop_indices);
@@ -440,6 +458,56 @@ LoopExpr reverse_loops(const LoopExpr& expr) {
   });
 }
 
+static LoopExpr loops_Q_impl(const std::vector<int>& points) {
+  if (points.size() <= 4) {
+    CHECK_EQ(points.size(), 4);
+    return LoopExpr::single({points});
+  }
+  const int k = div_int(points.size() - 2, 2);
+  LoopExpr ret;
+  for (int i : range_incl(2*k-2)) {
+    const auto q1 = loops_Q_impl(concat(slice_incl(points, 0, i), slice_incl(points, i+3, 2*k+1)));
+    const auto q2 = loops_Q_impl(slice_incl(points, i, i+3));
+    ret += tensor_product(q1, q2);
+  }
+  return ret;
+}
+
+LoopExpr loops_Q(const std::vector<int>& points) {
+  return loops_Q_impl(points).annotate(fmt::function_num_args(
+    fmt::opname("Q"),
+    points
+  ));
+}
+
+static LoopExpr loops_S_impl(const std::vector<int>& points) {
+  if (points.size() <= 5) {
+    CHECK_EQ(points.size(), 5);
+    return LoopExpr::single({points});
+  }
+  const int k = div_int(points.size() - 3, 2);
+  LoopExpr ret;
+  for (int i : range_incl(2*k-1)) {
+    const auto s = loops_S_impl(concat(slice_incl(points, 0, i), slice_incl(points, i+3, 2*k+2)));
+    const auto q = loops_Q_impl(slice_incl(points, i, i+3));
+    ret += tensor_product(s, q);
+  }
+  for (int i : range_incl(2*k-2)) {
+    const auto q = loops_Q_impl(concat(slice_incl(points, 0, i), slice_incl(points, i+4, 2*k+2)));
+    const auto s = loops_S_impl(slice_incl(points, i, i+4));
+    const int sign = neg_one_pow(i);
+    ret += sign * tensor_product(q, s);
+  }
+  return ret;
+}
+
+LoopExpr loops_S(const std::vector<int>& points) {
+  return loops_S_impl(points).annotate(fmt::function_num_args(
+    fmt::opname("S"),
+    points
+  ));
+}
+
 LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr) {
   static LoopExpr basis =
     - LoopExpr::single({{1,2,3,4}})
@@ -469,7 +537,6 @@ LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr) {
 }
 
 
-// TODO: Clean up this super ad hoc function.
 LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
   return expr.mapped([&](auto loops) {
     // CHECK_EQ(loops.size(), 3);
@@ -481,5 +548,23 @@ LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
       sort_two(loops[0], loops[2]);
     }
     return loops;
+  });
+}
+
+LoopExpr arg9_kill_middle(const LoopExpr& expr) {
+  return expr.mapped_expanding([&](auto loops) -> LoopExpr {
+    // CHECK_EQ(loops.size(), 3);
+    if (loops.size() != 3) {
+      // TODO: More robust solution
+      return LoopExpr::single(loops);
+    }
+    int sign = 1;
+    if (loops[0].size() == loops[1].size()) {
+      if (loops[0] > loops[1]) {
+        sign *= -1;
+        std::swap(loops[0], loops[1]);
+      }
+    }
+    return sign * LoopExpr::single(loops);
   });
 }
