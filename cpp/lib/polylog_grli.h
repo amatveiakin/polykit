@@ -1,4 +1,4 @@
-// Grassmannian polylogarithm
+// Grassmannian polylogarithm. Given 2n points it has weight n and dimension n.
 
 #pragma once
 

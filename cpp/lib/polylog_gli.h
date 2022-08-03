@@ -1,7 +1,9 @@
+// Cluster Grassmannian polylogarithm. Given 2n points it has dimension n.
+// The case of weight == n-1 gives Aomoto polylogarithm.
+
 #include "gamma.h"
 
 
-// Computes Grassmannian polylogarithm of dimension n, weight n-1 on 2n points.
 GammaExpr GLiVec(int weight, const std::vector<int>& points);
 
 // Equivalent to `pullback(GLiVec(weight, li_points), pb_points)`

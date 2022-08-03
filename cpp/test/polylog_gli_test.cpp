@@ -36,11 +36,6 @@ auto sum_alternating(const F& f, const std::vector<int>& points, const std::vect
   return ret;
 }
 
-GammaExpr AomotoPolylog(const std::vector<int>& points) {
-  const int weight = div_int(points.size(), 2) - 1;
-  return GLiVec(weight, points);
-}
-
 // Note. Synced with casimir_components in GLi definition.
 // TODO: Factor out, sync with CasimirDim3 and with cross_product.
 GammaExpr Casimir(const std::vector<int>& points) {
@@ -238,21 +233,37 @@ TEST(GLiTest, LARGE_AomotoPolylogProperties) {
   );
 }
 
+// Part (3) of Theorem 1.5. in https://arxiv.org/pdf/2208.01564v1.pdf
 TEST(GLiTest, GLiViaLowerDim) {
-  // Should be true for any weight
-  for (const int weight : range_incl(2, 3)) {
-    const int p = weight + 1;
-    const int num_points = 2 * p;
-    const auto points = seq_incl(1, num_points);
-    const auto lhs = GLiVec(weight, points);
+  // True for any p
+  for (const int p : range_incl(3, 4)) {
+    const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
     GammaExpr rhs;
-    for (const int i : range(p)) {
-      for (const int j : range(p, 2 * p)) {
-        const int sign = neg_one_pow(points[i] + points[j]);
-        rhs += sign * GLiVec(weight, {points[j]}, removed_indices(points, {i, j}));
+    for (const int i : range_incl(1, p)) {
+      for (const int j : range_incl(p+1, 2*p)) {
+        const auto points = removed_indices_one_based(seq_incl(1, 2*p), {i, j});
+        rhs += neg_one_pow(i+j) * GLiVec(p-1, {j}, points);
       }
     }
-    EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, neg_one_pow(weight) * rhs);
+    rhs *= neg_one_pow(p - 1);
+    std::cout << to_lyndon_basis(lhs - rhs);
+  }
+}
+
+// Part (4) of Theorem 1.5. in https://arxiv.org/pdf/2208.01564v1.pdf
+TEST(GLiTest, GLiSumInKernelA) {
+  // True for any p
+  for (const int p : range_incl(3, 4)) {
+    const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
+    GammaExpr rhs;
+    for (const int i : range(1, p)) {
+      for (const int j : range_incl(p+1, 2*p)) {
+        const auto points = removed_indices_one_based(seq_incl(1, 2*p), {i, j});
+        rhs += neg_one_pow(i+j) * GLiVec(p-1, {i}, points);
+      }
+    }
+    const auto expr = lhs + neg_one_pow(p - 1) * rhs;
+    std::cout << to_lyndon_basis(a_full(expr, 2*p+1));
   }
 }
 

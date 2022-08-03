@@ -27,7 +27,7 @@
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 0
+#if 1
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -405,10 +405,6 @@ LoopExpr reduce_arg9_loop_expr(const LoopExpr& expr) {
     }
   });
 }
-
-template<typename... Args> LoopExpr Q(Args... args) { return loops_Q(std::vector{args...}); }
-template<typename... Args> LoopExpr S(Args... args) { return loops_S(std::vector{args...}); }
-template<typename... Args> auto tp(Args... args) { return tensor_product(absl::MakeConstSpan({args...})); }
 #endif
 
 
@@ -429,7 +425,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(300)
+    .set_expression_line_limit(30)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -1826,147 +1822,4 @@ int main(int /*argc*/, char *argv[]) {
 #endif
 
 
-  // // Theorem 1.5.  (3)
-  // for (const int p : range_incl(3, 4)) {
-  //   const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
-  //   GammaExpr rhs;
-  //   for (const int i : range_incl(1, p)) {
-  //     for (const int j : range_incl(p+1, 2*p)) {
-  //       const auto points = removed_indices(seq_incl(1, 2*p), {i-1, j-1});
-  //       rhs += neg_one_pow(i+j) * GLiVec(p-1, {j}, points);
-  //     }
-  //   }
-  //   rhs *= neg_one_pow(p - 1);
-  //   std::cout << to_lyndon_basis(lhs - rhs);
-  // }
-
-  // // Theorem 1.5.  (4)
-  // for (const int p : range_incl(3, 4)) {
-  //   const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
-  //   GammaExpr rhs;
-  //   for (const int i : range(1, p)) {
-  //     for (const int j : range_incl(p+1, 2*p)) {
-  //       const auto points = removed_indices(seq_incl(1, 2*p), {i-1, j-1});
-  //       rhs += neg_one_pow(i+j) * GLiVec(p-1, {i}, points);
-  //     }
-  //   }
-  //   const auto expr = lhs + neg_one_pow(p - 1) * rhs;
-  //   std::cout << to_lyndon_basis(a_full(expr, 2*p+1));
-  // }
-
-
-
-  const auto prepare = [](const auto& expr) {
-    return to_canonical_permutation(to_lyndon_basis(
-      remove_duplicate_loops(remove_loops_with_duplicates(fully_normalize_loops(expr)))
-    ));
-  };
-
-  const auto d1 = -S(0,1,0,1,2,3,4,5,6);  // a
-  std::cout << prepare(
-    - d1
-    + tp(Q(0,1,2,3), Q(0,1,3,4), S(0,1,4,5,6))
-    - tp(Q(0,1,2,3), S(0,1,3,4,5), Q(0,1,5,6))
-    + tp(Q(0,1,5,6), Q(0,1,4,5), S(0,1,2,3,4))
-  );
-
-  const auto d2 = -S(0,1,0,2,0,3,4,5,6);  // m
-  std::cout << prepare(
-    - d2
-    + tp(Q(0,1,5,6), S(0,1,2,4,5), Q(0,2,3,4))
-    + tp(Q(0,1,5,6), Q(0,1,2,5), S(0,2,3,4,5))
-    - tp(Q(0,2,3,4), Q(0,1,2,4), S(0,1,4,5,6))
-  );
-
-  const auto d3 = -S(0,1,0,2,3,0,4,5,6);  // n
-  std::cout << prepare(
-    - d3
-    + tp(Q(1,0,3,2), Q(1,0,4,3), S(1,0,4,6,5))
-    - tp(Q(0,4,2,3), Q(0,5,1,6), S(0,5,1,4,2))
-    - tp(Q(0,5,1,6), Q(0,4,2,3), S(0,4,2,5,1))
-    + tp(Q(1,0,3,2), Q(1,0,5,6), S(1,0,5,3,4))
-    - tp(Q(1,0,5,6), Q(1,0,3,2), S(1,0,3,5,4))
-    - tp(Q(3,0,1,2), Q(3,0,5,4), S(3,0,5,1,6))
-    + tp(Q(3,0,1,2), Q(3,0,6,1), S(3,0,6,5,4))
-    + tp(Q(3,0,5,4), Q(3,0,1,2), S(3,0,1,5,6))
-    - tp(Q(4,0,2,3), Q(4,0,1,2), S(4,0,1,6,5))
-    + tp(Q(5,0,1,6), Q(5,0,2,1), S(5,0,2,4,3))
-    + tp(Q(5,0,1,6), Q(5,0,3,4), S(5,0,3,1,2))
-    - tp(Q(5,0,3,4), Q(5,0,1,6), S(5,0,1,3,2))
-  );
-
-  const auto d4 = -S(0,1,2,0,3,4,0,5,6);  // o
-  std::cout << prepare(
-    - d4
-    + tp(Q(0,3,1,2), Q(0,6,4,5), S(0,6,4,3,1))
-    + tp(Q(0,4,2,3), Q(0,5,1,6), S(0,5,1,4,2))
-    + tp(Q(0,5,1,6), Q(0,4,2,3), S(0,4,2,5,1))
-    + tp(Q(0,5,3,4), Q(0,6,2,1), S(0,6,2,5,3))
-    + tp(Q(0,6,2,1), Q(0,5,3,4), S(0,5,3,6,2))
-    + tp(Q(0,6,4,5), Q(0,3,1,2), S(0,3,1,6,4))
-    + tp(Q(1,0,3,2), Q(1,0,5,6), S(1,0,5,3,4))
-    - tp(Q(1,0,5,6), Q(1,0,3,2), S(1,0,3,5,4))
-    + tp(Q(1,0,5,6), Q(1,0,4,5), S(1,0,4,3,2))
-    + tp(Q(2,0,4,3), Q(2,0,5,4), S(2,0,5,6,1))
-    - tp(Q(2,0,4,3), Q(2,0,6,1), S(2,0,6,4,5))
-    + tp(Q(2,0,6,1), Q(2,0,4,3), S(2,0,4,6,5))
-    - tp(Q(3,0,1,2), Q(3,0,5,4), S(3,0,5,1,6))
-    + tp(Q(3,0,1,2), Q(3,0,6,1), S(3,0,6,5,4))
-    + tp(Q(3,0,5,4), Q(3,0,1,2), S(3,0,1,5,6))
-    + tp(Q(4,0,2,3), Q(4,0,6,5), S(4,0,6,2,1))
-    - tp(Q(4,0,6,5), Q(4,0,1,6), S(4,0,1,3,2))
-    - tp(Q(4,0,6,5), Q(4,0,2,3), S(4,0,2,6,1))
-    + tp(Q(5,0,1,6), Q(5,0,3,4), S(5,0,3,1,2))
-    - tp(Q(5,0,3,4), Q(5,0,1,6), S(5,0,1,3,2))
-    - tp(Q(5,0,3,4), Q(5,0,2,3), S(5,0,2,6,1))
-    - tp(Q(6,0,2,1), Q(6,0,3,2), S(6,0,3,5,4))
-    - tp(Q(6,0,2,1), Q(6,0,4,5), S(6,0,4,2,3))
-    + tp(Q(6,0,4,5), Q(6,0,2,1), S(6,0,2,4,3))
-  );
-
-  const auto d5 = d2 + d3 - d1 + cycle(d1, {{1,3}, {4,6}});
-  std::cout << prepare(
-    - d5
-    + tp(Q(0,1,5,6), S(0,1,2,3,5), Q(0,3,4,5))
-    - tp(Q(0,1,5,6), Q(0,1,4,5), S(0,1,2,3,4))
-    - tp(Q(0,3,4,5), Q(0,3,5,6), S(0,1,2,3,6))
-  );
-
-  const auto d6 = d2 - cycle(d2, {{1,5}});
-  std::cout << prepare(
-    - d6
-    + tp(Q(0,5,1,6), Q(0,5,1,2), S(0,5,2,3,4))
-    - tp(Q(0,1,5,6), Q(0,1,5,2), S(0,1,2,3,4))
-    - tp(Q(0,4,2,3), Q(0,4,2,1), S(0,4,1,5,6))
-    + tp(Q(0,4,2,3), Q(0,4,2,5), S(0,4,5,1,6))
-  );
-
-  const auto d7 = d5 + cycle(d5, {{0,5}});
-  std::cout << prepare(
-    - d7
-    + tp(Q(0,1,5,6), Q(0,1,5,4), S(0,1,4,2,3))
-    + tp(Q(0,3,5,4), Q(0,3,5,6), S(0,3,6,1,2))
-    - tp(Q(1,5,0,6), Q(1,5,0,4), S(1,5,4,2,3))
-    - tp(Q(3,5,0,4), Q(3,5,0,6), S(3,5,6,1,2))
-  );
-
-  const auto d8 =
-    + d4
-    - cycle(d2, {{1,5}, {2,4}})
-    - cycle(d2, {{2,6}, {3,5}})
-    - cycle(d2, {{1,3}, {4,6}})
-    - d1
-    - d5
-    + cycle(d1, {{1,3}, {4,6}})
-    + cycle(d5, {{1,2,3,4,5,6}})
-    - cycle(d1, {{1,2}, {3,6}, {4,5}})
-    - cycle(d5, {{1,2}, {3,6}, {4,5}})
-  ;
-  std::cout << prepare(
-    - d8
-    + tp(Q(0,1,3,2), Q(0,1,3,4), S(0,1,4,5,6))
-    + tp(Q(0,3,1,2), Q(0,3,1,6), S(0,3,6,4,5))
-    + tp(Q(0,4,6,5), Q(0,4,6,1), S(0,4,1,2,3))
-    + tp(Q(0,6,4,5), Q(0,6,4,3), S(0,6,3,1,2))
-  );
 }
