@@ -226,18 +226,8 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_
   return loop_expr_substitute(expr, substitutions);
 }
 
-LoopExpr loop_expr_cycle(
-    const LoopExpr& expr, const std::vector<std::vector<int>>& cycles) {
-  absl::flat_hash_map<int, int> substitutions;
-  for (const auto& cycle : cycles) {
-    for (int i : range(cycle.size())) {
-      const int p = cycle[i];
-      const int q = cycle[(i+1) % cycle.size()];
-      CHECK(!substitutions.contains(p));
-      substitutions[p] = q;
-    }
-  }
-  return loop_expr_substitute(expr, substitutions);
+LoopExpr loop_expr_cycle(const LoopExpr& expr, const Permutation& perm) {
+  return loop_expr_substitute(expr, perm.substitutions());
 }
 
 static LoopExpr arg11_shuffle_group3(const LoopExpr& group) {

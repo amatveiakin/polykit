@@ -73,13 +73,6 @@
 #if 1
 static constexpr auto cycle = loop_expr_cycle;
 
-LoopExpr cycle_pow(LoopExpr expr, const std::vector<std::vector<int>>& cycles, int power) {
-  for (EACH : range(power)) {
-    expr = cycle(expr, cycles);
-  }
-  return expr;
-}
-
 LoopExpr keep_term(const LoopExpr& expr, int type) {
   return expr.filtered([&](const Loops& loops) {
     return loops_names.loops_index(loops) == type;
@@ -100,17 +93,17 @@ LoopExpr preshow(const LoopExpr& expr) {
   // return arg11_shuffle_cluster(expr);
 }
 
-std::string permutation_to_string(const std::vector<std::vector<int>>& permutation) {
+std::string groups_to_string(const std::vector<std::vector<int>>& groups) {
   return str_join(
-    mapped(permutation, [&](const std::vector<int>& loop) {
-      return fmt::parens(str_join(loop, ","));
+    mapped(groups, [&](const std::vector<int>& group) {
+      return fmt::braces(str_join(group, ","));
     }),
     ""
   );
 }
 
 LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_type) {
-  static const std::vector<std::vector<std::vector<int>>> symmetries{
+  static const std::vector<Permutation> symmetries{
     {{2,4}, {5,8}, {6,7}},
     {{2,5}, {3,4}, {6,8}},
     {{2,6}, {3,5}, {7,8}},
@@ -132,14 +125,14 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_ty
       update_victim(
         cycle(killer, permutation),
         sign,
-        "symmetry " + permutation_to_string(permutation)
+        "symmetry " + to_string(permutation)
       );
     }
   }
   for (int rotation_pow : range(1, 8)) {
     for (int sign : {-1, 1}) {
       update_victim(
-        cycle_pow(killer, {{2,3,4,5,6,7,8}}, rotation_pow),
+        cycle(killer, Permutation({{2,3,4,5,6,7,8}}).pow(rotation_pow)),
         sign,
         absl::StrCat("rotate ", rotation_pow, " positions")
       );
@@ -149,6 +142,8 @@ LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_ty
 }
 
 // TODO: Normalize cycles
+//   Alternatively, should this return `Permutation`?
+//   (And additionally, should permutations be normalized?)
 std::vector<std::vector<int>> substitutions_to_cycles(absl::flat_hash_map<int, int> substitutions) {
   std::vector<std::vector<int>> ret;
   while (!substitutions.empty()) {
@@ -223,12 +218,12 @@ LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
         for (int sign : {-1, 1}) {
           const auto new_candidate = victim + sign * killer_subst;
           if (keep_term(new_candidate, target_type).l1_norm() < keep_term(victim, target_type).l1_norm()) {
-            // std::cout << ">>> " << absl::StrCat(fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)))
+            // std::cout << ">>> " << absl::StrCat(fmt::coeff(sign), "cycle ", to_string(Permutation(substitutions_to_cycles(subst))))
             //     << " : " << new_candidate << " => " << dump_to_string(expr_complexity(new_candidate)) << "\n\n";
             if (!best_candidate || expr_complexity(new_candidate) < expr_complexity(*best_candidate)) {
               best_candidate = new_candidate;
               best_candidate_description = absl::StrCat(
-                  fmt::coeff(sign), "cycle ", permutation_to_string(substitutions_to_cycles(subst)));
+                  fmt::coeff(sign), "cycle ", to_string(Permutation(substitutions_to_cycles(subst))));
             }
           }
         }
@@ -358,7 +353,7 @@ void list_all_degenerations(const LoopExpr& expr) {
     const auto expr_degenerated = loop_expr_degenerate(expr, groups);
     // if (!expr_degenerated.is_zero() && contains_only_expression_of_type(expr_degenerated, {1,2,3,4,5,6})) {
     if (!expr_degenerated.is_zero() && has_common_variable_in_each_term(expr_degenerated)) {
-      std::cout << permutation_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
+      std::cout << groups_to_string(groups) << " => " << preshow(expr_degenerated) << fmt::newline();
     }
   };
 
@@ -1038,7 +1033,7 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-#if 0
+#if 1
   LoopExpr loop_templates;
 
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
@@ -1065,7 +1060,7 @@ int main(int /*argc*/, char *argv[]) {
       );
     }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
   });
-#if 0
+#if 1
   // loop_expr = arg9_semi_lyndon(loop_expr);
   loop_expr = to_canonical_permutation(arg9_semi_lyndon(loop_expr));
 

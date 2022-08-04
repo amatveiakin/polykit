@@ -1,10 +1,10 @@
-// TODO: Strong typing and proper group operations for `cycles`.
 // TODO: Reduce the number of normalizations and organize them properly.
 
 #pragma once
 
 #include "format.h"
 #include "lira_ones.h"
+#include "permutation.h"
 #include "sequence_iteration.h"
 #include "util.h"
 
@@ -69,7 +69,7 @@ LoopExpr remove_duplicate_loops(const LoopExpr& expr);
 
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<int, int>& substitutions);
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices);
-LoopExpr loop_expr_cycle(const LoopExpr& expr, const std::vector<std::vector<int>>& cycles);
+LoopExpr loop_expr_cycle(const LoopExpr& expr, const Permutation& perm);  // TODO: Rename "cycle" part
 LoopExpr loop_expr_degenerate(const LoopExpr& expr, const std::vector<std::vector<int>>& groups);
 
 // Returns length of each loop (e.g. {{1,2,3,4}, {1,2,5,3}, {1,2,5,6,7}} -> {4, 4, 5}).
