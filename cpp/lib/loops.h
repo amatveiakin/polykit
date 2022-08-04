@@ -43,10 +43,12 @@ extern LoopsNames loops_names;
 struct LoopExprParam : public SimpleLinearParam<Loops> {
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_LENGTH_FIRST
+  DERIVE_WEIGHT_AND_UNIFORMITY_MARKER
+  static std::monostate element_uniformity_marker(const std::vector<int>&) { return {}; }
+  static std::string object_to_string(const ObjectT& loops);
   static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs) {
     return concat(lhs, rhs);
   }
-  static std::string object_to_string(const ObjectT& loops);
 };
 
 using LoopExpr = Linear<LoopExprParam>;
@@ -85,6 +87,12 @@ std::vector<int> decompose_loops(const Loops& loops);
 // class w.r.t. permutations.
 LoopExpr to_canonical_permutation(const LoopExpr& expr);
 
+// Keeps only terms of a specific type based on `loops_names`.
+LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type);
+
+// Returns the substitution that turns `from` to `to`. Panics if it does not exist.
+absl::flat_hash_map<int, int> loop_expr_recover_substitution(const Loops& from, const Loops& to);
+
 // Sorts elements within each function argument, adjusting signs accordingly.
 LiraExpr lira_expr_sort_args(const LiraExpr& expr);
 
@@ -99,7 +107,7 @@ LoopExpr loops_S(const std::vector<int>& points);
 // There must be 5 vars: 1,2,3,4,5. Each loop must be sorted.
 LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr);
 
-
-// TODO: Clean up these super ad hoc functions.
+// TODO: Clean up this ad hoc function.
+// Generalization idea: find a way to apply shuffle relations in order to get a
+// deterministic basis with minimal (or close to minimal) number of terms.
 LoopExpr arg9_semi_lyndon(const LoopExpr& expr);
-LoopExpr arg9_kill_middle(const LoopExpr& expr);

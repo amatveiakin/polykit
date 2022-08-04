@@ -107,6 +107,7 @@ struct SimpleLinearParam {
 
   // === left to define (optional; if missing the corresponding functionality will be unavailable):
 
+  // static <anything> element_uniformity_marker(const ObjectT::value_type& element);
   // static int object_to_weight(const ObjectT& obj);
   // static int object_to_dimension(const ObjectT& obj);
   // static StorageT monom_tensor_product(const StorageT& lhs, const StorageT& rhs);
@@ -185,6 +186,8 @@ bool compare_length_first(const T& lhs, const T& rhs) {
         << object_to_string(obj);                                              \
     return PartExprParam::object_to_uniformity_marker(obj.front());            \
   }
+
+#define DUMP_EXPR(expr) std::cout << STRINGIFY(expr) << " " << expr
 
 
 template<typename BaseParamT>

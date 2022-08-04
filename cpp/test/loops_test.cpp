@@ -51,6 +51,19 @@ TEST(LoopsTest, CutLoopsEquivalentToLiQuad) {
   );
 }
 
+// TODO: Test that S/Q loops expressions are equivalent to expressions obtained from
+//   icomultiply(QLi4(1,2,3,4,5,6), {2,2})
+//   icomultiply(QLi6(1,2,3,4,5,6,7,8), {2,2,2})
+TEST(LoopsTest, OldAndNewCutLoopsEquivalent) {
+  const auto normalize = [](const auto& expr) {
+    return to_lyndon_basis(fully_normalize_loops(expr));
+  };
+  EXPECT_EXPR_EQ(
+    normalize(cut_loops({1,2,3,4,5,6,7,8,9})),
+    normalize(loops_S({1,2,3,4,5,6,7,8,9}))
+  );
+}
+
 // Formulas from "3.5. Proof of the higher Gangl formula in weights four and six"
 //   in https://arxiv.org/pdf/2208.01564v1.pdf
 TEST(LoopsTest, DFunctionExpanded) {

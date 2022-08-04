@@ -4,6 +4,7 @@
 
 #include "algebra.h"
 #include "set_util.h"
+#include "zip.h"
 
 
 LoopsNames loops_names;
@@ -214,7 +215,6 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
     return LoopExpr::single(new_loops);
   });
   return to_canonical_permutation(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst))));
-  // return to_canonical_permutation(arg9_kill_middle(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)))));
   // return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
 }
 
@@ -396,6 +396,24 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr) {
   });
 }
 
+LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type) {
+  return expr.filtered([&](const Loops& loops) {
+    return loops_names.loops_index(loops) == type;
+  });
+}
+
+absl::flat_hash_map<int, int> loop_expr_recover_substitution(const Loops& from, const Loops& to) {
+  absl::flat_hash_map<int, int> ret;
+  for (auto [a, b] : zip(flatten(from), flatten(to))) {
+    if (ret.contains(a)) {
+      CHECK(ret.at(a) == b) << "\n" << LoopExprParam::object_to_string(from) << "\n" << LoopExprParam::object_to_string(to);
+    } else {
+      ret[a] = b;
+    }
+  }
+  return ret;
+}
+
 LiraExpr lira_expr_sort_args(const LiraExpr& expr) {
   return expr.mapped_expanding([](const LiraParamOnes& term) {
     int sign = 1;
@@ -526,7 +544,6 @@ LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr) {
   });
 }
 
-
 LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
   return expr.mapped([&](auto loops) {
     // CHECK_EQ(loops.size(), 3);
@@ -538,23 +555,5 @@ LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
       sort_two(loops[0], loops[2]);
     }
     return loops;
-  });
-}
-
-LoopExpr arg9_kill_middle(const LoopExpr& expr) {
-  return expr.mapped_expanding([&](auto loops) -> LoopExpr {
-    // CHECK_EQ(loops.size(), 3);
-    if (loops.size() != 3) {
-      // TODO: More robust solution
-      return LoopExpr::single(loops);
-    }
-    int sign = 1;
-    if (loops[0].size() == loops[1].size()) {
-      if (loops[0] > loops[1]) {
-        sign *= -1;
-        std::swap(loops[0], loops[1]);
-      }
-    }
-    return sign * LoopExpr::single(loops);
   });
 }
