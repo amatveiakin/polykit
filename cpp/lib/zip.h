@@ -23,7 +23,7 @@ auto mapped_zip(
     const std::vector<Second>& second,
     F&& func) {
   CHECK_EQ(first.size(), second.size());
-  std::vector<std::invoke_result_t<F, First, Second>> ret;
+  std::vector<std::decay_t<std::invoke_result_t<F, First, Second>>> ret;
   for (int i : range(first.size())) {
     ret.push_back(func(first[i], second[i]));
   }

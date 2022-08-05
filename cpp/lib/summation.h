@@ -31,7 +31,7 @@ auto sum_looped_vec(
   CHECK(max_arg_value % step == 0)
     << "The sum is suspiciously non-symmetric: max_arg_value = " << max_arg_value
     << ", step = " << step << ". If you really want this, feel free to remove this check.";
-  std::invoke_result_t<F, std::vector<int>> ret;
+  std::decay_t<std::invoke_result_t<F, std::vector<int>>> ret;
   for (int shift = 0; shift < max_arg_value; shift += step) {
     std::vector<int> args;
     for (const int a : starting_args) {

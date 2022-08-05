@@ -22,10 +22,10 @@ struct ClusterCoRanks {
 
 template<typename SpaceT>
 ClusterCoRanks cluster_co_ranks(const SpaceT& space) {
-  const int space_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  const int space_rank = space_mapping_ranks(space, identity_function, [](const auto& expr) {
     return keep_non_weakly_separated(expr);
   }).kernel();
-  const int kernel_rank = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  const int kernel_rank = space_mapping_ranks(space, identity_function, [](const auto& expr) {
     return std::make_tuple(keep_non_weakly_separated(expr), ncomultiply(expr));
   }).kernel();
   return {space_rank, kernel_rank};

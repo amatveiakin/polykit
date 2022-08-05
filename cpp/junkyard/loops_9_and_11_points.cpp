@@ -417,7 +417,7 @@ void loops_args9() {
       space.push_back(loop_expr_substitute(expr, perm));
     }
   }
-  auto rank = space_rank(space, DISAMBIGUATE(identity_function));
+  auto rank = space_rank(space, identity_function);
   std::cout << rank << "\n";
 
 

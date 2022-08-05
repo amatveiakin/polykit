@@ -54,7 +54,7 @@ void add_space_to_matrix_builder(const SpaceT& space, const PrepareF& prepare, M
 
 template<typename SpaceT, typename PrepareF>
 Matrix space_matrix(const SpaceT& space, const PrepareF& prepare) {
-  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+  using ExprT = std::decay_t<std::invoke_result_t<PrepareF, typename SpaceT::value_type>>;
   GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_space_to_matrix_builder(space, prepare, matrix_builder);
   return matrix_builder.make_matrix();
@@ -68,7 +68,7 @@ int space_rank(const SpaceT& space, const PrepareF& prepare) {
 template<typename SpaceT, typename PrepareF>
 bool space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF& prepare) {
   check_spaces(haystack, needle);
-  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+  using ExprT = std::decay_t<std::invoke_result_t<PrepareF, typename SpaceT::value_type>>;
   GetExprMatrixBuilder_t<ExprT> matrix_builder;
   add_space_to_matrix_builder(haystack, prepare, matrix_builder);
   const int haystack_rank = matrix_rank(matrix_builder.make_matrix());
@@ -81,7 +81,7 @@ bool space_contains(const SpaceT& haystack, const SpaceT& needle, const PrepareF
 template<typename SpaceT, typename PrepareF>
 SpaceVennRanks space_venn_ranks(const SpaceT& a, const SpaceT& b, const PrepareF& prepare) {
   check_spaces(a, b);
-  using ExprT = std::invoke_result_t<PrepareF, typename SpaceT::value_type>;
+  using ExprT = std::decay_t<std::invoke_result_t<PrepareF, typename SpaceT::value_type>>;
   Profiler profiler(false);
 
   GetExprMatrixBuilder_t<ExprT> matrix_builder_a;
@@ -126,5 +126,5 @@ SpaceMappingRanks space_mapping_ranks(const SpaceT& raw_space, const PrepareF& p
 
 template<typename SpaceT>
 SpaceMappingRanks space_ncomultiply_mapping_ranks(const SpaceT& space) {
-  return space_mapping_ranks(space, DISAMBIGUATE(identity_function), DISAMBIGUATE(ncomultiply));
+  return space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
 }

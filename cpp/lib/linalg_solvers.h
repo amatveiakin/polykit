@@ -11,13 +11,13 @@
 // Optimization potential: Re-use matrix builder
 template<typename SpaceT>
 SpaceT minimal_containing_subspace(const SpaceT& haystack, const SpaceT& needle) {
-  CHECK(space_contains(haystack, needle, DISAMBIGUATE(identity_function)));
+  CHECK(space_contains(haystack, needle, identity_function));
   auto ret = haystack;
   int idx = 0;
   while (idx < ret.size()) {
     auto new_ret = ret;
     new_ret.erase(new_ret.begin() + idx);
-    if (space_contains(new_ret, needle, DISAMBIGUATE(identity_function))) {
+    if (space_contains(new_ret, needle, identity_function)) {
       ret = std::move(new_ret);
     } else {
       ++idx;
@@ -33,7 +33,7 @@ SpaceT minimal_containing_subspace(const SpaceT& haystack, const SpaceT& needle)
 template<typename ExprT>
 ExprT find_equation(ExprT expr, const std::vector<ExprT>& space, const std::vector<int>& coeff_candidates = {1, -1}) {
   Profiler profiler(true);
-  CHECK(space_contains(space, {expr}, DISAMBIGUATE(identity_function)));
+  CHECK(space_contains(space, {expr}, identity_function));
   profiler.finish("check space contains");
 
   using StorageT = typename ExprT::StorageT;
@@ -62,7 +62,7 @@ ExprT find_equation(ExprT expr, const std::vector<ExprT>& space, const std::vect
       space_remaining.push_back(summand);
     }
   }
-  CHECK(space_contains(space_remaining, {expr}, DISAMBIGUATE(identity_function)));
+  CHECK(space_contains(space_remaining, {expr}, identity_function));
   profiler.finish(absl::StrCat(
     "done with unique terms (", space.size() - space_remaining.size(), "/", space.size(), ")")
   );
@@ -76,7 +76,7 @@ ExprT find_equation(ExprT expr, const std::vector<ExprT>& space, const std::vect
     bool found_coeff = false;
     for (const int coeff : coeff_candidates) {
       auto candidate_expr = expr + coeff * summand;
-      if (space_contains(space_remaining, {candidate_expr}, DISAMBIGUATE(identity_function))) {
+      if (space_contains(space_remaining, {candidate_expr}, identity_function)) {
         expr = std::move(candidate_expr);
         found_coeff = true;
         break;
@@ -97,7 +97,7 @@ SpaceT space_basis(const SpaceT& space, const PrepareF& prepare) {
   int rank = 0;
   for (const auto& expr : mapped(space, prepare)) {
     ret.push_back(expr);
-    const int new_rank = space_rank(ret, DISAMBIGUATE(identity_function));
+    const int new_rank = space_rank(ret, identity_function);
     if (new_rank == rank) {
       ret.pop_back();
     }

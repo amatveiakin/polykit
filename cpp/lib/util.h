@@ -290,7 +290,7 @@ void append_vector(std::vector<T>& dst, SrcContainerT src) {
 
 template<typename Src, typename F>
 auto mapped(const Src& src, F&& func) {
-  std::vector<std::invoke_result_t<F, typename Src::value_type>> dst;
+  std::vector<std::decay_t<std::invoke_result_t<F, typename Src::value_type>>> dst;
   dst.reserve(src.size());
   absl::c_transform(src, std::back_inserter(dst), std::forward<F>(func));
   return dst;
@@ -300,7 +300,7 @@ auto mapped(const Src& src, F&& func) {
 // This is NOT in-place map; the result is returned as usual.
 template<typename Src, typename F>
 auto mapped_mutable(Src& src, F&& func) {
-  std::vector<std::invoke_result_t<F, typename Src::reference>> dst;
+  std::vector<std::decay_t<std::invoke_result_t<F, typename Src::reference>>> dst;
   dst.reserve(src.size());
   std::transform(src.begin(), src.end(), std::back_inserter(dst), std::forward<F>(func));
   return dst;
@@ -311,7 +311,7 @@ auto mapped_mutable(Src& src, F&& func) {
 // (note: `zip` is from https://github.com/ericniebler/range-v3, it's missing in C++20).
 template<typename Src, typename F>
 auto mapped_with_index(const Src& src, const F& func) {
-  std::vector<std::invoke_result_t<F, int, typename Src::value_type>> dst;
+  std::vector<std::decay_t<std::invoke_result_t<F, int, typename Src::value_type>>> dst;
   dst.reserve(src.size());
   for (const int idx : range(src.size())) {
     dst.push_back(func(idx, src[idx]));
@@ -321,7 +321,7 @@ auto mapped_with_index(const Src& src, const F& func) {
 
 template<typename In, size_t N, typename F>
 auto mapped_array(const std::array<In, N>& src, F&& func) {
-  std::array<std::invoke_result_t<F, In>, N> dst;
+  std::array<std::decay_t<std::invoke_result_t<F, In>>, N> dst;
   absl::c_transform(src, dst.begin(), func);
   return dst;
 }
@@ -335,7 +335,7 @@ auto mapped_to_string(const Src& src) {
 // Equivalent to `flatten(mapped(src, func))`.
 template<typename Src, typename F>
 auto mapped_expanding(const Src& src, const F& func) {
-  using ResultContainer = std::invoke_result_t<F, typename Src::value_type>;
+  using ResultContainer = std::decay_t<std::invoke_result_t<F, typename Src::value_type>>;
   std::vector<typename ResultContainer::value_type> dst;
   for (const auto& value : src) {
     append_vector(dst, func(value));
@@ -360,7 +360,7 @@ auto mapped_nested(const Src& src, const F& func) {
 // returns a vector of non-null y.
 template<typename Src, typename F>
 auto filtered_mapped(const Src& src, const F& func) {
-  std::vector<typename std::invoke_result_t<F, typename Src::value_type>::value_type> dst;
+  std::vector<std::decay_t<typename std::invoke_result_t<F, typename Src::value_type>::value_type>> dst;
   for (const auto& old_value : src) {
     auto new_value = func(old_value);
     if (new_value.has_value()) {
@@ -573,7 +573,7 @@ template<typename Container, typename Projector>
 auto sum(const Container& c, const Projector& projector) {
   return absl::c_accumulate(
     c,
-    std::invoke_result_t<Projector, typename Container::value_type>(),
+    std::decay_t<std::invoke_result_t<Projector, typename Container::value_type>>(),
     [&](const auto& x, const auto& y) {
       return x + projector(y);
     }

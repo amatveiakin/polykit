@@ -170,7 +170,7 @@ auto mapped_to_pvector(absl::Span<const In> src, F&& func) {
 }
 template<int N, typename In, typename F>
 auto mapped_to_pvector(absl::Span<const In> src, F&& func) {
-  return mapped_to_pvector<PVector<std::invoke_result_t<F, In>, N>>(src, std::forward<F>(func));
+  return mapped_to_pvector<PVector<std::decay_t<std::invoke_result_t<F, In>>, N>>(src, std::forward<F>(func));
 }
 
 template<typename Dst, typename In, typename F>

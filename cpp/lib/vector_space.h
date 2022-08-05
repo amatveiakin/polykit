@@ -98,7 +98,7 @@ void check_space_homogeneity(const F& func, const SpaceTs&... spaces) {
   const auto spaces_list = {std::cref(spaces)...};
   using Space = typename decltype(spaces_list)::value_type::type;
   using Expr = typename Space::value_type;
-  std::optional<std::invoke_result_t<F, Expr>> exemplar;
+  std::optional<std::decay_t<std::invoke_result_t<F, Expr>>> exemplar;
   const Expr* exemplar_ptr = nullptr;
   for (const auto& space : spaces_list) {
     for (const auto& expr : space.get()) {

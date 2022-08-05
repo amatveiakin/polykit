@@ -650,7 +650,7 @@ public:
   //   * `mapped_expanding` deduces result type from the functor.
   template<typename F>
   auto mapped_expanding(F func) const {
-    using ResultT = std::invoke_result_t<F, ObjectT>;
+    using ResultT = std::decay_t<std::invoke_result_t<F, ObjectT>>;
     static_assert(is_linear_v<ResultT>, "mapped_expanding functor must return a Linear expression");
     ResultT ret;
     foreach([&](const auto& obj, int coeff) {
@@ -660,7 +660,7 @@ public:
   }
   template<typename F>
   auto mapped_key_expanding(F func) const {
-    using ResultT = std::invoke_result_t<F, StorageT>;
+    using ResultT = std::decay_t<std::invoke_result_t<F, StorageT>>;
     static_assert(is_linear_v<ResultT>, "mapped_expanding functor must return a Linear expression");
     ResultT ret;
     foreach_key([&](const auto& key, int coeff) {
@@ -887,7 +887,7 @@ std::ostream& to_ostream_grouped(
     const GroupHeaderF& group_header,
     const ToStringF& object_to_string) {
   using LinearT = Linear<ParamT>;
-  using GroupT = std::invoke_result_t<GroupByF, typename ParamT::ObjectT>;
+  using GroupT = std::decay_t<std::invoke_result_t<GroupByF, typename ParamT::ObjectT>>;
   const auto piece_to_ostream = [&](const LinearT& linear_piece) {
     ScopedFormatting sf(FormattingConfig().set_new_line_after_expression(false));
     to_ostream(os, linear_piece, term_sorting_cmp, object_to_string);

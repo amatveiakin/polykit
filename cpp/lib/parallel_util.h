@@ -22,7 +22,7 @@ auto mapped_parallel(const Src& src, F&& func) {
 // TODO: Link TBB via Bazel.
 template<typename Src, typename F>
 auto mapped_parallel(const Src& src, F&& func) {
-  std::vector<std::invoke_result_t<F, typename Src::value_type>> dst(src.size());
+  std::vector<std::decay_t<std::invoke_result_t<F, typename Src::value_type>>> dst(src.size());
   std::transform(std::execution::par_unseq, src.begin(), src.end(), dst.begin(), std::forward<F>(func));
   return dst;
 }

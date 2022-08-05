@@ -7,7 +7,7 @@
 
 
 Permutation::Permutation(std::initializer_list<std::initializer_list<int>> cycles)
-  : Permutation(mapped_nested<2>(cycles, DISAMBIGUATE(identity_function))) {}
+  : Permutation(mapped_nested<2>(cycles, identity_function)) {}
 
 Permutation::Permutation(std::vector<std::vector<int>> cycles) : cycles_(cycles) {
   std::vector<int> vars;
