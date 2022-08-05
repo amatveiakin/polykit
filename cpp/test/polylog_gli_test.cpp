@@ -234,7 +234,7 @@ TEST(GLiTest, LARGE_AomotoPolylogProperties) {
 }
 
 // Part (3) of Theorem 1.5. in https://arxiv.org/pdf/2208.01564v1.pdf
-TEST(GLiTest, GLiViaLowerDim) {
+TEST(GLiTest, LARGE_GLiViaLowerDim) {
   // True for any p
   for (const int p : range_incl(3, 4)) {
     const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
@@ -251,7 +251,7 @@ TEST(GLiTest, GLiViaLowerDim) {
 }
 
 // Part (4) of Theorem 1.5. in https://arxiv.org/pdf/2208.01564v1.pdf
-TEST(GLiTest, GLiSumInKernelA) {
+TEST(GLiTest, LARGE_GLiSumInKernelA) {
   // True for any p
   for (const int p : range_incl(3, 4)) {
     const auto lhs = GLiVec(p-1, seq_incl(1, 2*p));
@@ -264,6 +264,29 @@ TEST(GLiTest, GLiSumInKernelA) {
     }
     const auto expr = lhs + neg_one_pow(p - 1) * rhs;
     std::cout << to_lyndon_basis(a_full(expr, 2*p+1));
+  }
+}
+
+TEST(GLiTest, LARGE_ABEquations) {
+  for (const auto p : range_incl(3, 4)) {
+    EXPECT_EXPR_EQ_AFTER_LYNDON(
+      GLiVec(p, seq_incl(1, 2*p+2)),
+      neg_one_pow(p-1) * a_plus(b_minus(GLiVec(p, seq_incl(1, 2*p)), 2*p+1), 2*p+2)
+    );
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(
+      a_full(
+        + GLiVec(p, seq_incl(1, 2*p))
+        + neg_one_pow(p-1) * a_plus(b_minus_minus(GLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
+        2*p+1
+      )
+    );
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(
+      b_full(
+        + GLiVec(p, seq_incl(1, 2*p))
+        + neg_one_pow(p) * b_plus(a_minus_minus(GLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
+        2*p+1
+      )
+    );
   }
 }
 

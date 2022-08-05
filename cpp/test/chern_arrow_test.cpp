@@ -57,27 +57,39 @@ TEST_P(ChernArrowIdentityTest, LeftUp) {
   );
 }
 
-TEST_P(OddNumPointsIdentityTest, ABOdd) {
+TEST_P(ChernArrowIdentityTest, ABDecompositions) {
   const auto& x = expr();
   const int n = detect_num_variables(x);
-  EXPECT_EXPR_ZERO(a_plus(b_plus(x, n+1), n+2) + b_plus(a_plus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_minus(b_minus(x, n+1), n+2) + b_minus(a_minus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_minus(a_minus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_plus(a_plus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(b_minus(b_minus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(b_plus(b_plus(x, n+1), n+2));
-  EXPECT_EXPR_EQ(chern_arrow_left(x, n+1), a_minus(x, n+1) + a_plus(x, n+1));
-  EXPECT_EXPR_EQ(chern_arrow_up(x, n+1), b_minus(x, n+1) + b_plus(x, n+1));
+  EXPECT_EXPR_EQ(a_full(x, n+1), a_minus(x, n+1) + a_plus_plus(x, n+1));
+  EXPECT_EXPR_EQ(a_full(x, n+1), a_plus(x, n+1) + a_minus_minus(x, n+1));
+  EXPECT_EXPR_EQ(b_full(x, n+1), b_minus(x, n+1) + b_plus_plus(x, n+1));
+  EXPECT_EXPR_EQ(b_full(x, n+1), b_plus(x, n+1) + b_minus_minus(x, n+1));
 }
 
-TEST_P(EvenNumPointsIdentityTest, ABEven) {
+TEST_P(OddNumPointsIdentityTest, ABOddEquivalences) {
   const auto& x = expr();
   const int n = detect_num_variables(x);
-  EXPECT_EXPR_ZERO(a_plus(a_minus(x, n+1), n+2) + a_minus(a_plus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_plus(b_minus(x, n+1), n+2) + b_minus(a_plus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_minus(b_plus(x, n+1), n+2) + b_plus(a_minus(x, n+1), n+2));
-  EXPECT_EXPR_ZERO(a_minus(chern_arrow_left(x, n+1), n+2) + a_plus(chern_arrow_left(x, n+1), n+2));
-  EXPECT_EXPR_EQ(a_minus(chern_arrow_left(x, n+1), n+2), a_minus(a_plus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_minus(x, n+1), a_minus_minus(x, n+1));
+  EXPECT_EXPR_EQ(a_plus(x, n+1), a_plus_plus(x, n+1));
+  EXPECT_EXPR_EQ(b_minus(x, n+1), b_minus_minus(x, n+1));
+  EXPECT_EXPR_EQ(b_plus(x, n+1), b_plus_plus(x, n+1));
+}
+
+// Equations that hold true both for odd and even number of points.
+// Proposition 4.1 from https://arxiv.org/pdf/2208.01564v1.pdf
+TEST_P(ChernArrowIdentityTest, ABEquations) {
+  const auto& x = expr();
+  const int n = detect_num_variables(x);
+  EXPECT_EXPR_ZERO(a_minus(a_minus_minus(x, n+1), n+2));
+  EXPECT_EXPR_ZERO(a_plus(a_plus_plus(x, n+1), n+2));
+  EXPECT_EXPR_ZERO(b_minus(b_minus_minus(x, n+1), n+2));
+  EXPECT_EXPR_ZERO(b_plus(b_plus_plus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_minus_minus(a_plus(x, n+1), n+2), -a_plus_plus(a_minus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(b_minus_minus(b_plus(x, n+1), n+2), -b_plus_plus(b_minus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_plus(b_plus_plus(x, n+1), n+2), -b_plus(a_plus_plus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_minus_minus(b_plus(x, n+1), n+2), -b_plus_plus(a_minus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_minus(b_minus_minus(x, n+1), n+2), -b_minus(a_minus_minus(x, n+1), n+2));
+  EXPECT_EXPR_EQ(a_plus_plus(b_minus(x, n+1), n+2), -b_minus_minus(a_plus(x, n+1), n+2));
 }
 
 INSTANTIATE_TEST_SUITE_P(AllCases, ChernArrowIdentityTest, testing::ValuesIn(

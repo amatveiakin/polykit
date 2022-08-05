@@ -463,20 +463,6 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
 
-  // // TODO: Factor out as tests
-  // for (const auto& expr : exprs_any_num_points) {
-  //   const int n = detect_num_variables(expr);
-  //   CHECK((a_minus(a_minus_minus(expr, n+1), n+2)).is_zero());
-  //   CHECK((a_plus(a_plus_plus(expr, n+1), n+2)).is_zero());
-  //   CHECK((b_minus(b_minus_minus(expr, n+1), n+2)).is_zero());
-  //   CHECK((b_plus(b_plus_plus(expr, n+1), n+2)).is_zero());
-  //   CHECK(a_plus(b_plus_plus(expr, n+1), n+2) == -b_plus(a_plus_plus(expr, n+1), n+2));
-  //   CHECK(a_minus_minus(b_plus(expr, n+1), n+2) == -b_plus_plus(a_minus(expr, n+1), n+2));
-  //   CHECK(a_minus(b_minus_minus(expr, n+1), n+2) == -b_minus(a_minus_minus(expr, n+1), n+2));
-  //   CHECK(a_plus_plus(b_minus(expr, n+1), n+2) == -b_minus_minus(a_plus(expr, n+1), n+2));
-  // }
-  // std::cout << "ok\n";
-
 
   // for (const int dimension : range_incl(3, 5)) {
   //   const int weight = dimension - 1;
@@ -510,24 +496,6 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  // const int n = 6;
-  // const auto x = ncoproduct(GLi3(1,2,3,4,5,6), plucker({4,5,6}));
-  // const auto y =
-  //   + b_minus(a_minus_minus(x, n+1), n+2)
-  //   + a_plus(b_plus_plus(x, n+1), n+2)
-  //   + a_plus(b_minus(x, n+1), n+2)
-  //   - a_plus(b_minus_minus(x, n+1), n+2)
-  // ;
-  // std::cout << to_lyndon_basis(a_full(y, n+3));
-
-
-
-  // for (const int p : range_incl(3, 4)) {
-  //   std::cout << to_lyndon_basis(
-  //     + GLiVec(p, seq_incl(1, 2*p+2))
-  //     - neg_one_pow(p-1) * a_plus(b_minus(GLiVec(p, seq_incl(1, 2*p)), 2*p+1), 2*p+2)
-  //   );
-  // }
 
   // using ArrowF = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
   // using ArrowF = std::function<GammaExpr(const GammaExpr&, int)>;
@@ -559,30 +527,6 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   //   std::cout << "\n";
   // }
-
-  // for (const auto p : range_incl(3, 4)) {
-  //   std::cout << to_lyndon_basis(
-  //     a_full(
-  //       + GLiVec(p, seq_incl(1, 2*p))
-  //       + neg_one_pow(p-1) * a_plus(b_minus_minus(GLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
-  //       2*p+1
-  //     )
-  //   );
-  // }
-  // for (const auto p : range_incl(3, 4)) {
-  //   std::cout << to_lyndon_basis(
-  //     b_full(
-  //       + GLiVec(p, seq_incl(1, 2*p))
-  //       + neg_one_pow(p) * b_plus(a_minus_minus(GLiVec(p, seq_incl(1, 2*p-2)), 2*p-1), 2*p),
-  //       2*p+1
-  //     )
-  //   );
-  // }
-
-  // std::cout << to_lyndon_basis(
-  //   + ncoproduct(GLi3(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
-  //   - a_plus(b_minus(ncoproduct(GLi3(1,2,3,4,5,6), plucker({1,2,3})), 7), 8)
-  // );
 
 
   // // TODO: factor out sigma_i (a.k.a "co-degeneration maps")
