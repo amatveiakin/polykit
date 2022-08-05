@@ -573,7 +573,7 @@ template<typename Container, typename Projector>
 auto sum(const Container& c, const Projector& projector) {
   return absl::c_accumulate(
     c,
-    projector(typename Container::value_type()),
+    std::invoke_result_t<Projector, typename Container::value_type>(),
     [&](const auto& x, const auto& y) {
       return x + projector(y);
     }

@@ -613,7 +613,7 @@ int main(int /*argc*/, char *argv[]) {
   //   });
   // };
   // static constexpr auto kernel_element = [](const int weight, const int num_points) {
-  //   return sum(mapped(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
+  //   return sum(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
   //     // std::cout << dump_to_string(mapped(range(num_points * 2 - 1), [&](const int k) {
   //     //   const int i = k / 2;
   //     //   return (k % 2 == 0)
@@ -628,7 +628,7 @@ int main(int /*argc*/, char *argv[]) {
   //         : ProjectionExpr::single({X(i)}) - ProjectionExpr::single({X(i + 1)})
   //       ;
   //     })));
-  //   }));
+  //   });
   // };
 
   // for (const int num_points : range_incl(2, 6)) {
