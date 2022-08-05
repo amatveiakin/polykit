@@ -670,28 +670,4 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  // // TODO: Make this the canonical definition on ChernCocycle,
-  // //   test that it's equal to the old definition.
-  // // TODO: Test the functional equations too.
-  // for (const int n : range_incl(3, 4)) {
-  //   const auto c_n =
-  //     + GLiVec(n, seq_incl(1, 2*n))
-  //     + neg_one_pow(n) * b_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n);
-  //   ;
-  //   const auto c_n1 =
-  //     + neg_one_pow(n) * a_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n);
-  //   ;
-  //   std::cout << to_lyndon_basis(a_full(c_n1, 2*n+1));
-  //   std::cout << to_lyndon_basis(b_full(c_n1, 2*n+1) + a_full(c_n, 2*n+1));
-  //   std::cout << to_lyndon_basis(b_full(c_n, 2*n+1));
-  //   std::cout << to_lyndon_basis(
-  //     + ncoproduct(c_n)
-  //     - neg_one_pow(n) * ChernCocycle(n, n, seq_incl(1, 2*n))
-  //   );
-  //   std::cout << to_lyndon_basis(
-  //     + ncoproduct(c_n1)
-  //     - neg_one_pow(n) * ChernCocycle(n, n-1, seq_incl(1, 2*n))
-  //   );
-  // }
-
 }

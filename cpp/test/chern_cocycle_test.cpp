@@ -3,6 +3,8 @@
 
 #include "lib/chern_cocycle.h"
 
+#include <random>
+
 #include "gtest/gtest.h"
 
 #include "lib/chern_arrow.h"
@@ -112,19 +114,68 @@ GammaExpr ChernCocycle_4_4_8(const std::vector<int>& points) {
   );
 }
 
+GammaExpr ChernCocycle_n_n_2n(const std::vector<int>& points) {
+  CHECK(points.size() % 2 == 0);
+  const int weight = points.size() / 2;
+  const int mid = points.size() / 2 - 1;
+  GammaExpr ret;
+  ret += GLiVec(weight, points);
+  for (const int before : range(mid)) {
+    for (const int after : range(mid + 1, points.size())) {
+      const int sign = neg_one_pow(before + after + weight + 1);
+      ret += sign * GLiVec(
+        weight,
+        choose_indices(points, {before}),
+        removed_indices(points, {before, after})
+      );
+    }
+  }
+  return plucker_dual(ret, points);
+}
+
+GammaExpr ChernCocycle_n_nminus1_2n(const std::vector<int>& points) {
+  CHECK(points.size() % 2 == 0);
+  const int weight = points.size() / 2;
+  const int mid = points.size() / 2 - 1;
+  GammaExpr ret;
+  for (const int before : range(mid)) {
+    for (const int after : range(mid + 1, points.size())) {
+      const int sign = neg_one_pow(before + after + weight + 1);
+      ret += sign * GLiVec(weight, removed_indices(points, {before, after}));
+    }
+  }
+  return neg_one_pow(weight + 1) * ret;
+}
+
 
 TEST(ChernCocycleTest, EqualsExplicit_Weight3) {
   std::vector points5 = {3,4,5,1,2};
   std::vector points6 = {3,4,5,6,1,2};
   EXPECT_EXPR_EQ(ChernCocycle_3_2_5(points5), ChernCocycle(3, 2, points5));
-  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_2_6(points6)), ChernCocycle(3, 2, points6));
-  EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_3_3_6(points6)), ChernCocycle(3, 3, points6));
+  EXPECT_EXPR_EQ(-ncoproduct(ChernCocycle_3_2_6(points6)), ChernCocycle(3, 2, points6));
+  EXPECT_EXPR_EQ(-ncoproduct(ChernCocycle_3_3_6(points6)), ChernCocycle(3, 3, points6));
 }
 
 TEST(ChernCocycleTest, LARGE_EqualsExplicit_Weight4) {
   std::vector points8 = {3,4,5,6,7,8,1,2};
   EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_3_8(points8)), ChernCocycle(4, 3, points8));
   EXPECT_EXPR_EQ(ncoproduct(ChernCocycle_4_4_8(points8)), ChernCocycle(4, 4, points8));
+}
+
+TEST(ChernCocycleTest, LARGE_EqualsOld) {
+  std::minstd_rand rnd;
+  for (const int n : range_incl(3, 4)) {
+    auto points = seq_incl(1, 2*n);
+    absl::c_shuffle(points, rnd);
+    EXPECT_EXPR_EQ_AFTER_LYNDON(
+      ChernCocycle(n, n, points),
+      neg_one_pow(n) * ncoproduct(ChernCocycle_n_n_2n(points))
+    );
+    EXPECT_EXPR_EQ_AFTER_LYNDON(
+      ChernCocycle(n, n-1, points),
+      neg_one_pow(n) * ncoproduct(ChernCocycle_n_nminus1_2n(points))
+    );
+  }
 }
 
 TEST(ChernCocycleTest, ArrowEquations_Weight3) {
@@ -136,11 +187,11 @@ TEST(ChernCocycleTest, ArrowEquations_Weight3) {
   );
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6}))
-    - chern_arrow_left(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+    + chern_arrow_left(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
   );
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6}))
-    - chern_arrow_up(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
+    + chern_arrow_up(ChernCocycle(3, 2, {1,2,3,4,5}), 6)
   );
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + chern_arrow_left(ChernCocycle(3, 3, {1,2,3,4,5,6}), 7)
@@ -155,6 +206,16 @@ TEST(ChernCocycleTest, LARGE_ArrowEquations_Weight4) {
     + chern_arrow_left(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), 9)
     + chern_arrow_up(ChernCocycle(4, 3, {1,2,3,4,5,6,7,8}), 9)
   );
+}
+
+TEST(ChernCocycleTest, LARGE_ABEquations) {
+  for (const int n : range_incl(3, 4)) {
+    const auto c_n = ChernCocycle(n, n, seq_incl(1, 2*n));
+    const auto c_n1 = ChernCocycle(n, n-1, seq_incl(1, 2*n));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(a_full(c_n1, 2*n+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(b_full(c_n1, 2*n+1) + a_full(c_n, 2*n+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(b_full(c_n, 2*n+1));
+  }
 }
 
 TEST(ChernCocycleTest, LARGE_ImageLiesInChernGrLImage_Weight3) {
@@ -282,8 +343,9 @@ TEST(ChernCocycleTest, LARGE_Comultiplication_3_1_Dim4) {
   );
 }
 
-TEST(ChernCocycleTest, LARGE_ReversedDual_Comultiplication_3_1_Dim4) {
-  // Note: `plucker_dual` here reverses `plucker_dual` in `ChernCocycle` definition.
+TEST(ChernCocycleTest, LARGE_Dual_Comultiplication_3_1_Dim4) {
+  // Note: with the old definition (see ChernCocycle_n_n_2n) `plucker_dual` used to
+  //   reverse `plucker_dual` in the cocycle definition.
   EXPECT_EXPR_ZERO(
     + ncomultiply(plucker_dual(ChernCocycle(4, 4, {1,2,3,4,5,6,7,8}), {1,2,3,4,5,6,7,8}), {1,3})
     + chern_arrow_left(

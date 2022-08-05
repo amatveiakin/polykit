@@ -1,7 +1,11 @@
+// TODO: Should the signs of ChernCocycle_Dim1 and ChernCocycle_3_2_5 be adjusted after
+//   changing the signs of cocycles in weight n, dimension n (or n-1), 2n points at odd n?
+
 #include "chern_cocycle.h"
 
 #include "absl/strings/substitute.h"
 
+#include "chern_arrow.h"
 #include "polylog_gli.h"
 
 
@@ -21,7 +25,7 @@ GammaNCoExpr ChernCocycle_Dim1(int weight, const std::vector<int>& points) {
   return ret;
 }
 
-GammaNCoExpr ChernCocycle_3_2(const std::vector<int>& points) {
+GammaNCoExpr ChernCocycle_3_2_5(const std::vector<int>& points) {
   const int weight = 3;
   CHECK_EQ(points.size(), 5);
   const auto args = [&](const std::vector<int>& indices) {
@@ -46,37 +50,26 @@ GammaNCoExpr ChernCocycle_impl(int weight, int dimension, const std::vector<int>
     return ChernCocycle_Dim1(weight, points);
   }
   if (weight == 3 && dimension == 2 && points.size() == 5) {
-    return ChernCocycle_3_2(points);
+    return ChernCocycle_3_2_5(points);
   }
   CHECK_EQ(weight * 2, points.size()) << "Not implemented";
   CHECK(points.size() % 2 == 0);
-  const int mid = points.size() / 2 - 1;
-  GammaExpr ret;
   if (dimension == weight) {
-    ret += GLiVec(weight, points);
-    for (const int before : range(mid)) {
-      for (const int after : range(mid + 1, points.size())) {
-        const int sign = neg_one_pow(before + after + weight + 1);
-        ret += sign * GLiVec(
-          weight,
-          choose_indices(points, {before}),
-          removed_indices(points, {before, after})
-        );
-      }
-    }
-    ret = plucker_dual(ret, points);
+    const int n = weight;
+    return ncoproduct(substitute_variables_1_based(
+      + GLiVec(n, seq_incl(1, 2*n))
+      + neg_one_pow(n) * b_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n),
+      points
+    ));
   } else if (dimension == weight - 1) {
-    for (const int before : range(mid)) {
-      for (const int after : range(mid + 1, points.size())) {
-        const int sign = neg_one_pow(before + after + weight + 1);
-        ret += sign * GLiVec(weight, removed_indices(points, {before, after}));
-      }
-    }
-    ret *= neg_one_pow(weight + 1);
+    const int n = weight;
+    return ncoproduct(substitute_variables_1_based(
+      neg_one_pow(n) * a_plus(a_minus_minus(GLiVec(n, seq_incl(1, 2*n-2)), 2*n-1), 2*n),
+      points
+    ));
   } else {
     FATAL(absl::Substitute("Not implemented: ChernCocycle with weight=$0, dimension=$1", weight, dimension));
   }
-  return ncoproduct(ret);
 }
 
 // TODO: How does `dimension` parameter in ChernCocycle relate to Grassmannian dimension?
