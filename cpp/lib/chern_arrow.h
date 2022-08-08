@@ -30,3 +30,14 @@ GammaNCoExpr a_minus_minus(const GammaNCoExpr& expr, int num_dst_points);
 GammaNCoExpr a_plus_plus(const GammaNCoExpr& expr, int num_dst_points);
 GammaNCoExpr b_minus_minus(const GammaNCoExpr& expr, int num_dst_points);
 GammaNCoExpr b_plus_plus(const GammaNCoExpr& expr, int num_dst_points);
+
+using ABFunction = std::function<GammaExpr(const GammaExpr&, int)>;
+using NCoABFunction = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
+
+enum class ABDoublePlusMinus {
+  Include,
+  Exclude,
+};
+
+std::vector<ABFunction> list_ab_function(ABDoublePlusMinus double_plus_minus);
+std::vector<NCoABFunction> list_nco_ab_function(ABDoublePlusMinus double_plus_minus);

@@ -25,6 +25,8 @@ static std::vector exprs_even_num_points = {
   tensor_product(G({1,2,3,4}), G({3,4,5,6})),
 };
 
+static std::vector exprs_any_num_points = concat(exprs_odd_num_points, exprs_even_num_points);
+
 // Identities that should be true for all symbols.
 class ChernArrowIdentityTest : public testing::TestWithParam<GammaExpr> {
 public:
@@ -92,8 +94,159 @@ TEST_P(ChernArrowIdentityTest, ABEquations) {
   EXPECT_EXPR_EQ(a_plus_plus(b_minus(x, n+1), n+2), -b_minus_minus(a_plus(x, n+1), n+2));
 }
 
-INSTANTIATE_TEST_SUITE_P(AllCases, ChernArrowIdentityTest, testing::ValuesIn(
-  concat(exprs_odd_num_points, exprs_even_num_points)
-));
+TEST(ChernArrowTest, LARGE_GenerateABEquations) {
+  ScopedFormatting sf(FormattingConfig()
+    .set_encoder(Encoder::ascii)
+    .set_rich_text_format(RichTextFormat::plain_text)
+    .set_max_terms_in_annotations_one_liner(100)
+  );
+
+  const auto arrows = list_ab_function(ABDoublePlusMinus::Include);
+  absl::flat_hash_set<std::pair<int, int>> zero_eqn_indices;
+  std::vector<std::string> zero_eqns;
+  for (const int out : range(arrows.size())) {
+    for (const int in : range(arrows.size())) {
+      const auto make_eqn = [&](const auto& expr, const int n) {
+        return arrows[out](arrows[in](expr, n+1), n+2);
+      };
+      bool eqn_holds = true;
+      for (const auto& expr : exprs_any_num_points) {
+        const int n = detect_num_variables(expr);
+        const auto eqn = make_eqn(expr, n);
+        if (!eqn.is_zero()) {
+          eqn_holds = false;
+          break;
+        }
+      }
+      if (eqn_holds) {
+        const auto expr = GammaExpr().annotate("x");
+        const auto eqn = make_eqn(expr, 0);
+        zero_eqn_indices.insert({out, in});
+        zero_eqns.push_back(absl::StrCat(annotations_one_liner(eqn.annotations()), " == 0"));
+      }
+    }
+  }
+
+  std::vector<std::string> equality_eqns;
+  for (const int l_out : range(arrows.size())) {
+    for (const int l_in : range(arrows.size())) {
+      for (const int r_out : range(arrows.size())) {
+        for (const int r_in : range(arrows.size())) {
+          const bool is_trivial =
+            std::tie(l_out, l_in) >= std::tie(r_out, r_in)
+            || zero_eqn_indices.contains({l_out, l_in})
+            || zero_eqn_indices.contains({r_out, r_in})
+          ;
+          if (is_trivial) {
+            continue;
+          }
+          for (const int sign : {-1, 1}) {
+            const auto make_eqn = [&](const auto& expr, const int n) {
+              return
+                + arrows[l_out](arrows[l_in](expr, n+1), n+2)
+                + sign * arrows[r_out](arrows[r_in](expr, n+1), n+2)
+              ;
+            };
+            bool eqn_holds = true;
+            for (const auto& expr : exprs_any_num_points) {
+              const int n = detect_num_variables(expr);
+              const auto eqn = make_eqn(expr, n);
+              if (!eqn.is_zero()) {
+                eqn_holds = false;
+                break;
+              }
+            }
+            if (eqn_holds) {
+              const auto expr = GammaExpr().annotate("x");
+              const auto eqn = make_eqn(expr, 0);
+              equality_eqns.push_back(absl::StrCat(annotations_one_liner(eqn.annotations()), " == 0"));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  EXPECT_THAT(zero_eqns, testing::UnorderedElementsAre(
+    "a(a(x)) == 0",
+    "a-(a--(x)) == 0",
+    "a+(a++(x)) == 0",
+    "b(b(x)) == 0",
+    "b-(b--(x)) == 0",
+    "b+(b++(x)) == 0"
+  ));
+
+  EXPECT_THAT(equality_eqns, testing::UnorderedElementsAre(
+    "(a(a++(x)) + a(a-(x))) == 0",
+    "(a(a-(x)) + a--(a++(x))) == 0",
+    "(a(a+(x)) + a(a--(x))) == 0",
+    "(a(a+(x)) + a++(a--(x))) == 0",
+    "(a(b(x)) + b(a(x))) == 0",
+    "(a(a--(x)) - a++(a--(x))) == 0",
+    "(a(a++(x)) - a--(a++(x))) == 0",
+    "(a-(a(x)) - a-(a+(x))) == 0",
+    "(a++(a(x)) + a-(a(x))) == 0",
+    "(a++(a(x)) + a-(a+(x))) == 0",
+    "(a-(b--(x)) + b-(a--(x))) == 0",
+    "(a+(a(x)) - a+(a-(x))) == 0",
+    "(a+(a(x)) + a--(a(x))) == 0",
+    "(a+(a-(x)) + a--(a(x))) == 0",
+    "(a+(b++(x)) + b+(a++(x))) == 0",
+    "(b(b++(x)) + b(b-(x))) == 0",
+    "(b(b-(x)) + b--(b++(x))) == 0",
+    "(b(b+(x)) + b(b--(x))) == 0",
+    "(b(b+(x)) + b++(b--(x))) == 0",
+    "(b(b--(x)) - b++(b--(x))) == 0",
+    "(b(b++(x)) - b--(b++(x))) == 0",
+    "(b-(b(x)) - b-(b+(x))) == 0",
+    "(b++(b(x)) + b-(b(x))) == 0",
+    "(b++(b(x)) + b-(b+(x))) == 0",
+    "(b+(b(x)) - b+(b-(x))) == 0",
+    "(b+(b(x)) + b--(b(x))) == 0",
+    "(b+(b-(x)) + b--(b(x))) == 0",
+    "(a++(a-(x)) + a--(a+(x))) == 0",
+    "(a--(b+(x)) + b++(a-(x))) == 0",
+    "(a++(b-(x)) + b--(a+(x))) == 0",
+    "(b++(b-(x)) + b--(b+(x))) == 0"
+  ));
+}
+
+TEST(ChernArrowTest, LARGE_GenerateGLiViaLowerGLiABEquations) {
+  ScopedFormatting sf(FormattingConfig()
+    .set_encoder(Encoder::ascii)
+    .set_rich_text_format(RichTextFormat::plain_text)
+    .set_compact_x(true)
+    .set_max_terms_in_annotations_one_liner(100)
+  );
+
+  std::vector<std::string> equations;
+  const auto ab_full = list_ab_function(ABDoublePlusMinus::Include);
+  const auto ab_core = list_ab_function(ABDoublePlusMinus::Exclude);
+  const int p = 3;
+  for (const auto& out : ab_core) {
+    for (const auto& in : ab_full) {
+      for (const int sign : {-1, 1}) {
+        const auto eqn = to_lyndon_basis(
+          + GLiVec(p, seq_incl(1, 2*p+2))
+          + sign * out(in(GLiVec(p, seq_incl(1, 2*p)), 2*p+1), 2*p+2)
+        );
+        if (eqn.is_zero()) {
+          equations.push_back(absl::StrCat(annotations_one_liner(eqn.annotations()), " = 0"));
+        }
+      }
+    }
+  }
+
+  EXPECT_THAT(equations, testing::UnorderedElementsAre(
+    "(GLi_3(1,2,3,4,5,6,7,8) - a-(b+(GLi_3(1,2,3,4,5,6)))) = 0",
+    "(GLi_3(1,2,3,4,5,6,7,8) + a-(b--(GLi_3(1,2,3,4,5,6)))) = 0",
+    "(GLi_3(1,2,3,4,5,6,7,8) - a+(b-(GLi_3(1,2,3,4,5,6)))) = 0",
+    "(GLi_3(1,2,3,4,5,6,7,8) + b-(a+(GLi_3(1,2,3,4,5,6)))) = 0",
+    "(GLi_3(1,2,3,4,5,6,7,8) - b-(a--(GLi_3(1,2,3,4,5,6)))) = 0",
+    "(GLi_3(1,2,3,4,5,6,7,8) + b+(a-(GLi_3(1,2,3,4,5,6)))) = 0"
+  ));
+}
+
+INSTANTIATE_TEST_SUITE_P(AllCases, ChernArrowIdentityTest, testing::ValuesIn(exprs_any_num_points));
 INSTANTIATE_TEST_SUITE_P(AllCases, OddNumPointsIdentityTest, testing::ValuesIn(exprs_odd_num_points));
 INSTANTIATE_TEST_SUITE_P(AllCases, EvenNumPointsIdentityTest, testing::ValuesIn(exprs_even_num_points));

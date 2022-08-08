@@ -173,3 +173,33 @@ IMPL(a_minus_minus, a_minus_minus_impl)
 IMPL(a_plus_plus, a_plus_plus_impl)
 IMPL(b_minus_minus, b_minus_minus_impl)
 IMPL(b_plus_plus, b_plus_plus_impl)
+
+
+template<typename F>
+std::vector<F> list_ab_function(ABDoublePlusMinus double_plus_minus) {
+  std::vector<F> ret = {
+    DISAMBIGUATE(a_full),
+    DISAMBIGUATE(a_minus),
+    DISAMBIGUATE(a_plus),
+    DISAMBIGUATE(b_full),
+    DISAMBIGUATE(b_minus),
+    DISAMBIGUATE(b_plus),
+  };
+  if (double_plus_minus == ABDoublePlusMinus::Include) {
+    append_vector(ret, std::vector<F>{
+      DISAMBIGUATE(a_minus_minus),
+      DISAMBIGUATE(a_plus_plus),
+      DISAMBIGUATE(b_minus_minus),
+      DISAMBIGUATE(b_plus_plus),
+    });
+  }
+  return ret;
+}
+
+std::vector<ABFunction> list_ab_function(ABDoublePlusMinus double_plus_minus) {
+  return list_ab_function<ABFunction>(double_plus_minus);
+}
+
+std::vector<NCoABFunction> list_nco_ab_function(ABDoublePlusMinus double_plus_minus) {
+  return list_ab_function<NCoABFunction>(double_plus_minus);
+}
