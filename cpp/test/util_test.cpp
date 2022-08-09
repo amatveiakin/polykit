@@ -39,6 +39,10 @@ TEST(SumTest, Basic) {
   EXPECT_EQ(sum(std::vector{1, 2, 3, 4}, [](const auto& v) { return v * v; }), 30);
 }
 
+TEST(DiffsTest, Basic) {
+  EXPECT_EQ(diffs(std::vector{4, 6, 9, 13, 18, 19, 19, 15}), (std::vector{2, 3, 4, 5, 1, 0, -4}));
+}
+
 TEST(GroupByTest, GroupEqual) {
   EXPECT_EQ(
     group_equal(std::vector<int>{1, 2, 2, 1, 3, 3, 3, 1, 1, 3}),

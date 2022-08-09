@@ -999,7 +999,7 @@ std::ostream& operator<<(std::ostream& os, const internal::PrintableLinear<Param
 namespace prnt {
 
 template<typename T, typename ToStringF>
-auto set_object_to_string(T expression, ToStringF object_to_string) {
+auto with_object_to_string(T expression, ToStringF object_to_string) {
   auto printable_expression = to_printable_linear(std::move(expression));
   printable_expression.object_to_string = object_to_string;
   return printable_expression;

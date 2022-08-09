@@ -329,9 +329,9 @@ TEST(GLiTest, LARGE_Comultiplication) {
   }
 }
 
+// Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm:
+// Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
 TEST(GLiTest, LARGE_ComultiplicationAomoto) {
-  // Simplified formula for (1, n-1) comultiplication component of Aomoto polylogarithm,
-  // Proposition 2.3 from https://arxiv.org/pdf/math/0011168.pdf
   for (const int weight : range_incl(3, 4)) {
     const int p = weight + 1;
     const int num_points = 2 * p;
@@ -383,6 +383,56 @@ TEST(GLiTest, LARGE_ComultiplicationAomotoViaAB) {
       ), 2*p-1), 2*p)
     ;
     EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, -neg_one_pow(p) * rhs);
+  }
+}
+
+// Presentation for (1, n-1) comultiplication component:
+// Proposition 4.4 from https://arxiv.org/pdf/math/0011168.pdf
+TEST(GLiTest, LARGE_ComultiplicationViaAB) {
+  for (const int n : range_incl(4, 5)) {
+    for (const int p : range_incl(3, 4)) {
+      const auto gli_large = GLiVec(n-1, seq_incl(1, 2*p));
+      const auto gli_small = GLiVec(n-1, seq_incl(1, 2*p-2));
+      const auto s = neg_one_pow(p-1);
+      const auto lhs = s * ncomultiply(GLiVec(n, seq_incl(1, 2*p)), {1,n-1});
+      const auto rhs =
+        + s * ncoproduct(gli_large, plucker(seq_incl(1, p)))
+        + s * ncoproduct(gli_large, plucker(seq_incl(p+1, 2*p)))
+        - ncoproduct(
+          s * gli_large + a_minus(b_plus(gli_small, 2*p-1), 2*p),
+          plucker(concat(seq_incl(1, p-1), {2*p}))
+        )
+        - ncoproduct(
+          s * gli_large + a_plus(b_minus(gli_small, 2*p-1), 2*p),
+          plucker(seq_incl(p, 2*p-1))
+        )
+        + a_minus(ncoproduct(
+          b_plus(gli_small, 2*p-1),
+          plucker(concat(seq_incl(1, p-1), {2*p-1}))
+        ), 2*p)
+        + a_plus(ncoproduct(
+          b_minus(gli_small, 2*p-1),
+          plucker(seq_incl(p, 2*p-1))
+        ), 2*p)
+        - b_plus(ncoproduct(
+          a_minus(gli_small, 2*p-1),
+          plucker(seq_incl(1, p-1))
+        ), 2*p)
+        - b_minus(ncoproduct(
+          a_plus(gli_small, 2*p-1),
+          plucker(seq_incl(p, 2*p-2))
+        ), 2*p)
+        - a_minus(b_plus(ncoproduct(
+          gli_small,
+          plucker(seq_incl(1, p-1))
+        ), 2*p-1), 2*p)
+        - a_plus(b_minus(ncoproduct(
+          gli_small,
+          plucker(seq_incl(p, 2*p-2))
+        ), 2*p-1), 2*p)
+      ;
+      EXPECT_EXPR_EQ(lhs, -rhs);  // TODO: Fix the formula (here and in the article) and remove minus
+    }
   }
 }
 
@@ -592,4 +642,33 @@ TEST(GLiTest, LARGE_SymmGLi4EquationStub) {
     {expr},
     DISAMBIGUATE(to_lyndon_basis)
   );
+}
+
+TEST(GLiTest, SumOfPermutations_Arg4) {
+  GammaExpr p, q;
+  for (const auto& [points, sign] : permutations_with_sign({1,2,3,4})) {
+    p += sign * tensor_product(absl::MakeConstSpan({
+      G(choose_indices_one_based(points, {1,2})),
+      G(choose_indices_one_based(points, {2,3})),
+    }));
+    q += sign * GLiVec(2, points);
+  }
+  p = to_lyndon_basis(p);
+  q = to_lyndon_basis(q);
+  EXPECT_EXPR_ZERO(p.dived_int(2) + q.dived_int(24));
+}
+
+TEST(GLiTest, LARGE_SumOfPermutations_Arg6) {
+  GammaExpr p, q;
+  for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+    p += sign * tensor_product(absl::MakeConstSpan({
+      G(choose_indices_one_based(points, {1,2,3})),
+      G(choose_indices_one_based(points, {2,3,4})),
+      G(choose_indices_one_based(points, {3,4,5})),
+    }));
+    q += sign * GLiVec(3, points);
+  }
+  p = to_lyndon_basis(p);
+  q = to_lyndon_basis(q);
+  EXPECT_EXPR_ZERO(p.dived_int(2) - q.dived_int(240));
 }

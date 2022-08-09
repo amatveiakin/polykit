@@ -85,7 +85,7 @@ struct identity_function_t {
 };
 constexpr identity_function_t identity_function;
 
-// TODO: For using together with `mapped`.
+// For using together with `mapped`.
 template<typename T>
 struct convert_to_t {
   template<class U>
@@ -578,6 +578,11 @@ auto sum(const Container& c, const Projector& projector) {
       return x + projector(y);
     }
   );
+}
+
+template<typename Container>
+auto diffs(const Container& c) {
+  return mapped(range(c.size() - 1), [&](const int i) { return c[i + 1] - c[i]; });
 }
 
 template<typename Container>

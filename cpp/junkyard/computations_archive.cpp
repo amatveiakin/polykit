@@ -1,4 +1,4 @@
-// Old rank computations that are not ready to be factored out into tests, but could be
+// Old computations that are not ready to be factored out into tests, but could be
 // useful for future reference.
 
 #include "lib/integer_math.h"
@@ -820,4 +820,228 @@ void computations_archive() {
   // const auto ranks = space_venn_ranks(space, {pair}, identity_function);
   // std::cout << to_string(ranks) << "\n";
 
+
+  // const auto prepare = [](const GammaExpr& expr) {
+  //   return prnt::with_object_to_string(
+  //     expr.filtered([](const auto& term) {
+  //       return all_vars(term).size() == 5 && common_vars(term).size() == 1;
+  //     }),
+  //     [](const auto& term) {
+  //       const auto vars = common_vars(term);
+  //       return absl::StrCat(
+  //         internal::GammaExprParam::object_to_string(term),
+  //         "   ",
+  //         str_join(vars, ",")
+  //       );
+  //     }
+  //   );
+  // };
+  // auto lhs = to_lyndon_basis(GLi3(1,2,3,4,5,6));
+  // // lhs = lhs.filtered([](const auto& term) {
+  // //   return absl::c_all_of(
+  // //     transposed(mapped(term, [](const Gamma& g) { return g.index_vector(); })),
+  // //     DISAMBIGUATE(is_strictly_increasing)
+  // //   );
+  // // });
+  // std::cout << prepare(lhs);
+  // GammaExpr rhs;
+  // for (const auto& [points, sign] : permutations_with_sign({1,2,3,4,5,6})) {
+  //   rhs += sign * tensor_product(absl::MakeConstSpan({
+  //     G(choose_indices_one_based(points, {1,2,3})),
+  //     G(choose_indices_one_based(points, {2,3,4})),
+  //     G(choose_indices_one_based(points, {3,4,5})),
+  //   }));
+  // }
+  // rhs = to_lyndon_basis(rhs)
+  //   .dived_int(2)
+  //   .filtered(DISAMBIGUATE(is_weakly_separated))
+  // ;
+  // std::cout << prepare(rhs);
+  // std::cout << prepare(lhs - rhs);  // NOT ZERO: fitting not finished
+
+
+  // Profiler profiler;
+  // const auto expr = GLi5(1,2,3,4,5,6,7,8);
+  // profiler.finish("expr");
+  // auto coexpr = ncomultiply(expr, {1,4});
+  // profiler.finish("comult");
+  // std::cout << "\n";
+  // // This zeroes out terms where we take three points from {1,2,3,4} and one point from {5,6,7,8}.
+  // // Should also do vice versa to the the full equation.
+  // coexpr +=
+  //   + ncoproduct(GLi4(1,2,3,4,5,6,7,8), plucker({1,2,3,4}))
+  //   + ncoproduct(
+  //     + GLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - GLiVec(4, {6}, {1,2,4,5,7,8})
+  //     + GLiVec(4, {7}, {1,2,4,5,6,8})
+  //     ,
+  //     plucker({1,2,4,8})
+  //   )
+  //   - ncoproduct(
+  //     + GLiVec(4, {5}, {1,3,4,6,7,8})
+  //     - GLiVec(4, {6}, {1,3,4,5,7,8})
+  //     + GLiVec(4, {7}, {1,3,4,5,6,8})
+  //     ,
+  //     plucker({1,3,4,8})
+  //   )
+  //   + ncoproduct(
+  //     + GLiVec(4, {5}, {2,3,4,6,7,8})
+  //     - GLiVec(4, {6}, {2,3,4,5,7,8})
+  //     + GLiVec(4, {7}, {2,3,4,5,6,8})
+  //     ,
+  //     plucker({2,3,4,8})
+  //   )
+  //   + ncoproduct(
+  //     + GLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - GLiVec(4, {5}, {1,3,4,6,7,8})
+  //     + GLiVec(4, {5}, {2,3,4,6,7,8})
+  //     ,
+  //     plucker({1,2,3,5})
+  //   )
+  //   - ncoproduct(
+  //     + GLiVec(4, {6}, {1,2,4,5,7,8})
+  //     - GLiVec(4, {6}, {1,3,4,5,7,8})
+  //     + GLiVec(4, {6}, {2,3,4,5,7,8})
+  //     ,
+  //     plucker({1,2,3,6})
+  //   )
+  //   + ncoproduct(
+  //     + GLiVec(4, {7}, {1,2,4,5,6,8})
+  //     - GLiVec(4, {7}, {1,3,4,5,6,8})
+  //     + GLiVec(4, {7}, {2,3,4,5,6,8})
+  //     ,
+  //     plucker({1,2,3,7})
+  //   )
+  //   - ncoproduct(GLiVec(4, {5}, {1,2,4,6,7,8}), plucker({1,2,4,5}))
+  //   + ncoproduct(GLiVec(4, {6}, {1,2,4,5,7,8}), plucker({1,2,4,6}))
+  //   - ncoproduct(GLiVec(4, {7}, {1,2,4,5,6,8}), plucker({1,2,4,7}))
+  //   + ncoproduct(GLiVec(4, {5}, {1,3,4,6,7,8}), plucker({1,3,4,5}))
+  //   - ncoproduct(GLiVec(4, {6}, {1,3,4,5,7,8}), plucker({1,3,4,6}))
+  //   + ncoproduct(GLiVec(4, {7}, {1,3,4,5,6,8}), plucker({1,3,4,7}))
+  //   - ncoproduct(GLiVec(4, {5}, {2,3,4,6,7,8}), plucker({2,3,4,5}))
+  //   + ncoproduct(GLiVec(4, {6}, {2,3,4,5,7,8}), plucker({2,3,4,6}))
+  //   - ncoproduct(GLiVec(4, {7}, {2,3,4,5,6,8}), plucker({2,3,4,7}))
+  //   - ncoproduct(
+  //     + GLiVec(4, {1,2,3,4,5,6,7,8})
+  //     + GLiVec(4, {5}, {2,3,4,6,7,8})
+  //     - GLiVec(4, {5}, {1,3,4,6,7,8})
+  //     + GLiVec(4, {5}, {1,2,4,6,7,8})
+  //     - GLiVec(4, {6}, {2,3,4,5,7,8})
+  //     + GLiVec(4, {6}, {1,3,4,5,7,8})
+  //     - GLiVec(4, {6}, {1,2,4,5,7,8})
+  //     + GLiVec(4, {7}, {2,3,4,5,6,8})
+  //     - GLiVec(4, {7}, {1,3,4,5,6,8})
+  //     + GLiVec(4, {7}, {1,2,4,5,6,8})
+  //     ,
+  //     plucker({1,2,3,8})
+  //   )
+  // ;
+  // std::cout << coexpr;
+  // std::cout << coexpr.termwise_abs().mapped<GammaExpr>([](const auto& term) {
+  //   return term.at(0);
+  // });
+  // // const auto lhs = filter_coexpr(coexpr, 0, std::vector{Gamma({1,2,3,8})});
+  // // const auto rhs = ;
+  // // std::cout << lhs;
+  // // std::cout << rhs;
+  // // std::cout << lhs + rhs;
+
+
+  // for (const int dimension : range_incl(3, 4)) {
+  //   const int weight = dimension - 1;
+  //   const int num_points = dimension * 2;
+  //   const auto points = seq_incl(1, num_points);
+  //   const auto space = ChernGrL(weight, dimension, points);
+  //   const auto ranks = space_mapping_ranks(
+  //     space,
+  //     DISAMBIGUATE(to_lyndon_basis),
+  //     [&](const auto& expr) {
+  //       return std::tuple{
+  //         to_lyndon_basis(a_minus(expr, num_points + 1)),
+  //         to_lyndon_basis(a_plus(expr, num_points + 1)),
+  //         to_lyndon_basis(b_minus(expr, num_points + 1)),
+  //         to_lyndon_basis(b_plus(expr, num_points + 1)),
+  //         // to_lyndon_basis(expr + neg_one_pow(dimension) * plucker_dual(expr, points)),
+  //       };
+  //     }
+  //   );
+  //   std::cout << to_string(ranks) << "\n";
+  // }
+
+
+  // // TODO: Factor out sigma_i (a.k.a "co-degeneration maps")
+  // //   But first we need to figure out the story about propagating variable space information.
+  // //   Some functions (cherns arrows, a+, a-, b+, b-) expect one-based numeration, while this
+  // //   function expects 0-based. Also both of them need `dst_vars` to be passed explicitly,
+  // //   which is not really convenient.
+  // static constexpr auto sigma = [](int i, const auto& expr, int dst_vars) {
+  //   CHECK_LT(i, dst_vars);
+  //   return substitute_variables_0_based(expr, concat(seq_incl(0, i), seq(i, dst_vars)));
+  // };
+  // static constexpr auto add_to_each_multiple = [](X new_var, const auto& expr) {
+  //   return expr.mapped_expanding([&](const auto& term) {
+  //     return tensor_product(absl::MakeConstSpan(mapped(term, [&](const X var) {
+  //       return
+  //         + ProjectionExpr::single({var})
+  //         + ProjectionExpr::single({new_var})
+  //       ;
+  //     })));
+  //   });
+  // };
+  // static constexpr auto get_unsorted_partitions_allow_zero = [](int n, int num_summands) {
+  //   const int q = n + num_summands - 1;
+  //   return mapped(combinations(seq_incl(1, q), num_summands - 1), [&](const auto& s) {
+  //     return mapped(diffs(concat(std::vector{0}, s, std::vector{q+1})), [](const int k) {
+  //       return k - 1;
+  //     });
+  //   });
+  // };
+  // static constexpr auto kernel_element = [](const int weight, const int num_points) {
+  //   return sum(get_unsorted_partitions_allow_zero(weight - num_points + 1, num_points), [&](const auto& subweights) {
+  //     return tensor_product(absl::MakeConstSpan(mapped(range(num_points * 2 - 1), [&](const int k) {
+  //       const int i = k / 2;
+  //       return (k % 2 == 0)
+  //         ? ProjectionExpr::single(std::vector(subweights.at(i), X(i)))
+  //         : ProjectionExpr::single({X(i)}) - ProjectionExpr::single({X(i + 1)})
+  //       ;
+  //     })));
+  //   });
+  // };
+  // for (const int num_points : range_incl(2, 6)) {
+  //   for (const int weight : range_incl(2, 6)) {
+  //     const int m = num_points - 1;
+  //     const auto coords = seq(num_points);
+  //     // const auto space = mapped(get_lyndon_words(coords, weight), [](const auto& word) {
+  //     //   return ProjectionExpr::single(mapped(word, convert_to<X>));
+  //     // });
+  //     const auto space = mapped(combinations_with_replacement(coords, weight), [](const auto& word) {
+  //       return ProjectionExpr::single(mapped(word, convert_to<X>));
+  //     });
+  //     const auto ranks = space_mapping_ranks(
+  //       space,
+  //       DISAMBIGUATE(to_lyndon_basis),
+  //       [&](const auto& expr) {
+  //         return concat(
+  //           mapped(
+  //             range(m),
+  //             [&](const int i) { return to_lyndon_basis(sigma(i, expr, m)); }
+  //           ),
+  //           mapped(
+  //             range(num_points),
+  //             [&](const int i) { return to_lyndon_basis(expr - add_to_each_multiple(i, expr)); }
+  //           )
+  //         );
+  //       }
+  //     );
+  //     std::cout << "m=" << m << ", w=" << weight << ": " << to_string(ranks) << "\n";
+  //     const auto expr = kernel_element(weight, num_points - 1);
+  //     for (const int i : range(m - 1)) {
+  //       CHECK(to_lyndon_basis(sigma(i, expr, m)).is_zero()) << i;
+  //     }
+  //     for (const int i : range(num_points - 1)) {
+  //       CHECK(to_lyndon_basis(expr - add_to_each_multiple(i, expr)).is_zero());
+  //     }
+  //     // std::cout << "kernel ok\n";
+  //   }
+  // }
 }
