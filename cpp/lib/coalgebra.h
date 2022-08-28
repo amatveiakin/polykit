@@ -78,13 +78,13 @@ auto to_coexpr(ExprT expr) {
   });
 }
 
-template<typename T>
-auto maybe_to_ncoexpr(T expr) {
-  using NCoExprT = NCoExprForExpr_t<T>;
-  if constexpr (std::is_void_v<NCoExprT>) {
+// Usage e.g.: maybe_to_coexpr<NCoExprForExpr_t<T>>
+template<typename CoExprT, typename T>
+auto maybe_to_coexpr(T expr) {
+  if constexpr (std::is_void_v<CoExprT>) {
     return expr;
   } else {
-    return to_coexpr<NCoExprT>(expr);
+    return to_coexpr<CoExprT>(expr);
   }
 }
 
@@ -108,11 +108,10 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
 }  // namespace internal
 
 
-template<typename CoExprT, typename ExprT>
-auto abstract_coproduct_vec(const std::vector<ExprT>& expr) {
+template<typename CoExprT>
+auto abstract_coproduct_vec(const std::vector<CoExprT>& coexpr) {
   constexpr bool is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
   constexpr bool is_iterated = CoExprT::Param::coproduct_is_iterated;
-  const auto coexpr = mapped(expr, internal::to_coexpr<CoExprT, ExprT>);
   auto ret = outer_product<CoExprT>(
     coexpr,
     [](const auto& u, const auto& v) {
@@ -133,17 +132,17 @@ auto abstract_coproduct_vec(const std::vector<ExprT>& expr) {
 
 template<typename ExprT>
 auto ncoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec<NCoExprForExpr_t<ExprT>>(expr);
+  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<NCoExprForExpr_t<ExprT>>)));
 }
 
 template<typename ExprT>
 auto icoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec<ICoExprForExpr_t<ExprT>>(expr);
+  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<ICoExprForExpr_t<ExprT>>)));
 }
 
 template<typename ExprT>
 auto acoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec<ACoExprForExpr_t<ExprT>>(expr);
+  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<ACoExprForExpr_t<ExprT>>)));
 }
 
 template<typename CoExprT, typename... Args>
@@ -282,7 +281,10 @@ auto ncomultiply_impl(const CoExprT& coexpr, std::vector<int> form) {
 
 template<typename T>
 auto ncomultiply(const T& expr, std::vector<int> form = {}) {
-  return internal::ncomultiply_impl(internal::maybe_to_ncoexpr(expr), std::move(form));
+  return internal::ncomultiply_impl(
+    internal::maybe_to_coexpr<NCoExprForExpr_t<T>>(expr),
+    std::move(form)
+  );
 }
 
 // Converts each term
