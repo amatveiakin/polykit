@@ -60,24 +60,24 @@ def to_lyndon_basis(
         words,  # Linear[word]
     ):
     assert isinstance(words, Linear)
-    terms_to_convert = SortedDict(words.items())
+    terms_to_convert = SortedDict(words.data.items())
     terms_converted = Linear()
     while terms_to_convert:
         word_orig, coeff = terms_to_convert.popitem(-1)
         lyndon_words = lyndon_factorize(word_orig)
         assert len(lyndon_words) > 0
-        lyndon_word_expr = Linear.count(lyndon_words)
+        lyndon_word_expr = Linear.from_collection(lyndon_words)
         if len(lyndon_words) == 1:
-            terms_converted[word_orig] += coeff
+            terms_converted.add_to(word_orig, coeff)
             continue
         denominator = 1
-        for _, count in lyndon_word_expr.items():
+        for _, count in lyndon_word_expr.data.items():
             denominator *= math.factorial(count)
-        expanded_word_expr = Linear.count(shuffle_product(lyndon_words)).div_int(denominator)
+        expanded_word_expr = Linear.from_collection(shuffle_product(lyndon_words)).div_int(denominator)
         assert expanded_word_expr[word_orig] == 1, f"{word_orig} not in {expanded_word_expr}"
         # print(f"Lyndon transform: {word_orig} => {lyndon_words} =>\n{expanded_word_expr}")
-        expanded_word_expr[word_orig] = 0
-        for word, inner_coeff in expanded_word_expr.items():
+        expanded_word_expr.add_to(word_orig, -1)
+        for word, inner_coeff in expanded_word_expr.data.items():
             assert terms_converted[word] == 0
             if not word in terms_to_convert:
                 terms_to_convert[word] = 0

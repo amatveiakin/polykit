@@ -122,12 +122,13 @@ def d_expr_dimension(
 
 
 # Equivalent to `to_lyndon_basis(expr)`, but faster
+# TODO: Fix: it's not actually equivalent. Probably the ordering in alphabet mapping differs.
 def d_expr_to_lyndon_basis(
         expr: Linear,  # Linear[Tuple[D]]
     ):
     return to_lyndon_basis(
-        expr.mapped_obj(_to_word)
-    ).mapped_obj(_from_word)
+        expr.mapped(_to_word)
+    ).mapped(_from_word)
 
 
 # Checks that:

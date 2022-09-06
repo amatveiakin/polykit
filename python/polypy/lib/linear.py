@@ -19,6 +19,13 @@ class Linear:
         return Linear({obj: 1})
 
     @staticmethod
+    def from_collection(container):
+        ret = Linear()
+        for term in container:
+            ret.add_to(term, 1)
+        return ret
+
+    @staticmethod
     def from_cpp(expr):
         ret = Linear()
         for term, coeff in expr:
@@ -132,7 +139,7 @@ def _tensor_product_two(
         for obj_r, coeff_r in rhs:
             obj = product(obj_l, obj_r)
             assert ret[obj] == 0, f"Tensor product is not unique: {obj} = ({obj_l}) * ({obj_r})"
-            ret[obj] = coeff_l * coeff_r
+            ret.add_to(obj, coeff_l * coeff_r)
     return ret
 
 def tensor_product(
