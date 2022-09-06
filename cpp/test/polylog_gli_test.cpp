@@ -316,8 +316,8 @@ TEST(GLiTest, LARGE_Comultiplication) {
               const auto args_2 = concat(i, points_p, j_complement, points_2p);
               if (are_GLi_args_ok(w_1, args_1.size()) && are_GLi_args_ok(w_2, args_2.size())) {
                 rhs += sign * ncoproduct(
-                  pullback(GLiVec(w_1, args_1), i),
-                  pullback(GLiVec(w_2, args_2), j)
+                  GLiVec(w_1, i, args_1),
+                  GLiVec(w_2, j, args_2)
                 );
               }
             }
