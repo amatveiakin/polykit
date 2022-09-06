@@ -197,16 +197,6 @@ def describe(matrix_builder):
     print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
 
 
-def describe_cpp(mat):
-    global profiler
-    profiler.finish("expr")
-    rank = np.linalg.matrix_rank(mat)
-    profiler.finish("rank")
-    nonzero_percent = np.count_nonzero(mat) * 100.0 / mat.size
-    print(f"{mat.shape} [{nonzero_percent:.2f}% nonzero] => {rank}")
-
-
-
 # mat = np.transpose(np.array(loops_matrix(), dtype=int))
 # print(mat.shape)
 # print(mat)
@@ -1238,43 +1228,6 @@ def describe_cpp(mat):
 # 7 points: 1484 - 1407 = 77
 # 8 points: 4970 - 4802 = 168
 
-# weight = 5
-# points = [x1,x2,x3,x4,x5,x6,x7]
-# describe_cpp(polylog_space_matrix(weight, points, False))
-# describe_cpp(polylog_space_matrix(weight, points, True))
-
-
-# for weight in range(2, 7):
-#     for num_points in range(4, 9):
-#         points = list(range(1, num_points+1))
-#         space_dim = rank_relaxed(polylog_space_matrix(weight, points, False))
-#         cospace_dim = rank_relaxed(polylog_space_matrix(weight, points, True))
-#         diff = space_dim - cospace_dim
-#         print(f'w={weight}, p={num_points}: {space_dim} - {cospace_dim} = {diff}')
-
-# expr = ncomultiply(QLi6(1,2,3,4,5,6,7,8))
-# print(expr)
-# print(ncomultiply(expr))
-
-# for weight in range(2, 11):
-#     for num_points in range(4, 13):
-#         points = [X(i) for i in range(1, num_points+1)]
-#         points[-1] = Inf
-#         start_time = time.time()
-#         space_mat = polylog_space_matrix(weight, points, False)
-#         cospace_mat = polylog_space_matrix(weight, points, True)
-#         space_dim = rank_relaxed(space_mat)
-#         cospace_dim = rank_relaxed(cospace_mat)
-#         diff = space_dim - cospace_dim
-#         print(
-#             f'w={weight}, p={num_points}: '
-#             f'{space_dim} - {cospace_dim} = {diff}'
-#             # f'  ({space_mat.shape} - {cospace_mat.shape})'
-#         )
-#         duration = time.time() - start_time
-#         if duration > 5 * 60:
-#             break
-
 
 
 # points = [x1,x2,x3,x4,x5,x6]
@@ -1291,40 +1244,3 @@ def describe_cpp(mat):
 #     for s2 in L3(points):
 #         matrix_builder.add_expr(prepare(ncoproduct(s1, s2)))
 # describe(matrix_builder)
-
-# num_points = 7
-# points = [X(i) for i in range(1, num_points+1)]
-# points[-1] = Inf
-# space_mat = polylog_space_matrix_6_via_l(points, False)
-# profiler.finish('space_mat')
-# cospace_mat = polylog_space_matrix_6_via_l(points, True)
-# profiler.finish('cospace_mat')
-# space_dim = rank_relaxed(space_mat)
-# profiler.finish('space_dim')
-# cospace_dim = rank_relaxed(cospace_mat)
-# profiler.finish('cospace_dim')
-# diff = space_dim - cospace_dim
-# print(
-#     f'w=6_via_l, p={num_points}: '
-#     f'{space_dim} - {cospace_dim} = {diff}'
-#     f'  ({space_mat.shape} - {cospace_mat.shape})'
-# )
-# # w=6_via_l, p=6: 1389 - 1373 = 16  ((1825, 7760) - (1825, 17864))
-# # w=6_via_l, p=7: 7623 - 7581 = 42  ((10039, 44920) - (10039, 111372))
-
-# weight = 2
-# num_points = 5
-# while True:
-#     points = [X(i) for i in range(1, num_points+1)]
-#     points[-1] = Inf
-#     a, b, united = polylog_space_matrix_l_vs_m(weight, points)
-#     # profiler.finish('matrices')
-#     a_dim = rank_relaxed(a)
-#     # profiler.finish('dim A')
-#     b_dim = rank_relaxed(b)
-#     # profiler.finish('dim B')
-#     united_dim = rank_relaxed(united)
-#     # profiler.finish('dim united')
-#     intersection = a_dim + b_dim - united_dim
-#     print(f'w={weight}, p={num_points}: ({a_dim}, {b_dim}), ∪ = {united_dim}, ∩ = {intersection}')
-#     num_points += 1
