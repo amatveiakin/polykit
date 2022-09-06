@@ -221,3 +221,16 @@ cc_binary(
         ":polylog_linalg",
     ]
 )
+
+cc_binary(
+    name = "example",
+    srcs = ["example.cpp"],
+    deps = [
+        "@absl//absl/debugging:failure_signal_handler",
+        "@absl//absl/debugging:symbolize",
+        ":base",
+        ":math",
+        ":polylog",
+        ":polylog_linalg",
+    ]
+)

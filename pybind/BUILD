@@ -50,6 +50,18 @@ py_library(
 
 
 py_binary(
+    name = "example",
+    srcs = ["example.py"],
+    deps = [
+        requirement("numpy"),
+        requirement("scipy"),
+        requirement("progress"),
+        ":delta_matrix",
+        ":polykit",
+    ],
+)
+
+py_binary(
     name = "workspace",
     srcs = ["workspace.py"],
     deps = [
