@@ -31,6 +31,9 @@ GammaNCoExpr a_plus_plus(const GammaNCoExpr& expr, int num_dst_points);
 GammaNCoExpr b_minus_minus(const GammaNCoExpr& expr, int num_dst_points);
 GammaNCoExpr b_plus_plus(const GammaNCoExpr& expr, int num_dst_points);
 
+GammaNCoExpr c_minus(const GammaNCoExpr& expr, int /*num_points*/);
+GammaNCoExpr c_plus(const GammaNCoExpr& expr, int num_points);
+
 using ABFunction = std::function<GammaExpr(const GammaExpr&, int)>;
 using NCoABFunction = std::function<GammaNCoExpr(const GammaNCoExpr&, int)>;
 
