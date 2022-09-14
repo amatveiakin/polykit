@@ -9,6 +9,7 @@
 #include "polylog_gli.h"
 
 
+// TODO: Fix: this is called "Dim1" but actually produces an expression of dimension 2.
 GammaNCoExpr ChernCocycle_Dim1(int weight, const std::vector<int>& points) {
   CHECK_EQ(points.size(), weight + 1);
   GammaNCoExpr ret;

@@ -129,13 +129,15 @@ SpaceT normalize_space_remove_consecutive(const SpaceT& space, int dimension, in
   });
 }
 
-template<typename SpaceF>
-auto space_ncoproduct(const SpaceF& space_a, const SpaceF& space_b) {
-  // Precompute Lyndon to speed up coproduct.
-  const auto space_a_lyndon = mapped(space_a, DISAMBIGUATE(to_lyndon_basis));
-  const auto space_b_lyndon = mapped(space_b, DISAMBIGUATE(to_lyndon_basis));
+template<typename... Spaces>
+auto space_ncoproduct(const Spaces&... spaces) {
+  // Convert each space to normal co-form first. Serves two purposes:
+  //   - Allows to mix co-spaces and regular spaces.
+  //     TODO: Do the same for regular `ncoproduct`
+  //   - Precomputes Lyndon to speed up actual space coproduct.
+  const std::tuple spaces_lyndon{ mapped(spaces, DISAMBIGUATE(ncoproduct))... };
   return mapped_parallel(
-    cartesian_product(space_a_lyndon, space_b_lyndon),
+    std::apply(DISAMBIGUATE(cartesian_product), spaces_lyndon),
     applied(DISAMBIGUATE(ncoproduct))
   );
 }
