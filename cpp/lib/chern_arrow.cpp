@@ -163,7 +163,7 @@ LinearT b_plus_plus_impl(const LinearT& expr, int num_dst_points) {
 GammaNCoExpr c_minus(const GammaNCoExpr& expr, int /*num_points*/) {
   const auto ret = expr.is_zero()
     ? expr
-    : ncoproduct(expr, ncoproduct(plucker(seq_incl(1, expr.dimension()))));
+    : ncoproduct(expr, plucker(seq_incl(1, expr.dimension())));
   return ret.without_annotations().copy_annotations_mapped(expr, [&](const std::string& annotation) {
     return fmt::function(fmt::super("c", {"-"}), {annotation});
   });
@@ -172,7 +172,7 @@ GammaNCoExpr c_minus(const GammaNCoExpr& expr, int /*num_points*/) {
 GammaNCoExpr c_plus(const GammaNCoExpr& expr, int num_points) {
   const auto ret = expr.is_zero()
     ? expr
-    : ncoproduct(expr, ncoproduct(plucker(seq_incl(num_points - expr.dimension() + 1, num_points))));
+    : ncoproduct(expr, plucker(seq_incl(num_points - expr.dimension() + 1, num_points)));
   return ret.without_annotations().copy_annotations_mapped(expr, [&](const std::string& annotation) {
     return fmt::function(fmt::super("c", {"+"}), {annotation});
   });

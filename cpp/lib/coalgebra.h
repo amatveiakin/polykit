@@ -84,8 +84,21 @@ auto maybe_to_coexpr(T expr) {
   if constexpr (std::is_void_v<CoExprT>) {
     return expr;
   } else {
-    return to_coexpr<CoExprT>(expr);
+    return to_coexpr<CoExprT>(std::move(expr));
   }
+}
+
+template<typename T>
+auto maybe_to_ncoexpr(T expr) {
+  return maybe_to_coexpr<NCoExprForExpr_t<T>>(std::move(expr));
+}
+template<typename T>
+auto maybe_to_icoexpr(T expr) {
+  return maybe_to_coexpr<ICoExprForExpr_t<T>>(std::move(expr));
+}
+template<typename T>
+auto maybe_to_acoexpr(T expr) {
+  return maybe_to_coexpr<ACoExprForExpr_t<T>>(std::move(expr));
 }
 
 template<typename CoExprT>
@@ -105,11 +118,9 @@ CoExprT normalize_coproduct(const CoExprT& expr) {
     });
   }
 }
-}  // namespace internal
-
 
 template<typename CoExprT>
-auto abstract_coproduct_vec(const std::vector<CoExprT>& coexpr) {
+auto coproduct_vec(const std::vector<CoExprT>& coexpr) {
   constexpr bool is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
   constexpr bool is_iterated = CoExprT::Param::coproduct_is_iterated;
   auto ret = outer_product<CoExprT>(
@@ -129,40 +140,36 @@ auto abstract_coproduct_vec(const std::vector<CoExprT>& coexpr) {
     return ret;  // `normalize_coproduct` might not compile here, thus `if constexpr`
   }
 }
+}  // namespace internal
 
 template<typename ExprT>
 auto ncoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<NCoExprForExpr_t<ExprT>>)));
+  return internal::coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_ncoexpr)));
 }
 
 template<typename ExprT>
 auto icoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<ICoExprForExpr_t<ExprT>>)));
+  return internal::coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_icoexpr)));
 }
 
 template<typename ExprT>
 auto acoproduct_vec(const std::vector<ExprT>& expr) {
-  return abstract_coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_coexpr<ACoExprForExpr_t<ExprT>>)));
-}
-
-template<typename CoExprT, typename... Args>
-auto abstract_coproduct(Args&&... args) {
-  return abstract_coproduct_vec<CoExprT>(std::vector{std::forward<Args>(args)...});
+  return internal::coproduct_vec(mapped(expr, DISAMBIGUATE(internal::maybe_to_acoexpr)));
 }
 
 template<typename... Args>
 auto ncoproduct(Args&&... args) {
-  return ncoproduct_vec(std::vector{std::forward<Args>(args)...});
+  return internal::coproduct_vec(std::vector{internal::maybe_to_ncoexpr(args)...});
 }
 
 template<typename... Args>
 auto icoproduct(Args&&... args) {
-  return icoproduct_vec(std::vector{std::forward<Args>(args)...});
+  return internal::coproduct_vec(std::vector{internal::maybe_to_icoexpr(args)...});
 }
 
 template<typename... Args>
 auto acoproduct(Args&&... args) {
-  return acoproduct_vec(std::vector{std::forward<Args>(args)...});
+  return internal::coproduct_vec(std::vector{internal::maybe_to_acoexpr(args)...});
 }
 
 

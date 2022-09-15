@@ -133,7 +133,6 @@ template<typename... Spaces>
 auto space_ncoproduct(const Spaces&... spaces) {
   // Convert each space to normal co-form first. Serves two purposes:
   //   - Allows to mix co-spaces and regular spaces.
-  //     TODO: Do the same for regular `ncoproduct`
   //   - Precomputes Lyndon to speed up actual space coproduct.
   const std::tuple spaces_lyndon{ mapped(spaces, DISAMBIGUATE(ncoproduct))... };
   return mapped_parallel(
