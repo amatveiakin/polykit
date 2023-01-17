@@ -10,18 +10,6 @@ fn factorial(x: Coeff) -> Coeff {
     ret
 }
 
-// TODO: Replace with `BTreeMap::pop_last` when it's stable:
-//   https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.pop_last
-//   https://github.com/rust-lang/rust/issues/62924
-fn map_pop_last<K, V>(m: &mut BTreeMap<K, V>) -> Option<(K, V)>
-where
-    K: Ord + Clone,
-{
-    let (k, _) = m.iter().next_back()?;
-    let k_copy = k.clone();
-    return m.remove_entry(&k_copy);
-}
-
 
 // Splits the word into a sequence of nonincreasing Lyndon words using Duval algorithm.
 // Such split always exists and is unique (Chen–Fox–Lyndon theorem).
@@ -86,7 +74,7 @@ where
     }
     let mut terms_converted = Linear::<MonomT::AsVector>::zero();
 
-    while let Some((word, coeff)) = map_pop_last(&mut terms_to_convert) {
+    while let Some((word, coeff)) = terms_to_convert.pop_last() {
         if coeff == 0 {
             continue;
         }
