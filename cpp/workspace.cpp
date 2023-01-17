@@ -47,7 +47,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 0
+#if 1
 #include "lib/corr_expression.h"
 #include "lib/iterated_integral.h"
 #include "lib/polylog_via_correlators.h"
@@ -335,61 +335,94 @@ int main(int /*argc*/, char *argv[]) {
 #endif
 
 
-  const auto pl = [](auto... points) {
-    return plucker({points...});
-  };
-  const auto cocycle = a_full(ChernCocycle(4, 1, {1,2,3,4,5}), 6);
-
-  std::vector space = {
-    // first 3 term: expanded residue([t,1,2,3] ^ [t,4]/[t,3] ^ [t,5]/[t,3] ^ [t,6]/[t,3])
-    ncoproduct(GLi2(4,1,2,3), pl(4,5) - pl(4,3), pl(4,6) - pl(4,3)),
-    ncoproduct(GLi2(5,1,2,3), pl(5,4) - pl(5,3), pl(5,6) - pl(5,3)),
-    ncoproduct(GLi2(6,1,2,3), pl(6,4) - pl(6,3), pl(6,5) - pl(6,3)),
-    ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}) - ChernCocycle(3, 2, {2,3,4,5,6}), pl(1,2)),
-    ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}), pl(1,3)),
-    ncoproduct(ChernCocycle(3, 2, {2,3,4,5,6}), pl(2,3)),
-    ncoproduct(GLi2(3,4,5,6), pl(1,2), pl(2,3)),
-    ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(3,1)),
-    ncoproduct(GLi2(3,4,5,6), pl(3,1), pl(1,2)),
-  };
-
-  // const auto cocyle_3_2 = [](const std::vector<int>& points, const auto& rhs) {
-  //   const auto args = [&](const auto... idx) {
-  //     return choose_indices_one_based(points, {idx...});
-  //   };
-  //   return std::vector{
-  //     ncoproduct(GLiVec(2, args(1,2,3,5)), plucker(args(3,4)), rhs),
-  //     ncoproduct(GLiVec(2, args(1,2,4,5)), plucker(args(3,4)), rhs),
-  //     ncoproduct(GLiVec(2, args(1,2,3,5)), plucker(args(3,5)), rhs),
-  //     ncoproduct(GLiVec(2, args(1,2,4,5)), plucker(args(4,5)), rhs),
-  //     ncoproduct(GLiVec(2, args(1,3,4,5)), plucker(args(1,2)), rhs),
-  //     ncoproduct(GLiVec(2, args(2,3,4,5)), plucker(args(1,2)), rhs),
-  //     ncoproduct(GLiVec(2, args(1,3,4,5)), plucker(args(1,5)), rhs),
-  //     ncoproduct(GLiVec(2, args(2,3,4,5)), plucker(args(2,5)), rhs),
-  //   };
+  // const auto pl = [](auto... points) {
+  //   return plucker({points...});
   // };
-  // auto space = concat(
-  //   std::vector{
-  //     ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(4,6)),
-  //     ncoproduct(GLi2(4,1,2,3), pl(4,3), pl(4,6)),
-  //     ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(4,3)),
-  //     ncoproduct(GLi2(5,1,2,3), pl(5,4), pl(5,6)),
-  //     ncoproduct(GLi2(5,1,2,3), pl(5,3), pl(5,6)),
-  //     ncoproduct(GLi2(5,1,2,3), pl(5,4), pl(5,3)),
-  //     ncoproduct(GLi2(6,1,2,3), pl(6,4), pl(6,5)),
-  //     ncoproduct(GLi2(6,1,2,3), pl(6,3), pl(6,5)),
-  //     ncoproduct(GLi2(6,1,2,3), pl(6,4), pl(6,3)),
-  //     ncoproduct(GLi2(3,4,5,6), pl(1,2), pl(2,3)),
-  //     ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(3,1)),
-  //     ncoproduct(GLi2(3,4,5,6), pl(3,1), pl(1,2)),
-  //   },
-  //   cocyle_3_2({1,3,4,5,6}, pl(1,2)),
-  //   cocyle_3_2({2,3,4,5,6}, pl(1,2)),
-  //   cocyle_3_2({1,3,4,5,6}, pl(1,3)),
-  //   cocyle_3_2({2,3,4,5,6}, pl(2,3))
-  // );
+  // const auto cocycle = a_full(ChernCocycle(4, 1, {1,2,3,4,5}), 6);
 
-  space = mapped(space, DISAMBIGUATE(ncomultiply));
-  const auto eqn = find_equation(cocycle, space, {0,-1,1});
-  std::cout << eqn;
+  // std::vector space = {
+  //   // first 3 term: expanded residue([t,1,2,3] ^ [t,4]/[t,3] ^ [t,5]/[t,3] ^ [t,6]/[t,3])
+  //   ncoproduct(GLi2(4,1,2,3), pl(4,5) - pl(4,3), pl(4,6) - pl(4,3)),
+  //   ncoproduct(GLi2(5,1,2,3), pl(5,4) - pl(5,3), pl(5,6) - pl(5,3)),
+  //   ncoproduct(GLi2(6,1,2,3), pl(6,4) - pl(6,3), pl(6,5) - pl(6,3)),
+  //   ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}) - ChernCocycle(3, 2, {2,3,4,5,6}), pl(1,2)),
+  //   ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}), pl(1,3)),
+  //   ncoproduct(ChernCocycle(3, 2, {2,3,4,5,6}), pl(2,3)),
+  //   ncoproduct(GLi2(3,4,5,6), pl(1,2), pl(2,3)),
+  //   ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(3,1)),
+  //   ncoproduct(GLi2(3,4,5,6), pl(3,1), pl(1,2)),
+  // };
+
+  // // const auto cocyle_3_2 = [](const std::vector<int>& points, const auto& rhs) {
+  // //   const auto args = [&](const auto... idx) {
+  // //     return choose_indices_one_based(points, {idx...});
+  // //   };
+  // //   return std::vector{
+  // //     ncoproduct(GLiVec(2, args(1,2,3,5)), plucker(args(3,4)), rhs),
+  // //     ncoproduct(GLiVec(2, args(1,2,4,5)), plucker(args(3,4)), rhs),
+  // //     ncoproduct(GLiVec(2, args(1,2,3,5)), plucker(args(3,5)), rhs),
+  // //     ncoproduct(GLiVec(2, args(1,2,4,5)), plucker(args(4,5)), rhs),
+  // //     ncoproduct(GLiVec(2, args(1,3,4,5)), plucker(args(1,2)), rhs),
+  // //     ncoproduct(GLiVec(2, args(2,3,4,5)), plucker(args(1,2)), rhs),
+  // //     ncoproduct(GLiVec(2, args(1,3,4,5)), plucker(args(1,5)), rhs),
+  // //     ncoproduct(GLiVec(2, args(2,3,4,5)), plucker(args(2,5)), rhs),
+  // //   };
+  // // };
+  // // auto space = concat(
+  // //   std::vector{
+  // //     ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(4,6)),
+  // //     ncoproduct(GLi2(4,1,2,3), pl(4,3), pl(4,6)),
+  // //     ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(4,3)),
+  // //     ncoproduct(GLi2(5,1,2,3), pl(5,4), pl(5,6)),
+  // //     ncoproduct(GLi2(5,1,2,3), pl(5,3), pl(5,6)),
+  // //     ncoproduct(GLi2(5,1,2,3), pl(5,4), pl(5,3)),
+  // //     ncoproduct(GLi2(6,1,2,3), pl(6,4), pl(6,5)),
+  // //     ncoproduct(GLi2(6,1,2,3), pl(6,3), pl(6,5)),
+  // //     ncoproduct(GLi2(6,1,2,3), pl(6,4), pl(6,3)),
+  // //     ncoproduct(GLi2(3,4,5,6), pl(1,2), pl(2,3)),
+  // //     ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(3,1)),
+  // //     ncoproduct(GLi2(3,4,5,6), pl(3,1), pl(1,2)),
+  // //   },
+  // //   cocyle_3_2({1,3,4,5,6}, pl(1,2)),
+  // //   cocyle_3_2({2,3,4,5,6}, pl(1,2)),
+  // //   cocyle_3_2({1,3,4,5,6}, pl(1,3)),
+  // //   cocyle_3_2({2,3,4,5,6}, pl(2,3))
+  // // );
+
+  // space = mapped(space, DISAMBIGUATE(ncomultiply));
+  // const auto eqn = find_equation(cocycle, space, {0,-1,1});
+  // std::cout << eqn;
+
+
+  for (const int n : range_incl(2, 6)) {
+    for (const int m : range_incl(2, 6)) {
+      const int w = m - 1;
+      const auto space = mapped(
+        nondecreasing_sequences(n, m),
+        [](const auto& args) {
+          return CorrVec(args);
+        }
+      );
+      // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+      // std::cout << "w=" << w << ", p=" << n << ": " << rank << "\n";
+      const bool ok = to_lyndon_basis(sum(space)).is_zero();
+      std::cout << "w=" << w << ", p=" << n << ": " << (ok ? "OK" : "FAIL") << "\n";
+    }
+  }
+
+  // // std::cout << to_lyndon_basis(
+  // //   + Corr(1,1,2,3)
+  // //   + Corr(1,2,2,3)
+  // //   + Corr(1,2,3,3)
+  // // );  // ZERO
+  // const std::vector space = {
+  //   + Corr(1,1,1,2,3)
+  //   + Corr(1,1,2,2,3)
+  //   + Corr(1,1,2,3,3)
+  //   + Corr(1,2,2,2,3)
+  //   + Corr(1,2,2,3,3)
+  //   + Corr(1,2,3,3,3)
+  // };
+  // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << rank << "\n";
 }
