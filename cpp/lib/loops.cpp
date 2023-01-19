@@ -7,7 +7,7 @@
 #include "zip.h"
 
 
-LoopsNames loops_names;
+LoopKinds loop_kinds;
 
 
 std::string loops_description(const Loops& loops) {
@@ -85,34 +85,112 @@ LoopsInvariant loops_invariant(const Loops& loops) {
   return invariant;
 }
 
-int LoopsNames::loops_index(const Loops& loops) {
-  const auto invariant = loops_invariant(loops);
-  if (!indices_.contains(invariant)) {
-    indices_[invariant] = next_idx_++;
+// Returns n if `a` and `b` are both present in n loops, while neither `a` nor `b` is present in
+// any other loops.
+std::optional<int> num_unique_common_loops(const Loops& loops, int a, int b) {
+  std::vector<int> a_loops, b_loops;
+  for (const int loop_idx : range(loops.size())) {
+    const auto& loop = loops[loop_idx];
+    if (absl::c_count(loop, a) > 0) {
+      a_loops.push_back(loop_idx);
+    }
+    if (absl::c_count(loop, b) > 0) {
+      b_loops.push_back(loop_idx);
+    }
   }
-  return indices_.at(invariant);
+  return (a_loops == b_loops) ? std::optional(a_loops.size()) : std::nullopt;
 }
 
-std::string LoopsNames::loops_name(const Loops& loops) {
-  return fmt::braces(
-    fmt::colored(
-      pad_left(to_string(loops_index(loops)), 2),
-      TextColor::cyan
-    )
-  );
+LoopKindInfo make_loop_kind_info(const Loops& loops, int index, bool index_is_stable) {
+  int num_vars = 0;
+  for (const auto& loop : loops) {
+    for (const int v : loop) {
+      num_vars = std::max(num_vars, v + 1);
+    }
+  }
+  LoopKindInfo info;
+  info.representative = loops;
+  info.index = index;
+  info.index_is_stable = index_is_stable;
+  for (const int a : range(1, num_vars)) {
+    for (const int b : range(1, a)) {
+      const auto n_or = num_unique_common_loops(loops, a, b);
+      if (n_or.has_value()) {
+        const int n = n_or.value();
+        if (n % 2 == 1) {
+          info.killed_by_symmetrization = true;
+        } else {
+          info.killed_by_antisymmetrization = true;
+        }
+      }
+    }
+  }
+  return info;
 }
+
+const LoopKindInfo& LoopKinds::generate_loops_kind(const Loops& loops, bool index_is_stable) {
+  const auto invariant = loops_invariant(loops);
+  if (!invariant_to_kind_.contains(invariant)) {
+    int index = kinds_.size();
+    kinds_.push_back(make_loop_kind_info(loops, index + 1, index_is_stable));
+    invariant_to_kind_[invariant] = index;
+  }
+  return kinds_[invariant_to_kind_.at(invariant)];
+}
+
+const LoopKindInfo& LoopKinds::loops_kind(const Loops& loops) {
+  return generate_loops_kind(loops, false);
+
+}
+
+int LoopKinds::loops_index(const Loops& loops) {
+  return loops_kind(loops).index;
+}
+
+std::string LoopKinds::loops_name(const Loops& loops) {
+  const auto& kind = loops_kind(loops);
+  return pretty_print_loop_kind_index(kind.index, kind.index_is_stable);
+}
+
+std::string pretty_print_loop_kind_index(const LoopKindInfo& kind) {
+  return pretty_print_loop_kind_index(kind.index, kind.index_is_stable);
+}
+
+std::string pretty_print_loop_kind_index(int index, bool index_is_stable) {
+  return index_is_stable
+    ? fmt::braces(
+      fmt::colored(
+        pad_left(to_string(index), 2),
+        TextColor::cyan
+      )
+    )
+    : fmt::braces(
+      fmt::colored(
+        absl::StrCat("~", index),
+        TextColor::yellow
+      )
+    );
+}
+
 
 std::string LoopExprParam::object_to_string(const ObjectT& loops) {
   const std::string loops_str = loops_description(loops);
   // return loops_str;
   // TODO: Show warning if a loop name was assigned outside of `generate_loops_names`.
-  const std::string loops_name_str = loops_names.loops_name(loops);
+  const std::string loops_name_str = loop_kinds.loops_name(loops);
   return absl::StrCat(loops_str, "  ", loops_name_str);
 }
 
 void generate_loops_names(const std::vector<LoopExpr>& expressions) {
   for (const auto& expr : expressions) {
-    std::stringstream() << expr;
+    std::vector<Loops> terms;
+    for (const auto& [loops, coeff] : expr) {
+      terms.push_back(loops);
+    }
+    absl::c_sort(terms);
+    for (const auto& loops : terms) {
+      loop_kinds.generate_loops_kind(loops, true);
+    }
   }
 }
 
@@ -398,7 +476,7 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr) {
 
 LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type) {
   return expr.filtered([&](const Loops& loops) {
-    return loops_names.loops_index(loops) == type;
+    return loop_kinds.loops_index(loops) == type;
   });
 }
 

@@ -9,7 +9,7 @@ static constexpr auto keep_term = loop_expr_keep_term_type;
 static int num_distinct_term_types(const LoopExpr& expr) {
   std::vector<int> term_types;
   expr.foreach([&](const Loops& loops, int) {
-    term_types.push_back(loops_names.loops_index(loops));
+    term_types.push_back(loop_kinds.loops_index(loops));
   });
   return num_distinct_elements_unsorted(term_types);
 }
@@ -96,7 +96,7 @@ LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
   std::cout << ".\n";
   std::vector<Loops> killer_terms;
   killer.foreach([&](const Loops& loops, int) {
-    if (loops_names.loops_index(loops) == target_type) {
+    if (loop_kinds.loops_index(loops) == target_type) {
       killer_terms.push_back(loops);
     }
   });
@@ -106,7 +106,7 @@ LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
     stuck = true;
     std::vector<Loops> victim_terms;
     victim.foreach([&](const Loops& loops, int) {
-      if (loops_names.loops_index(loops) == target_type) {
+      if (loop_kinds.loops_index(loops) == target_type) {
         victim_terms.push_back(loops);
       }
     });
@@ -189,7 +189,7 @@ static Degenerations rotate_variables(const Degenerations& groups, int total_var
 //   absl::flat_hash_set<int> types_set(types.begin(), types.end());
 //   bool ret = true;
 //   expr.foreach([&](const auto& loops, int) {
-//     if (!types_set.contains(loops_names.loops_index(loops))) {
+//     if (!types_set.contains(loop_kinds.loops_index(loops))) {
 //       ret = false;
 //       return;
 //     }
@@ -308,7 +308,7 @@ LoopExpr reduce_arg9_loop_expr(const LoopExpr& expr) {
   }).mapped_expanding([&](const Loops& loops) -> LoopExpr {
     // TODO: Add an asserting for the type OR fetch the type dynamically.
     constexpr int kLoopTypeKnownToBeFullyAntisymmetric = 1;
-    if (loops_names.loops_index(loops) == kLoopTypeKnownToBeFullyAntisymmetric) {
+    if (loop_kinds.loops_index(loops) == kLoopTypeKnownToBeFullyAntisymmetric) {
       const Loops canonical_form = {{1,2,3,4}, {1,2,5,3}, {1,2,5,6,7}};
       CHECK(loop_lengths(loops) == loop_lengths(canonical_form)) << dump_to_string(loops);
       const int main_sign = permutation_sign(decompose_loops(loops));

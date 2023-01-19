@@ -25,18 +25,35 @@ private:
 std::string loops_description(const Loops& loops);
 LoopsInvariant loops_invariant(const Loops& loops);
 
-class LoopsNames {
-public:
-  int loops_index(const Loops& loops);
-  std::string loops_name(const Loops& loops);
-  int total_names() const { return next_idx_; }
-
-private:
-  int next_idx_ = 1;
-  absl::flat_hash_map<LoopsInvariant, int> indices_;
+struct LoopKindInfo {
+  Loops representative;
+  bool killed_by_symmetrization = false;
+  bool killed_by_antisymmetrization = false;
+  int index = 0;
+  bool index_is_stable = false;
 };
 
-extern LoopsNames loops_names;
+class LoopKinds {
+public:
+  // Thread-unsafe: Generates loop kinds on the fly.
+  const LoopKindInfo& loops_kind(const Loops& loops);
+  int loops_index(const Loops& loops);
+  std::string loops_name(const Loops& loops);
+  int total_kinds() const { return kinds_.size(); }
+  const std::vector<LoopKindInfo>& kinds() const { return kinds_; }
+
+  // Do not use directly. Use `this.loops_kind` or `generate_loops_names` instead.
+  const LoopKindInfo& generate_loops_kind(const Loops& loops, bool index_is_stable);
+
+private:
+  std::vector<LoopKindInfo> kinds_;
+  absl::flat_hash_map<LoopsInvariant, int> invariant_to_kind_;
+};
+
+extern LoopKinds loop_kinds;
+
+std::string pretty_print_loop_kind_index(const LoopKindInfo& kind);
+std::string pretty_print_loop_kind_index(int index, bool index_is_stable);
 
 
 // TODO: Rename LoopExpr -> LoopsExpr (also function names including `loop_expr`)
@@ -53,8 +70,6 @@ struct LoopExprParam : public SimpleLinearParam<Loops> {
 
 using LoopExpr = Linear<LoopExprParam>;
 
-// TODO: Force using this, disable on-the-fly name generation (?)
-//   OR mark names generated on-the-fly
 void generate_loops_names(const std::vector<LoopExpr>& expressions);
 
 LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr);  // will NOT group five-term relations
