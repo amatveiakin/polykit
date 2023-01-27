@@ -480,11 +480,13 @@ LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type) {
   });
 }
 
-absl::flat_hash_map<int, int> loop_expr_recover_substitution(const Loops& from, const Loops& to) {
+std::optional<absl::flat_hash_map<int, int>> loop_expr_recover_substitution(const Loops& from, const Loops& to) {
   absl::flat_hash_map<int, int> ret;
   for (auto [a, b] : zip(flatten(from), flatten(to))) {
     if (ret.contains(a)) {
-      CHECK(ret.at(a) == b) << "\n" << LoopExprParam::object_to_string(from) << "\n" << LoopExprParam::object_to_string(to);
+      if (ret.at(a) != b) {
+        return std::nullopt;
+      }
     } else {
       ret[a] = b;
     }

@@ -119,7 +119,11 @@ LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
       for (const Loops& victim_term : victim_terms) {
         // NOTE. Assumes canonical form.
         // TODO: take into account different ways of treating symmetries.
-        const auto subst = loop_expr_recover_substitution(killer_term, victim_term);
+        const auto subst_or = loop_expr_recover_substitution(killer_term, victim_term);
+        if (!subst_or.has_value()) {
+          continue;
+        }
+        const auto& subst = subst_or.value();
         const auto killer_subst = loop_expr_substitute(killer, subst);
         for (int sign : {-1, 1}) {
           const auto new_candidate = victim + sign * killer_subst;
@@ -127,9 +131,19 @@ LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type) {
             // std::cout << ">>> " << absl::StrCat(fmt::coeff(sign), "cycle ", to_string(substitutions_to_permutation(subst)))
             //     << " : " << new_candidate << " => " << dump_to_string(expr_complexity(new_candidate)) << "\n\n";
             if (!best_candidate || expr_complexity(new_candidate) < expr_complexity(*best_candidate)) {
+              ScopedFormatting sf(FormattingConfig().set_encoder(Encoder::ascii));
               best_candidate = new_candidate;
+              const auto perm = substitutions_to_permutation(subst);
+              const auto cycle_parseable = fmt::braces(str_join(
+                mapped(perm.cycles(), [&](const std::vector<int>& loop) {
+                  return fmt::braces(str_join(loop, ","));
+                }),
+                ","
+              ));
               best_candidate_description = absl::StrCat(
-                  fmt::coeff(sign), "cycle ", to_string(substitutions_to_permutation(subst)));
+                  fmt::coeff(sign), "cycle(, ", cycle_parseable, ")");
+              // best_candidate_description = absl::StrCat(
+              //     fmt::coeff(sign), "cycle ", to_string(substitutions_to_permutation(subst)));
             }
           }
         }

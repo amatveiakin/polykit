@@ -105,8 +105,8 @@ LoopExpr to_canonical_permutation(const LoopExpr& expr);
 // Keeps only terms of a specific type based on `loops_names`.
 LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type);
 
-// Returns the substitution that turns `from` to `to`. Panics if it does not exist.
-absl::flat_hash_map<int, int> loop_expr_recover_substitution(const Loops& from, const Loops& to);
+// Returns the substitution that turns `from` to `to`, or `nullopt` if it doesn't exist.
+std::optional<absl::flat_hash_map<int, int>> loop_expr_recover_substitution(const Loops& from, const Loops& to);
 
 // Sorts elements within each function argument, adjusting signs accordingly.
 LiraExpr lira_expr_sort_args(const LiraExpr& expr);
