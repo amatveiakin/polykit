@@ -27,7 +27,7 @@
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 1
+#if 0
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -47,7 +47,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 1
+#if 0
 #include "lib/corr_expression.h"
 #include "lib/iterated_integral.h"
 #include "lib/polylog_via_correlators.h"
@@ -55,7 +55,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 0
+#if 1
 #include "lib/epsilon.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
@@ -72,9 +72,49 @@
 
 
 
-Gr_Space frozen_vars(int num_points) {
-  return mapped(range_incl(1, num_points), [&](const auto a) {
-    return plucker({a, a % num_points + 1});
+// Gr_Space frozen_vars(int num_points) {
+//   return mapped(range_incl(1, num_points), [&](const auto a) {
+//     return plucker({a, a % num_points + 1});
+//   });
+// }
+
+
+
+static constexpr auto cycle = loop_expr_cycle;
+
+#define DUMP(expr) std::cout << STRINGIFY(expr) << " " << expr
+
+int loops_united_permutation_sign(const Loops& loops) {
+  absl::flat_hash_set<int> variables;
+  std::vector<int> unique_variables;
+  for (const auto& loop : loops) {
+    for (const int v : loop) {
+      if (variables.insert(v).second) {
+        unique_variables.push_back(v);
+      }
+    }
+  }
+  return permutation_sign(unique_variables);
+}
+
+struct LoopIndexExprParam : SimpleLinearParam<int> {
+  static std::string object_to_string(const ObjectT& index) {
+    return pretty_print_loop_kind_index(index, true);
+  }
+};
+
+using LoopIndexExpr = Linear<LoopIndexExprParam>;
+
+LoopIndexExpr loop_expr_to_index_symmetrized(const LoopExpr& expr) {
+  return expr.mapped<LoopIndexExpr>([](const auto& expr) {
+    return loop_kinds.loops_index(expr);
+  });
+}
+
+LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
+  return expr.mapped_expanding([](const auto& expr) {
+    const int sign = loops_united_permutation_sign(expr);
+    return sign * LoopIndexExpr::single(loop_kinds.loops_index(expr));
   });
 }
 
@@ -91,7 +131,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(30)
+    .set_expression_line_limit(300)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -394,21 +434,21 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << eqn;
 
 
-  for (const int n : range_incl(2, 6)) {
-    for (const int m : range_incl(2, 6)) {
-      const int w = m - 1;
-      const auto space = mapped(
-        nondecreasing_sequences(n, m),
-        [](const auto& args) {
-          return CorrVec(args);
-        }
-      );
-      // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
-      // std::cout << "w=" << w << ", p=" << n << ": " << rank << "\n";
-      const bool ok = to_lyndon_basis(sum(space)).is_zero();
-      std::cout << "w=" << w << ", p=" << n << ": " << (ok ? "OK" : "FAIL") << "\n";
-    }
-  }
+  // for (const int n : range_incl(2, 6)) {
+  //   for (const int m : range_incl(2, 6)) {
+  //     const int w = m - 1;
+  //     const auto space = mapped(
+  //       nondecreasing_sequences(n, m),
+  //       [](const auto& args) {
+  //         return CorrVec(args);
+  //       }
+  //     );
+  //     // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
+  //     // std::cout << "w=" << w << ", p=" << n << ": " << rank << "\n";
+  //     const bool ok = to_lyndon_basis(sum(space)).is_zero();
+  //     std::cout << "w=" << w << ", p=" << n << ": " << (ok ? "OK" : "FAIL") << "\n";
+  //   }
+  // }
 
   // // std::cout << to_lyndon_basis(
   // //   + Corr(1,1,2,3)
@@ -425,4 +465,347 @@ int main(int /*argc*/, char *argv[]) {
   // };
   // const auto rank = space_rank(space, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << rank << "\n";
+
+
+
+
+
+
+#if 0
+  LoopExpr loop_templates;
+
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
+
+  // In Lyndon basis:
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+
+  auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
+    return sum_looped_vec([&](const std::vector<int>& args) {
+      return LoopExpr::single(
+        mapped(loops, [&](const std::vector<int>& loop) {
+          return choose_indices_one_based(args, loop);
+        })
+      );
+    }, 9, {1,2,3,4,5,6,7,8,9}, SumSign::plus);
+  });
+  // loop_expr = arg9_semi_lyndon(loop_expr);
+  loop_expr = to_canonical_permutation(arg9_semi_lyndon(loop_expr));
+
+
+  const auto a = loop_expr_degenerate(loop_expr, {{1,3}, {2,4}});
+  const auto b = loop_expr_degenerate(loop_expr, {{1,3}, {2,5}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,4}, {2,5}});
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3}, {4,6}});  // == cycle(d, {{1,2}, {3,4}, {5,7}})
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3}, {4,7}});
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3}, {5,7}});  // == cycle(f, {{1,2}, {3,5}, {6,7}})
+  const auto g = loop_expr_degenerate(loop_expr, {{1,3}, {2,6}});
+  const auto h = loop_expr_degenerate(loop_expr, {{1,3}, {5,8}});
+  const auto i = loop_expr_degenerate(loop_expr, {{1,4}, {2,6}});
+  const auto j = loop_expr_degenerate(loop_expr, {{1,5}, {2,4}});  // == cycle(j, {{4,7}, {5,6}})
+  const auto k = loop_expr_degenerate(loop_expr, {{1,6}, {2,4}});
+  const auto l = loop_expr_degenerate(loop_expr, {{1,6}, {2,5}});
+  const auto x = loop_expr_degenerate(loop_expr, {{1,4}, {2,7}});
+  const auto y = loop_expr_degenerate(loop_expr, {{1,4}, {2,8}});
+  const auto z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
+  const auto u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
+  const auto w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
+  const auto m = loop_expr_degenerate(loop_expr, {{1,3,5}});
+  const auto n = loop_expr_degenerate(loop_expr, {{1,3,6}});
+  const auto o = loop_expr_degenerate(loop_expr, {{1,4,7}});
+
+  generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o});
+
+  for (const auto& kind : loop_kinds.kinds()) {
+    std::cout << pretty_print_loop_kind_index(kind)
+      << ": s=" << kind.killed_by_symmetrization
+      << ", a=" << kind.killed_by_antisymmetrization
+      << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+      << "\n";
+  }
+  std::cout << "\n";
+
+  DUMP(a);
+  DUMP(b);
+  DUMP(c);
+  DUMP(d);
+  DUMP(e);
+  DUMP(f);
+  DUMP(g);
+  DUMP(h);
+  DUMP(i);
+  DUMP(j);
+  DUMP(k);
+  DUMP(l);
+  DUMP(x);
+  DUMP(y);
+  DUMP(z);
+  DUMP(u);
+  DUMP(w);
+  DUMP(m);
+  DUMP(n);
+  DUMP(o);
+
+
+  const auto a1 = cycle(a, {{2,4}, {5,7}});
+  const auto v = n + m - a + a1;
+
+  const auto o0 =
+    + o
+    - cycle(m, {{2,6}, {3,5}})
+    - cycle(m, {{3,7}, {4,6}})
+    - cycle(m, {{2,4}, {5,7}})
+    - a
+    - v
+    + cycle(a, {{2,4}, {5,7}})
+    + cycle(v, {{2,3,4,5,6,7}})
+    - cycle(a, {{2,3}, {4,7}, {5,6}})
+    - cycle(v, {{2,3}, {4,7}, {5,6}})
+  ;
+  const auto m0 = m - cycle(m, {{2,6}});
+  const auto v0 = v + cycle(v, {{1,6}});
+
+  // DUMP(a);
+  // DUMP(m);
+  // DUMP(n);
+  // DUMP(o);
+  // DUMP(a1);
+  // DUMP(v);
+  // DUMP(cycle(m, {{2,6}, {3,5}}));
+  // DUMP(cycle(m, {{3,7}, {4,6}}));
+  // DUMP(cycle(m, {{2,4}, {5,7}}));
+  // DUMP(cycle(a, {{2,4}, {5,7}}));
+  // DUMP(cycle(v, {{2,3,4,5,6,7}}));
+  // DUMP(cycle(a, {{2,3}, {4,7}, {5,6}}));
+  // DUMP(cycle(v, {{2,3}, {4,7}, {5,6}}));
+  // DUMP(o0);
+  // DUMP(m0);
+  // DUMP(v0);
+
+  // std::cout << o0;
+  // std::cout << m0;
+  // std::cout << v0;
+
+  // std::vector<LoopExpr> space;
+  // for (const auto& expr : {o0, m0}) {
+  //   for (const auto& p : permutations(seq_incl(1, 7))) {
+  //     space.push_back(loop_expr_substitute(expr, p));
+  //   }
+  // }
+  // // TEST: co-dimension == 1
+  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+#endif
+
+
+
+#if 1
+  const int N = 11;
+  const int num_points = N;
+  auto source = sum_looped_vec(
+    [&](const std::vector<int>& args) {
+      return LiQuad(num_points / 2 - 1, args);
+    },
+    num_points,
+    seq_incl(1, num_points - 1)
+  );
+
+  auto lira_expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
+
+  auto loop_expr = reverse_loops(cut_loops(seq_incl(1, num_points)));
+  auto loop_lira_expr = loop_expr_to_lira_expr(loop_expr);
+
+  lira_expr = lira_expr_sort_args(lira_expr);
+  loop_lira_expr = lira_expr_sort_args(loop_lira_expr);
+
+
+  // std::cout << "Via LiQuad " << lira_expr;
+  // std::cout << "Loops " << loop_expr_recursive;
+  // std::cout << "Via loops " << loop_lira_expr;
+  // std::cout << "Diff " << to_lyndon_basis(lira_expr + loop_lira_expr);
+
+  // All possible ways of gluing 4 points together. Gives terms {1}-{6}.
+  const auto a = loop_expr_degenerate(loop_expr, {{1,3,5,7}});
+  const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
+  const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});  // == expr(a, b)
+  const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});  // == expr(a, b, e)
+  const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
+
+  // All expressions limited to terms {1}-{6}.
+  const auto f = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
+  const auto g = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,11}});
+  const auto fg = loop_expr_degenerate(loop_expr, {{1,3,6}, {2,4}});  // == -(f1 + f2)
+  const auto h = loop_expr_degenerate(loop_expr, {{1,4,7}, {3,5}});  // == expr(f, g, a)
+  const auto gg = loop_expr_degenerate(loop_expr, {{2,5}, {1,3}, {4,6}});  // ==  g(symmetry: (2,3)(4,8)(5,7) + rotate 7 positions)
+  const auto m = loop_expr_degenerate(loop_expr, {{2,6}, {1,3}, {5,7}});
+  const auto n = loop_expr_degenerate(loop_expr, {{2,7}, {1,3}, {6,8}});
+
+  // All expressions that have a common variable in each term. Gives terms {1}-{7}.
+  const auto p = loop_expr_degenerate(loop_expr, {{1,3,6}, {2,11}});  // == -r + f
+  const auto q = loop_expr_degenerate(loop_expr, {{1,3,6}, {5,7}});
+  const auto r = loop_expr_degenerate(loop_expr, {{1,3,7}, {2,4}});
+  const auto s = loop_expr_degenerate(loop_expr, {{1,3,7}, {2,11}});
+  const auto t = loop_expr_degenerate(loop_expr, {{1,3,7}, {6,8}});
+  const auto u = loop_expr_degenerate(loop_expr, {{1,4,7}, {2,11}});
+  const auto v = loop_expr_degenerate(loop_expr, {{1,4,8}, {2,11}});
+  const auto w = loop_expr_degenerate(loop_expr, {{1,4,8}, {7,9}});
+
+  generate_loops_names({a, b, c, d, e, r});
+  generate_loops_names({f, g, fg, h, gg, m, n, p, q, s, t, u, v, w});
+
+  // Converts between {5}+{6} and {8}+{8} pairs.
+  const auto sh =
+    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,2,8}, {1,7,5,6}})
+    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,5,6}, {1,7,2,8}})
+    + LoopExpr::single({{1,7,5,6}, {1,7,5,2,3}, {1,7,2,8}, {1,5,3,4}})
+    + LoopExpr::single({{1,7,5,6}, {1,7,5,2,3}, {1,5,3,4}, {1,7,2,8}})
+  ;
+
+  // for (const auto& kind : loop_kinds.kinds()) {
+  //   std::cout << pretty_print_loop_kind_index(kind)
+  //     << ": s=" << kind.killed_by_symmetrization
+  //     << ", a=" << kind.killed_by_antisymmetrization
+  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+  //     << "\n";
+  // }
+  // std::cout << "\n";
+
+  // DUMP(b);
+  // DUMP(g);
+  // DUMP(h);
+  // DUMP(m);
+  // DUMP(n);
+  // DUMP(q);
+  // DUMP(r);
+  // DUMP(s);
+  // DUMP(t);
+  // DUMP(w);
+  // DUMP(sh);
+
+  // // This gives the same space rank as all variables. And it's full: 154.
+  // std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
+  // // Note. It also makes sense to keep an eye on `a` and `f`, because they are neat.
+  // std::vector<LoopExpr> space;
+  // for (const int shift : range(7)) {
+  //   for (const auto& expr : exprs) {
+  //     space.push_back(loop_expr_substitute(expr, concat({1}, rotated_vector(seq_incl(2, 8), shift))));
+  //     space.push_back(loop_expr_substitute(expr, concat({1}, rotated_vector(reversed(seq_incl(2, 8)), shift))));
+  //   }
+  // }
+  // std::cout << space_rank(space, identity_function) << "\n";
+
+  // Kill {8} terms with `sh`:
+  const auto ssh = s + cycle(sh, {{6,8},{3,4},{2,5}});
+  const auto wsh = w + cycle(sh, {{6,3},{4,5},{7,8}}) - cycle(sh, {{6,4},{3,2,7}});
+
+  const auto qb = q + cycle(b, {{3,6,4,5,2,7}});
+  const auto rb = r + cycle(b, {{3,7,4,8,5,2,6}});
+  const auto sshb = ssh + cycle(b, {{3,7,4,8,5,2,6}}) - cycle(b, {{3,4},{6,8},{5,2}});
+  const auto tb = t + cycle(b, {{3,5},{6,8}});
+  const auto wshb = wsh + cycle(b, {{3,2,7},{6,4}}) - cycle(b, {{3,6},{5,4},{7,8}});
+
+  const auto qbt = qb - cycle(tb, {{4,7,2,6,5,8}}) - cycle(tb, {{4,5,6,8},{2,7,3}});
+  const auto rbt = rb + cycle(tb, {{4,7},{8,5},{6,3}}) + cycle(tb, {{4,5,6,8,3},{2,7}});
+  const auto sshbt = sshb + cycle(tb, {{4,7},{8,5},{6,3}}) + cycle(tb, {{4,5,6,8,3},{2,7}}) + cycle(tb, {{4,3,2,5}});
+  const auto wshbt = wshb  + cycle(tb, {{4,5,6,7,8,3}}) - cycle(tb, {{4,7,5,8,6},{2,3}});
+
+  const auto hg = h - cycle(g, {{6,7,8,3,4,5}}) - cycle(g, {{8,4},{5,7}});
+  const auto mg = m - cycle(g, {{6,4,8,5,2},{3,7}}) - cycle(g, {{6,4,5,3},{2,7}});
+  const auto ng = n + cycle(g, {{3,4,5}}) + cycle(g, {{3,2,4,8,5,7}}) + cycle(g, {{6,8,4},{2,5,7}}) + cycle(g, {{6,8},{3,5,2}});
+  const auto qbtg = qbt - cycle(g, {{6,4,8,5,3,7,2}}) - cycle(g, {{6,4,7,2},{3,8,5}}) - cycle(g, {{6,5,2,7}}) - cycle(g, {{6,8},{3,2,5}}) - cycle(g, {{6,4,5,2,7,3}});
+  const auto rbtg = rbt + cycle(g, {{6,8},{3,4},{2,5}}) + cycle(g, {{6,3},{2,7},{5,4}}) + cycle(g, {{6,5},{3,8},{4,7}}) - g;
+  const auto sshbtg = sshbt + cycle(g, {{6,8},{3,4},{2,5}}) + cycle(g, {{6,5},{3,8},{4,7}}) + cycle(g, {{6,3},{2,7},{5,4}}) + cycle(g, {{6,8,3,5,7,2,4}}) + cycle(g, {{3,2},{8,4},{5,7}}) + cycle(g, {{6,8},{3,4},{2,5}});
+  const auto wshbtg = wshbt - cycle(g, {{6,4,8},{3,7,5}}) - cycle(g, {{2,8,7}}) - cycle(g, {{6,4},{3,2,7}}) - cycle(g, {{3,8,4,7,5,2}});
+
+  const auto hga = hg - cycle(a, {{3,2}});
+  const auto qbtga = qbtg - cycle(a, {{4,2,3}});
+  const auto rbtga = rbtg + cycle(a, {{7,4},{6,5},{3,8}});
+  const auto sshbtga = sshbtg + cycle(a, {{7,4},{6,5},{3,8}});
+  const auto wshbtga = wshbtg - cycle(a, {{7,5,2,3,8,4}}) + cycle(a, {{7,6,2,4,8,5}});
+
+  const auto hgaf = hga - cycle(f, {{6,7,8,3,4,5}});  // ZERO
+  const auto mgf = mg + cycle(f, {{6,5},{3,8,4,7}}) + cycle(f, {{2,3,5,7},{6,8,4}});
+  const auto ngf = ng - cycle(f, {{2,7,3,8,6,5,4}});
+  const auto qbtgaf = qbtga + cycle(f, {{2,3,4}});
+  const auto rbtgaf = rbtga - cycle(f, {{6,5},{3,8},{7,4}});
+  const auto sshbtgaf = sshbtga - cycle(f, {{2,7,5,3,8,6,4}});
+  const auto wshbtgaf = wshbtga + cycle(f, {{2,5,7,3,6,8,4}});
+
+  DUMP(mgf);
+  DUMP(ngf);
+  DUMP(qbtgaf);
+  DUMP(rbtgaf);
+  DUMP(sshbtgaf);
+  DUMP(wshbtgaf);
+
+  // std::cout << qbtgaf - cycle(qbtgaf, {{1,2}});  // kills {7}; left: {1},{2},{3}
+  // std::cout << qbtgaf - cycle(qbtgaf, {{7,8}});  // kills {7}; left: {1},{2},{3}
+  const auto sr = sshbtgaf - rbtgaf;  // kills {1}; left: {2},{3}
+
+  // // FACT: {wshbtgaf} space == {mgf, ngf, wshbtgaf, sr} space under permutations of 2..=8
+  // const std::vector exprs = {wshbtgaf};
+  // std::vector<LoopExpr> space;
+  // for (const auto& perm : permutations(seq_incl(2, 8))) {
+  //   for (const auto& expr : exprs) {
+  //     space.push_back(loop_expr_substitute(expr, concat({1}, perm)));
+  //   }
+  // }
+  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+
+  std::vector<LoopExpr> space_a;
+  std::vector<LoopExpr> space_b;
+  // const std::vector exprs = {wshbtgaf, qbtgaf};
+  const std::vector exprs = {wshbtgaf, qbtgaf, rbtgaf, sshbtgaf};
+  const auto kind2 = LoopExpr::single(loop_kinds.kinds().at(7 - 1).representative);
+  for (const auto& perm : permutations(seq_incl(2, 8))) {
+    const auto args = concat({1}, perm);
+    for (const auto& expr : exprs) {
+      space_a.push_back(loop_expr_substitute(expr, args));
+    }
+    space_b.push_back(loop_expr_substitute(kind2, args));
+  }
+  std::cout << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+
+  // const std::vector exprs = {hg, mg, ng, qbtg, rbtg, sshbtg, wshbtg};
+  // std::vector<LoopExpr> space;
+  // for (const auto& perm : permutations(seq_incl(2, 8))) {
+  //   // for (const auto& expr : exprs) {
+  //   //   space.push_back(loop_expr_substitute(expr, concat({1}, perm)));
+  //   // }
+  //   for (const auto& kind : {1,2,3,7}) {
+  //     const auto expr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+  //     space.push_back(loop_expr_substitute(expr, concat({1}, perm)));
+  //   }
+  // }
+  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+
+  // Apply (abcd + abdc = dbca + dbac) to convert {5}+{6} into {8}+{8}
+  // const auto e56 =
+  //   - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,2,8}, {1,7,5,6}})
+  //   - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,5,6}, {1,7,2,8}})
+  // ;
+  // const auto e56_shuffled =
+  //   - LoopExpr::single({{1,7,5,6}, {1,7,5,2,3}, {1,7,2,8}, {1,5,3,4}})
+  //   - LoopExpr::single({{1,7,5,6}, {1,7,5,2,3}, {1,5,3,4}, {1,7,2,8}})
+  // ;
+  // CHECK(to_lyndon_basis(e56) == to_lyndon_basis(e56_shuffled));
+  // DUMP(e56);
+  // DUMP(e56_shuffled);
+
+  // std::vector<LoopExpr> space;
+  // for (const auto& expr : {a}) {
+  //   for (const auto& p : permutations(seq_incl(1, 8))) {
+  //     space.push_back(loop_expr_substitute(expr, p));
+  //   }
+  // }
+  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+#endif
 }
