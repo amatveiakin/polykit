@@ -503,7 +503,17 @@ std::array<T, N> to_array(std::vector<T> v) {
 
 template<typename Container>
 auto to_vector(const Container& c) {
-  return std::vector<typename Container::value_type>(c.begin(), c.end());
+  // Note. Don't use `std::vector(c.begin(), c.end())` because it doesn't support heterogeneous
+  // iterators (used by `Permutations` for example).
+  std::vector<typename Container::value_type> ret;
+  using IteratorCategory = typename std::iterator_traits<decltype(c.begin())>::iterator_category;
+  if constexpr (std::is_same_v<IteratorCategory, std::random_access_iterator_tag>) {
+    ret.reserve(c.end() - c.begin());
+  }
+  for (const auto& v : c) {
+    ret.push_back(v);
+  }
+  return ret;
 }
 
 // Specializations for map types remove `const` from key

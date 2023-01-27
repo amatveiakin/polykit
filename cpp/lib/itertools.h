@@ -169,10 +169,19 @@ void fill_cartesian_combinations(
 template<typename T>
 class Permutations {
 public:
+  using value_type = std::vector<T>;
+  using size_type = size_t;
+
   class EndIterator {};
 
   class Iterator {
   public:
+    using difference_type = ptrdiff_t;
+    using value_type = std::vector<T>;
+    using pointer = void;
+    using reference = const std::vector<T>&;
+    using iterator_category = std::forward_iterator_tag;
+
     explicit Iterator(std::vector<T> current_permutation)
         : current_permutation_(std::move(current_permutation)) {}
 
