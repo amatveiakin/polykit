@@ -7,10 +7,12 @@
 
 // Tries to eliminate as many `target_type` type term in `victim` as possible by adding
 // `killer` expression with different planar transformations.
+// Acts greedily: tries to reduce the number of target terms on each iteration.
 LoopExpr auto_kill_planar(LoopExpr victim, const LoopExpr& killer, int target_type);
 
 // Tries to eliminate as many `target_type` type term in `victim` as possible by adding
 // `killer` expression with different permutations.
+// Acts greedily: tries to reduce the number of target terms on each iteration.
 // TODO: Add linear algebra support
 LoopExpr auto_kill(LoopExpr victim, const LoopExpr& killer, int target_type);
 

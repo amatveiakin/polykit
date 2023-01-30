@@ -474,20 +474,20 @@ int main(int /*argc*/, char *argv[]) {
 #if 0
   LoopExpr loop_templates;
 
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
-  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
-  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
-
-  // In Lyndon basis:
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
-  loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
-  loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6,7}, {1,7,8,9}});
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
   loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
-  loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
-  loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
+  loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,8,9}, {5,6,7,8}});
+
+  // // In Lyndon basis:
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,7,8,9}, {1,4,5,6,7}});
+  // loop_templates += LoopExpr::single({{1,7,8,9}, {1,2,3,4}, {1,4,5,6,7}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,8,9}, {4,5,6,7,8}});
+  // loop_templates += LoopExpr::single({{1,2,3,4}, {1,4,5,9}, {5,6,7,8,9}});
+  // loop_templates -= LoopExpr::single({{1,2,3,4}, {5,6,7,8}, {1,4,5,8,9}});
+  // loop_templates -= LoopExpr::single({{5,6,7,8}, {1,2,3,4}, {1,4,5,8,9}});
 
   auto loop_expr = loop_templates.mapped_expanding([](const Loops& loops) {
     return sum_looped_vec([&](const std::vector<int>& args) {
@@ -556,23 +556,23 @@ int main(int /*argc*/, char *argv[]) {
   DUMP(o);
 
 
-  const auto a1 = cycle(a, {{2,4}, {5,7}});
-  const auto v = n + m - a + a1;
+  // const auto a1 = cycle(a, {{2,4}, {5,7}});
+  // const auto v = n + m - a + a1;
 
-  const auto o0 =
-    + o
-    - cycle(m, {{2,6}, {3,5}})
-    - cycle(m, {{3,7}, {4,6}})
-    - cycle(m, {{2,4}, {5,7}})
-    - a
-    - v
-    + cycle(a, {{2,4}, {5,7}})
-    + cycle(v, {{2,3,4,5,6,7}})
-    - cycle(a, {{2,3}, {4,7}, {5,6}})
-    - cycle(v, {{2,3}, {4,7}, {5,6}})
-  ;
-  const auto m0 = m - cycle(m, {{2,6}});
-  const auto v0 = v + cycle(v, {{1,6}});
+  // const auto o0 =
+  //   + o
+  //   - cycle(m, {{2,6}, {3,5}})
+  //   - cycle(m, {{3,7}, {4,6}})
+  //   - cycle(m, {{2,4}, {5,7}})
+  //   - a
+  //   - v
+  //   + cycle(a, {{2,4}, {5,7}})
+  //   + cycle(v, {{2,3,4,5,6,7}})
+  //   - cycle(a, {{2,3}, {4,7}, {5,6}})
+  //   - cycle(v, {{2,3}, {4,7}, {5,6}})
+  // ;
+  // const auto m0 = m - cycle(m, {{2,6}});
+  // const auto v0 = v + cycle(v, {{1,6}});
 
   // DUMP(a);
   // DUMP(m);
@@ -603,6 +603,40 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // // TEST: co-dimension == 1
   // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+
+  // // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
+  // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
+  // for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
+  //   const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+  //   std::vector<LoopExpr> space_a;
+  //   std::vector<LoopExpr> space_b;
+  //   for (const auto& perm : permutations(seq_incl(1, 7))) {
+  //     for (const auto& expr : exprs) {
+  //       space_a.push_back(loop_expr_substitute(expr, perm));
+  //     }
+  //     space_b.push_back(loop_expr_substitute(kind_repr, perm));
+  //   }
+  //   std::cout << pretty_print_loop_kind_index(kind, true) << ": "
+  //     << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+  // }
+
+  // Note. This computation only makes sense without Lyndon.
+  const auto perms = to_vector(permutations(seq_incl(1, 7)));
+  // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
+  const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
+  for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
+    const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+    const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
+      return mapped(exprs, [&](const auto& expr) {
+        return loop_expr_substitute(expr, perm);
+      });
+    }));
+    const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
+      return loop_expr_substitute(kind_repr, perm);
+    });
+    std::cout << pretty_print_loop_kind_index(kind, true) << ": "
+      << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+  }
 #endif
 
 
@@ -658,6 +692,10 @@ int main(int /*argc*/, char *argv[]) {
   const auto v = loop_expr_degenerate(loop_expr, {{1,4,8}, {2,11}});
   const auto w = loop_expr_degenerate(loop_expr, {{1,4,8}, {7,9}});
 
+  // TODO: Generate all degenerations
+  //    + find simple ones (e.g. little terms)
+  //    + compute stats (how widespread are different loop kinds, for example)
+
   generate_loops_names({a, b, c, d, e, r});
   generate_loops_names({f, g, fg, h, gg, m, n, p, q, s, t, u, v, w});
 
@@ -678,17 +716,17 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << "\n";
 
-  // DUMP(b);
-  // DUMP(g);
-  // DUMP(h);
-  // DUMP(m);
-  // DUMP(n);
-  // DUMP(q);
-  // DUMP(r);
-  // DUMP(s);
-  // DUMP(t);
-  // DUMP(w);
-  // DUMP(sh);
+  DUMP(b);
+  DUMP(g);
+  DUMP(h);
+  DUMP(m);
+  DUMP(n);
+  DUMP(q);
+  DUMP(r);
+  DUMP(s);
+  DUMP(t);
+  DUMP(w);
+  DUMP(sh);
 
   // // This gives the same space rank as all variables. And it's full: 154.
   // std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
@@ -739,12 +777,12 @@ int main(int /*argc*/, char *argv[]) {
   const auto sshbtgaf = sshbtga - cycle(f, {{2,7,5,3,8,6,4}});
   const auto wshbtgaf = wshbtga + cycle(f, {{2,5,7,3,6,8,4}});
 
-  DUMP(mgf);
-  DUMP(ngf);
-  DUMP(qbtgaf);
-  DUMP(rbtgaf);
-  DUMP(sshbtgaf);
-  DUMP(wshbtgaf);
+  // DUMP(mgf);
+  // DUMP(ngf);
+  // DUMP(qbtgaf);
+  // DUMP(rbtgaf);
+  // DUMP(sshbtgaf);
+  // DUMP(wshbtgaf);
 
   // std::cout << qbtgaf - cycle(qbtgaf, {{1,2}});  // kills {7}; left: {1},{2},{3}
   // std::cout << qbtgaf - cycle(qbtgaf, {{7,8}});  // kills {7}; left: {1},{2},{3}
@@ -760,19 +798,49 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
 
-  std::vector<LoopExpr> space_a;
-  std::vector<LoopExpr> space_b;
+  // const auto perms = to_vector(permutations(seq_incl(1, 8)));
   // const std::vector exprs = {wshbtgaf, qbtgaf};
-  const std::vector exprs = {wshbtgaf, qbtgaf, rbtgaf, sshbtgaf};
-  const auto kind2 = LoopExpr::single(loop_kinds.kinds().at(7 - 1).representative);
-  for (const auto& perm : permutations(seq_incl(2, 8))) {
-    const auto args = concat({1}, perm);
-    for (const auto& expr : exprs) {
-      space_a.push_back(loop_expr_substitute(expr, args));
-    }
-    space_b.push_back(loop_expr_substitute(kind2, args));
+  // // const std::vector exprs = {wshbtgaf, qbtgaf, rbtgaf, sshbtgaf};
+  // const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(2 - 1).representative);
+  // const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
+  //   return mapped(exprs, [&](const auto& expr) {
+  //     return loop_expr_substitute(expr, perm);
+  //   });
+  // }));
+  // const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
+  //   return loop_expr_substitute(kind_repr, perm);
+  // });
+  // std::cout << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+
+  const auto perms = to_vector(permutations(seq_incl(1, 8)));
+  const std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
+  const auto kinds56 =
+    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,2,8}, {1,7,5,6}})
+    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,5,6}, {1,7,2,8}})
+  ;
+  const auto kinds99 =
+    + LoopExpr::single({{1,2,3,5,4}, {1,7,2,3}, {1,7,3,8}, {1,7,2,6}})
+    + LoopExpr::single({{1,3,2,5,4}, {1,7,3,2}, {1,7,2,6}, {1,7,3,8}})
+  ;
+  const std::vector kind_exprs = {kinds56, kinds99};
+  for (const auto& kind_repr : kind_exprs) {
+  // for (const int kind : range_incl(1, loop_kinds.total_kinds())) {
+  //   const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+    Profiler profiler;
+    const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
+      return mapped(exprs, [&](const auto& expr) {
+        return loop_expr_substitute(expr, perm);
+      });
+    }));
+    const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
+      return loop_expr_substitute(kind_repr, perm);
+    });
+    profiler.finish("exprs");
+    const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+    profiler.finish("ranks");
+    // std::cout << pretty_print_loop_kind_index(kind, true) << ": " << to_string(ranks) << "\n";
+    std::cout << to_string(ranks) << "\n";
   }
-  std::cout << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
 
   // const std::vector exprs = {hg, mg, ng, qbtg, rbtg, sshbtg, wshbtg};
   // std::vector<LoopExpr> space;
