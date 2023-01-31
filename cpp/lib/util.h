@@ -125,6 +125,14 @@ auto extract_value_or(Container& container, const Key& key) {
   return extract_value_or(container, key, {});
 }
 
+template<typename Container>
+auto extract_back(Container& container) {
+  CHECK(!container.empty());
+  auto value = std::move(container.back());
+  container.pop_back();
+  return value;
+}
+
 
 namespace internal {
 template <typename T>

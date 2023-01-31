@@ -3,12 +3,21 @@
 #include <sstream>
 
 #include "algebra.h"
+#include "itertools.h"
 #include "set_util.h"
 #include "zip.h"
 
 
 LoopKinds loop_kinds;
 
+
+static const auto compare_length_first_asc = cmp::projected([](const auto& v) {
+  return std::tuple{cmp::asc_val(v.size()), cmp::asc_ref(v)};
+});
+
+static const auto compare_length_first_desc = cmp::projected([](const auto& v) {
+  return std::tuple{cmp::desc_val(v.size()), cmp::asc_ref(v)};
+});
 
 std::string loops_description(const Loops& loops) {
   absl::flat_hash_set<int> fully_common = to_set(set_intersection(loops));
@@ -636,4 +645,97 @@ LoopExpr arg9_semi_lyndon(const LoopExpr& expr) {
     }
     return loops;
   });
+}
+
+static std::optional<std::vector<std::vector<int>>> gluings_to_degenerations(
+    const std::vector<std::array<int, 2>>& gluings, int num_vars) {
+  std::vector<std::vector<int>> clusters;
+  std::vector<std::array<int, 2>> remaining_gluings = gluings;
+  while (!remaining_gluings.empty()) {
+    auto cluster = to_set(extract_back(remaining_gluings));
+    bool cluster_increased = true;
+    while (cluster_increased) {
+      cluster_increased = false;
+      for (const int idx : range(remaining_gluings.size())) {
+        const auto& [a, b] = remaining_gluings[idx];
+        if (cluster.contains(a) && cluster.contains(b)) {
+          // `gluings` graph is not a forest, meaning that we've effectively produced less
+          // gluings than required (e.g. {1-2, 2-3} is the same as {1-2, 2-3, 3-1}).
+          return std::nullopt;
+        } else if (cluster.contains(a)) {
+          cluster_increased = true;
+          cluster.insert(b);
+          remaining_gluings.erase(remaining_gluings.begin() + idx);
+          break;
+        } else if (cluster.contains(b)) {
+          cluster_increased = true;
+          cluster.insert(a);
+          remaining_gluings.erase(remaining_gluings.begin() + idx);
+          break;
+        }
+      }
+    }
+    const auto cluster_sorted = sorted(to_vector(cluster));
+    for (const auto i : range(cluster_sorted.size())) {
+      const int a = cluster_sorted.at(i);
+      const int b = cluster_sorted.at((i + 1) % cluster_sorted.size());
+      if (mod_eq(a + 1, b, num_vars) || mod_eq(a, b + 1, num_vars)) {
+        return std::nullopt;
+      }
+    }
+    clusters.push_back(cluster_sorted);
+  }
+  return clusters;
+}
+
+static std::vector<std::vector<int>> make_dihedral_substitutions(int num_vars) {
+  std::vector<std::vector<int>> substitutions;
+  const auto basic_rotation = seq_incl(1, num_vars);
+  const auto basic_symmetry = concat({1}, reversed(seq_incl(2, num_vars)));
+  for (const int shift : range(num_vars)) {
+    substitutions.push_back(rotated_vector(basic_rotation, shift));
+    substitutions.push_back(rotated_vector(basic_symmetry, shift));
+  }
+  return substitutions;
+}
+
+static std::vector<std::vector<int>> degeneration_substitute(
+    const std::vector<std::vector<int>>& degen, const std::vector<int>& new_indices) {
+  return mapped_nested<2>(degen, [&](const int var) { return new_indices.at(var - 1); });
+}
+
+static std::vector<std::vector<int>> degeneration_sort(const std::vector<std::vector<int>>& degen) {
+  return sorted(mapped(degen, DISAMBIGUATE(sorted)), compare_length_first_desc);
+}
+
+static std::vector<std::vector<int>> degeneration_canonical_form(
+    const std::vector<std::vector<int>>& degen, const std::vector<std::vector<int>>& substitutions) {
+  std::vector<std::vector<int>> smallest = degen;
+  for (const auto& subst : substitutions) {
+    const auto candidate = degeneration_sort(degeneration_substitute(degen, subst));
+    smallest = std::min(smallest, candidate);
+  }
+  return smallest;
+}
+
+std::vector<std::vector<std::vector<int>>> make_degenerations(int num_vars, int num_gluings) {
+  const auto diagonals = filtered(
+    mapped(
+      combinations(seq_incl(1, num_vars), 2),
+      [](const auto& v) { return to_array<2>(v); }
+    ),
+    [&](const auto& pair) {
+      const auto& [a, b] = pair;
+      return !mod_eq(a + 1, b, num_vars) && !mod_eq(a, b + 1, num_vars);
+    }
+  );
+  const auto substitutions = make_dihedral_substitutions(num_vars);
+  absl::flat_hash_set<std::vector<std::vector<int>>> degenerations;
+  for (const auto& gluing : combinations(diagonals, num_gluings)) {
+    const auto degen_or = gluings_to_degenerations(gluing, num_vars);
+    if (degen_or.has_value()) {
+      degenerations.insert(degeneration_canonical_form(degen_or.value(), substitutions));
+    }
+  }
+  return sorted(to_vector(degenerations), compare_length_first_asc);
 }

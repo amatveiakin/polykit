@@ -519,20 +519,21 @@ int main(int /*argc*/, char *argv[]) {
   const auto z = loop_expr_degenerate(loop_expr, {{1,4}, {5,8}});
   const auto u = loop_expr_degenerate(loop_expr, {{1,5}, {2,6}});
   const auto w = loop_expr_degenerate(loop_expr, {{1,5}, {3,7}});
+  const auto q = loop_expr_degenerate(loop_expr, {{1,5}, {2,7}});  // note: this was missing originally; found by `make_degenerations`
   const auto m = loop_expr_degenerate(loop_expr, {{1,3,5}});
   const auto n = loop_expr_degenerate(loop_expr, {{1,3,6}});
   const auto o = loop_expr_degenerate(loop_expr, {{1,4,7}});
 
-  generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o});
+  generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o, q});
 
-  for (const auto& kind : loop_kinds.kinds()) {
-    std::cout << pretty_print_loop_kind_index(kind)
-      << ": s=" << kind.killed_by_symmetrization
-      << ", a=" << kind.killed_by_antisymmetrization
-      << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
-      << "\n";
-  }
-  std::cout << "\n";
+  // for (const auto& kind : loop_kinds.kinds()) {
+  //   std::cout << pretty_print_loop_kind_index(kind)
+  //     << ": s=" << kind.killed_by_symmetrization
+  //     << ", a=" << kind.killed_by_antisymmetrization
+  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+  //     << "\n";
+  // }
+  // std::cout << "\n";
 
   DUMP(a);
   DUMP(b);
@@ -716,17 +717,17 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << "\n";
 
-  DUMP(b);
-  DUMP(g);
-  DUMP(h);
-  DUMP(m);
-  DUMP(n);
-  DUMP(q);
-  DUMP(r);
-  DUMP(s);
-  DUMP(t);
-  DUMP(w);
-  DUMP(sh);
+  // DUMP(b);
+  // DUMP(g);
+  // DUMP(h);
+  // DUMP(m);
+  // DUMP(n);
+  // DUMP(q);
+  // DUMP(r);
+  // DUMP(s);
+  // DUMP(t);
+  // DUMP(w);
+  // DUMP(sh);
 
   // // This gives the same space rank as all variables. And it's full: 154.
   // std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
@@ -812,35 +813,35 @@ int main(int /*argc*/, char *argv[]) {
   // });
   // std::cout << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
 
-  const auto perms = to_vector(permutations(seq_incl(1, 8)));
-  const std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
-  const auto kinds56 =
-    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,2,8}, {1,7,5,6}})
-    - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,5,6}, {1,7,2,8}})
-  ;
-  const auto kinds99 =
-    + LoopExpr::single({{1,2,3,5,4}, {1,7,2,3}, {1,7,3,8}, {1,7,2,6}})
-    + LoopExpr::single({{1,3,2,5,4}, {1,7,3,2}, {1,7,2,6}, {1,7,3,8}})
-  ;
-  const std::vector kind_exprs = {kinds56, kinds99};
-  for (const auto& kind_repr : kind_exprs) {
-  // for (const int kind : range_incl(1, loop_kinds.total_kinds())) {
-  //   const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
-    Profiler profiler;
-    const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
-      return mapped(exprs, [&](const auto& expr) {
-        return loop_expr_substitute(expr, perm);
-      });
-    }));
-    const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
-      return loop_expr_substitute(kind_repr, perm);
-    });
-    profiler.finish("exprs");
-    const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
-    profiler.finish("ranks");
-    // std::cout << pretty_print_loop_kind_index(kind, true) << ": " << to_string(ranks) << "\n";
-    std::cout << to_string(ranks) << "\n";
-  }
+  // const auto perms = to_vector(permutations(seq_incl(1, 8)));
+  // const std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
+  // const auto kinds56 =
+  //   - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,2,8}, {1,7,5,6}})
+  //   - LoopExpr::single({{1,5,3,4}, {1,7,5,2,3}, {1,7,5,6}, {1,7,2,8}})
+  // ;
+  // const auto kinds99 =
+  //   + LoopExpr::single({{1,2,3,5,4}, {1,7,2,3}, {1,7,3,8}, {1,7,2,6}})
+  //   + LoopExpr::single({{1,3,2,5,4}, {1,7,3,2}, {1,7,2,6}, {1,7,3,8}})
+  // ;
+  // const std::vector kind_exprs = {kinds56, kinds99};
+  // for (const auto& kind_repr : kind_exprs) {
+  // // for (const int kind : range_incl(1, loop_kinds.total_kinds())) {
+  // //   const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+  //   Profiler profiler;
+  //   const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
+  //     return mapped(exprs, [&](const auto& expr) {
+  //       return loop_expr_substitute(expr, perm);
+  //     });
+  //   }));
+  //   const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
+  //     return loop_expr_substitute(kind_repr, perm);
+  //   });
+  //   profiler.finish("exprs");
+  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   profiler.finish("ranks");
+  //   // std::cout << pretty_print_loop_kind_index(kind, true) << ": " << to_string(ranks) << "\n";
+  //   std::cout << to_string(ranks) << "\n";
+  // }
 
   // const std::vector exprs = {hg, mg, ng, qbtg, rbtg, sshbtg, wshbtg};
   // std::vector<LoopExpr> space;
@@ -876,4 +877,22 @@ int main(int /*argc*/, char *argv[]) {
   // }
   // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
 #endif
+
+
+  // const auto degenrations = make_degenerations(9, 2);
+  const auto degenrations = make_degenerations(11, 3);
+  for (const auto& degenration : degenrations) {
+    std::cout << dump_to_string(degenration) << " ";
+    const auto expr = loop_expr_degenerate(loop_expr, degenration);
+    std::cout << expr;
+  }
+  std::cout << "\ntotal degenerations = " << degenrations.size() << "\n\n";
+  for (const auto& kind : loop_kinds.kinds()) {
+    std::cout << pretty_print_loop_kind_index(kind)
+      << ": s=" << kind.killed_by_symmetrization
+      << ", a=" << kind.killed_by_antisymmetrization
+      << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+      << "\n";
+  }
+  std::cout << "\n";
 }

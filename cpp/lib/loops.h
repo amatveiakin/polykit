@@ -126,3 +126,12 @@ LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr);
 // Generalization idea: find a way to apply shuffle relations in order to get a
 // deterministic basis with minimal (or close to minimal) number of terms.
 LoopExpr arg9_semi_lyndon(const LoopExpr& expr);
+
+// Generates ways of gluing variables 1, 2, ..., `num_vars` where:
+//   - Variable pairs are glued exactly `num_gluings` times. The gluings could be applied to
+//     different variables or to the same variable repeatedly.
+//     For example `num_gluings` == 2 could produce both {{1,3,7}} and {{1,3}, {4,6}}.
+//   - Neighbor variables (1 and 2, 2 and 3, ..., `num_vars` and 1) are never glued.
+//   - Degenerations are factored by dihedral symmetries. Each cluster is represented by the
+//     lexicographically smallest degeneration.
+std::vector<std::vector<std::vector<int>>> make_degenerations(int num_vars, int num_gluings);
