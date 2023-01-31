@@ -66,7 +66,7 @@ static std::string text_color_to_html_color(TextColor color) {
     case TextColor::normal:         return "Black";
     case TextColor::red:            return "Red";
     case TextColor::green:          return "LimeGreen";
-    case TextColor::yellow:         return "Gold";
+    case TextColor::yellow:         return "GoldenRod";
     case TextColor::blue:           return "Blue";
     case TextColor::magenta:        return "Magenta";
     case TextColor::cyan:           return "DarkCyan";
