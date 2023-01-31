@@ -120,7 +120,7 @@ LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
 
 
 
-int main(int /*argc*/, char *argv[]) {
+int main(int argc, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
@@ -137,6 +137,9 @@ int main(int /*argc*/, char *argv[]) {
     .set_compact_x(true)
     .set_max_terms_in_annotations_one_liner(100)
   );
+
+  CHECK_EQ(argc, 2);
+  const int app_arg = atoi(argv[1]);
 
 
 #if 0
@@ -526,14 +529,14 @@ int main(int /*argc*/, char *argv[]) {
 
   generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o, q});
 
-  for (const auto& kind : loop_kinds.kinds()) {
-    std::cout << pretty_print_loop_kind_index(kind)
-      << ": s=" << kind.killed_by_symmetrization
-      << ", a=" << kind.killed_by_antisymmetrization
-      << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
-      << "\n";
-  }
-  std::cout << "\n";
+  // for (const auto& kind : loop_kinds.kinds()) {
+  //   std::cout << pretty_print_loop_kind_index(kind)
+  //     << ": s=" << kind.killed_by_symmetrization
+  //     << ", a=" << kind.killed_by_antisymmetrization
+  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+  //     << "\n";
+  // }
+  // std::cout << "\n";
 
   // DUMP(a);
   // DUMP(b);
@@ -633,7 +636,8 @@ int main(int /*argc*/, char *argv[]) {
   // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
   // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
   const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o, kind1_sum, kind4_sum, kind6_sum};
-  for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
+  // for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
+  for (const auto kind : {app_arg}) {
     const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
     const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
       return mapped(exprs, [&](const auto& expr) {
