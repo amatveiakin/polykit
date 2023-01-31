@@ -138,6 +138,8 @@ LoopKindInfo make_loop_kind_info(const Loops& loops, int index, bool index_is_st
 }
 
 const LoopKindInfo& LoopKinds::generate_loops_kind(const Loops& loops, bool index_is_stable) {
+  // TODO: Return none if the expression is missing some variables.
+  //   The expectation is: num_unique_vars == num_loops + 4.
   const auto invariant = loops_invariant(loops);
   if (!invariant_to_kind_.contains(invariant)) {
     int index = kinds_.size();
@@ -287,6 +289,11 @@ LoopExpr remove_duplicate_loops(const LoopExpr& expr) {
   });
 }
 
+LoopExpr loop_expr_simplify(const LoopExpr& expr) {
+  return to_canonical_permutation(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(expr))));
+  // return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(expr)));
+}
+
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<int, int>& substitutions) {
   auto loop_subst = expr.mapped_expanding([&](const Loops& loops) -> LoopExpr {
     Loops new_loops;
@@ -301,8 +308,7 @@ LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<in
     }
     return LoopExpr::single(new_loops);
   });
-  return to_canonical_permutation(arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst))));
-  // return arg9_semi_lyndon(remove_duplicate_loops(fully_normalize_loops(loop_subst)));
+  return loop_expr_simplify(loop_subst);
 }
 
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices) {
@@ -420,6 +426,21 @@ LoopExpr loop_expr_degenerate(
   }
   // return loop_expr_substitute(expr, substitutions);
   return arg11_shuffle_cluster(loop_expr_substitute(expr, substitutions));
+}
+
+LoopExpr loop_expr_expand_len_6_loop_into_sum(const Loops& loops) {
+  const auto target_loop_index = absl::c_find_if(loops, [](const auto& loop) {
+    return loop.size() == 6;
+  }) - loops.begin();
+  LoopExpr ret;
+  for (const int idx : range(6)) {
+    const int sign = neg_one_pow(idx);
+    Loops loops_expanded = loops;
+    auto& target_loop = loops_expanded.at(target_loop_index);
+    target_loop.erase(target_loop.begin() + idx);
+    ret.add_to(loops_expanded, sign);
+  }
+  return loop_expr_simplify(ret);
 }
 
 std::vector<int> loop_lengths(const Loops& loops) {

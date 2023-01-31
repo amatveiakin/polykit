@@ -84,10 +84,13 @@ LoopExpr remove_loops_with_duplicates(const LoopExpr& expr);
 // Removes terms where one loop is equal to or included in another one.
 LoopExpr remove_duplicate_loops(const LoopExpr& expr);
 
+LoopExpr loop_expr_simplify(const LoopExpr& expr);
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const absl::flat_hash_map<int, int>& substitutions);
 LoopExpr loop_expr_substitute(const LoopExpr& expr, const std::vector<int>& new_indices);
 LoopExpr loop_expr_cycle(const LoopExpr& expr, const Permutation& perm);  // TODO: Rename "cycle" part
 LoopExpr loop_expr_degenerate(const LoopExpr& expr, const std::vector<std::vector<int>>& groups);
+
+LoopExpr loop_expr_expand_len_6_loop_into_sum(const Loops& loops);
 
 // Returns length of each loop (e.g. {{1,2,3,4}, {1,2,5,3}, {1,2,5,6,7}} -> {4, 4, 5}).
 std::vector<int> loop_lengths(const Loops& loops);
