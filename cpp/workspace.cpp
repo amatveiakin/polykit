@@ -119,8 +119,7 @@ LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
 }
 
 
-
-int main(int argc, char *argv[]) {
+int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
 
@@ -138,8 +137,8 @@ int main(int argc, char *argv[]) {
     .set_max_terms_in_annotations_one_liner(100)
   );
 
-  CHECK_EQ(argc, 2);
-  const int app_arg = atoi(argv[1]);
+  // CHECK_EQ(argc, 2);
+  // const int app_arg = atoi(argv[1]);
 
 
 #if 0
@@ -474,7 +473,7 @@ int main(int argc, char *argv[]) {
 
 
 
-#if 1
+#if 0
   LoopExpr loop_templates;
 
   loop_templates -= LoopExpr::single({{1,2,3,4}, {1,4,5,6}, {1,6,7,8,9}});
@@ -529,14 +528,8 @@ int main(int argc, char *argv[]) {
 
   generate_loops_names({a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o, q});
 
-  // for (const auto& kind : loop_kinds.kinds()) {
-  //   std::cout << pretty_print_loop_kind_index(kind)
-  //     << ": s=" << kind.killed_by_symmetrization
-  //     << ", a=" << kind.killed_by_antisymmetrization
-  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
-  //     << "\n";
-  // }
-  // std::cout << "\n";
+  loop_kinds.list_all_kinds(std::cout);
+  std::cout << "\n";
 
   // DUMP(a);
   // DUMP(b);
@@ -631,30 +624,30 @@ int main(int argc, char *argv[]) {
   // Based on: [1,2,7,3][1,6,7,3][1,6,2,5,4]
   const auto kind6_sum = loop_expr_expand_len_6_loop_into_sum({{1,2,7,3}, {1,6,7,3}, {1,6,2,5,4,3}});
 
-  // Note. This computation only makes sense without Lyndon.
-  const auto perms = to_vector(permutations(seq_incl(1, 7)));
-  // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
-  // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
-  const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o, kind1_sum, kind4_sum, kind6_sum};
-  // for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
-  for (const auto kind : {app_arg}) {
-    const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
-    const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
-      return mapped(exprs, [&](const auto& expr) {
-        return loop_expr_substitute(expr, perm);
-      });
-    }));
-    const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
-      return loop_expr_substitute(kind_repr, perm);
-    });
-    std::cout << pretty_print_loop_kind_index(kind, true) << ": "
-      << to_string(space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis))) << "\n";
-  }
+  // // Note. This computation only makes sense without Lyndon.
+  // const auto perms = to_vector(permutations(seq_incl(1, 7)));
+  // // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
+  // // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
+  // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o, kind1_sum, kind4_sum, kind6_sum};
+  // // for (const auto kind : range_incl(1, loop_kinds.total_kinds())) {
+  // for (const auto kind : {app_arg}) {
+  //   const auto kind_repr = LoopExpr::single(loop_kinds.kinds().at(kind - 1).representative);
+  //   const std::vector<LoopExpr> space_a = flatten(mapped_parallel(perms, [&](const auto& perm) {
+  //     return mapped(exprs, [&](const auto& expr) {
+  //       return loop_expr_substitute(expr, perm);
+  //     });
+  //   }));
+  //   const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
+  //     return loop_expr_substitute(kind_repr, perm);
+  //   });
+  //   std::cout << pretty_print_loop_kind_index(kind, true) << ": "
+  //     << to_string(space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis))) << "\n";
+  // }
 #endif
 
 
 
-#if 0
+#if 1
   const int N = 11;
   const int num_points = N;
   auto source = sum_looped_vec(
@@ -684,7 +677,7 @@ int main(int argc, char *argv[]) {
   const auto b = loop_expr_degenerate(loop_expr, {{1,3,5,8}});
   const auto c = loop_expr_degenerate(loop_expr, {{1,3,6,8}});  // == expr(a, b)
   const auto d = loop_expr_degenerate(loop_expr, {{1,3,6,9}});  // == expr(a, b, e)
-  const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});
+  // const auto e = loop_expr_degenerate(loop_expr, {{1,3,7,9}});  // == `c` under dihedral symmetry
 
   // All expressions limited to terms {1}-{6}.
   const auto f = loop_expr_degenerate(loop_expr, {{1,3,5}, {2,4}});
@@ -709,7 +702,7 @@ int main(int argc, char *argv[]) {
   //    + find simple ones (e.g. little terms)
   //    + compute stats (how widespread are different loop kinds, for example)
 
-  generate_loops_names({a, b, c, d, e, r});
+  generate_loops_names({a, b, c, d, r});
   generate_loops_names({f, g, fg, h, gg, m, n, p, q, s, t, u, v, w});
 
   // Converts between {5}+{6} and {8}+{8} pairs.
@@ -720,13 +713,7 @@ int main(int argc, char *argv[]) {
     + LoopExpr::single({{1,7,5,6}, {1,7,5,2,3}, {1,5,3,4}, {1,7,2,8}})
   ;
 
-  // for (const auto& kind : loop_kinds.kinds()) {
-  //   std::cout << pretty_print_loop_kind_index(kind)
-  //     << ": s=" << kind.killed_by_symmetrization
-  //     << ", a=" << kind.killed_by_antisymmetrization
-  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
-  //     << "\n";
-  // }
+  // loop_kinds.list_all_kinds(std::cout);
   // std::cout << "\n";
 
   // DUMP(b);
@@ -888,23 +875,16 @@ int main(int argc, char *argv[]) {
   //   }
   // }
   // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+
+  const auto degenrations = make_degenerations(11, 3);
+  for (const auto& degenration : degenrations) {
+    std::cout << dump_to_string(degenration) << " ";
+    const auto expr = loop_expr_degenerate(loop_expr, degenration);
+    std::cout << expr;
+  }
+  std::cout << "\n";
+  std::cout << "total degenerations = " << degenrations.size() << "\n";
+  std::cout << "\n";
+  loop_kinds.list_all_kinds(std::cout);
 #endif
-
-
-  // // const auto degenrations = make_degenerations(9, 2);
-  // const auto degenrations = make_degenerations(11, 3);
-  // for (const auto& degenration : degenrations) {
-  //   std::cout << dump_to_string(degenration) << " ";
-  //   const auto expr = loop_expr_degenerate(loop_expr, degenration);
-  //   std::cout << expr;
-  // }
-  // std::cout << "\ntotal degenerations = " << degenrations.size() << "\n\n";
-  // for (const auto& kind : loop_kinds.kinds()) {
-  //   std::cout << pretty_print_loop_kind_index(kind)
-  //     << ": s=" << kind.killed_by_symmetrization
-  //     << ", a=" << kind.killed_by_antisymmetrization
-  //     << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
-  //     << "\n";
-  // }
-  // std::cout << "\n";
 }

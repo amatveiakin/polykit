@@ -144,6 +144,7 @@ const LoopKindInfo& LoopKinds::generate_loops_kind(const Loops& loops, bool inde
   if (!invariant_to_kind_.contains(invariant)) {
     int index = kinds_.size();
     kinds_.push_back(make_loop_kind_info(loops, index + 1, index_is_stable));
+    // TODO: Thread-safety.
     invariant_to_kind_[invariant] = index;
   }
   return kinds_[invariant_to_kind_.at(invariant)];
@@ -161,6 +162,16 @@ int LoopKinds::loops_index(const Loops& loops) {
 std::string LoopKinds::loops_name(const Loops& loops) {
   const auto& kind = loops_kind(loops);
   return pretty_print_loop_kind_index(kind.index, kind.index_is_stable);
+}
+
+void LoopKinds::list_all_kinds(std::ostream& os) const {
+  for (const auto& kind : loop_kinds.kinds()) {
+    os << pretty_print_loop_kind_index(kind)
+      << ": s=" << kind.killed_by_symmetrization
+      << ", a=" << kind.killed_by_antisymmetrization
+      << "; e.g. " << LoopExprParam::object_to_string(kind.representative)
+      << fmt::newline();
+  }
 }
 
 std::string pretty_print_loop_kind_index(const LoopKindInfo& kind) {

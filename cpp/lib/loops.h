@@ -41,6 +41,7 @@ public:
   std::string loops_name(const Loops& loops);
   int total_kinds() const { return kinds_.size(); }
   const std::vector<LoopKindInfo>& kinds() const { return kinds_; }
+  void list_all_kinds(std::ostream& os) const;
 
   // Do not use directly. Use `this.loops_kind` or `generate_loops_names` instead.
   const LoopKindInfo& generate_loops_kind(const Loops& loops, bool index_is_stable);
