@@ -21,6 +21,8 @@ Gr_Space GrL3(int dimension, const std::vector<int>& args);
 Gr_Space GrL4_Dim3(const std::vector<int>& args);
 Gr_Space GrL(int weight, int dimension, const std::vector<int>& args);
 
+Gr_NCoSpace GrLArnold2(int dimension, const std::vector<int>& args);
+
 // Suffix "test_space" stands for the fact that these are candidate spaces likely to be missing some functions.
 Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points);
 Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points);

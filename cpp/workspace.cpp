@@ -27,7 +27,7 @@
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 0
+#if 1
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -55,7 +55,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 1
+#if 0
 #include "lib/epsilon.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
@@ -80,43 +80,44 @@
 
 
 
-static constexpr auto cycle = loop_expr_cycle;
+// static constexpr auto cycle = loop_expr_cycle;
 
-#define DUMP(expr) std::cout << STRINGIFY(expr) << " " << expr
+// #define DUMP(expr) std::cout << STRINGIFY(expr) << " " << expr
 
-int loops_united_permutation_sign(const Loops& loops) {
-  absl::flat_hash_set<int> variables;
-  std::vector<int> unique_variables;
-  for (const auto& loop : loops) {
-    for (const int v : loop) {
-      if (variables.insert(v).second) {
-        unique_variables.push_back(v);
-      }
-    }
-  }
-  return permutation_sign(unique_variables);
-}
+// int loops_united_permutation_sign(const Loops& loops) {
+//   absl::flat_hash_set<int> variables;
+//   std::vector<int> unique_variables;
+//   for (const auto& loop : loops) {
+//     for (const int v : loop) {
+//       if (variables.insert(v).second) {
+//         unique_variables.push_back(v);
+//       }
+//     }
+//   }
+//   return permutation_sign(unique_variables);
+// }
 
-struct LoopIndexExprParam : SimpleLinearParam<int> {
-  static std::string object_to_string(const ObjectT& index) {
-    return pretty_print_loop_kind_index(index, true);
-  }
-};
+// struct LoopIndexExprParam : SimpleLinearParam<int> {
+//   static std::string object_to_string(const ObjectT& index) {
+//     return pretty_print_loop_kind_index(index, true);
+//   }
+// };
 
-using LoopIndexExpr = Linear<LoopIndexExprParam>;
+// using LoopIndexExpr = Linear<LoopIndexExprParam>;
 
-LoopIndexExpr loop_expr_to_index_symmetrized(const LoopExpr& expr) {
-  return expr.mapped<LoopIndexExpr>([](const auto& expr) {
-    return loop_kinds.loops_index(expr);
-  });
-}
+// LoopIndexExpr loop_expr_to_index_symmetrized(const LoopExpr& expr) {
+//   return expr.mapped<LoopIndexExpr>([](const auto& expr) {
+//     return loop_kinds.loops_index(expr);
+//   });
+// }
 
-LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
-  return expr.mapped_expanding([](const auto& expr) {
-    const int sign = loops_united_permutation_sign(expr);
-    return sign * LoopIndexExpr::single(loop_kinds.loops_index(expr));
-  });
-}
+// LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
+//   return expr.mapped_expanding([](const auto& expr) {
+//     const int sign = loops_united_permutation_sign(expr);
+//     return sign * LoopIndexExpr::single(loop_kinds.loops_index(expr));
+//   });
+// }
+
 
 
 int main(int /*argc*/, char *argv[]) {
@@ -647,7 +648,7 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-#if 1
+#if 0
   const int N = 11;
   const int num_points = N;
   auto source = sum_looped_vec(
@@ -887,4 +888,120 @@ int main(int /*argc*/, char *argv[]) {
   std::cout << "\n";
   loop_kinds.list_all_kinds(std::cout);
 #endif
+
+
+
+  // const int num_points = 6;
+  // const int dimension = 3;
+  // const auto points = seq_incl(1, num_points);
+  // const auto fx_prime = mapped(
+  //   combinations(seq_incl(1, num_points - 1), dimension - 1),
+  //   [](const auto& args) {
+  //     return plucker(concat(args, {num_points}));
+  //   }
+  // );
+  // const auto fx = GrFx(dimension, points);
+  // const auto l2 = GrL2(dimension, points);
+  // // const auto space_a = space_ncoproduct(fx, fx, fx);
+  // // const auto space_a = space_ncoproduct(fx, fx, fx_prime);
+  // // const auto space_a = space_ncoproduct(fx, fx_prime, fx_prime);
+  // const auto space_a = space_ncoproduct(fx_prime, fx_prime, fx_prime);
+  // const auto space_b = mapped(
+  //   space_ncoproduct(l2, fx),
+  //   DISAMBIGUATE(ncomultiply)
+  // );
+  // const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  // // Generalized Arnold's relationship.
+  // const int num_points = 5;
+  // const int dimension = 3;
+  // const auto points = seq_incl(1, num_points);
+  // const auto fx = GrFx(dimension, points);
+  // const auto l2_prime = mapped(
+  //   to_vector(permutations(points)),
+  //   [](const auto& args) {
+  //     const auto pl = [&](const std::vector<int>& subargs) {
+  //       return plucker(choose_indices_one_based(args, subargs));
+  //     };
+  //     return
+  //       + ncoproduct(pl({1,2,3}), pl({1,2,4}))
+  //       + ncoproduct(pl({1,2,4}), pl({1,3,4}))
+  //       + ncoproduct(pl({1,3,4}), pl({1,2,3}))
+  //     ;
+  //   }
+  // );
+  // const auto space_a = space_ncoproduct(fx, fx, fx);
+  // const auto space_b = space_ncoproduct(l2_prime, fx);
+  // const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  // const int num_points = 5;
+  // const int dimension = 3;
+  // const auto points = seq_incl(1, num_points);
+  // const auto fx = GrFx(dimension, points);
+  // const auto l2_prime = mapped(
+  //   to_vector(permutations(points)),
+  //   [](const auto& args) {
+  //     const auto pl = [&](const std::vector<int>& subargs) {
+  //       return plucker(choose_indices_one_based(args, subargs));
+  //     };
+  //     return
+  //       + ncoproduct(pl({1,2,3}), pl({1,2,4}))
+  //       + ncoproduct(pl({1,2,4}), pl({1,3,4}))
+  //       + ncoproduct(pl({1,3,4}), pl({1,2,3}))
+  //     ;
+  //   }
+  // );
+  // // Basis:
+  // const std::vector space_a = {
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({1,2,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({1,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({1,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({2,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({2,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,4}), plucker({3,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({1,2,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({1,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({1,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({2,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({2,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,4}), plucker({3,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({1,2,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({1,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({1,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({2,3,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({2,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({2,3,4}), plucker({3,4,5})),
+
+  //   ncoproduct(plucker({1,2,3}), plucker({1,2,5}), plucker({3,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,3,5}), plucker({2,4,5})),
+  //   ncoproduct(plucker({1,2,3}), plucker({1,4,5}), plucker({2,3,5})),
+  // };
+  // const auto space_b = space_ncoproduct(l2_prime, fx);
+  // const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+
+  for (const int weight : range_incl(2, 6)) {
+    for (const int dimension : range_incl(2, 4)) {
+      for (const int num_points : range_incl(dimension + 1, 6)) {
+        const auto points = seq_incl(1, num_points);
+        const auto fx = space_ncoproduct(GrFx(dimension, points));
+        const auto space_a = mapped(
+          combinations(fx, weight),
+          DISAMBIGUATE(ncoproduct)
+        );
+        const auto space_b = mapped(
+          cartesian_combinations(std::vector{
+            std::pair{GrLArnold2(dimension, points), 1},
+            std::pair{fx, weight - 2},
+          }),
+          DISAMBIGUATE(ncoproduct)
+        );
+        const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+        const int result = ranks.a() - ranks.intersected();
+        std::cout << "w=" << weight << ", d=" << dimension << ", p=" << num_points << ": " << result << "\n";
+      }
+    }
+  }
 }

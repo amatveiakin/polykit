@@ -115,6 +115,32 @@ Gr_Space GrL(int weight, int dimension, const std::vector<int>& args) {
   FATAL(absl::StrCat("Unsupported weight&dimension for GrL: ", weight, "&", dimension));
 }
 
+Gr_NCoSpace GrLArnold2(int dimension, const std::vector<int>& points) {
+  CHECK_GE(dimension, 2);
+  CHECK_GT(points.size(), dimension);
+  return mapped_expanding(
+    combinations(points, dimension + 1),
+    [](const auto& args) {
+      return mapped(
+        index_splits(args, 3),
+        [](const auto& arg_pair) {
+          const auto& [tail_args, head_args] = arg_pair;
+          // workaround: lambdas cannot capture structured bindings
+          const auto& head = head_args;
+          const auto& tail = tail_args;
+          const auto pl = [&](const std::vector<int>& subargs) {
+            return plucker(concat(head, choose_indices_one_based(tail, subargs)));
+          };
+          return
+            + ncoproduct(pl({1,2}), pl({1,3}))
+            + ncoproduct(pl({1,3}), pl({2,3}))
+            + ncoproduct(pl({2,3}), pl({1,2}))
+          ;
+        }
+      );
+    }
+  );
+}
 
 Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points) {
   Gr_Space space;
