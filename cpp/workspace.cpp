@@ -891,27 +891,67 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  // const int num_points = 6;
-  // const int dimension = 3;
-  // const auto points = seq_incl(1, num_points);
-  // const auto fx_prime = mapped(
-  //   combinations(seq_incl(1, num_points - 1), dimension - 1),
-  //   [](const auto& args) {
-  //     return plucker(concat(args, {num_points}));
-  //   }
-  // );
+  const int num_points = 7;
+  const int dimension = 3;
+  const auto points = seq_incl(1, num_points);
+  const auto fx_prime = space_ncoproduct(mapped(
+    combinations(seq_incl(1, num_points - 1), dimension - 1),
+    [](const auto& args) {
+      return plucker(concat(args, {num_points}));
+    }
+  ));
   // const auto fx = GrFx(dimension, points);
   // const auto l2 = GrL2(dimension, points);
-  // // const auto space_a = space_ncoproduct(fx, fx, fx);
+  // const auto space_a = space_ncoproduct(fx, fx, fx);
   // // const auto space_a = space_ncoproduct(fx, fx, fx_prime);
   // // const auto space_a = space_ncoproduct(fx, fx_prime, fx_prime);
-  // const auto space_a = space_ncoproduct(fx_prime, fx_prime, fx_prime);
+  // // const auto space_a = space_ncoproduct(fx_prime, fx_prime, fx_prime);
   // const auto space_b = mapped(
   //   space_ncoproduct(l2, fx),
   //   DISAMBIGUATE(ncomultiply)
   // );
-  // const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis));
+  // const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
   // std::cout << to_string(ranks) << "\n";
+
+  const auto fx = space_ncoproduct(GrFx(dimension, points));
+  const auto l2 = space_ncoproduct(GrL2(dimension, points));
+  for (const int weight : range_incl(2, 10)) {
+    Profiler profiler(true);
+    const auto space_a = mapped_parallel(combinations(fx, weight), DISAMBIGUATE(ncoproduct));
+    const auto space_b = mapped_parallel(cartesian_combinations(std::vector{
+      std::pair{l2, 1},
+      std::pair{fx, weight - 2},
+    }), [](const auto& exprs) {
+      return ncomultiply(ncoproduct(exprs));
+    });
+    profiler.finish("spaces");
+    const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+    profiler.finish("ranks");
+    std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
+  }
+
+  // const auto fx = space_ncoproduct(GrFx(dimension, points));
+  // const auto l2 = space_ncoproduct(GrL2(dimension, points));
+  // const int weight = 5;
+  // const int num_prime = app_arg;
+  // // for (const int num_prime : range_incl(0, weight)) {
+  //   Profiler profiler(false);
+  //   const auto space_a = mapped_parallel(cartesian_combinations(std::vector{
+  //     std::pair{fx, weight - num_prime},
+  //     std::pair{fx_prime, num_prime},
+  //   }), DISAMBIGUATE(ncoproduct));
+  //   const auto space_b = mapped_parallel(cartesian_combinations(std::vector{
+  //     std::pair{l2, 1},
+  //     std::pair{fx, weight - 2},
+  //   }), [](const auto& exprs) {
+  //     return ncomultiply(ncoproduct(exprs));
+  //   });
+  //   profiler.finish("spaces");
+  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   profiler.finish("ranks");
+  //   std::cout << "w=" << weight << ", #f'=" << num_prime << ": " << to_string(ranks) << "\n";
+  // // }
+
 
   // // Generalized Arnold's relationship.
   // const int num_points = 5;
@@ -982,26 +1022,29 @@ int main(int /*argc*/, char *argv[]) {
   // const auto ranks = space_venn_ranks(space_a, space_b, DISAMBIGUATE(to_lyndon_basis));
   // std::cout << to_string(ranks) << "\n";
 
-  for (const int weight : range_incl(2, 6)) {
-    for (const int dimension : range_incl(2, 4)) {
-      for (const int num_points : range_incl(dimension + 1, 6)) {
-        const auto points = seq_incl(1, num_points);
-        const auto fx = space_ncoproduct(GrFx(dimension, points));
-        const auto space_a = mapped(
-          combinations(fx, weight),
-          DISAMBIGUATE(ncoproduct)
-        );
-        const auto space_b = mapped(
-          cartesian_combinations(std::vector{
-            std::pair{GrLArnold2(dimension, points), 1},
-            std::pair{fx, weight - 2},
-          }),
-          DISAMBIGUATE(ncoproduct)
-        );
-        const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
-        const int result = ranks.a() - ranks.intersected();
-        std::cout << "w=" << weight << ", d=" << dimension << ", p=" << num_points << ": " << result << "\n";
-      }
-    }
-  }
+  // for (const int weight : range_incl(2, 3)) {
+  //   for (const int dimension : range_incl(2, 3)) {
+  //     for (const int num_points : range_incl(7, 9)) {
+  //       Profiler profiler(true);
+  //       const auto points = seq_incl(1, num_points);
+  //       const auto fx = space_ncoproduct(GrFx(dimension, points));
+  //       const auto space_a = mapped(
+  //         combinations(fx, weight),
+  //         DISAMBIGUATE(ncoproduct)
+  //       );
+  //       const auto space_b = mapped(
+  //         cartesian_combinations(std::vector{
+  //           std::pair{GrLArnold2(dimension, points), 1},
+  //           std::pair{fx, weight - 2},
+  //         }),
+  //         DISAMBIGUATE(ncoproduct)
+  //       );
+  //       profiler.finish("spaces");
+  //       const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //       profiler.finish("ranks");
+  //       const int result = ranks.a() - ranks.intersected();
+  //       std::cout << "w=" << weight << ", d=" << dimension << ", p=" << num_points << ": " << result << "\n";
+  //     }
+  //   }
+  // }
 }
