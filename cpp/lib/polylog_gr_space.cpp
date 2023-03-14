@@ -32,6 +32,14 @@ Gr_Space GrFx(int dimension, const std::vector<int>& args) {
   return mapped(combinations(args, dimension), DISAMBIGUATE(plucker));
 }
 
+Gr_Space GrFxPrime(int dimension, const std::vector<int>& args) {
+  const auto& [main_args, fixed_p] = split_slice(args, args.size() - 1);
+  const auto& fixed_points = fixed_p;  // workaround: lambdas cannot capture structured bindings
+  return mapped(combinations(main_args, dimension - 1), [&](const auto& args) {
+    return plucker(concat(args, fixed_points));
+  });
+}
+
 Gr_Space GrL_core(
   int weight, int dimension, const std::vector<int>& args,
   bool include_one_minus_cross_ratio, int num_fixed_points

@@ -415,3 +415,61 @@ TEST(ChernCocycleTest, LARGE_Dual_Comultiplication_3_1_Dim4) {
     )
   );
 }
+
+TEST(ChernCocycleTest, AFull_ChernCocycle_4_1) {
+  const auto pl = [](auto... points) {
+    return plucker({points...});
+  };
+
+  EXPECT_EXPR_ZERO(
+    + a_full(ChernCocycle(4, 1, {1,2,3,4,5}), 6)
+    // first 3 term: expanded residue([t,1,2,3] ^ [t,4]/[t,3] ^ [t,5]/[t,3] ^ [t,6]/[t,3])
+    - ncomultiply(ncoproduct(GLi2(4,1,2,3), pl(4,5) - pl(4,3), pl(4,6) - pl(4,3)))
+    + ncomultiply(ncoproduct(GLi2(5,1,2,3), pl(5,4) - pl(5,3), pl(5,6) - pl(5,3)))
+    - ncomultiply(ncoproduct(GLi2(6,1,2,3), pl(6,4) - pl(6,3), pl(6,5) - pl(6,3)))
+    - ncomultiply(ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}) - ChernCocycle(3, 2, {2,3,4,5,6}), pl(1,2)))
+    + ncomultiply(ncoproduct(ChernCocycle(3, 2, {1,3,4,5,6}), pl(1,3)))
+    - ncomultiply(ncoproduct(ChernCocycle(3, 2, {2,3,4,5,6}), pl(2,3)))
+    - ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(1,2), pl(2,3)))
+    - ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(3,1)))
+    - ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(3,1), pl(1,2)))
+  );
+
+  EXPECT_EXPR_ZERO(
+    + a_full(ChernCocycle(4, 1, {1,2,3,4,5}), 6)
+    - ncomultiply(ncoproduct(GLi2(1,3,4,6), pl(4,5), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(1,3,4,6), pl(4,5), pl(1,3)))
+    + ncomultiply(ncoproduct(GLi2(1,3,4,6), pl(4,6), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(1,3,4,6), pl(4,6), pl(1,3)))
+    + ncomultiply(ncoproduct(GLi2(1,3,5,6), pl(4,5), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(1,3,5,6), pl(4,5), pl(1,3)))
+    - ncomultiply(ncoproduct(GLi2(1,3,5,6), pl(5,6), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(1,3,5,6), pl(5,6), pl(1,3)))
+    - ncomultiply(ncoproduct(GLi2(1,4,5,6), pl(1,3), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(1,4,5,6), pl(1,6), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(1,4,5,6), pl(1,6), pl(1,3)))
+    + ncomultiply(ncoproduct(GLi2(2,3,4,6), pl(4,5), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(2,3,4,6), pl(4,5), pl(2,3)))
+    - ncomultiply(ncoproduct(GLi2(2,3,4,6), pl(4,6), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(2,3,4,6), pl(4,6), pl(2,3)))
+    - ncomultiply(ncoproduct(GLi2(2,3,5,6), pl(4,5), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(2,3,5,6), pl(4,5), pl(2,3)))
+    + ncomultiply(ncoproduct(GLi2(2,3,5,6), pl(5,6), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(2,3,5,6), pl(5,6), pl(2,3)))
+    + ncomultiply(ncoproduct(GLi2(2,4,5,6), pl(2,3), pl(1,2)))
+    - ncomultiply(ncoproduct(GLi2(2,4,5,6), pl(2,6), pl(1,2)))
+    + ncomultiply(ncoproduct(GLi2(2,4,5,6), pl(2,6), pl(2,3)))
+    - ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(2,3), pl(1,3)))
+    + ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(3,6), pl(1,3)))
+    - ncomultiply(ncoproduct(GLi2(3,4,5,6), pl(3,6), pl(2,3)))
+    + ncomultiply(ncoproduct(GLi2(4,1,2,3), pl(3,4), pl(4,6)))
+    + ncomultiply(ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(3,4)))
+    - ncomultiply(ncoproduct(GLi2(4,1,2,3), pl(4,5), pl(4,6)))
+    - ncomultiply(ncoproduct(GLi2(5,1,2,3), pl(3,5), pl(5,6)))
+    - ncomultiply(ncoproduct(GLi2(5,1,2,3), pl(4,5), pl(3,5)))
+    + ncomultiply(ncoproduct(GLi2(5,1,2,3), pl(4,5), pl(5,6)))
+    + ncomultiply(ncoproduct(GLi2(6,1,2,3), pl(3,6), pl(5,6)))
+    + ncomultiply(ncoproduct(GLi2(6,1,2,3), pl(4,6), pl(3,6)))
+    - ncomultiply(ncoproduct(GLi2(6,1,2,3), pl(4,6), pl(5,6)))
+  );
+}

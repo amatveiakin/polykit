@@ -211,6 +211,104 @@ TEST(ChernArrowTest, LARGE_GenerateABEquations) {
   ));
 }
 
+TEST(ChernArrowTest, LARGE_GenerateABCEquations) {
+  ScopedFormatting sf(FormattingConfig()
+    .set_encoder(Encoder::ascii)
+    .set_rich_text_format(RichTextFormat::plain_text)
+    .set_max_terms_in_annotations_one_liner(100)
+  );
+
+  const auto ab_functions = list_nco_ab_function(ABDoublePlusMinus::Include);
+  const std::vector c_functions = {
+    c_minus,
+    c_plus,
+  };
+  std::vector<std::string> zero_eqns;
+  for (const auto& ab : ab_functions) {
+    for (const auto& c : c_functions) {
+      for (const bool c_inside : {false, true}) {
+        const auto make_eqn = [&](const auto& x, const int n) {
+          return c_inside
+            ? ab(c(x, n), n+1)
+            : c(ab(x, n+1), n+1)
+          ;
+        };
+        bool eqn_holds = true;
+        for (const auto& expr : exprs_any_num_points) {
+          const int n = detect_num_variables(expr);
+          const auto eqn = make_eqn(ncoproduct(expr), n);
+          if (!eqn.is_zero()) {
+            eqn_holds = false;
+            break;
+          }
+        }
+        if (eqn_holds) {
+          const auto x = GammaNCoExpr().annotate("x");
+          const auto eqn = make_eqn(x, 0);
+          zero_eqns.push_back(absl::StrCat(annotations_one_liner(eqn.annotations()), " == 0"));
+        }
+      }
+    }
+  }
+
+  std::vector<std::string> equality_eqns;
+  for (const int l_ab_idx : range(ab_functions.size())) {
+    for (const int l_c_idx : range(c_functions.size())) {
+      for (const bool l_c_inside : {false, true}) {
+        for (const int r_ab_idx : range(ab_functions.size())) {
+          for (const int r_c_idx : range(c_functions.size())) {
+            for (const bool r_c_inside : {false, true}) {
+              const bool is_trivial =
+                std::tie(l_ab_idx, l_c_idx, l_c_inside) <= std::tie(r_ab_idx, r_c_idx, r_c_inside)
+              ;
+              if (is_trivial) {
+                continue;
+              }
+              const auto l_ab = ab_functions.at(l_ab_idx);
+              const auto l_c = c_functions.at(l_c_idx);
+              const auto r_ab = ab_functions.at(r_ab_idx);
+              const auto r_c = c_functions.at(r_c_idx);
+              for (const int sign : {-1, 1}) {
+                const auto make_eqn = [&](const auto& x, const int n) {
+                  const auto lhs = l_c_inside
+                    ? l_ab(l_c(x, n), n+1)
+                    : l_c(l_ab(x, n+1), n+1)
+                  ;
+                  const auto rhs = r_c_inside
+                    ? r_ab(r_c(x, n), n+1)
+                    : r_c(r_ab(x, n+1), n+1)
+                  ;
+                  return lhs + sign * rhs;
+                };
+                bool eqn_holds = true;
+                for (const auto& expr : exprs_any_num_points) {
+                  const int n = detect_num_variables(expr);
+                  const auto eqn = make_eqn(ncoproduct(expr), n);
+                  if (!eqn.is_zero()) {
+                    eqn_holds = false;
+                    break;
+                  }
+                }
+                if (eqn_holds) {
+                  const auto x = GammaNCoExpr().annotate("x");
+                  const auto eqn = make_eqn(x, 0);
+                  equality_eqns.push_back(absl::StrCat(annotations_one_liner(eqn.annotations()), " == 0"));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  EXPECT_THAT(zero_eqns, testing::IsEmpty());
+  EXPECT_THAT(equality_eqns, testing::UnorderedElementsAre(
+    "(b--(c-(x)) - c-(b--(x))) == 0",
+    "(b++(c+(x)) - c+(b++(x))) == 0"
+  ));
+}
+
 TEST(ChernArrowTest, LARGE_GenerateGLiViaLowerGLiABEquations) {
   ScopedFormatting sf(FormattingConfig()
     .set_encoder(Encoder::ascii)

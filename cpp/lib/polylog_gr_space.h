@@ -11,6 +11,7 @@ using Gr_ACoSpace = std::vector<GammaACoExpr>;
 Gr_Space gr_free_lie_coalgebra(int weight, int dimension, const std::vector<int>& args);
 
 Gr_Space GrFx(int dimension, const std::vector<int>& args);
+Gr_Space GrFxPrime(int dimension, const std::vector<int>& args);  // fixed last point
 
 Gr_Space GrL_core(
   int weight, int dimension, const std::vector<int>& args,

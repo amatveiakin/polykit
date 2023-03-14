@@ -1044,4 +1044,140 @@ void computations_archive() {
   //     // std::cout << "kernel ok\n";
   //   }
   // }
+
+
+  // const auto cocycle = a_full(ChernCocycle(4, 1, {1,2,3,4,5}), 6);
+  // // const auto space = mapped(
+  // //   space_ncoproduct(
+  // //     ChernGrL(2, 2, {1,2,3,4,5,6}),
+  // //     GrFx(2, {1,2,3,4,5,6}),
+  // //     GrFx(2, {1,2,3,4,5,6})
+  // //   ),
+  // //   DISAMBIGUATE(ncomultiply)
+  // // );
+  // // const auto frozen_vars = mapped(range_incl(1, 6), [](const auto a) {
+  // //   return plucker({a, a % 6 + 1});
+  // // });
+  // // Gr_NCoSpace space;
+  // // for (const int i : range(6)) {
+  // //   const auto points = removed_index(seq_incl(1, 6), i);
+  // //   append_vector(
+  // //     space,
+  // //     space_ncoproduct(
+  // //       ChernGrL(2, 2, points),
+  // //       GrFx(2, points),
+  // //       frozen_vars
+  // //     )
+  // //   );
+  // // }
+  // // space = mapped(space, DISAMBIGUATE(ncomultiply));
+  // // const auto ranks = space_venn_ranks(space, {cocycle}, identity_function);
+  // // std::cout << to_string(ranks) << "\n";
+  //
+  // const auto frozen_vars = [](int num_points) {
+  //   return mapped(range_incl(1, num_points), [&](const auto a) {
+  //     return plucker({a, a % num_points + 1});
+  //   });
+  // };
+  // const auto chern_space = ChernGrL(2, 2, {1,2,3,4});
+  // const auto frozen_vars_4 = frozen_vars(4);
+  // const auto frozen_vars_5 = frozen_vars(5);
+  // // const auto frozen_vars_6 = frozen_vars(6);
+  // const auto frozen_vars_6 = space_ncoproduct(std::vector{
+  //   plucker({1,2}),
+  //   plucker({2,3}),
+  //   // plucker({3,4}),
+  //   plucker({4,5}),
+  //   plucker({5,6}),
+  //   // plucker({6,1}),
+  // });
+  // Gr_NCoSpace space;
+  // for (const auto& i_inner : range(5)) {
+  //   for (const auto& i_outer : range(6)) {
+  //     // `inner` and `outer` are effectively a_i functions.
+  //     const auto inner = [&](const auto& expr) {
+  //       return substitute_variables_1_based(expr, removed_index(seq_incl(1, 5), i_inner));
+  //     };
+  //     const auto outer = [&](const auto& expr) {
+  //       return substitute_variables_1_based(expr, removed_index(seq_incl(1, 6), i_outer));
+  //     };
+  //     const auto apply_inner = [&](const auto& space) { return mapped(space, inner); };
+  //     const auto apply_outer = [&](const auto& space) { return mapped(space, outer); };
+  //     // append_vector(space,
+  //     //   apply_outer(
+  //     //     apply_inner(
+  //     //       space_ncoproduct(
+  //     //         chern_space,
+  //     //         frozen_vars_4,
+  //     //         frozen_vars_4
+  //     //       )
+  //     //     )
+  //     //   )
+  //     // );
+  //     append_vector(space,
+  //       apply_outer(
+  //         space_ncoproduct(
+  //           apply_inner(
+  //             space_ncoproduct(
+  //               chern_space,
+  //               frozen_vars_4
+  //             )
+  //           ),
+  //           frozen_vars_5
+  //         )
+  //       )
+  //     );
+  //     // append_vector(space,
+  //     //   apply_outer(
+  //     //     space_ncoproduct(
+  //     //       apply_inner(
+  //     //         chern_space
+  //     //       ),
+  //     //       frozen_vars_5,
+  //     //       frozen_vars_5
+  //     //     )
+  //     //   )
+  //     // );
+  //     // append_vector(space,
+  //     //   space_ncoproduct(
+  //     //     apply_outer(
+  //     //       apply_inner(
+  //     //         space_ncoproduct(
+  //     //           chern_space,
+  //     //           frozen_vars_4
+  //     //         )
+  //     //       )
+  //     //     ),
+  //     //     frozen_vars_6
+  //     //   )
+  //     // );
+  //     append_vector(space,
+  //       space_ncoproduct(
+  //         apply_outer(
+  //           space_ncoproduct(
+  //             apply_inner(
+  //               chern_space
+  //             ),
+  //             frozen_vars_5
+  //           )
+  //         ),
+  //         frozen_vars_6
+  //       )
+  //     );
+  //     // append_vector(space,
+  //     //   space_ncoproduct(
+  //     //     apply_outer(
+  //     //       apply_inner(
+  //     //         chern_space
+  //     //       )
+  //     //     ),
+  //     //     frozen_vars_6,
+  //     //     frozen_vars_6
+  //     //   )
+  //     // );
+  //   }
+  // }
+  // space = mapped(space, DISAMBIGUATE(ncomultiply));
+  // const auto ranks = space_venn_ranks(space, {cocycle}, identity_function);
+  // std::cout << to_string(ranks) << "\n";
 }

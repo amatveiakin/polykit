@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "lib/projection.h"
+#include "lib/sequence_iteration.h"
 #include "test_util/matchers.h"
 
 
@@ -33,4 +34,19 @@ TEST(CorrTest, BuiltinProjection) {
     project_on_x2(CorrVec({1,2,3,4})),
     CorrVecPr({1,2,3,4}, project_on_x2)
   );
+}
+
+TEST(CorrTest, LARGE_CorrNondecreasingSequenceSum) {
+  for (const int p : range_incl(2, 6)) {
+    for (const int w : range_incl(1, 5)) {
+      const auto space = mapped(
+        nondecreasing_sequences(p, w + 1),
+        [](const auto& args) {
+          return CorrVec(args);
+        }
+      );
+      const bool ok = to_lyndon_basis(sum(space)).is_zero();
+      EXPECT_EQ(ok, w >= p);
+    }
+  }
 }

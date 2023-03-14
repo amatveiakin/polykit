@@ -71,10 +71,21 @@ struct LoopExprParam : public SimpleLinearParam<Loops> {
 
 using LoopExpr = Linear<LoopExprParam>;
 
+struct LoopIndexExprParam : SimpleLinearParam<int> {
+  static std::string object_to_string(const ObjectT& index) {
+    return pretty_print_loop_kind_index(index, true);
+  }
+};
+
+using LoopIndexExpr = Linear<LoopIndexExprParam>;
+
 void generate_loops_names(const std::vector<LoopExpr>& expressions);
 
 LoopExpr lira_expr_to_loop_expr(const LiraExpr& expr);  // will NOT group five-term relations
 LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr);
+
+LoopIndexExpr loop_expr_to_index_symmetrized(const LoopExpr& expr);
+LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr);
 
 // Sorts elements within each loop, adjusting signs accordingly.
 LoopExpr fully_normalize_loops(const LoopExpr& expr);
@@ -111,6 +122,10 @@ LoopExpr loop_expr_keep_term_type(const LoopExpr& expr, int type);
 
 // Returns the substitution that turns `from` to `to`, or `nullopt` if it doesn't exist.
 std::optional<absl::flat_hash_map<int, int>> loop_expr_recover_substitution(const Loops& from, const Loops& to);
+
+// Sign of the permutation obtained by flattening the loops and deduplicating variables,
+//   e.g. {{2,1,4,3}, {2,1,5,4}, {2,1,5,7,6,4}} -> {2,1,4,3,5,7,6} -> -1
+int loops_united_permutation_sign(const Loops& loops);
 
 // Sorts elements within each function argument, adjusting signs accordingly.
 LiraExpr lira_expr_sort_args(const LiraExpr& expr);

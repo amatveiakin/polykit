@@ -257,6 +257,19 @@ LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
   });
 }
 
+LoopIndexExpr loop_expr_to_index_symmetrized(const LoopExpr& expr) {
+  return expr.mapped<LoopIndexExpr>([](const auto& expr) {
+    return loop_kinds.loops_index(expr);
+  });
+}
+
+LoopIndexExpr loop_expr_to_index_antisymmetrized(const LoopExpr& expr) {
+  return expr.mapped_expanding([](const auto& expr) {
+    const int sign = loops_united_permutation_sign(expr);
+    return sign * LoopIndexExpr::single(loop_kinds.loops_index(expr));
+  });
+}
+
 LoopExpr fully_normalize_loops(const LoopExpr& expr) {
   return expr.mapped_expanding([&](const auto& loops) -> LoopExpr {
     int sign = 1;
@@ -533,6 +546,19 @@ std::optional<absl::flat_hash_map<int, int>> loop_expr_recover_substitution(cons
     }
   }
   return ret;
+}
+
+int loops_united_permutation_sign(const Loops& loops) {
+  absl::flat_hash_set<int> variables;
+  std::vector<int> unique_variables;
+  for (const auto& loop : loops) {
+    for (const int v : loop) {
+      if (variables.insert(v).second) {
+        unique_variables.push_back(v);
+      }
+    }
+  }
+  return permutation_sign(unique_variables);
 }
 
 LiraExpr lira_expr_sort_args(const LiraExpr& expr) {
