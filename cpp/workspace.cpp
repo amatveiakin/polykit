@@ -2,6 +2,9 @@
 //   - Add DECLARE_EXPR/DEFINE_EXPR macros, move lyndon and co-product to .cpp;
 //   - Add a way to disable co-products and corresponding expressions.
 
+#include <fstream>
+#include <regex>
+
 #include "absl/debugging/failure_signal_handler.h"
 #include "absl/debugging/symbolize.h"
 #include "absl/container/flat_hash_set.h"
@@ -82,7 +85,7 @@ int main(int /*argc*/, char *argv[]) {
     // .set_rich_text_format(RichTextFormat::html)
     .set_unicode_version(UnicodeVersion::simple)
     // .set_expression_line_limit(FormattingConfig::kNoLineLimit)
-    .set_expression_line_limit(300)
+    .set_expression_line_limit(100)
     // .set_annotation_sorting(AnnotationSorting::length)
     .set_annotation_sorting(AnnotationSorting::lexicographic)
     .set_compact_x(true)
@@ -93,27 +96,26 @@ int main(int /*argc*/, char *argv[]) {
   // const int app_arg = atoi(argv[1]);
 
 
-  const int num_points = 7;
-  const int dimension = 3;
-  const auto points = seq_incl(1, num_points);
-  const auto fx = space_ncoproduct(GrFx(dimension, points));
-  const auto fx_prime = space_ncoproduct(GrFxPrime(dimension, points));
-  const auto l2 = space_ncoproduct(GrL2(dimension, points));
-
-  for (const int weight : range_incl(2, 10)) {
-    Profiler profiler(true);
-    const auto space_a = mapped_parallel(combinations(fx, weight), DISAMBIGUATE(ncoproduct));
-    const auto space_b = mapped_parallel(cartesian_combinations(std::vector{
-      std::pair{l2, 1},
-      std::pair{fx, weight - 2},
-    }), [](const auto& exprs) {
-      return ncomultiply(ncoproduct(exprs));
-    });
-    profiler.finish("spaces");
-    const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
-    profiler.finish("ranks");
-    std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
-  }
+  // const int num_points = 7;
+  // const int dimension = 3;
+  // const auto points = seq_incl(1, num_points);
+  // const auto fx = space_ncoproduct(GrFx(dimension, points));
+  // const auto fx_prime = space_ncoproduct(GrFxPrime(dimension, points));
+  // const auto l2 = space_ncoproduct(GrL2(dimension, points));
+  // for (const int weight : range_incl(2, 10)) {
+  //   Profiler profiler(true);
+  //   const auto space_a = mapped_parallel(combinations(fx, weight), DISAMBIGUATE(ncoproduct));
+  //   const auto space_b = mapped_parallel(cartesian_combinations(std::vector{
+  //     std::pair{l2, 1},
+  //     std::pair{fx, weight - 2},
+  //   }), [](const auto& exprs) {
+  //     return ncomultiply(ncoproduct(exprs));
+  //   });
+  //   profiler.finish("spaces");
+  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   profiler.finish("ranks");
+  //   std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
+  // }
 
   // const auto fx = space_ncoproduct(GrFx(dimension, points));
   // const auto l2 = space_ncoproduct(GrL2(dimension, points));
@@ -232,4 +234,33 @@ int main(int /*argc*/, char *argv[]) {
   //     }
   //   }
   // }
+
+
+  const std::regex line_re("(-?[0-9]+) *([0-9]+)");
+  std::ifstream input("../inputs/A3.m", std::ios::in);
+  DeltaExpr expr;
+  for (std::string line; std::getline(input, line); ) {
+    trim(line);
+    std::smatch match;
+    CHECK(std::regex_match(line, match, line_re));
+    CHECK_EQ(match.size(), 2+1);
+    const int coeff = std::stoi(match[1].str());
+    const auto& term_str = match[2].str();
+    CHECK(term_str.size() % 2 == 0);
+    std::vector<Delta> term;
+    for (int i = 0; i < term_str.size(); i += 2) {
+      term.push_back(Delta(term_str[i] - '0', term_str[i + 1] - '0'));
+    }
+    expr.add_to(term, coeff);
+  }
+
+  // int d = expr.element().second;
+  // for (const auto& [_, coeff] : expr) {
+  //   d = std::gcd(d, coeff);
+  // }
+  // std::cout << "GCD = " << d << "\n";  // == 16
+  expr.div_int(16);
+
+  std::cout << expr;
+  std::cout << to_lyndon_basis(expr);
 }
