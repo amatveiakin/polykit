@@ -238,7 +238,7 @@ int main(int /*argc*/, char *argv[]) {
 
   const std::regex line_re("(-?[0-9]+) *([0-9]+)");
   std::ifstream input("../inputs/A3.m", std::ios::in);
-  DeltaExpr expr;
+  DeltaExpr a_expr;
   for (std::string line; std::getline(input, line); ) {
     trim(line);
     std::smatch match;
@@ -251,16 +251,36 @@ int main(int /*argc*/, char *argv[]) {
     for (int i = 0; i < term_str.size(); i += 2) {
       term.push_back(Delta(term_str[i] - '0', term_str[i + 1] - '0'));
     }
-    expr.add_to(term, coeff);
+    a_expr.add_to(term, coeff);
   }
 
-  // int d = expr.element().second;
-  // for (const auto& [_, coeff] : expr) {
+  // int d = a_expr.element().second;
+  // for (const auto& [_, coeff] : a_expr) {
   //   d = std::gcd(d, coeff);
   // }
   // std::cout << "GCD = " << d << "\n";  // == 16
-  expr.div_int(16);
+  a_expr.div_int(16);
+  // std::cout << a_expr;
+  // std::cout << to_lyndon_basis(a_expr);
 
-  std::cout << expr;
-  std::cout << to_lyndon_basis(expr);
+  const auto a = [&](const std::vector<int>& points) {
+    return substitute_variables_1_based(a_expr, points).annotate(
+      fmt::function_num_args("a", points)
+    );
+  };
+
+  // std::cout << a({1,1,2,2,1,2});
+  std::cout << a({1,2,3,4,5,6}) - a({2,3,4,5,6,1});
+
+  // const auto expr = a({1,1,1,2,2,3});
+  // std::cout << to_lyndon_basis(expr);
+
+  // const auto space = LInf(6, {1,2,3,Inf});
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
+  // std::cout << space.front();
+
+  // const auto space = L(6, to_vector(range_incl(1, 6)));
+  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // std::cout << to_string(ranks) << "\n";
 }
