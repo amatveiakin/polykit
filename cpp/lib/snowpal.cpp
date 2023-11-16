@@ -382,7 +382,7 @@ Snowpal& Snowpal::add_ball(std::vector<int> points) {
   auto* node = splitting_tree_.node_for_points(points);
   node->split(points, splitting_tree_);
   expr_ = lira_expr_substitute(orig_expr_, splitting_tree_);
-  // expr_ = without_unities(expr_);
+  expr_ = without_unities(expr_);
   // expr_ = fully_normalize_ratios(expr_);
   // expr_ = keep_distinct_ratios(expr_);
   // expr_ = keep_independent_ratios(expr_);

@@ -30,7 +30,7 @@
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 1
+#if 0
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -58,7 +58,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 0
+#if 1
 #include "lib/epsilon.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
@@ -236,51 +236,145 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  const std::regex line_re("(-?[0-9]+) *([0-9]+)");
-  std::ifstream input("../inputs/A3.m", std::ios::in);
-  DeltaExpr a_expr;
-  for (std::string line; std::getline(input, line); ) {
-    trim(line);
-    std::smatch match;
-    CHECK(std::regex_match(line, match, line_re));
-    CHECK_EQ(match.size(), 2+1);
-    const int coeff = std::stoi(match[1].str());
-    const auto& term_str = match[2].str();
-    CHECK(term_str.size() % 2 == 0);
-    std::vector<Delta> term;
-    for (int i = 0; i < term_str.size(); i += 2) {
-      term.push_back(Delta(term_str[i] - '0', term_str[i + 1] - '0'));
-    }
-    a_expr.add_to(term, coeff);
-  }
-
-  // int d = a_expr.element().second;
-  // for (const auto& [_, coeff] : a_expr) {
-  //   d = std::gcd(d, coeff);
+  // const std::regex line_re("(-?[0-9]+) *([0-9]+)");
+  // std::ifstream input("../inputs/A3.m", std::ios::in);
+  // DeltaExpr a_expr;
+  // for (std::string line; std::getline(input, line); ) {
+  //   trim(line);
+  //   std::smatch match;
+  //   CHECK(std::regex_match(line, match, line_re));
+  //   CHECK_EQ(match.size(), 2+1);
+  //   const int coeff = std::stoi(match[1].str());
+  //   const auto& term_str = match[2].str();
+  //   CHECK(term_str.size() % 2 == 0);
+  //   std::vector<Delta> term;
+  //   for (int i = 0; i < term_str.size(); i += 2) {
+  //     term.push_back(Delta(term_str[i] - '0', term_str[i + 1] - '0'));
+  //   }
+  //   a_expr.add_to(term, coeff);
   // }
-  // std::cout << "GCD = " << d << "\n";  // == 16
-  a_expr.div_int(16);
-  // std::cout << a_expr;
-  // std::cout << to_lyndon_basis(a_expr);
 
-  const auto a = [&](const std::vector<int>& points) {
-    return substitute_variables_1_based(a_expr, points).annotate(
-      fmt::function_num_args("a", points)
-    );
-  };
+  // // int d = a_expr.element().second;
+  // // for (const auto& [_, coeff] : a_expr) {
+  // //   d = std::gcd(d, coeff);
+  // // }
+  // // std::cout << "GCD = " << d << "\n";  // == 16
+  // a_expr.div_int(16);
+  // // std::cout << a_expr;
+  // // std::cout << to_lyndon_basis(a_expr);
 
-  // std::cout << a({1,1,2,2,1,2});
-  std::cout << a({1,2,3,4,5,6}) - a({2,3,4,5,6,1});
+  // const auto a = [&](const std::vector<int>& points) {
+  //   return substitute_variables_1_based(a_expr, points).annotate(
+  //     fmt::function_num_args("a", points)
+  //   );
+  // };
 
-  // const auto expr = a({1,1,1,2,2,3});
-  // std::cout << to_lyndon_basis(expr);
+  // // std::cout << a({1,1,2,2,1,2});
+  // std::cout << a({1,2,3,4,5,6}) - a({2,3,4,5,6,1});
 
-  // const auto space = LInf(6, {1,2,3,Inf});
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  // std::cout << to_string(ranks) << "\n";
-  // std::cout << space.front();
+  // // const auto expr = a({1,1,1,2,2,3});
+  // // std::cout << to_lyndon_basis(expr);
 
-  // const auto space = L(6, to_vector(range_incl(1, 6)));
-  // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
-  // std::cout << to_string(ranks) << "\n";
+  // // const auto space = LInf(6, {1,2,3,Inf});
+  // // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // // std::cout << to_string(ranks) << "\n";
+  // // std::cout << space.front();
+
+  // // const auto space = L(6, to_vector(range_incl(1, 6)));
+  // // const auto ranks = space_venn_ranks(space, {expr}, DISAMBIGUATE(to_lyndon_basis));
+  // // std::cout << to_string(ranks) << "\n";
+
+
+
+  const int num_points = 11;
+  const int num_args = num_points / 2 - 1;
+  auto source = sum_looped_vec(
+    [&](const auto& args) {
+      return LiQuad(num_points / 2 - 1, args);
+    },
+    num_points,
+    seq_incl(1, num_points - 1)
+  );
+
+  auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
+
+  StringExpr stats;
+
+  constexpr char kInvalidInput[] = "Invalid input: ";
+  bool short_form_ratios = true;
+  std::cout << "Functional\n" << source.annotations() << "\n";
+  while (true) {
+    std::vector<std::vector<int>> balls;
+    std::unique_ptr<Snowpal> snowpal;
+    auto reset_snowpal = [&]() {
+      snowpal = absl::make_unique<Snowpal>(expr, num_points);
+      for (const auto& b : balls) {
+        snowpal->add_ball(b);
+      }
+    };
+    reset_snowpal();
+    std::cout << expr;
+    while (true) {
+      std::cout << "\n> ";
+      std::string input;
+      std::getline(std::cin, input);
+      trim(input);
+      if (input.empty()) {
+        continue;
+      } else if (input == "q" || input == "quit") {
+        return 0;
+      } else if (input == "sf" || input == "short_forms") {
+        short_form_ratios = !short_form_ratios;
+        if (short_form_ratios) {
+          std::cout << "Short form cross-ratios: enabled\n";
+        } else {
+          std::cout << "Short form cross-ratios: disabled\n";
+        }
+        to_ostream(std::cout, *snowpal, short_form_ratios);
+        continue;
+      } else if (input == "r" || input == "reset") {
+        break;
+      } else if (input == "b" || input == "back") {
+        if (balls.empty()) {
+          std::cout << kInvalidInput << "nothing to remove\n";
+          continue;
+        }
+        balls.pop_back();
+        reset_snowpal();
+        to_ostream(std::cout, *snowpal, short_form_ratios);
+        continue;
+      }
+      std::vector<int> ball;
+      try {
+        for (const auto& var_str : absl::StrSplit(input, " ", absl::SkipEmpty())) {
+          const int var = std::stoi(std::string(var_str));
+          if (var < 1 || var > num_points) {
+            throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
+          }
+          ball.push_back(var);
+        }
+        // for (const char ch : input) {
+        //   if (std::isspace(ch)) {
+        //     continue;
+        //   }
+        //   const int var = std::stoi(std::string(1, ch));
+        //   if (var < 1 || var > num_points) {
+        //     throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
+        //   }
+        //   ball.push_back(var);
+        // }
+      } catch (const std::exception& e) {
+        std::cout << kInvalidInput << e.what() << "\n";
+        continue;
+      }
+      try {
+        snowpal->add_ball(ball);
+        balls.push_back(ball);
+        to_ostream(std::cout, *snowpal, short_form_ratios);
+      } catch (const IllegalTreeCutException& e) {
+        std::cout << kInvalidInput << e.what() << "\n";
+        reset_snowpal();
+      }
+    }
+  }
 }
