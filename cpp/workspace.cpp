@@ -30,7 +30,7 @@
 
 // In order to reduce compilation time enable expressions only when necessary:
 
-#if 0
+#if 1
 #include "lib/bigrassmannian_complex_cohomologies.h"
 #include "lib/gamma.h"
 #include "lib/chern_arrow.h"
@@ -58,7 +58,7 @@
 #  error "Expression type leaked: check header structure"
 #endif
 
-#if 1
+#if 0
 #include "lib/epsilon.h"
 #include "lib/lira_ones.h"
 #include "lib/loops.h"
@@ -286,95 +286,268 @@ int main(int /*argc*/, char *argv[]) {
 
 
 
-  const int num_points = 11;
-  const int num_args = num_points / 2 - 1;
-  auto source = sum_looped_vec(
-    [&](const auto& args) {
-      return LiQuad(num_points / 2 - 1, args);
-    },
-    num_points,
-    seq_incl(1, num_points - 1)
-  );
+  // const int num_points = 11;
+  // const int num_args = num_points / 2 - 1;
+  // auto source = sum_looped_vec(
+  //   [&](const auto& args) {
+  //     return LiQuad(num_points / 2 - 1, args);
+  //   },
+  //   num_points,
+  //   seq_incl(1, num_points - 1)
+  // );
 
-  auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
+  // auto expr = theta_expr_to_lira_expr_without_products(source.without_annotations());
 
-  StringExpr stats;
+  // StringExpr stats;
 
-  constexpr char kInvalidInput[] = "Invalid input: ";
-  bool short_form_ratios = true;
-  std::cout << "Functional\n" << source.annotations() << "\n";
-  while (true) {
-    std::vector<std::vector<int>> balls;
-    std::unique_ptr<Snowpal> snowpal;
-    auto reset_snowpal = [&]() {
-      snowpal = absl::make_unique<Snowpal>(expr, num_points);
-      for (const auto& b : balls) {
-        snowpal->add_ball(b);
-      }
-    };
-    reset_snowpal();
-    std::cout << expr;
-    while (true) {
-      std::cout << "\n> ";
-      std::string input;
-      std::getline(std::cin, input);
-      trim(input);
-      if (input.empty()) {
-        continue;
-      } else if (input == "q" || input == "quit") {
-        return 0;
-      } else if (input == "sf" || input == "short_forms") {
-        short_form_ratios = !short_form_ratios;
-        if (short_form_ratios) {
-          std::cout << "Short form cross-ratios: enabled\n";
-        } else {
-          std::cout << "Short form cross-ratios: disabled\n";
-        }
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-        continue;
-      } else if (input == "r" || input == "reset") {
-        break;
-      } else if (input == "b" || input == "back") {
-        if (balls.empty()) {
-          std::cout << kInvalidInput << "nothing to remove\n";
-          continue;
-        }
-        balls.pop_back();
-        reset_snowpal();
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-        continue;
-      }
-      std::vector<int> ball;
-      try {
-        for (const auto& var_str : absl::StrSplit(input, " ", absl::SkipEmpty())) {
-          const int var = std::stoi(std::string(var_str));
-          if (var < 1 || var > num_points) {
-            throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
-          }
-          ball.push_back(var);
-        }
-        // for (const char ch : input) {
-        //   if (std::isspace(ch)) {
-        //     continue;
-        //   }
-        //   const int var = std::stoi(std::string(1, ch));
-        //   if (var < 1 || var > num_points) {
-        //     throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
-        //   }
-        //   ball.push_back(var);
-        // }
-      } catch (const std::exception& e) {
-        std::cout << kInvalidInput << e.what() << "\n";
-        continue;
-      }
-      try {
-        snowpal->add_ball(ball);
-        balls.push_back(ball);
-        to_ostream(std::cout, *snowpal, short_form_ratios);
-      } catch (const IllegalTreeCutException& e) {
-        std::cout << kInvalidInput << e.what() << "\n";
-        reset_snowpal();
-      }
+  // constexpr char kInvalidInput[] = "Invalid input: ";
+  // bool short_form_ratios = true;
+  // std::cout << "Functional\n" << source.annotations() << "\n";
+  // while (true) {
+  //   std::vector<std::vector<int>> balls;
+  //   std::unique_ptr<Snowpal> snowpal;
+  //   auto reset_snowpal = [&]() {
+  //     snowpal = absl::make_unique<Snowpal>(expr, num_points);
+  //     for (const auto& b : balls) {
+  //       snowpal->add_ball(b);
+  //     }
+  //   };
+  //   reset_snowpal();
+  //   std::cout << expr;
+  //   while (true) {
+  //     std::cout << "\n> ";
+  //     std::string input;
+  //     std::getline(std::cin, input);
+  //     trim(input);
+  //     if (input.empty()) {
+  //       continue;
+  //     } else if (input == "q" || input == "quit") {
+  //       return 0;
+  //     } else if (input == "sf" || input == "short_forms") {
+  //       short_form_ratios = !short_form_ratios;
+  //       if (short_form_ratios) {
+  //         std::cout << "Short form cross-ratios: enabled\n";
+  //       } else {
+  //         std::cout << "Short form cross-ratios: disabled\n";
+  //       }
+  //       to_ostream(std::cout, *snowpal, short_form_ratios);
+  //       continue;
+  //     } else if (input == "r" || input == "reset") {
+  //       break;
+  //     } else if (input == "b" || input == "back") {
+  //       if (balls.empty()) {
+  //         std::cout << kInvalidInput << "nothing to remove\n";
+  //         continue;
+  //       }
+  //       balls.pop_back();
+  //       reset_snowpal();
+  //       to_ostream(std::cout, *snowpal, short_form_ratios);
+  //       continue;
+  //     }
+  //     std::vector<int> ball;
+  //     try {
+  //       for (const auto& var_str : absl::StrSplit(input, " ", absl::SkipEmpty())) {
+  //         const int var = std::stoi(std::string(var_str));
+  //         if (var < 1 || var > num_points) {
+  //           throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
+  //         }
+  //         ball.push_back(var);
+  //       }
+  //       // for (const char ch : input) {
+  //       //   if (std::isspace(ch)) {
+  //       //     continue;
+  //       //   }
+  //       //   const int var = std::stoi(std::string(1, ch));
+  //       //   if (var < 1 || var > num_points) {
+  //       //     throw std::out_of_range(absl::StrCat("variable index out of range: ", var));
+  //       //   }
+  //       //   ball.push_back(var);
+  //       // }
+  //     } catch (const std::exception& e) {
+  //       std::cout << kInvalidInput << e.what() << "\n";
+  //       continue;
+  //     }
+  //     try {
+  //       snowpal->add_ball(ball);
+  //       balls.push_back(ball);
+  //       to_ostream(std::cout, *snowpal, short_form_ratios);
+  //     } catch (const IllegalTreeCutException& e) {
+  //       std::cout << kInvalidInput << e.what() << "\n";
+  //       reset_snowpal();
+  //     }
+  //   }
+  // }
+
+
+  // for (const auto& expr : GrL1(3, {1,2,3,4,5,6})) {
+  //   std::cout << expr;
+  // }
+  // std::cout << GrL1(3, {1,2,3,4,5,6}).size() << "\n";
+  // std::cout << GrLog(1)(2,3,4,5) << "\n";
+
+
+  // Gr_Space space;
+  // for (const auto x : range_incl(1, 6)) {
+  //   for (const auto& p : combinations(removed_index(seq_incl(1, 6), x - 1), 4)) {
+  //     space.push_back(GrLogVec({x}, p));
+  //   }
+  // }
+  // std::cout << dump_to_string(space) << "\n";
+  // absl::flat_hash_map<GammaExpr, std::vector<std::string>> groups;
+  // for (const auto& exprs : combinations(space, 2)) {
+  //   const auto [a, b] = to_array<2>(exprs);
+  //   for (const int sign : {-1, 1}) {
+  //     const auto s =
+  //       annotations_one_liner(a.annotations()) +
+  //       (sign == -1 ? " - " : " + ") +
+  //       annotations_one_liner(b.annotations());
+  //     groups[a + sign * b].push_back(s);
+  //   }
+  // }
+  // const auto groups_sorted = sorted_by_projection(
+  //   to_vector(groups),
+  //   [](const auto& g) { return g.second.size(); }
+  // );
+  // size_t sep_len = 0;
+  // for (const auto& group : groups_sorted) {
+  //   for (const auto& expr : group.second) {
+  //     sep_len = std::max(sep_len, expr.length());
+  //   }
+  // }
+  // const std::string sep(sep_len, '-');
+  // std::cout << sep << "\n";
+  // for (const auto& group : groups_sorted) {
+  //   for (const auto& expr : group.second) {
+  //     std::cout << expr << "\n";
+  //   }
+  //   std::cout << sep << "\n";
+  // }
+
+  // const std::vector space {
+  //   // full rank
+  //   GrLog(2)(1,4,5,6) + GrLog(6)(1,2,3,4),
+  //   GrQLi1(2)(1,4,5,6) - GrQLi1(6)(2,3,4,1),
+  //   GrQLi1(2)(3,4,5,6) - GrQLi1(4)(2,3,6,1),
+  //   GrQLi1(4)(1,2,5,6) - GrQLi1(6)(2,3,4,5),
+  //
+  //   // corank 1
+  //   // GrQLi1(1)(2,3,4,6) - GrQLi1(4)(3,5,6,1),
+  //   // GrQLi1(1)(2,3,5,6) - GrQLi1(5)(3,4,6,1),
+  //   // GrQLi1(2)(1,3,4,6) - GrQLi1(4)(3,5,6,2),
+  //   // GrQLi1(2)(1,3,5,6) - GrQLi1(5)(3,4,6,2),
+  // };
+  // std::cout << space_rank(space, identity_function) << "\n";
+
+
+  struct Args {
+    std::vector<int> bonus_points;
+    std::vector<int> log_points;
+    bool operator==(const Args& other) const { return bonus_points == other.bonus_points && log_points == other.log_points; }
+  };
+  struct ArgsAndLog {
+    Args args;
+    GammaExpr log_expr;
+  };
+  struct ArgsPair {
+    Args a;
+    Args b;
+    int b_sign;
+  };
+
+  Profiler profiler;
+  const int dim = 3;
+  const int num_points = 9;
+  const auto points = seq_incl(1, num_points);
+  std::vector<ArgsAndLog> logs;
+  for (const auto& bonus_p : combinations(points, dim - 2)) {
+    for (const auto& log_p : combinations(removed_indices_one_based(points, bonus_p), 4)) {
+      const auto args = Args{bonus_p, log_p};
+      const auto expr = GrLogVec(bonus_p, log_p);
+      logs.push_back(ArgsAndLog{args, expr});
     }
+  }
+  profiler.finish("expressions");
+  absl::flat_hash_map<GammaExpr, std::vector<ArgsPair>> groups;
+  for (const auto& pair : combinations(logs, 2)) {
+    const auto [a, b] = to_array<2>(pair);
+    for (const int sign : {-1, 1}) {
+      groups[a.log_expr + sign * b.log_expr].push_back(ArgsPair{a.args, b.args, sign});
+    }
+  }
+  profiler.finish("groups");
+  const auto groups_sorted = sorted_by_projection(
+    to_vector(groups),
+    [](const auto& g) { return g.second.size(); }
+  );
+  profiler.finish("sorting");
+  const std::string sep = "-------------------------------";
+  std::cout << sep << "\n";
+  std::vector<ArgsPair> linked;
+  int total_interesting_groups = 0;
+  for (const auto& [expr, group] : groups_sorted) {
+    Gr_Space space;
+    space.push_back(expr);
+    for (const auto& args_pair : group) {
+      const auto& args_a = args_pair.a;
+      const auto& args_b = args_pair.b;
+      const auto b_sign = args_pair.b_sign;
+      const auto& b_log_points = b_sign == 1
+        ? rotated_vector(args_b.log_points, 1)
+        : args_b.log_points;
+      space.push_back(
+        + GrQLiVec(1, args_a.bonus_points, args_a.log_points)
+        - GrQLiVec(1, args_b.bonus_points, b_log_points)
+      );
+    }
+    const auto rank = space_rank(space, identity_function);
+    const int corank = space.size() - rank;
+    if (corank > 0) {
+      total_interesting_groups++;
+      append_vector(linked, group);
+      for (const auto& expr : space) {
+        std::cout << annotations_one_liner(expr.annotations()) << "\n";
+      }
+      std::cout << "corank = " << corank << "\n";
+      std::cout << sep << "\n";
+    }
+  }
+  profiler.finish("ranks");
+  std::cout << "Total interesting groups: " << total_interesting_groups << "\n";
+
+  absl::flat_hash_map<GammaExpr, std::vector<std::array<Args, 3>>> triplets;
+  for (const auto& pair : combinations(linked, 2)) {
+    const auto& [xy, yz] = to_array<2>(pair);
+    if (xy.b == yz.a) {
+      const auto& x = xy.a;
+      const auto& y = xy.b;
+      const auto& z = yz.b;
+      const int x_sign = 1;
+      const int y_sign = xy.b_sign;
+      const int z_sign = xy.b_sign * yz.b_sign;
+      const auto expr =
+        + x_sign * GrLogVec(x.bonus_points, x.log_points)
+        + y_sign * GrLogVec(y.bonus_points, y.log_points)
+        + z_sign * GrLogVec(z.bonus_points, z.log_points)
+      ;
+      const std::array triplet = {xy.a, xy.b, yz.b};
+      // const auto expr = sum(mapped(triplet, [](const auto& args) {
+      //   return GrLogVec(args.bonus_points, args.log_points);
+      // }));
+      triplets[expr].push_back(triplet);
+    }
+  }
+  profiler.finish("triplets");
+  std::cout << sep << "\n";
+  for (const auto& [expr, triplets] : triplets) {
+    if (triplets.size() <= 2) {
+      continue;
+    }
+    for (const auto& triplet : triplets) {
+      for (const auto& args : triplet) {
+        std::cout << dump_to_string(args.bonus_points) << " / " << dump_to_string(args.log_points) << ",  ";
+      }
+      std::cout << "\n";
+    }
+    std::cout << sep << "\n";
   }
 }
