@@ -473,6 +473,11 @@ public:
     return !(*this == other);
   }
 
+  template <typename H>
+  friend H AbslHashValue(H h, const BasicLinear& expr) {
+    return H::combine(std::move(h), expr.data_);
+  }
+
 private:
   ContainerT data_;
 };
@@ -779,6 +784,11 @@ public:
   }
   bool operator!=(const Linear& other) const {
     return !(*this == other);
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const Linear& expr) {
+    return H::combine(std::move(h), expr.main_);
   }
 
 private:

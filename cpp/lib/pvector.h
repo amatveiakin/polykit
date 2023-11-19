@@ -100,6 +100,11 @@ private:
   static constexpr size_t kInlineSize = internal::inlined_vector_size<T, N>::value;  // meaningful only if kCanInline is true
   using ParentT = internal::pvector_base_type<T, N>;
 
+  template <typename H>
+  friend H AbslHashValue(H h, const PVector& vec) {
+    return H::combine(std::move(h), static_cast<const ParentT&>(vec));
+  }
+
 public:
   static constexpr int inlined_size = N;
   using ParentT::ParentT;
