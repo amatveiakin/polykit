@@ -439,115 +439,203 @@ int main(int /*argc*/, char *argv[]) {
   // std::cout << space_rank(space, identity_function) << "\n";
 
 
-  struct Args {
-    std::vector<int> bonus_points;
-    std::vector<int> log_points;
-    bool operator==(const Args& other) const { return bonus_points == other.bonus_points && log_points == other.log_points; }
-  };
-  struct ArgsAndLog {
-    Args args;
-    GammaExpr log_expr;
-  };
-  struct ArgsPair {
-    Args a;
-    Args b;
-    int b_sign;
-  };
+  // struct Args {
+  //   std::vector<int> bonus_points;
+  //   std::vector<int> log_points;
+  //   bool operator==(const Args& other) const { return bonus_points == other.bonus_points && log_points == other.log_points; }
+  // };
+  // struct ArgsAndLog {
+  //   Args args;
+  //   GammaExpr log_expr;
+  // };
+  // struct ArgsPair {
+  //   Args a;
+  //   Args b;
+  //   int b_sign;
+  // };
 
-  Profiler profiler;
-  const int dim = 3;
-  const int num_points = 9;
-  const auto points = seq_incl(1, num_points);
-  std::vector<ArgsAndLog> logs;
-  for (const auto& bonus_p : combinations(points, dim - 2)) {
-    for (const auto& log_p : combinations(removed_indices_one_based(points, bonus_p), 4)) {
-      const auto args = Args{bonus_p, log_p};
-      const auto expr = GrLogVec(bonus_p, log_p);
-      logs.push_back(ArgsAndLog{args, expr});
-    }
-  }
-  profiler.finish("expressions");
-  absl::flat_hash_map<GammaExpr, std::vector<ArgsPair>> groups;
-  for (const auto& pair : combinations(logs, 2)) {
-    const auto [a, b] = to_array<2>(pair);
-    for (const int sign : {-1, 1}) {
-      groups[a.log_expr + sign * b.log_expr].push_back(ArgsPair{a.args, b.args, sign});
-    }
-  }
-  profiler.finish("groups");
-  const auto groups_sorted = sorted_by_projection(
-    to_vector(groups),
-    [](const auto& g) { return g.second.size(); }
-  );
-  profiler.finish("sorting");
-  const std::string sep = "-------------------------------";
-  std::cout << sep << "\n";
-  std::vector<ArgsPair> linked;
-  int total_interesting_groups = 0;
-  for (const auto& [expr, group] : groups_sorted) {
-    Gr_Space space;
-    space.push_back(expr);
-    for (const auto& args_pair : group) {
-      const auto& args_a = args_pair.a;
-      const auto& args_b = args_pair.b;
-      const auto b_sign = args_pair.b_sign;
-      const auto& b_log_points = b_sign == 1
-        ? rotated_vector(args_b.log_points, 1)
-        : args_b.log_points;
-      space.push_back(
-        + GrQLiVec(1, args_a.bonus_points, args_a.log_points)
-        - GrQLiVec(1, args_b.bonus_points, b_log_points)
-      );
-    }
-    const auto rank = space_rank(space, identity_function);
-    const int corank = space.size() - rank;
-    if (corank > 0) {
-      total_interesting_groups++;
-      append_vector(linked, group);
-      for (const auto& expr : space) {
-        std::cout << annotations_one_liner(expr.annotations()) << "\n";
-      }
-      std::cout << "corank = " << corank << "\n";
-      std::cout << sep << "\n";
-    }
-  }
-  profiler.finish("ranks");
-  std::cout << "Total interesting groups: " << total_interesting_groups << "\n";
+  // Profiler profiler;
+  // const int dim = 3;
+  // const int num_points = 9;
+  // const auto points = seq_incl(1, num_points);
+  // std::vector<ArgsAndLog> logs;
+  // for (const auto& bonus_p : combinations(points, dim - 2)) {
+  //   for (const auto& log_p : combinations(removed_indices_one_based(points, bonus_p), 4)) {
+  //     const auto args = Args{bonus_p, log_p};
+  //     const auto expr = GrLogVec(bonus_p, log_p);
+  //     logs.push_back(ArgsAndLog{args, expr});
+  //   }
+  // }
+  // profiler.finish("expressions");
+  // absl::flat_hash_map<GammaExpr, std::vector<ArgsPair>> groups;
+  // for (const auto& pair : combinations(logs, 2)) {
+  //   const auto [a, b] = to_array<2>(pair);
+  //   for (const int sign : {-1, 1}) {
+  //     groups[a.log_expr + sign * b.log_expr].push_back(ArgsPair{a.args, b.args, sign});
+  //   }
+  // }
+  // profiler.finish("groups");
+  // const auto groups_sorted = sorted_by_projection(
+  //   to_vector(groups),
+  //   [](const auto& g) { return g.second.size(); }
+  // );
+  // profiler.finish("sorting");
+  // const std::string sep = "-------------------------------";
+  // std::cout << sep << "\n";
+  // std::vector<ArgsPair> linked;
+  // int total_interesting_groups = 0;
+  // for (const auto& [expr, group] : groups_sorted) {
+  //   Gr_Space space;
+  //   space.push_back(expr);
+  //   for (const auto& args_pair : group) {
+  //     const auto& args_a = args_pair.a;
+  //     const auto& args_b = args_pair.b;
+  //     const auto b_sign = args_pair.b_sign;
+  //     const auto& b_log_points = b_sign == 1
+  //       ? rotated_vector(args_b.log_points, 1)
+  //       : args_b.log_points;
+  //     space.push_back(
+  //       + GrQLiVec(1, args_a.bonus_points, args_a.log_points)
+  //       - GrQLiVec(1, args_b.bonus_points, b_log_points)
+  //     );
+  //   }
+  //   const auto rank = space_rank(space, identity_function);
+  //   const int corank = space.size() - rank;
+  //   if (corank > 0) {
+  //     total_interesting_groups++;
+  //     append_vector(linked, group);
+  //     for (const auto& expr : space) {
+  //       std::cout << annotations_one_liner(expr.annotations()) << "\n";
+  //     }
+  //     std::cout << "corank = " << corank << "\n";
+  //     std::cout << sep << "\n";
+  //   }
+  // }
+  // profiler.finish("ranks");
+  // std::cout << "Total interesting groups: " << total_interesting_groups << "\n";
 
-  absl::flat_hash_map<GammaExpr, std::vector<std::array<Args, 3>>> triplets;
-  for (const auto& pair : combinations(linked, 2)) {
-    const auto& [xy, yz] = to_array<2>(pair);
-    if (xy.b == yz.a) {
-      const auto& x = xy.a;
-      const auto& y = xy.b;
-      const auto& z = yz.b;
-      const int x_sign = 1;
-      const int y_sign = xy.b_sign;
-      const int z_sign = xy.b_sign * yz.b_sign;
-      const auto expr =
-        + x_sign * GrLogVec(x.bonus_points, x.log_points)
-        + y_sign * GrLogVec(y.bonus_points, y.log_points)
-        + z_sign * GrLogVec(z.bonus_points, z.log_points)
-      ;
-      const std::array triplet = {xy.a, xy.b, yz.b};
-      // const auto expr = sum(mapped(triplet, [](const auto& args) {
-      //   return GrLogVec(args.bonus_points, args.log_points);
-      // }));
-      triplets[expr].push_back(triplet);
+  // absl::flat_hash_map<GammaExpr, std::vector<std::array<Args, 3>>> triplets;
+  // for (const auto& pair : combinations(linked, 2)) {
+  //   const auto& [xy, yz] = to_array<2>(pair);
+  //   if (xy.b == yz.a) {
+  //     const auto& x = xy.a;
+  //     const auto& y = xy.b;
+  //     const auto& z = yz.b;
+  //     const int x_sign = 1;
+  //     const int y_sign = xy.b_sign;
+  //     const int z_sign = xy.b_sign * yz.b_sign;
+  //     const auto expr =
+  //       + x_sign * GrLogVec(x.bonus_points, x.log_points)
+  //       + y_sign * GrLogVec(y.bonus_points, y.log_points)
+  //       + z_sign * GrLogVec(z.bonus_points, z.log_points)
+  //     ;
+  //     const std::array triplet = {xy.a, xy.b, yz.b};
+  //     // const auto expr = sum(mapped(triplet, [](const auto& args) {
+  //     //   return GrLogVec(args.bonus_points, args.log_points);
+  //     // }));
+  //     triplets[expr].push_back(triplet);
+  //   }
+  // }
+  // profiler.finish("triplets");
+  // std::cout << sep << "\n";
+  // for (const auto& [expr, triplets] : triplets) {
+  //   if (triplets.size() <= 2) {
+  //     continue;
+  //   }
+  //   for (const auto& triplet : triplets) {
+  //     for (const auto& args : triplet) {
+  //       std::cout << dump_to_string(args.bonus_points) << " / " << dump_to_string(args.log_points) << ",  ";
+  //     }
+  //     std::cout << "\n";
+  //   }
+  //   std::cout << sep << "\n";
+  // }
+
+
+
+  // const auto points = seq_incl(1, 5);
+  // const auto space = GrL1(2, points);
+  // const auto s2 = space_ncoproduct(space, space);
+  // std::cout << dump_to_string(space) << "\n";
+  // std::cout << space_rank(s2, identity_function) << "\n";
+  // // for (const auto& expr : s2) {
+  // //   std::cout << expr;
+  // //   std::cout << "\n---------------\n";
+  // //   std::cout << substitute_variables_1_based(expr, {5,4,3,2,1});
+  // //   std::cout << "\n===============\n";
+  // // }
+  // const auto ranks = space_mapping_ranks(s2, identity_function, [](const auto& expr) {
+  //   return std::tuple {
+  //     + expr
+  //     + substitute_variables_1_based(expr, {5,4,3,2,1})
+  //     ,
+  //     // + expr
+  //     // - substitute_variables_1_based(expr, {2,3,4,5,1})
+  //     // ,
+  //     + substitute_variables_1_based(expr, {1,2,3,4,5})
+  //     - substitute_variables_1_based(expr, {1,2,3,4,6})
+  //     + substitute_variables_1_based(expr, {1,2,3,5,6})
+  //     - substitute_variables_1_based(expr, {1,2,4,5,6})
+  //     + substitute_variables_1_based(expr, {1,3,4,5,6})
+  //     - substitute_variables_1_based(expr, {2,3,4,5,6})
+  //   };
+  // });
+  // std::cout << to_string(ranks) << "\n";
+
+  // const auto expr =
+  //   + ncoproduct(Log(1,2,3,4), Log(2,3,4,5))
+  //   + ncoproduct(Log(2,3,4,5), Log(3,4,5,1))
+  //   + ncoproduct(Log(3,4,5,1), Log(4,5,1,2))
+  //   + ncoproduct(Log(4,5,1,2), Log(5,1,2,3))
+  //   + ncoproduct(Log(5,1,2,3), Log(1,2,3,4))
+  // ;
+  // std::cout << expr;
+  // // std::cout << expr + substitute_variables_1_based(expr, {5,4,3,2,1});
+  // std::cout << expr - substitute_variables_1_based(expr, {2,3,4,5,1});
+
+
+  // const auto snew = std::vector{
+  //   ncoproduct(Log(1,2,3,4), Log(2,3,4,5)),
+  //   ncoproduct(Log(1,2,3,4), Log(3,4,5,1)),
+  //   ncoproduct(Log(2,3,4,5), Log(3,4,5,1)),
+  //   ncoproduct(Log(2,3,4,5), Log(4,5,1,2)),
+  //   ncoproduct(Log(3,4,5,1), Log(4,5,1,2)),
+  //   ncoproduct(Log(3,4,5,1), Log(5,1,2,3)),
+  //   ncoproduct(Log(4,5,1,2), Log(5,1,2,3)),
+  //   ncoproduct(Log(4,5,1,2), Log(1,2,3,4)),
+  //   ncoproduct(Log(5,1,2,3), Log(1,2,3,4)),
+  //   ncoproduct(Log(5,1,2,3), Log(2,3,4,5)),
+  // };
+  // std::cout << space_rank(snew, identity_function) << "\n";
+
+  const auto snew = std::vector{
+    ncoproduct(Log(1,2,3,4), Log(2,3,4,5)),
+    ncoproduct(Log(1,2,3,4), Log(3,4,5,1)),
+    ncoproduct(Log(2,3,4,5), Log(3,4,5,1)),
+    ncoproduct(Log(2,3,4,5), Log(4,5,1,2)),
+    ncoproduct(Log(3,4,5,1), Log(4,5,1,2)),
+    ncoproduct(Log(3,4,5,1), Log(5,1,2,3)),
+    ncoproduct(Log(4,5,1,2), Log(5,1,2,3)),
+    ncoproduct(Log(4,5,1,2), Log(1,2,3,4)),
+    ncoproduct(Log(5,1,2,3), Log(1,2,3,4)),
+    ncoproduct(Log(5,1,2,3), Log(2,3,4,5)),
+  };
+  for (const auto& signs : cartesian_power({-1, 1, 0}, snew.size())) {
+    const auto expr = sum(mapped(zip(signs, snew), [](const auto& pair) {
+      const auto [sign, expr] = pair;
+      return sign * expr;
+    }));
+    const auto sum_expr =
+      + substitute_variables_1_based(expr, {1,2,3,4,5})
+      - substitute_variables_1_based(expr, {1,2,3,4,6})
+      + substitute_variables_1_based(expr, {1,2,3,5,6})
+      - substitute_variables_1_based(expr, {1,2,4,5,6})
+      + substitute_variables_1_based(expr, {1,3,4,5,6})
+      - substitute_variables_1_based(expr, {2,3,4,5,6})
+    ;
+    if (sum_expr.is_zero()) {
+      std::cout << expr;
     }
   }
-  profiler.finish("triplets");
-  std::cout << sep << "\n";
-  for (const auto& [expr, triplets] : triplets) {
-    if (triplets.size() <= 2) {
-      continue;
-    }
-    for (const auto& triplet : triplets) {
-      for (const auto& args : triplet) {
-        std::cout << dump_to_string(args.bonus_points) << " / " << dump_to_string(args.log_points) << ",  ";
-      }
-      std::cout << "\n";
-    }
-    std::cout << sep << "\n";
-  }
+  // std::cout << space_rank(snew, identity_function) << "\n";
 }
