@@ -38,7 +38,7 @@ GammaExpr substitute_variables_1_based(const GammaExpr& expr, const std::vector<
 
 // TODO: Auto-generate variable substitution functions for all co-exprs.
 GammaNCoExpr substitute_variables_0_based(const GammaNCoExpr& expr, const std::vector<int>& new_points) {
-  return expr.mapped_expanding([&](const GammaNCoExpr::ObjectT& term_old) -> GammaNCoExpr {
+  const auto expr_new = expr.mapped_expanding([&](const GammaNCoExpr::ObjectT& term_old) -> GammaNCoExpr {
     std::vector<std::vector<Gamma>> term_new;
     for (const auto& copart_old : term_old) {
       std::vector<Gamma> copart_new;
@@ -53,6 +53,7 @@ GammaNCoExpr substitute_variables_0_based(const GammaNCoExpr& expr, const std::v
     }
     return GammaNCoExpr::single(term_new);
   }).without_annotations();
+  return normalize_coproduct(expr_new);
 }
 
 GammaNCoExpr substitute_variables_1_based(const GammaNCoExpr& expr, const std::vector<int>& new_points) {

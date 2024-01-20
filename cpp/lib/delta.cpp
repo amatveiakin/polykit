@@ -59,15 +59,19 @@ DeltaAlphabetMapping::DeltaAlphabetMapping() {
 }
 
 
+Delta monom_substitute_variables(Delta d, const std::vector<X>& new_points) {
+  return Delta(
+    d.a().substitution_result_0_based(new_points),
+    d.b().substitution_result_0_based(new_points)
+  );
+}
+
 DeltaExpr substitute_variables_0_based(const DeltaExpr& expr, const XArgs& new_points) {
   const auto& new_points_v = new_points.as_x();
   return expr.mapped_expanding([&](const DeltaExpr::ObjectT& term_old) -> DeltaExpr {
     std::vector<Delta> term_new;
     for (const Delta& d_old : term_old) {
-      Delta d_new(
-        d_old.a().substitution_result_0_based(new_points_v),
-        d_old.b().substitution_result_0_based(new_points_v)
-      );
+      const Delta d_new = monom_substitute_variables(d_old, new_points_v);
       if (d_new.is_nil()) {
         return {};
       }
@@ -124,6 +128,30 @@ DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_p
 #endif
 
 DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_points) {
+  return substitute_variables_0_based(expr, concat({X::Undefined()}, new_points.as_x()));
+}
+
+DeltaNCoExpr substitute_variables_0_based(const DeltaNCoExpr& expr, const XArgs& new_points) {
+  const auto& new_points_v = new_points.as_x();
+  const auto expr_new = expr.mapped_expanding([&](const DeltaNCoExpr::ObjectT& term_old) -> DeltaNCoExpr {
+    std::vector<std::vector<Delta>> term_new;
+    for (const auto& copart_old : term_old) {
+      std::vector<Delta> copart_new;
+      for (const Delta& d_old : copart_old) {
+        const Delta d_new = monom_substitute_variables(d_old, new_points_v);
+        if (d_new.is_nil()) {
+          return {};
+        }
+        copart_new.push_back(d_new);
+      }
+      term_new.push_back(copart_new);
+    }
+    return DeltaNCoExpr::single(term_new);
+  }).without_annotations();
+  return normalize_coproduct(expr_new);
+}
+
+DeltaNCoExpr substitute_variables_1_based(const DeltaNCoExpr& expr, const XArgs& new_points) {
   return substitute_variables_0_based(expr, concat({X::Undefined()}, new_points.as_x()));
 }
 

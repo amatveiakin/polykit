@@ -298,6 +298,8 @@ inline DeltaExpr D(X a, X b) {
 
 DeltaExpr substitute_variables_0_based(const DeltaExpr& expr, const XArgs& new_points);
 DeltaExpr substitute_variables_1_based(const DeltaExpr& expr, const XArgs& new_points);
+DeltaNCoExpr substitute_variables_0_based(const DeltaNCoExpr& expr, const XArgs& new_points);
+DeltaNCoExpr substitute_variables_1_based(const DeltaNCoExpr& expr, const XArgs& new_points);
 
 // Expects: points.size() == 6
 // Eliminates terms (x5-x6), (x4-x6), (x2-x6) using involution x1<->x4, x2<->x5, x3<->x6.
