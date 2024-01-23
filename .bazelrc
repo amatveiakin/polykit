@@ -17,7 +17,7 @@ build:clang --cxxopt -Wimplicit-fallthrough
 build:clang --cxxopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
 build:clang --linkopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
 build:clang --linkopt -ltbb  # for <execution>
-build:clang --linkopt "-lgmp -lgivaro -lntl"  # for LinBox
+build:clang --linkopt "-lgmp -lgivaro -lntl -lblas"  # for LinBox
 
 build:clang-asan --repo_env=CC=clang
 build:clang-asan --cxxopt -std=c++17
@@ -31,6 +31,5 @@ build:clang-asan --linkopt -fsanitize=address
 build:clang-asan --platform_suffix=asan  # separate build cache
 
 test --test_output=errors
-test --cxxopt=-DNDEBUG  # TODO: Remove after fixing "error: undefined reference to 'LinBox::PreconditionFailed::_errorStream'"!
 test --cxxopt=-DENABLE_ASSERTIONS
 test --platform_suffix=test  # separate build cache

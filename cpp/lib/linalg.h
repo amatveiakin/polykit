@@ -78,6 +78,10 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix);
 // Removes empty rows and columns.
 Matrix compress_matrix(const Matrix& matrix);
 
+// Returns x such that Ax = b, random solution if sigular and consistent, x = 0 if inconsistent.
+// TODO: Return a rational instead.
+std::vector<double> linear_solve(const Matrix& matrix, const std::vector<int>& rhs);
+
 // Computes matrix rank without preconditioning.
 int matrix_rank_raw_linbox(const Matrix& matrix);
 

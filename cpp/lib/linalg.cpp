@@ -11,6 +11,7 @@
 #include <linbox/ring/modular.h>
 #include <linbox/matrix/sparse-matrix.h>
 #include <linbox/solutions/rank.h>
+#include <linbox/solutions/solve.h>
 
 #include "check.h"
 #include "compare.h"
@@ -21,6 +22,16 @@
 #include "table_printer.h"
 #include "util.h"
 
+
+// Workaround link errors that I got with LinBox from `liblinbox-dev` package:
+//   .../linalg.o:linalg.cpp:function LinBox::NotImplementedYet::NotImplementedYet(char const*):
+//     error: undefined reference to 'LinBox::NotImplementedYet::_errorStream'
+//   .../linalg.o:linalg.cpp:function LinBox::PreconditionFailed::PreconditionFailed(char const*, int, char const*):
+//     error: undefined reference to 'LinBox::PreconditionFailed::_errorStream'
+namespace LinBox {
+  std::ostream __attribute__((weak)) *PreconditionFailed::_errorStream;
+  std::ostream __attribute__((weak)) *NotImplementedYet::_errorStream;
+}
 
 MatrixView::MatrixView(const Matrix* matrix, ViewType view_type)
     : matrix_(matrix), view_type_(view_type) {
@@ -37,6 +48,21 @@ std::vector<MatrixView::Triplet> MatrixView::as_triplets() const {
   );
 }
 
+
+template<typename Field>
+LinBox::SparseMatrix<Field> to_linbox_matrix(const Matrix& matrix, const Field& field) {
+  LinBox::SparseMatrix<Field> linbox_matrix(field, matrix.rows(), matrix.cols());
+  // Sort triplets first. The order of calls to `setEntry` plays a huge role: `LinBox::rank`
+  // can be five times slower in case of random order compared to sorted.
+  const auto sorted_triplets = sorted(
+    matrix.as_triplets(),
+    cmp::projected([](const auto& t) { return std::pair{t.row, t.col}; })
+  );
+  for (const auto& t : sorted_triplets) {
+    linbox_matrix.setEntry(t.row, t.col, t.value);
+  }
+  return linbox_matrix;
+}
 
 // Finds one diagonal block in a matrix given by `rows` and `cols`, which must be synchronized,
 // i.e. for each element (col, value) in `rows` there must be a corresponding element (row, value)
@@ -91,6 +117,20 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
   return blocks;
 }
 
+std::vector<double> linear_solve(const Matrix& matrix, const std::vector<int>& rhs) {
+  CHECK_EQ(matrix.rows(), rhs.size());
+
+  using Field = Givaro::QField<Givaro::Rational>;
+  Field field;
+
+  auto linbox_matrix = to_linbox_matrix(matrix, field);
+  LinBox::DenseVector<Field> linbox_result(field, matrix.cols());
+  LinBox::DenseVector<Field> linbox_rhs(field, rhs);
+
+  LinBox::solveInPlace(linbox_result, linbox_matrix, linbox_rhs);
+  return mapped(linbox_result, [](const auto& v) { return static_cast<double>(v); });
+}
+
 int matrix_rank_raw_linbox(const Matrix& matrix) {
   const auto& triplets = matrix.as_triplets();
   if (triplets.empty()) {
@@ -122,17 +162,7 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   //   using Field = Givaro::Modular<int>;
   //   Field field(1000003u);
 
-  LinBox::SparseMatrix<Field> linbox_matrix(field, matrix.rows(), matrix.cols());
-
-  // Sort triplets first. The order of calls to `setEntry` plays a huge role: `LinBox::rank`
-  // can be five times slower in case of random order compared to sorted.
-  const auto sorted_triplets = sorted(
-    triplets,
-    cmp::projected([](const auto& t) { return std::pair{t.row, t.col}; })
-  );
-  for (const auto& t : sorted_triplets) {
-    linbox_matrix.setEntry(t.row, t.col, t.value);
-  }
+  auto linbox_matrix = to_linbox_matrix(matrix, field);
 
   size_t rank;
   // TODO: Try other methods, esp. LinBox::Method::Wiedemann and LinBox::Method::Blackbox
