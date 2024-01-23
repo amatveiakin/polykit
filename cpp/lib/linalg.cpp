@@ -105,10 +105,25 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   // LinBox::commentator().setMaxDetailLevel(-1);
   // LinBox::commentator().setMaxDepth(-1);
   // LinBox::commentator().setReportStream(std::cerr);
-  Givaro::QField<Givaro::Rational> QQ;
-  LinBox::SparseMatrix<Givaro::QField<Givaro::Rational>, LinBox::SparseMatrixFormat::SparseSeq> linbox_matrix(
-    QQ, matrix.rows(), matrix.cols()
-  );
+
+  // Integers are not actually a field, but the corresponding `LinBox::SparseMatrix` parameter is
+  // called "field", so using the same name for consistency.
+  using Field = Givaro::ZRing<Givaro::Integer>;
+  Field field;
+
+  // Alternative field option. Performance seems comparable with `Givaro::ZRing<Givaro::Integer>`,
+  // but a little bit worse (hard to tell for sure because my benchmark was noisy).
+  //   using Field = Givaro::QField<Givaro::Rational>;
+  //   Field field;
+
+  // TODO: Figure out why computing rank modulo prime works so weird. In my experience it even returned
+  // non-zero ranks for matrix that contains only zero elements: it was as if it treated unset as zero
+  // and zero as non-zero.
+  //   using Field = Givaro::Modular<int>;
+  //   Field field(1000003u);
+
+  LinBox::SparseMatrix<Field> linbox_matrix(field, matrix.rows(), matrix.cols());
+
   // Sort triplets first. The order of calls to `setEntry` plays a huge role: `LinBox::rank`
   // can be five times slower in case of random order compared to sorted.
   const auto sorted_triplets = sorted(
@@ -120,11 +135,9 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   }
 
   size_t rank;
-  // TODO: Try adding IntegerTag
-  // TODO: Try other methods, esp. LinBox::Method::Wiedemann
+  // TODO: Try other methods, esp. LinBox::Method::Wiedemann and LinBox::Method::Blackbox
   // TODO: Try LinBox::Method::SparseElimination options
-  // TODO: Try (optionally) computing rank modulo prime
-  LinBox::rank(rank, linbox_matrix, LinBox::Method::SparseElimination());
+  LinBox::rank(rank, linbox_matrix);
   return rank;
 }
 
