@@ -1,28 +1,14 @@
 #pragma once
 
 #include <chrono>
-#include <iostream>
 #include <string>
 
 
-// TODO: Add user time and system time.
 class Profiler {
 public:
-  Profiler(bool enable = true) {
-    enable_ = enable;
-    if (enable_) {
-      start_ = std::chrono::steady_clock::now();
-    }
-  }
+  Profiler(bool enable = true);
 
-  void finish(const std::string& operation) {
-    if (enable_) {
-      const auto finish = std::chrono::steady_clock::now();
-      const double time_sec = (finish - start_) / std::chrono::milliseconds(1) / 1000.;
-      std::cerr << "Profiler: " << operation << " took " << time_sec << " seconds\n";
-      start_ = finish;
-    }
-  }
+  void finish(const std::string& operation);
 
 private:
   bool enable_ = false;

@@ -101,6 +101,7 @@ void reset_default_formatting();
 // to the preambule.
 enum class TextColor {
   normal,
+  gray,
   red,
   green,
   yellow,

@@ -46,6 +46,7 @@ static thread_local std::vector<RichTextOptions> console_rich_text_options_stack
 static int text_color_to_console_color(TextColor color) {
   SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return 0;   // normal
+    case TextColor::gray:           return 2;   // dim
     case TextColor::red:            return 91;  // bright_red
     case TextColor::green:          return 92;  // bright_green
     case TextColor::yellow:         return 93;  // bright_yellow
@@ -64,6 +65,7 @@ static int text_color_to_console_color(TextColor color) {
 static std::string text_color_to_html_color(TextColor color) {
   SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "Black";
+    case TextColor::gray:           return "Gray";
     case TextColor::red:            return "Red";
     case TextColor::green:          return "LimeGreen";
     case TextColor::yellow:         return "GoldenRod";
@@ -86,6 +88,7 @@ static std::string text_color_to_html_color(TextColor color) {
 static std::string text_color_to_latex_color(TextColor color) {
   SWITCH_ENUM_OR_DIE(color, {
     case TextColor::normal:         return "black";
+    case TextColor::gray:           return "Gray";
     case TextColor::red:            return "red";
     case TextColor::green:          return "Green";
     case TextColor::yellow:         return "Goldenrod";

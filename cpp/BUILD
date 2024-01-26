@@ -49,6 +49,7 @@ cc_library(
         "lib/file_util.cpp",
         "lib/format_basic.cpp",
         "lib/parse.cpp",
+        "lib/profiler.cpp",
         "lib/pvector.cpp",
         "lib/sequence_iteration.cpp",
         "lib/string.cpp",
