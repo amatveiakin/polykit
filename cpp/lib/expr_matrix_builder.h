@@ -12,7 +12,7 @@ namespace internal {
 using SparseElement = std::pair<int, int>;  // (row/col, value)
 
 Matrix make_matrix(
-  const absl::flat_hash_set<std::vector<SparseElement>>& sparse_rows, int num_cols
+  const std::vector<std::vector<SparseElement>>& sparse_rows, int num_cols
 );
 }  // namespace internal
 
@@ -41,12 +41,7 @@ private:
   void add_expr_impl(const ExprTs&... expressions) {
     std::vector<SparseElement> row;
     add_columns<0>(row, expressions...);
-    // TODO: Is sorting required? (here and in `ExprVectorMatrixBuilder`)
-    //   (col, value) pairs should be sorted in order for row deduplication to work.
-    //   However chances are they are already oredered the same way: absl::hash_map
-    //   iteration is likely deterministic within one launch.
-    absl::c_sort(row);
-    sparse_rows_.insert(std::move(row));
+    sparse_rows_.push_back(std::move(row));
   }
 
   template<std::size_t Idx, typename Head, typename... Tail>
@@ -62,7 +57,7 @@ private:
   Enumerator<KeyT> monoms_;
 
   // For each row: for each non-zero value: (column, value)
-  absl::flat_hash_set<std::vector<SparseElement>> sparse_rows_;
+  std::vector<std::vector<SparseElement>> sparse_rows_;
 };
 
 template<typename ExprT>
@@ -70,8 +65,7 @@ class ExprVectorMatrixBuilder {
 public:
   void add_expr(const std::vector<ExprT>& expressions) {
     auto row = make_row(expressions);
-    absl::c_sort(row);
-    sparse_rows_.insert(std::move(row));
+    sparse_rows_.push_back(std::move(row));
   }
 
   Matrix make_matrix() const {
@@ -96,7 +90,7 @@ private:
   Enumerator<KeyT> monoms_;
 
   // For each row: for each non-zero value: (column, value)
-  absl::flat_hash_set<std::vector<SparseElement>> sparse_rows_;
+  std::vector<std::vector<SparseElement>> sparse_rows_;
 };
 
 

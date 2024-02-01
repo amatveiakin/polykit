@@ -3,38 +3,26 @@
 
 using internal::SparseElement;
 
-static absl::flat_hash_set<std::vector<SparseElement>> unique_sparse_columns(
-  const absl::flat_hash_set<std::vector<SparseElement>>& sparse_rows, int num_cols
-) {
-  std::vector<std::vector<SparseElement>> sparse_columns(num_cols);
-  int i_row = 0;
-  for (const auto& row : sparse_rows) {
-    for (const auto& [i_col, coeff] : row) {
-      sparse_columns[i_col].push_back({i_row, coeff});
-    }
-    ++i_row;
-  }
-  // Note: Elements are sorted within each column since we iterate rows sequentially.
-  //   Hence decuplication works.
-  return to_set(sparse_columns);
-}
-
-
 namespace internal {
 
 Matrix make_matrix(
-  const absl::flat_hash_set<std::vector<SparseElement>>& sparse_rows, int num_cols
+  const std::vector<std::vector<SparseElement>>& sparse_rows, int num_cols
 ) {
-  const auto sparse_columns = unique_sparse_columns(sparse_rows, num_cols);
-  Matrix matrix;
-  int i_col = 0;
-  for (const auto& column : sparse_columns) {
-    for (const auto& [i_row, value] : column) {
-      matrix.insert(i_row, i_col) = value;
+  Matrix matrix(sparse_rows.size(), num_cols);
+  int row = 0;
+  for (const auto& colvalues : sparse_rows) {
+    for (const auto& [col, value] : colvalues) {
+      matrix(row, col) = value;
     }
-    ++i_col;
+    ++row;
   }
-  return matrix;
+  // We use these matrices for two purposes finding space ranks and finding null spaces.
+  // Therefore, it ok to deduplicate the columns, because it doesn't affect either operation.
+  // It is not ok to deduplicate rows here, because that would break correspondence between
+  // rows and the original expressions.
+  // Note that after the columns are sorted, the matrix for each space is deterministic,
+  // assuming the expressions are fed to `ExprTupleMatrixBuilder` in a fixed order.
+  return sort_unique_cols(matrix);
 }
 
 }  // namespace internal

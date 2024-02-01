@@ -74,6 +74,19 @@
 #endif
 
 
+Gr_Space CGrL3_Dim3_Depth1_test_space(const std::vector<int>& points) {
+  const int weight = 3;
+  Gr_Space space;
+  for (const int bonus_point_idx : range(points.size())) {
+    const auto bonus_args = choose_indices(points, {bonus_point_idx});
+    const auto main_args = removed_index(points, bonus_point_idx);
+    append_vector(space, mapped(CL(weight, main_args), [&](const auto& expr) {
+      return pullback(expr, bonus_args);
+    }));
+  }
+  return space;
+}
+
 int main(int /*argc*/, char *argv[]) {
   absl::InitializeSymbolizer(argv[0]);
   absl::InstallFailureSignalHandler({});
@@ -608,34 +621,182 @@ int main(int /*argc*/, char *argv[]) {
   // };
   // std::cout << space_rank(snew, identity_function) << "\n";
 
-  const auto snew = std::vector{
-    ncoproduct(Log(1,2,3,4), Log(2,3,4,5)),
-    ncoproduct(Log(1,2,3,4), Log(3,4,5,1)),
-    ncoproduct(Log(2,3,4,5), Log(3,4,5,1)),
-    ncoproduct(Log(2,3,4,5), Log(4,5,1,2)),
-    ncoproduct(Log(3,4,5,1), Log(4,5,1,2)),
-    ncoproduct(Log(3,4,5,1), Log(5,1,2,3)),
-    ncoproduct(Log(4,5,1,2), Log(5,1,2,3)),
-    ncoproduct(Log(4,5,1,2), Log(1,2,3,4)),
-    ncoproduct(Log(5,1,2,3), Log(1,2,3,4)),
-    ncoproduct(Log(5,1,2,3), Log(2,3,4,5)),
-  };
-  for (const auto& signs : cartesian_power({-1, 1, 0}, snew.size())) {
-    const auto expr = sum(mapped(zip(signs, snew), [](const auto& pair) {
-      const auto [sign, expr] = pair;
-      return sign * expr;
-    }));
-    const auto sum_expr =
-      + substitute_variables_1_based(expr, {1,2,3,4,5})
-      - substitute_variables_1_based(expr, {1,2,3,4,6})
-      + substitute_variables_1_based(expr, {1,2,3,5,6})
-      - substitute_variables_1_based(expr, {1,2,4,5,6})
-      + substitute_variables_1_based(expr, {1,3,4,5,6})
-      - substitute_variables_1_based(expr, {2,3,4,5,6})
-    ;
-    if (sum_expr.is_zero()) {
-      std::cout << expr;
-    }
+  // const auto snew = std::vector{
+  //   ncoproduct(Log(1,2,3,4), Log(2,3,4,5)),
+  //   ncoproduct(Log(1,2,3,4), Log(3,4,5,1)),
+  //   ncoproduct(Log(2,3,4,5), Log(3,4,5,1)),
+  //   ncoproduct(Log(2,3,4,5), Log(4,5,1,2)),
+  //   ncoproduct(Log(3,4,5,1), Log(4,5,1,2)),
+  //   ncoproduct(Log(3,4,5,1), Log(5,1,2,3)),
+  //   ncoproduct(Log(4,5,1,2), Log(5,1,2,3)),
+  //   ncoproduct(Log(4,5,1,2), Log(1,2,3,4)),
+  //   ncoproduct(Log(5,1,2,3), Log(1,2,3,4)),
+  //   ncoproduct(Log(5,1,2,3), Log(2,3,4,5)),
+  // };
+  // for (const auto& signs : cartesian_power({-1, 1, 0}, snew.size())) {
+  //   const auto expr = sum(mapped(zip(signs, snew), [](const auto& pair) {
+  //     const auto [sign, expr] = pair;
+  //     return sign * expr;
+  //   }));
+  //   const auto sum_expr =
+  //     + substitute_variables_1_based(expr, {1,2,3,4,5})
+  //     - substitute_variables_1_based(expr, {1,2,3,4,6})
+  //     + substitute_variables_1_based(expr, {1,2,3,5,6})
+  //     - substitute_variables_1_based(expr, {1,2,4,5,6})
+  //     + substitute_variables_1_based(expr, {1,3,4,5,6})
+  //     - substitute_variables_1_based(expr, {2,3,4,5,6})
+  //   ;
+  //   if (sum_expr.is_zero()) {
+  //     std::cout << expr;
+  //   }
+  // }
+  // // std::cout << space_rank(snew, identity_function) << "\n";
+
+
+  // const auto compute = [](int weight, int dimension, int num_points) {
+  //   return bigrassmannian_complex_cohomology(dimension, num_points, [&](const int dim, const auto& points) {
+  //     return CGrL_test_space(weight, dim, points);
+  //   });
+  // };
+
+  // for (EACH : range(3)) {
+  //   Profiler profiler;
+  //   CHECK_EQ(compute(3, 4, 8), 1);
+  //   profiler.finish("A");
+  //   CHECK_EQ(compute(4, 4, 7), 0);
+  //   profiler.finish("B");
+  //   CHECK_EQ(compute(4, 4, 8), 2);
+  //   profiler.finish("C");
+  // }
+
+
+  // int v = 1;
+  // Matrix m;
+  // m.insert(0, 0) = v;
+  // m.insert(0, 1) = v;
+  // m.insert(0, 2) = v;
+  // m.insert(1, 2) = v;
+  // std::cout << dump_to_string(find_kernel_vector(m)) << "\n";
+  // // std::cout << dump_to_string(linear_solve(m, {0, 1})) << "\n";
+  // // int rank = matrix_rank_raw_linbox(m);
+  // // std::cout << "rank = " << rank << "\n";
+
+
+
+
+  // const int weight = 4;
+  // const int dimension = 3;
+  // for (const int num_points : range_incl(6, 6)) {
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   Profiler profiler;
+  //   const auto space = co_space(weight, 2, [&](const int weight) {
+  //     switch (weight) {
+  //       case 1: return normalize_space_remove_consecutive(GrFx(dimension, points), dimension, num_points);
+  //       case 2: return normalize_space_remove_consecutive(GrL2(dimension, points), dimension, num_points);
+  //       case 3: return normalize_space_remove_consecutive(CGrL3_Dim3_test_space(points), dimension, num_points);
+  //       default: FATAL("Unsupported weight");
+  //     }
+  //   });
+  //   profiler.finish("space");
+  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   });
+  //   profiler.finish("ranks");
+
+  //   std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+  //   std::cout << to_string(ranks) << "\n";
+
+  //   const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
+  //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   }).transposed();
+  //   std::cout << dump_to_string(mapping_matrix) << "\n";
+  //   const auto kernel_vector = find_kernel_vector(mapping_matrix);
+  //   profiler.finish("kernel");
+  //   const auto equation = sum(mapped(zip(kernel_vector, space), [](const auto& pair) {
+  //     const auto [coeff, expr] = pair;
+  //     return coeff * expr;
+  //   }));
+  //   std::cout << equation;
+  //   CHECK(ncomultiply(equation).is_zero());
+  //   CHECK(keep_non_weakly_separated(equation).is_zero());
+  //   std::cout << to_string(space_venn_ranks(
+  //     mapped(
+  //       normalize_space_remove_consecutive(CGrL3_Dim3_test_space(points), dimension, num_points),
+  //       DISAMBIGUATE(ncomultiply)
+  //     ),
+  //     std::vector{equation},
+  //     identity_function
+  //   )) << "\n";
+  //   std::cout << to_string(space_venn_ranks(
+  //     mapped(
+  //       normalize_space_remove_consecutive(CGrL3_Dim3_Depth1_test_space(points), dimension, num_points),
+  //       DISAMBIGUATE(ncomultiply)
+  //     ),
+  //     std::vector{equation},
+  //     identity_function
+  //   )) << "\n";
+  //   // std::cout << dump_to_string(kernel_vector) << "\n";
+  // }
+
+
+
+  // const int weight = 4;
+  // const int dimension = 3;
+  // for (const int num_points : range_incl(5, 10)) {
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   Profiler profiler;
+  //   const auto space = co_space(weight, 2, [&](const int weight) {
+  //     switch (weight) {
+  //       case 1: return normalize_space_remove_consecutive(GrFx(dimension, points), dimension, num_points);
+  //       case 2: return normalize_space_remove_consecutive(GrL2(dimension, points), dimension, num_points);
+  //       case 3: return normalize_space_remove_consecutive(CGrL3_Dim3_test_space(points), dimension, num_points);
+  //       default: FATAL("Unsupported weight");
+  //     }
+  //   });
+  //   profiler.finish("space");
+  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   });
+  //   profiler.finish("ranks");
+  //   std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+  //   std::cout << to_string(ranks) << "\n";
+  // }
+
+
+  const int weight = 5;
+  const int dimension = 3;
+  for (const int num_points : range_incl(5, 8)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    Profiler profiler;
+    const auto space = co_space(weight, 2, [&](const int w) {
+      const auto sp = w == 1
+        ? GrFx(dimension, points)
+        : CGrL_test_space(w, dimension, points);
+      const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+      // return normalize_space_remove_consecutive(spl, dimension, num_points);
+      return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
+    });
+    profiler.finish("space");
+
+    const auto base_name = absl::StrCat("cgrl", weight, "_d", dimension, "_p", num_points);
+    const auto dir_path = "/mnt/c/Andrei/polylog/matrices/";
+    const auto full_matrix = space_matrix(space, identity_function);
+    const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
+      return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+    });
+    profiler.finish("matrix");
+    // save_triplets(absl::StrCat(dir_path, base_name, "_all.txt"), full_matrix);
+    save_triplets(absl::StrCat(dir_path, base_name, ".txt"), mapping_matrix);
+    profiler.finish("dump");
+    std::cout << dump_to_string(full_matrix) << "\n";
+    std::cout << dump_to_string(mapping_matrix) << "\n";
+    std::cout << "Done: d=" << dimension << ", w=" << weight << ", p=" << num_points << "\n";
+
+    // const auto ranks = space_mapping_ranks(space, identity_function, [](const auto& expr) {
+    //   return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+    // });
+    // profiler.finish("ranks");
+    // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+    // std::cout << to_string(ranks) << "\n";
   }
-  // std::cout << space_rank(snew, identity_function) << "\n";
 }

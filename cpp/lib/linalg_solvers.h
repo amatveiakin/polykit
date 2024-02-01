@@ -26,9 +26,9 @@ SpaceT minimal_containing_subspace(const SpaceT& haystack, const SpaceT& needle)
   return ret;
 }
 
-// Optimization potential: If some expressions in `space` contain unique terms, use these
-//   to compute the coefficient.
-// Note. If `coeff_candidates` does not include 0, the option of not including this summand
+// TODO: Add a version based on `linear_solve`. Note that even after this is done, this
+//   function could still be useful for finding beautiful equations.
+// Note. If `coeff_candidates` does not include 0, the option of not including a summand
 //   will not be considered.
 template<typename ExprT>
 ExprT find_equation(ExprT expr, const std::vector<ExprT>& space, const std::vector<int>& coeff_candidates = {1, -1}) {

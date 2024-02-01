@@ -16,10 +16,8 @@
 #include "check.h"
 #include "compare.h"
 #include "enumerator.h"
-#include "format.h"
 #include "sorting.h"
 #include "string.h"
-#include "table_printer.h"
 #include "util.h"
 
 
@@ -31,21 +29,6 @@
 namespace LinBox {
   std::ostream __attribute__((weak)) *PreconditionFailed::_errorStream;
   std::ostream __attribute__((weak)) *NotImplementedYet::_errorStream;
-}
-
-MatrixView::MatrixView(const Matrix* matrix, ViewType view_type)
-    : matrix_(matrix), view_type_(view_type) {
-  CHECK(matrix_ != nullptr);
-}
-
-std::vector<MatrixView::Triplet> MatrixView::as_triplets() const {
-  return mapped(
-    matrix_->as_triplets(), [&](const auto& t) {
-      return view_type_ == RowMajor
-          ? MatrixView::Triplet{t.row, t.col, t.value}
-          : MatrixView::Triplet{t.col, t.row, t.value};
-    }
-  );
 }
 
 
@@ -68,7 +51,7 @@ LinBox::SparseMatrix<Field> to_linbox_matrix(const Matrix& matrix, const Field& 
 // i.e. for each element (col, value) in `rows` there must be a corresponding element (row, value)
 // in `cols` and vice versa. Removes the elements corresponding to the block from `rows` and `cols`.
 // Returns the block as a map: (row, col) -> value.
-absl::flat_hash_map<std::pair<int, int>, int> extract_block(
+static absl::flat_hash_map<std::pair<int, int>, int> extract_block(
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& rows,
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>>& cols
 ) {
@@ -96,7 +79,47 @@ absl::flat_hash_map<std::pair<int, int>, int> extract_block(
   return block;
 }
 
-std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
+// Removes empty rows and columns.
+static Matrix compress_matrix(const Matrix& uncompressed) {
+  Enumerator<int> row_indices;
+  Enumerator<int> col_indices;
+  absl::flat_hash_map<std::pair<int, int>, int> compressed_triplets;
+  for (const auto& t : uncompressed.as_triplets()) {
+    compressed_triplets[{row_indices.index(t.row), col_indices.index(t.col)}] = t.value;
+  }
+  return Matrix::from_triplets(compressed_triplets);
+}
+
+#if 0
+static Matrix compress_matrix_keep_rowcol_order(const Matrix& uncompressed) {
+  std::vector<int> row_index_vector;
+  std::vector<int> col_index_vector;
+  for (const auto& t : uncompressed.as_triplets()) {
+    row_index_vector.push_back(t.row);
+    col_index_vector.push_back(t.col);
+  }
+  absl::c_sort(row_index_vector);
+  absl::c_sort(col_index_vector);
+
+  Enumerator<int> row_indices;
+  Enumerator<int> col_indices;
+  for (const auto& idx : row_index_vector) {
+    row_indices.index(idx);
+  }
+  for (const auto& idx : col_index_vector) {
+    col_indices.index(idx);
+  }
+
+  absl::flat_hash_map<std::pair<int, int>, int> compressed_triplets;
+  for (const auto& t : uncompressed.as_triplets()) {
+    compressed_triplets[{row_indices.c_index(t.row), col_indices.c_index(t.col)}] = t.value;
+  }
+  return Matrix(compressed_triplets);
+}
+#endif
+
+// Splits matrix into blocks if it's block diagonal.
+static std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>> rows;  // row -> (col, value)
   absl::flat_hash_map<int, std::vector<std::pair<int, int>>> cols;  // col -> (row, value)
   for (const auto& t : matrix.as_triplets()) {
@@ -106,15 +129,48 @@ std::vector<Matrix> get_matrix_diagonal_blocks(const Matrix& matrix) {
   std::vector<Matrix> blocks;
   while (!rows.empty()) {
     const auto block = extract_block(rows, cols);
-    Matrix block_matrix;
+    int rows = 0, cols = 0;
     for (const auto& [rowcol, value] : block) {
       const auto [row, col] = rowcol;
-      block_matrix.insert(row, col) = value;
+      rows = std::max(rows, row + 1);
+      cols = std::max(cols, col + 1);
+    }
+    Matrix block_matrix(rows, cols);
+    for (const auto& [rowcol, value] : block) {
+      const auto [row, col] = rowcol;
+      block_matrix(row, col) = value;
     }
     blocks.push_back(compress_matrix(block_matrix));
   }
   CHECK(cols.empty());
   return blocks;
+}
+
+static Matrix diagonalize_matrix(const Matrix& src) {
+  using CoordValue = std::pair<int, int>;
+  std::optional<Matrix> mat;
+  for (const auto view_type : {MatrixView::RowMajor, MatrixView::ColumnMajor}) {
+    const MatrixView view{mat ? &*mat : &src, view_type};
+    std::vector<std::vector<CoordValue>> lines(view.a_size());
+    for (const auto& t : view.as_triplets()) {
+      lines.at(t.a).push_back({t.b, t.value});
+    }
+    const auto sorted_lines = sorted_by_projection(lines, [](const auto& line) {
+      // Note. Also tried sorting by average coord, but performance was worse.
+      //   Worse than the original even in many cases.
+      const auto [min, max] = minmax_value(line);
+      return (max.first - min.first);
+    });
+    Matrix new_mat(src.rows(), src.cols());
+    for (const int a : range(sorted_lines.size())) {
+      for (const auto& [b, value] : sorted_lines[a]) {
+        new_mat(view_type == MatrixView::RowMajor ? std::pair{a, b} : std::pair{b, a}) = value;
+      }
+    }
+    mat = std::move(new_mat);
+  }
+  CHECK(mat.has_value());
+  return *mat;
 }
 
 std::vector<double> linear_solve(const Matrix& matrix, const std::vector<int>& rhs) {
@@ -127,8 +183,54 @@ std::vector<double> linear_solve(const Matrix& matrix, const std::vector<int>& r
   LinBox::DenseVector<Field> linbox_result(field, matrix.cols());
   LinBox::DenseVector<Field> linbox_rhs(field, rhs);
 
-  LinBox::solveInPlace(linbox_result, linbox_matrix, linbox_rhs);
+  try {
+    LinBox::solveInPlace(linbox_result, linbox_matrix, linbox_rhs);
+  } catch (const LinBox::LinboxError& e) {
+    CHECK(false) << "Cannot solver linear system: " << e.what() << "\n";
+  }
   return mapped(linbox_result, [](const auto& v) { return static_cast<double>(v); });
+}
+
+std::vector<int> find_kernel_vector(const Matrix& matrix) {
+  using Field = Givaro::QField<Givaro::Rational>;
+  Field field;
+
+  int min_nonzero_col = std::numeric_limits<int>::max();
+  for (const auto& t : matrix.as_triplets()) {
+    if (t.value != 0) {
+      min_nonzero_col = std::min(min_nonzero_col, t.col);
+    }
+  }
+
+  LinBox::DenseVector<Field> linbox_rhs(field, matrix.rows());
+  Matrix matrix_fixcol(matrix.rows(), matrix.cols());
+  for (const auto& t : matrix.as_triplets()) {
+    if (t.col == min_nonzero_col) {
+      linbox_rhs[t.row] = -t.value;
+    } else {
+      matrix_fixcol(t.row, t.col) = t.value;
+    }
+  }
+
+  auto linbox_matrix = to_linbox_matrix(matrix_fixcol, field);
+  LinBox::DenseVector<Field> linbox_result(field, matrix_fixcol.cols());
+
+  try {
+    LinBox::solveInPlace(linbox_result, linbox_matrix, linbox_rhs);
+  } catch (const LinBox::LinboxError& e) {
+    CHECK(false) << "Cannot find kernel vector: " << e.what() << "\n";
+  }
+  // TODO: Deal with this element must be zero.
+  linbox_result[min_nonzero_col] = 1;
+
+  const int denom_lcm = absl::c_accumulate(
+    linbox_result,
+    1,
+    [](int lcm, const auto& v) { return lcm * v.deno(); }
+  );
+  return mapped(linbox_result, [&](const auto& v) {
+    return static_cast<int>(v.nume()) * denom_lcm / static_cast<int>(v.deno());
+  });
 }
 
 int matrix_rank_raw_linbox(const Matrix& matrix) {
@@ -171,186 +273,30 @@ int matrix_rank_raw_linbox(const Matrix& matrix) {
   return rank;
 }
 
-std::string to_string(const Matrix& matrix) {
-  const int kMaxColumns = 16;
-  const int kMaxRows = 16;
-  const int kEllipsisSize = 3;
-
-  const int kFirstRowsToPrint = (kMaxRows - kEllipsisSize + 1) / 2;
-  const int kLastRowsToPrint = (kMaxRows - kEllipsisSize) / 2;
-  const int kFirstColumnsToPrint = (kMaxColumns - kEllipsisSize + 1) / 2;
-  const int kLastColumnsToPrint = (kMaxColumns - kEllipsisSize) / 2;
-
-  const bool full_rows = matrix.rows() <= kMaxRows;
-  const bool full_cols = matrix.cols() <= kMaxColumns;
-  const int table_rows = full_rows ? matrix.rows() : kMaxRows;
-  const int table_cols = full_cols ? matrix.cols() : kMaxColumns;
-
-  const auto is_ellipsis_row = [&](int table_row) {
-    return !full_rows && table_row >= kFirstRowsToPrint && table_row < kMaxRows - kLastRowsToPrint;
-  };
-  const auto is_ellipsis_col = [&](int table_col) {
-    return !full_cols && table_col >= kFirstColumnsToPrint && table_col < kMaxColumns - kLastColumnsToPrint;
-  };
-  const auto get_table_row = [&](int matrix_row) -> std::optional<int> {
-    if (full_rows || matrix_row < kFirstRowsToPrint) {
-      return matrix_row;
-    }
-    if (matrix_row >= matrix.rows() - kLastRowsToPrint) {
-      return matrix_row + kMaxRows - matrix.rows();
-    }
-    return std::nullopt;
-  };
-  const auto get_table_col = [&](int matrix_col) -> std::optional<int> {
-    if (full_cols || matrix_col < kFirstColumnsToPrint) {
-      return matrix_col;
-    }
-    if (matrix_col >= matrix.cols() - kLastColumnsToPrint) {
-      return matrix_col + kMaxColumns - matrix.cols();
-    }
-    return std::nullopt;
-  };
-
-  TablePrinter table;
-  table.set_default_alignment(TextAlignment::right);
-  table.set_min_column_width(2);
-  for (const auto& triplet : matrix.as_triplets()) {
-    const auto row = get_table_row(triplet.row);
-    const auto col = get_table_col(triplet.col);
-    if (row.has_value() && col.has_value()) {
-      table.set_content({*row, *col}, fmt::num(triplet.value));
-    }
-  }
-  for (const int row : range(table_rows)) {
-    for (const int col : range(table_cols)) {
-      const bool ellipsis_row = is_ellipsis_row(row);
-      const bool ellipsis_col = is_ellipsis_col(col);
-      if (ellipsis_row || ellipsis_col) {
-        CHECK(table.content({row, col}).empty());
-        if (ellipsis_row != ellipsis_col) {
-          table.set_content({row, col}, ".");
-        }
-      } else {
-        if (table.content({row, col}).empty()) {
-          table.set_content({row, col}, fmt::num(0));
-        }
-      }
-    }
-  }
-  return table.to_string();
-}
-
-std::string dump_to_string_impl(const Matrix& matrix) {
-  return absl::StrCat(
-    "<", matrix.rows(), "x", matrix.cols(), " matrix, ",
-    matrix.as_triplets().size(), " elements>"
-  );
-}
-
-Matrix compress_matrix(const Matrix& uncompressed) {
-  Enumerator<int> row_indices;
-  Enumerator<int> col_indices;
-  Matrix compressed;
-  for (const auto& t : uncompressed.as_triplets()) {
-    compressed.insert(row_indices.index(t.row), col_indices.index(t.col)) = t.value;
-  }
-  return compressed;
-}
-
-Matrix compress_matrix_keep_rowcol_order(const Matrix& uncompressed) {
-  std::vector<int> row_index_vector;
-  std::vector<int> col_index_vector;
-  for (const auto& t : uncompressed.as_triplets()) {
-    row_index_vector.push_back(t.row);
-    col_index_vector.push_back(t.col);
-  }
-  absl::c_sort(row_index_vector);
-  absl::c_sort(col_index_vector);
-
-  Enumerator<int> row_indices;
-  Enumerator<int> col_indices;
-  for (const auto& idx : row_index_vector) {
-    row_indices.index(idx);
-  }
-  for (const auto& idx : col_index_vector) {
-    col_indices.index(idx);
-  }
-
-  Matrix compressed;
-  for (const auto& t : uncompressed.as_triplets()) {
-    compressed.insert(row_indices.c_index(t.row), col_indices.c_index(t.col)) = t.value;
-  }
-  return compressed;
-}
-
-Matrix diagonalize_matrix(const Matrix& src) {
-  using CoordValue = std::pair<int, int>;
-  std::optional<Matrix> mat;
-  for (const auto view_type : {MatrixView::RowMajor, MatrixView::ColumnMajor}) {
-    const MatrixView view{mat ? &*mat : &src, view_type};
-    std::vector<std::vector<CoordValue>> lines(view.a_size());
-    for (const auto& t : view.as_triplets()) {
-      lines.at(t.a).push_back({t.b, t.value});
-    }
-    const auto sorted_lines = sorted_by_projection(lines, [](const auto& line) {
-      // Note. Also tried sorting by average coord, but performance was worse.
-      //   Worse than the original even in many cases.
-      const auto [min, max] = minmax_value(line);
-      return (max.first - min.first);
-    });
-    Matrix new_mat;
-    for (const int a : range(sorted_lines.size())) {
-      for (const auto& [b, value] : sorted_lines[a]) {
-        new_mat.insert(view_type == MatrixView::RowMajor ? std::pair{a, b} : std::pair{b, a}) = value;
-      }
-    }
-    mat = new_mat;
-  }
-  CHECK(mat.has_value());
-  return *mat;
-}
-
-static int matrix_rank_fancy(const Matrix& matrix) {
+// Computes matrix rank after preconditioning. This is not guaranteed to be faster than
+// `matrix_rank_raw_linbox`. In particular, it could to be slower when there is only block.
+// However it tends to be faster on average, especially for large matrices.
+static int matrix_rank_preconditioned(const Matrix& matrix) {
   return sum(
     get_matrix_diagonal_blocks(matrix),
-    [](const auto& b) { return matrix_rank_raw_linbox(diagonalize_matrix(b)); }
+    [](const auto& b) {
+      return matrix_rank_raw_linbox(diagonalize_matrix(sort_unique_rows(sort_unique_cols(b))));
+    }
   );
 }
 
 #if 1
 int matrix_rank(const Matrix& matrix) {
-  return matrix_rank_fancy(matrix);
+  return matrix_rank_preconditioned(matrix);
 }
 #else
 int matrix_rank(const Matrix& matrix) {
   Profiler profiler;
   const int rank_orig = matrix_rank_raw_linbox(matrix);
   profiler.finish("rank (raw)");
-  const int rank_fancy = matrix_rank_fancy(matrix);
-  profiler.finish("rank (fancy)");
-  CHECK_EQ(rank_orig, rank_fancy);
+  const int rank_preconditioned = matrix_rank_preconditioned(matrix);
+  profiler.finish("rank (preconditioned)");
+  CHECK_EQ(rank_orig, rank_preconditioned);
   return rank_orig;
 }
 #endif
-
-void save_triplets(const std::string& filename, const Matrix& matrix) {
-  std::ofstream fs(filename);
-  CHECK(fs.good());
-  for (const auto& t : matrix.as_triplets()) {
-    fs << t.row << " " << t.col << " " << t.value << "\n";
-  }
-  CHECK(fs.good());
-}
-
-Matrix load_triplets(const std::string& filename) {
-  std::ifstream fs(filename);
-  Matrix matrix;
-  std::string line;
-  while (std::getline(fs, line)) {
-    std::istringstream ss(line);
-    int row, col, value;
-    CHECK(!!(ss >> row >> col >> value));
-    matrix.insert(row, col) = value;
-  }
-  return matrix;
-}
