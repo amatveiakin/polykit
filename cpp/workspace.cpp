@@ -708,7 +708,7 @@ int main(int /*argc*/, char *argv[]) {
 
   //   const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
   //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
-  //   }).transposed();
+  //   });
   //   std::cout << dump_to_string(mapping_matrix) << "\n";
   //   const auto kernel_vector = find_kernel_vector(mapping_matrix);
   //   profiler.finish("kernel");

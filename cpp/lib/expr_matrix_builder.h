@@ -12,7 +12,7 @@ namespace internal {
 using SparseElement = std::pair<int, int>;  // (row/col, value)
 
 Matrix make_matrix(
-  const std::vector<std::vector<SparseElement>>& sparse_rows, int num_cols
+  const std::vector<std::vector<SparseElement>>& sparse_cols, int num_rows
 );
 }  // namespace internal
 
@@ -31,7 +31,7 @@ public:
   }
 
   Matrix make_matrix() const {
-    return internal::make_matrix(sparse_rows_, monoms_.size());
+    return internal::make_matrix(sparse_cols_, monoms_.size());
   }
 
 private:
@@ -39,58 +39,58 @@ private:
   using KeyT = CompactVariant<typename ExprTs::ObjectT...>;
 
   void add_expr_impl(const ExprTs&... expressions) {
-    std::vector<SparseElement> row;
-    add_columns<0>(row, expressions...);
-    sparse_rows_.push_back(std::move(row));
+    std::vector<SparseElement> col;
+    add_rows<0>(col, expressions...);
+    sparse_cols_.push_back(std::move(col));
   }
 
   template<std::size_t Idx, typename Head, typename... Tail>
-  void add_columns(std::vector<SparseElement>& row, const Head& head, const Tail&... tail) {
+  void add_rows(std::vector<SparseElement>& col, const Head& head, const Tail&... tail) {
     for (const auto& [term, coeff] : head) {
-      row.push_back({monoms_.index(KeyT{std::in_place_index<Idx>, term}), coeff});
+      col.push_back({monoms_.index(KeyT{std::in_place_index<Idx>, term}), coeff});
     }
-    add_columns<Idx + 1>(row, tail...);
+    add_rows<Idx + 1>(col, tail...);
   }
   template<std::size_t Idx>
-  void add_columns(std::vector<SparseElement>&) {}
+  void add_rows(std::vector<SparseElement>&) {}
 
   Enumerator<KeyT> monoms_;
 
-  // For each row: for each non-zero value: (column, value)
-  std::vector<std::vector<SparseElement>> sparse_rows_;
+  // For each col: for each non-zero value: (row, value)
+  std::vector<std::vector<SparseElement>> sparse_cols_;
 };
 
 template<typename ExprT>
 class ExprVectorMatrixBuilder {
 public:
   void add_expr(const std::vector<ExprT>& expressions) {
-    auto row = make_row(expressions);
-    sparse_rows_.push_back(std::move(row));
+    auto col = make_col(expressions);
+    sparse_cols_.push_back(std::move(col));
   }
 
   Matrix make_matrix() const {
-    return internal::make_matrix(sparse_rows_, monoms_.size());
+    return internal::make_matrix(sparse_cols_, monoms_.size());
   }
 
 private:
   using SparseElement = internal::SparseElement;
   using KeyT = std::pair<int, typename ExprT::ObjectT>;
 
-  std::vector<SparseElement> make_row(const std::vector<ExprT>& expressions) {
-    std::vector<SparseElement> row;
+  std::vector<SparseElement> make_col(const std::vector<ExprT>& expressions) {
+    std::vector<SparseElement> col;
     for (const int expr_idx : range(expressions.size())) {
       const auto& expr = expressions.at(expr_idx);
       for (const auto& [term, coeff] : expr) {
-        row.push_back({monoms_.index(KeyT{expr_idx, term}), coeff});
+        col.push_back({monoms_.index(KeyT{expr_idx, term}), coeff});
       }
     };
-    return row;
+    return col;
   }
 
   Enumerator<KeyT> monoms_;
 
-  // For each row: for each non-zero value: (column, value)
-  std::vector<std::vector<SparseElement>> sparse_rows_;
+  // For each col: for each non-zero value: (row, value)
+  std::vector<std::vector<SparseElement>> sparse_cols_;
 };
 
 

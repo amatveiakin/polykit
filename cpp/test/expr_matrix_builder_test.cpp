@@ -36,9 +36,10 @@ TEST(ExprMatrixBuilderTest, SingleType) {
   EXPECT_MATRIX_EQ(
     matrix_builder.make_matrix(),
     matrix({
-      { 0,  0,  1,  1 },
-      { 0,  1,  0,  1 },
-      { 1, -1,  0,  0 },
+      { 0,  0,  1 },
+      { 0,  1, -1 },
+      { 1,  0,  0 },
+      { 1,  1,  0 }
     })
   );
 }
@@ -51,14 +52,11 @@ TEST(ExprMatrixBuilderTest, TwoOfSameTypes) {
   EXPECT_MATRIX_EQ(
     matrix_builder.make_matrix(),
     matrix({
-      // Initially we get:
-      //   { 1,  0,  0,  1,  0 },
-      //   { 0,  1,  0,  0,  1 },
-      //   { 0,  0,  1,  0, -1 },
-      // but the columns are deduplicated in `make_matrix`.
-      { 0,  0,  0,  1 },
-      { 0,  1,  1,  0 },
-      { 1, -1,  0,  0 },
+      // Initially we get a larger matrix, but `make_matrix` deduplicates rows.
+      { 0,  0,  1 },
+      { 0,  1, -1 },
+      { 0,  1,  0 },
+      { 1,  0,  0 },
     })
   );
 }
@@ -70,14 +68,12 @@ TEST(ExprMatrixBuilderTest, ThreeOfSameTypes) {
   EXPECT_MATRIX_EQ(
     matrix_builder.make_matrix(),
     matrix({
-      // Initially we get:
-      //   { 1,  0,  0,  1,  0, -1,  0 },
-      //   { 0,  1,  0,  0,  1, -1,  0 },
-      //   { 0,  0,  1,  0, -1,  1,  1 },
-      // but the columns are deduplicated in `make_matrix`.
-      { -1,  0,  0,  0,  1, },
-      { -1,  0,  1,  1,  0, },
-      {  1,  1, -1,  0,  0, },
+      // Initially we get a larger matrix, but `make_matrix` deduplicates rows.
+      { -1, -1,  1 },
+      {  0,  0,  1 },
+      {  0,  1, -1 },
+      {  0,  1,  0 },
+      {  1,  0,  0 },
     })
   );
 }
@@ -91,9 +87,10 @@ TEST(ExprMatrixBuilderTest, DifferentTypes) {
   EXPECT_MATRIX_EQ(
     matrix_builder.make_matrix(),
     matrix({
-      { 0,  0,  0,  1 },
-      { 0,  1,  1,  0 },
-      { 1, -1,  0,  0 },
+      { 0,  0,  1 },
+      { 0,  1, -1 },
+      { 0,  1,  0 },
+      { 1,  0,  0 },
     })
   );
 }
@@ -107,9 +104,11 @@ TEST(ExprMatrixBuilderTest, MixedTypes) {
   EXPECT_MATRIX_EQ(
     matrix_builder.make_matrix(),
     matrix({
-      { -1,  0,  0,  0,  1, },
-      { -1,  0,  1,  1,  0, },
-      {  1,  1, -1,  0,  0, },
+      { -1, -1,  1 },
+      {  0,  0,  1 },
+      {  0,  1, -1 },
+      {  0,  1,  0 },
+      {  1,  0,  0 },
     })
   );
 }

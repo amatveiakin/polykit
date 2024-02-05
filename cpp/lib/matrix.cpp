@@ -90,28 +90,28 @@ static bool sparse_vector_less(
 }
 
 Matrix sort_unique_rows(const Matrix& matrix) {
-  return sort_unique_cols(matrix.transposed()).transposed();
+  std::vector<std::vector<std::pair<int, int>>> rows(matrix.rows());
+  for (const auto& t : matrix.as_triplets()) {
+    rows[t.row].push_back({t.col, t.value});
+  }
+  for (auto& colvalues : rows) {
+    absl::c_sort(colvalues);
+  }
+  auto sorted_rows = sorted(rows, sparse_vector_less);
+  keep_unique_sorted(sorted_rows);
+  absl::flat_hash_map<std::pair<int, int>, int> triplets;
+  int row = 0;
+  for (const auto& colvalues : sorted_rows) {
+    for (const auto& [col, value] : colvalues) {
+      triplets[{row, col}] = value;
+    }
+    ++row;
+  }
+  return Matrix(std::pair{row, matrix.cols()}, std::move(triplets));
 }
 
 Matrix sort_unique_cols(const Matrix& matrix) {
-  std::vector<std::vector<std::pair<int, int>>> cols(matrix.cols());
-  for (const auto& t : matrix.as_triplets()) {
-    cols[t.col].push_back({t.row, t.value});
-  }
-  for (auto& rowvalues : cols) {
-    absl::c_sort(rowvalues);
-  }
-  auto sorted_cols = sorted(cols, sparse_vector_less);
-  keep_unique_sorted(sorted_cols);
-  absl::flat_hash_map<std::pair<int, int>, int> triplets;
-  int col = 0;
-  for (const auto& rowvalues : sorted_cols) {
-    for (const auto& [row, value] : rowvalues) {
-      triplets[{row, col}] = value;
-    }
-    ++col;
-  }
-  return Matrix(std::pair{matrix.rows(), col}, std::move(triplets));
+  return sort_unique_rows(matrix.transposed()).transposed();
 }
 
 static std::string matrix_header(const Matrix& matrix) {
