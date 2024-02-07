@@ -224,3 +224,15 @@ Matrix load_triplets(const std::string& filename) {
   }
   return matrix;
 }
+
+std::vector<std::vector<int>> load_bracketed_vectors(const std::string& filename) {
+  std::ifstream fs(filename);
+  std::string line;
+  std::getline(fs, line);
+  trim(line);
+  CHECK(line.front() == '[' && line.back() == ']');
+  line = line.substr(1, line.size() - 2);
+  return mapped(split(line, ';'), [](const std::string& vec) {
+    return mapped(split(vec, ','), [](const std::string& x) { return std::stoi(x); });
+  });
+}

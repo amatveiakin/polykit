@@ -105,3 +105,6 @@ void save_triplets(const std::string& filename, const Matrix& matrix);
 
 // Loads matrix stored by `save_triplets`.
 Matrix load_triplets(const std::string& filename);
+
+// Reads vector written as `[a11, a12, ...; a21, a22, ...; ...]`.
+std::vector<std::vector<int>> load_bracketed_vectors(const std::string& filename);

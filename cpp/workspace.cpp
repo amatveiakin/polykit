@@ -763,40 +763,69 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
+  // const int weight = 5;
+  // const int dimension = 3;
+  // for (const int num_points : range_incl(5, 8)) {
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   Profiler profiler;
+  //   const auto space = co_space(weight, 2, [&](const int w) {
+  //     const auto sp = w == 1
+  //       ? GrFx(dimension, points)
+  //       : CGrL_test_space(w, dimension, points);
+  //     const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+  //     // return normalize_space_remove_consecutive(spl, dimension, num_points);
+  //     return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
+  //   });
+  //   profiler.finish("space");
+  //
+  //   const auto base_name = absl::StrCat("cgrl", weight, "_d", dimension, "_p", num_points);
+  //   const auto dir_path = "/mnt/c/Andrei/polylog/matrices/";
+  //   const auto full_matrix = space_matrix(space, identity_function);
+  //   const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
+  //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   });
+  //   profiler.finish("matrix");
+  //   // save_triplets(absl::StrCat(dir_path, base_name, "_all.txt"), full_matrix);
+  //   save_triplets(absl::StrCat(dir_path, base_name, ".txt"), mapping_matrix);
+  //   profiler.finish("dump");
+  //   std::cout << dump_to_string(full_matrix) << "\n";
+  //   std::cout << dump_to_string(mapping_matrix) << "\n";
+  //   std::cout << "Done: d=" << dimension << ", w=" << weight << ", p=" << num_points << "\n";
+  //
+  //   // const auto ranks = space_mapping_ranks(space, identity_function, [](const auto& expr) {
+  //   //   return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
+  //   // });
+  //   // profiler.finish("ranks");
+  //   // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+  //   // std::cout << to_string(ranks) << "\n";
+  // }
+
+
   const int weight = 5;
   const int dimension = 3;
-  for (const int num_points : range_incl(5, 8)) {
-    const auto points = to_vector(range_incl(1, num_points));
-    Profiler profiler;
-    const auto space = co_space(weight, 2, [&](const int w) {
-      const auto sp = w == 1
-        ? GrFx(dimension, points)
-        : CGrL_test_space(w, dimension, points);
-      const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
-      // return normalize_space_remove_consecutive(spl, dimension, num_points);
-      return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
-    });
-    profiler.finish("space");
-
-    const auto base_name = absl::StrCat("cgrl", weight, "_d", dimension, "_p", num_points);
-    const auto dir_path = "/mnt/c/Andrei/polylog/matrices/";
-    const auto full_matrix = space_matrix(space, identity_function);
-    const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
-      return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
-    });
-    profiler.finish("matrix");
-    // save_triplets(absl::StrCat(dir_path, base_name, "_all.txt"), full_matrix);
-    save_triplets(absl::StrCat(dir_path, base_name, ".txt"), mapping_matrix);
-    profiler.finish("dump");
-    std::cout << dump_to_string(full_matrix) << "\n";
-    std::cout << dump_to_string(mapping_matrix) << "\n";
-    std::cout << "Done: d=" << dimension << ", w=" << weight << ", p=" << num_points << "\n";
-
-    // const auto ranks = space_mapping_ranks(space, identity_function, [](const auto& expr) {
-    //   return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
-    // });
-    // profiler.finish("ranks");
-    // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
-    // std::cout << to_string(ranks) << "\n";
+  const int num_points = 6;
+  const auto points = to_vector(range_incl(1, num_points));
+  const auto space = co_space(weight, 2, [&](const int w) {
+    const auto sp = w == 1
+      ? GrFx(dimension, points)
+      : CGrL_test_space(w, dimension, points);
+    const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+    return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
+  });
+  const auto dir_path = "/mnt/c/Andrei/polylog/cgrl5_solutions/";
+  const auto file_path = absl::StrCat(dir_path, "dp3_p", num_points, "_ns.txt");
+  const auto& solutions = load_bracketed_vectors(file_path);
+  // std::cout << solutions.size() << "\n";
+  for (const auto& solution : solutions) {
+    const auto expr = sum(mapped(zip(solution, space), [](const auto& pair) {
+      const auto [coeff, expr] = pair;
+      return coeff * expr;
+    }));
+    std::cout << expr.annotations() << "\n";
+    CHECK(ncomultiply(expr).is_zero());
+    CHECK(keep_non_weakly_separated(expr).is_zero());
+    // std::cout << expr;
+    // std::cout << ncomultiply(expr);
+    // std::cout << keep_non_weakly_separated(expr);
   }
 }
