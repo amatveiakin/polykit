@@ -6,9 +6,8 @@
    accessible as `bazel` (installing Bazelisk from brew or choco should do this
    automatically; if building from go sources, you could run
    `ln -s /root/go/bin/bazelisk /root/go/bin/bazel` afterwards).
-2. Install a C++ compiler with C++17 support.
-   I've tested with Clang 10.0.0 and MSVC 14.0 (C/C++ compiler version
-   19.27.29112), but other modern compilers should work as well.
+2. Install a C++ compiler with C++23 support. I've tested with Clang 14.0.0, but
+   other modern compilers should work as well.
 3. Linux/MacOS: install TBB (in Ubuntu: `sudo apt-get install libtbb-dev`).
    Alternative: set `PARALLELISM_IMPLEMENTATION` to 0 or 2, see
    cpp/compilation-macros.md.
