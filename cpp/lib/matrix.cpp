@@ -225,8 +225,10 @@ Matrix load_triplets(const std::string& filename) {
   return matrix;
 }
 
+// TODO: Support loading compressed files.
 std::vector<std::vector<int>> load_bracketed_vectors(const std::string& filename) {
   std::ifstream fs(filename);
+  CHECK(fs.good());
   std::string line;
   std::getline(fs, line);
   trim(line);

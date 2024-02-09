@@ -74,6 +74,10 @@ Gr_Space GrL2(int dimension, const std::vector<int>& args) {
   return GrL_core(2, dimension, args, false, 1);  // equivalent to zero fixed points
 }
 
+Gr_Space GrL2_unreduced(int dimension, const std::vector<int>& args) {
+  return GrL_core(2, dimension, args, false, 0);
+}
+
 Gr_Space GrL3(int dimension, const std::vector<int>& args) {
   const int weight = 3;
   Gr_Space ret = GrL_core(weight, dimension, args, true, 0);
@@ -188,6 +192,24 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points) {
   return space;
 }
 
+Gr_Space CGrL3_Dim3_test_space_unreduced(const std::vector<int>& points) {
+  const int weight = 3;
+  Gr_Space space;
+  for (const int bonus_point_idx : range(points.size())) {
+    const auto bonus_args = choose_indices(points, {bonus_point_idx});
+    const auto main_args = removed_index(points, bonus_point_idx);
+    append_vector(space, mapped(CL(weight, main_args), [&](const auto& expr) {
+      return pullback(expr, bonus_args);
+    }));
+  }
+  {
+    for (const auto& args : combinations(points, 6)) {
+      space.push_back(GLiVec(weight, args));
+    }
+  }
+  return space;
+}
+
 Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) {
   Gr_Space space;
   for (const int bonus_point_idx : range(points.size())) {
@@ -208,7 +230,6 @@ Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) 
   return space;
 }
 
-// TODO: Consider always using plucker dual when dimension > num_points/2
 Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& points) {
   if (dimension >= points.size() - 1) {
     return {};

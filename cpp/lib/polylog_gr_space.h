@@ -18,6 +18,7 @@ Gr_Space GrL_core(
   bool include_one_minus_cross_ratio, int num_fixed_points);
 Gr_Space GrL1(int dimension, const std::vector<int>& args);
 Gr_Space GrL2(int dimension, const std::vector<int>& args);
+Gr_Space GrL2_unreduced(int dimension, const std::vector<int>& args);
 Gr_Space GrL3(int dimension, const std::vector<int>& args);
 Gr_Space GrL4_Dim3(const std::vector<int>& args);
 Gr_Space GrL(int weight, int dimension, const std::vector<int>& args);
@@ -27,6 +28,7 @@ Gr_NCoSpace GrLArnold2(int dimension, const std::vector<int>& args);
 // Suffix "test_space" stands for the fact that these are candidate spaces likely to be missing some functions.
 Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points);
 Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points);
+Gr_Space CGrL3_Dim3_test_space_unreduced(const std::vector<int>& points);
 Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points);
 Gr_Space CGrL_test_space(int weight, int dimension, const std::vector<int>& points);
 
