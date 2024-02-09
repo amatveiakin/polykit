@@ -76,15 +76,6 @@ void sort_two(T& a, T& b) {
   }
 }
 
-// TODO(C++20): Replace with std::identity.
-struct identity_function_t {
-  template<class T>
-  constexpr T&& operator()(T&& t) const noexcept {
-    return std::forward<T>(t);
-  }
-};
-constexpr identity_function_t identity_function;
-
 // For using together with `mapped`.
 template<typename T>
 struct convert_to_t {

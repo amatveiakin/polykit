@@ -135,8 +135,8 @@ TEST(PolylogSpaceTest, LARGE_CLIsClusterL) {
       const auto points = seq_incl(1, num_points);
       const auto cl = mapped(CL(weight, points), DISAMBIGUATE(to_lyndon_basis));
       const auto l = mapped(L(weight, points), DISAMBIGUATE(to_lyndon_basis));
-      const int cl_rank = space_rank(cl, identity_function);
-      const auto l_mapping_ranks = space_mapping_ranks(l, identity_function, DISAMBIGUATE(keep_non_weakly_separated));
+      const int cl_rank = space_rank(cl, std::identity{});
+      const auto l_mapping_ranks = space_mapping_ranks(l, std::identity{}, DISAMBIGUATE(keep_non_weakly_separated));
       EXPECT_EQ(cl_rank, l_mapping_ranks.kernel()) << "w=" << weight << ", p=" << num_points;
     }
   }
@@ -190,7 +190,7 @@ TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
     cartesian_product(cl2, cl1, cl1),
     applied(DISAMBIGUATE(acoproduct))
   );
-  const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   // Note. Testing against previously computed result; no alternative proof known.
   EXPECT_EQ(ranks.intersected(), 42);
 }
@@ -211,7 +211,7 @@ TEST(PolylogSpaceTest, LARGE_FixVarDeltaQuasiProjectionKernelRankIsBinomialSum) 
       }
       const auto ranks = space_mapping_ranks(
         space,
-        identity_function,  // note: no Lyndon
+        std::identity{},  // note: no Lyndon
         [](const auto& expr) {
           return to_lyndon_basis(expr.filtered([&](const std::vector<Delta>& term) {
             return count_var(term, fixed_b) == 1;  // note: not equivalent to projection on fixed_b

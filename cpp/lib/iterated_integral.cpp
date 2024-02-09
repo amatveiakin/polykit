@@ -41,7 +41,7 @@ static ResultT IAltVec_wrapper(const std::vector<X>& points, const ProjectorT& p
 }
 
 DeltaExpr IAltVec(const XArgs& points) {
-  return IAltVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
+  return IAltVec_wrapper<DeltaExpr>(points.as_x(), std::identity{});
 }
 
 ProjectionExpr IAltVecPr(const XArgs& points, DeltaProjector projector) {
@@ -80,7 +80,7 @@ static ResultT IVec_wrapper(const std::vector<X>& points, const ProjectorT& proj
 }
 
 DeltaExpr IVec(const XArgs& points) {
-  return IVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
+  return IVec_wrapper<DeltaExpr>(points.as_x(), std::identity{});
 }
 
 ProjectionExpr IVecPr(const XArgs& points, DeltaProjector projector) {
@@ -96,7 +96,7 @@ ResultT CorrVec_wrapper(const std::vector<X>& points, const ProjectorT& projecto
 }
 
 DeltaExpr CorrVec(const XArgs& points) {
-  return CorrVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
+  return CorrVec_wrapper<DeltaExpr>(points.as_x(), std::identity{});
 }
 
 ProjectionExpr CorrVecPr(const XArgs& points, DeltaProjector projector) {
@@ -117,7 +117,7 @@ ResultT CorrAltVec_wrapper(const std::vector<X>& points, const ProjectorT& proje
 }
 
 DeltaExpr CorrAltVec(const XArgs& points) {
-  return CorrAltVec_wrapper<DeltaExpr>(points.as_x(), identity_function);
+  return CorrAltVec_wrapper<DeltaExpr>(points.as_x(), std::identity{});
 }
 
 ProjectionExpr CorrAltVecPr(const XArgs& points, DeltaProjector projector) {

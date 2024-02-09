@@ -125,7 +125,7 @@ int main(int /*argc*/, char *argv[]) {
   //     return ncomultiply(ncoproduct(exprs));
   //   });
   //   profiler.finish("spaces");
-  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //   profiler.finish("ranks");
   //   std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
   // }
@@ -147,7 +147,7 @@ int main(int /*argc*/, char *argv[]) {
   //     return ncomultiply(ncoproduct(exprs));
   //   });
   //   profiler.finish("spaces");
-  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //   profiler.finish("ranks");
   //   std::cout << "w=" << weight << ", #f'=" << num_prime << ": " << to_string(ranks) << "\n";
   // // }
@@ -240,7 +240,7 @@ int main(int /*argc*/, char *argv[]) {
   //         DISAMBIGUATE(ncoproduct)
   //       );
   //       profiler.finish("spaces");
-  //       const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //       const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //       profiler.finish("ranks");
   //       const int result = ranks.a() - ranks.intersected();
   //       std::cout << "w=" << weight << ", d=" << dimension << ", p=" << num_points << ": " << result << "\n";
@@ -449,7 +449,7 @@ int main(int /*argc*/, char *argv[]) {
   //   // GrQLi1(2)(1,3,4,6) - GrQLi1(4)(3,5,6,2),
   //   // GrQLi1(2)(1,3,5,6) - GrQLi1(5)(3,4,6,2),
   // };
-  // std::cout << space_rank(space, identity_function) << "\n";
+  // std::cout << space_rank(space, std::identity{}) << "\n";
 
 
   // struct Args {
@@ -512,7 +512,7 @@ int main(int /*argc*/, char *argv[]) {
   //       - GrQLiVec(1, args_b.bonus_points, b_log_points)
   //     );
   //   }
-  //   const auto rank = space_rank(space, identity_function);
+  //   const auto rank = space_rank(space, std::identity{});
   //   const int corank = space.size() - rank;
   //   if (corank > 0) {
   //     total_interesting_groups++;
@@ -570,14 +570,14 @@ int main(int /*argc*/, char *argv[]) {
   // const auto space = GrL1(2, points);
   // const auto s2 = space_ncoproduct(space, space);
   // std::cout << dump_to_string(space) << "\n";
-  // std::cout << space_rank(s2, identity_function) << "\n";
+  // std::cout << space_rank(s2, std::identity{}) << "\n";
   // // for (const auto& expr : s2) {
   // //   std::cout << expr;
   // //   std::cout << "\n---------------\n";
   // //   std::cout << substitute_variables_1_based(expr, {5,4,3,2,1});
   // //   std::cout << "\n===============\n";
   // // }
-  // const auto ranks = space_mapping_ranks(s2, identity_function, [](const auto& expr) {
+  // const auto ranks = space_mapping_ranks(s2, std::identity{}, [](const auto& expr) {
   //   return std::tuple {
   //     + expr
   //     + substitute_variables_1_based(expr, {5,4,3,2,1})
@@ -619,7 +619,7 @@ int main(int /*argc*/, char *argv[]) {
   //   ncoproduct(Log(5,1,2,3), Log(1,2,3,4)),
   //   ncoproduct(Log(5,1,2,3), Log(2,3,4,5)),
   // };
-  // std::cout << space_rank(snew, identity_function) << "\n";
+  // std::cout << space_rank(snew, std::identity{}) << "\n";
 
   // const auto snew = std::vector{
   //   ncoproduct(Log(1,2,3,4), Log(2,3,4,5)),
@@ -650,7 +650,7 @@ int main(int /*argc*/, char *argv[]) {
   //     std::cout << expr;
   //   }
   // }
-  // // std::cout << space_rank(snew, identity_function) << "\n";
+  // // std::cout << space_rank(snew, std::identity{}) << "\n";
 
 
   // const auto compute = [](int weight, int dimension, int num_points) {
@@ -698,7 +698,7 @@ int main(int /*argc*/, char *argv[]) {
   //     }
   //   });
   //   profiler.finish("space");
-  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(std::identity{}), [](const auto& expr) {
   //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
   //   });
   //   profiler.finish("ranks");
@@ -725,7 +725,7 @@ int main(int /*argc*/, char *argv[]) {
   //       DISAMBIGUATE(ncomultiply)
   //     ),
   //     std::vector{equation},
-  //     identity_function
+  //     std::identity{}
   //   )) << "\n";
   //   std::cout << to_string(space_venn_ranks(
   //     mapped(
@@ -733,7 +733,7 @@ int main(int /*argc*/, char *argv[]) {
   //       DISAMBIGUATE(ncomultiply)
   //     ),
   //     std::vector{equation},
-  //     identity_function
+  //     std::identity{}
   //   )) << "\n";
   //   // std::cout << dump_to_string(kernel_vector) << "\n";
   // }
@@ -754,7 +754,7 @@ int main(int /*argc*/, char *argv[]) {
   //     }
   //   });
   //   profiler.finish("space");
-  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(identity_function), [](const auto& expr) {
+  //   const auto ranks = space_mapping_ranks(space, DISAMBIGUATE(std::identity{}), [](const auto& expr) {
   //     return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
   //   });
   //   profiler.finish("ranks");
@@ -774,13 +774,13 @@ int main(int /*argc*/, char *argv[]) {
   //       : CGrL_test_space(w, dimension, points);
   //     const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
   //     // return normalize_space_remove_consecutive(spl, dimension, num_points);
-  //     return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
+  //     return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), std::identity{});
   //   });
   //   profiler.finish("space");
   //
   //   // const auto base_name = absl::StrCat("cgrl", weight, "_d", dimension, "_p", num_points);
   //   // const auto dir_path = "/mnt/c/Andrei/polylog/matrices/";
-  //   // const auto full_matrix = space_matrix(space, identity_function);
+  //   // const auto full_matrix = space_matrix(space, std::identity{});
   //   // const auto mapping_matrix = space_matrix(space, [](const auto& expr) {
   //   //   return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
   //   // });
@@ -821,7 +821,7 @@ int main(int /*argc*/, char *argv[]) {
   //
   //   const auto base_name = absl::StrCat("alt_cgrl", weight, "_d", dimension, "_p", num_points);
   //   const auto dir_path = "/mnt/c/Andrei/polylog/matrices/";
-  //   const auto full_matrix = space_matrix(space, identity_function);
+  //   const auto full_matrix = space_matrix(space, std::identity{});
   //   const auto mapping_matrix = space_matrix(space, DISAMBIGUATE(ncomultiply));
   //   profiler.finish("matrix");
   //   save_triplets(absl::StrCat(dir_path, base_name, ".txt"), mapping_matrix);
@@ -830,7 +830,7 @@ int main(int /*argc*/, char *argv[]) {
   //   std::cout << dump_to_string(mapping_matrix) << "\n";
   //   std::cout << "Done: d=" << dimension << ", w=" << weight << ", p=" << num_points << "\n";
   //
-  //   // const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
+  //   // const auto ranks = space_mapping_ranks(space, std::identity{}, DISAMBIGUATE(ncomultiply));
   //   // profiler.finish("ranks");
   //   // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
   //   // std::cout << to_string(ranks) << "\n";
@@ -847,7 +847,7 @@ int main(int /*argc*/, char *argv[]) {
   //     ? GrFx(dimension, points)
   //     : CGrL_test_space(w, dimension, points);
   //   const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
-  //   return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), identity_function);
+  //   return space_basis(normalize_space_remove_consecutive(spl, dimension, num_points), std::identity{});
   // });
   // const auto dir_path = "/mnt/c/Andrei/polylog/cgrl5_solutions/";
   // const auto file_path = absl::StrCat(dir_path, "dp3_p", num_points, "_ns.txt");

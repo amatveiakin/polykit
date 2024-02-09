@@ -789,7 +789,7 @@ public:
   }
   template<typename SourceLinearT>
   Linear& copy_annotations(const SourceLinearT& other) {
-    add_annotations(other, 1, identity_function);
+    add_annotations(other, 1, std::identity{});
     return *this;
   }
   template<typename SourceLinearT, typename F>
@@ -836,12 +836,12 @@ public:
 
   Linear& operator+=(const Linear& other) {
     main_ += other.main_;
-    add_annotations(other, 1, identity_function);
+    add_annotations(other, 1, std::identity{});
     return *this;
   }
   Linear& operator-=(const Linear& other) {
     main_ -= other.main_;
-    add_annotations(other, -1, identity_function);
+    add_annotations(other, -1, std::identity{});
     return *this;
   }
   Linear& operator*=(int scalar) {

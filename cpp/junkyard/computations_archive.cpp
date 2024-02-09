@@ -60,7 +60,7 @@ void computations_archive() {
   //   const auto ranks = space_venn_ranks(
   //     space_comult,
   //     second_space,
-  //     identity_function
+  //     std::identity{}
   //   );
   //   std::cout << "p=" << num_points << ": " << to_string(ranks) << "\n";
   // }
@@ -83,7 +83,7 @@ void computations_archive() {
   //   );
   //   const auto ranks = space_mapping_ranks(
   //     space,
-  //     identity_function,
+  //     std::identity{},
   //     DISAMBIGUATE(ncomultiply)
   //   );
   //   // const auto lambda3_rank = space_rank(
@@ -146,7 +146,7 @@ void computations_archive() {
   // const auto ranks = space_venn_ranks(
   //   space_words,
   //   space_l,
-  //   identity_function
+  //   std::identity{}
   // );
   // std::cout << to_string(ranks) << "\n";
 
@@ -177,7 +177,7 @@ void computations_archive() {
   // const auto ranks = space_venn_ranks(
   //   space_words,
   //   space_l,
-  //   identity_function
+  //   std::identity{}
   // );
   // std::cout << to_string(ranks) << "\n";
 
@@ -190,7 +190,7 @@ void computations_archive() {
   //       mapped(points_raw, [](const int idx) { return -X(idx); })
   //     );
   //     const auto space = mapped(L(weight, points_inv), DISAMBIGUATE(to_lyndon_basis));
-  //     const auto ranks = space_mapping_ranks(space, identity_function, [](const auto& expr) {
+  //     const auto ranks = space_mapping_ranks(space, std::identity{}, [](const auto& expr) {
   //       return std::tuple{
   //         keep_non_weakly_separated_inv(expr),
   //         // ncomultiply(expr, {2,2}),
@@ -227,7 +227,7 @@ void computations_archive() {
   // //     space_b
   // //   ),
   // //   // space_a,
-  // //   identity_function,
+  // //   std::identity{},
   // //   [](const auto& expr) {
   // //     if (expr.is_zero()) {
   // //       return std::tuple{
@@ -255,7 +255,7 @@ void computations_archive() {
   //
   // // const auto ranks = space_mapping_ranks(
   // //   mapped(space_a, DISAMBIGUATE(to_lyndon_basis)),
-  // //   identity_function,
+  // //   std::identity{},
   // //   DISAMBIGUATE(keep_non_weakly_separated_inv)
   // //   // [&](const auto& expr) {
   // //   //   return std::tuple{
@@ -269,7 +269,7 @@ void computations_archive() {
   // // const auto ranks = space_venn_ranks(
   // //   mapped(space_a, [](const auto& expr) { return ncomultiply(expr, {2,2}); }),
   // //   space_b,
-  // //   identity_function
+  // //   std::identity{}
   // // );
   // // std::cout << to_string(ranks) << "\n";
   //
@@ -295,7 +295,7 @@ void computations_archive() {
   // // }
   // const auto ranks = space_mapping_ranks(
   //   mapped(space, DISAMBIGUATE(to_lyndon_basis)),
-  //   identity_function,
+  //   std::identity{},
   //   [&](const auto& expr) {
   //     return std::tuple{
   //       // keep_non_weakly_separated_inv(expr),
@@ -327,14 +327,14 @@ void computations_archive() {
   //   const auto ranks = space_venn_ranks(
   //     space_words,
   //     space_l,
-  //     identity_function
+  //     std::identity{}
   //   );
   //   std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
   //   const auto new_space = mapped(b2_generators, [&](const auto& gen) {
   //     return expand_into_glued_pairs(NLog(weight, gen));
   //   });
-  //   CHECK(space_contains(space_words, new_space, identity_function));
-  //   CHECK(space_contains(space_l, new_space, identity_function));
+  //   CHECK(space_contains(space_words, new_space, std::identity{}));
+  //   CHECK(space_contains(space_l, new_space, std::identity{}));
   //   std::cout << "Contains: OK\n";
   // }
 
@@ -350,7 +350,7 @@ void computations_archive() {
   //     space = mapped_parallel(space, DISAMBIGUATE(to_lyndon_basis));
   //     const auto ranks = space_mapping_ranks(
   //       space,
-  //       identity_function,
+  //       std::identity{},
   //       DISAMBIGUATE(keep_non_weakly_separated_inv)
   //     );
   //     std::cout << "p=" << args.size() << "(" << num_vars << "), w=" << weight << ": ";
@@ -419,8 +419,8 @@ void computations_archive() {
   //   const auto a = to_lyndon_basis(typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4}));
   //   const auto b = to_lyndon_basis(typeC_QLi(weight, {x2,x3,x4,-x1,-x2,-x3,-x4,x1}));
   //   std::cout << "w=" << weight << "\n";
-  //   std::cout << "diff lies in = " << space_contains(space, {a - b}, identity_function) << "\n";
-  //   std::cout << "sum lies in = " << space_contains(space, {a + b}, identity_function) << "\n";
+  //   std::cout << "diff lies in = " << space_contains(space, {a - b}, std::identity{}) << "\n";
+  //   std::cout << "sum lies in = " << space_contains(space, {a + b}, std::identity{}) << "\n";
   //   std::cout << "\n";
   // }
 
@@ -473,7 +473,7 @@ void computations_archive() {
   // profiler.finish("lyndon");
   // const auto expr = to_lyndon_basis(CGrLiVec(weight, points));
   // profiler.finish("expr");
-  // const auto ranks = space_venn_ranks(space, {expr}, identity_function);
+  // const auto ranks = space_venn_ranks(space, {expr}, std::identity{});
   // profiler.finish("ranks");
   // std::cout << to_string(ranks) << "\n";
 
@@ -686,7 +686,7 @@ void computations_archive() {
   //   }
   // );
   // profiler.finish("space");
-  // const auto rank = space_rank(space, identity_function);
+  // const auto rank = space_rank(space, std::identity{});
   // profiler.finish("rank");
   // std::cout << rank << "\n";
 
@@ -817,7 +817,7 @@ void computations_archive() {
   //   ncomultiply(ChernCocycle(3, 2, {1,2,3,4,5,6})),
   //   ncomultiply(ChernCocycle(3, 3, {1,2,3,4,5,6})),
   // };
-  // const auto ranks = space_venn_ranks(space, {pair}, identity_function);
+  // const auto ranks = space_venn_ranks(space, {pair}, std::identity{});
   // std::cout << to_string(ranks) << "\n";
 
 
@@ -1071,7 +1071,7 @@ void computations_archive() {
   // //   );
   // // }
   // // space = mapped(space, DISAMBIGUATE(ncomultiply));
-  // // const auto ranks = space_venn_ranks(space, {cocycle}, identity_function);
+  // // const auto ranks = space_venn_ranks(space, {cocycle}, std::identity{});
   // // std::cout << to_string(ranks) << "\n";
   //
   // const auto frozen_vars = [](int num_points) {
@@ -1178,6 +1178,6 @@ void computations_archive() {
   //   }
   // }
   // space = mapped(space, DISAMBIGUATE(ncomultiply));
-  // const auto ranks = space_venn_ranks(space, {cocycle}, identity_function);
+  // const auto ranks = space_venn_ranks(space, {cocycle}, std::identity{});
   // std::cout << to_string(ranks) << "\n";
 }

@@ -108,7 +108,7 @@ TEST(PolylogSpaceTest, LARGE_L2Fx_contains_GrQLi3) {
       return ncomultiply(GrQLiVec(3, bonus_args, main_args));
     }
   );
-  EXPECT_TRUE(space_contains(space, grqli3_space, identity_function));
+  EXPECT_TRUE(space_contains(space, grqli3_space, std::identity{}));
 }
 
 TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
@@ -123,7 +123,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterL2Fx_contains_R43Sum) {
     DISAMBIGUATE(ncomultiply)
   );
   const auto expr = sum_looped_vec(R_4_3, 5, {1,2,3,4});
-  EXPECT_TRUE(space_contains(space, {expr}, identity_function));
+  EXPECT_TRUE(space_contains(space, {expr}, std::identity{}));
 }
 
 
@@ -184,7 +184,7 @@ TEST_P(GLiVsSpacesTest, CoGrL_contains_GLiExpandedIntoGluedPairs) {
   EXPECT_TRUE(space_contains(
     co_space,
     {expand_into_glued_pairs(expr)},
-    identity_function
+    std::identity{}
   ));
 }
 
@@ -203,7 +203,7 @@ TEST(PolylogSpaceTest, LARGE_GrL3Dim3ProjectionKernelVsOnePointLess) {
     const auto points = seq_incl(1, num_points);
     const auto ranks = space_mapping_ranks(
       mapped(GrL3(3, points), DISAMBIGUATE(to_lyndon_basis)),
-      identity_function,
+      std::identity{},
       [](const auto& expr) {
         return project_on(1, expr);
       }
@@ -220,7 +220,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
   for (const int num_points : range_incl(5, 8)) {
     const auto points = seq_incl(1, num_points);
     const auto co_space = simple_co_CGrL_test_space(weight, dimension, num_points);
-    const auto mapping_ranks = space_mapping_ranks(co_space, identity_function, [](const auto& expr) {
+    const auto mapping_ranks = space_mapping_ranks(co_space, std::identity{}, [](const auto& expr) {
       return std::tuple{ncomultiply(expr), keep_non_weakly_separated(expr)};
     });
     const int cgrl_rank = space_rank(CGrL_test_space(weight, dimension, points), DISAMBIGUATE(to_lyndon_basis));
@@ -238,7 +238,7 @@ TEST(PolylogSpaceTest, LARGE_ClusterGrL3AsKernel) {
     }
   }
   const auto space_product = simple_co_CGrL_test_space(weight, dimension, num_points);
-  const auto ranks = space_venn_ranks(space_lyndon, space_product, identity_function);
+  const auto ranks = space_venn_ranks(space_lyndon, space_product, std::identity{});
   EXPECT_EQ(ranks.intersected(), ...);  // TODO: What is this?
 #endif
 

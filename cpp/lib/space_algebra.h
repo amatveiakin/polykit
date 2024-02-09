@@ -126,5 +126,5 @@ SpaceMappingRanks space_mapping_ranks(const SpaceT& raw_space, const PrepareF& p
 
 template<typename SpaceT>
 SpaceMappingRanks space_ncomultiply_mapping_ranks(const SpaceT& space) {
-  return space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
+  return space_mapping_ranks(space, std::identity{}, DISAMBIGUATE(ncomultiply));
 }

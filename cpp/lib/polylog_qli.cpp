@@ -107,7 +107,7 @@ static ResultT QLi_wrapper(
 }
 
 DeltaExpr QLiVec(int weight, const XArgs& points) {
-  return QLi_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
+  return QLi_wrapper<DeltaExpr>(weight, points.as_x(), std::identity{});
 }
 
 ProjectionExpr QLiVecPr(int weight, const XArgs& points, DeltaProjector projector) {
@@ -130,7 +130,7 @@ static ResultT QLiNeg_wrapper(
 }
 
 DeltaExpr QLiNegVec(int weight, const XArgs& points) {
-  return QLiNeg_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
+  return QLiNeg_wrapper<DeltaExpr>(weight, points.as_x(), std::identity{});
 }
 
 ProjectionExpr QLiNegVecPr(int weight, const XArgs& points, DeltaProjector projector) {
@@ -172,7 +172,7 @@ static ResultT QLiSymm_wrapper(int weight, const std::vector<X>& points, const P
 }
 
 DeltaExpr QLiSymmVec(int weight, const XArgs& points) {
-  return QLiSymm_wrapper<DeltaExpr>(weight, points.as_x(), identity_function);
+  return QLiSymm_wrapper<DeltaExpr>(weight, points.as_x(), std::identity{});
 }
 
 ProjectionExpr QLiSymmVecPr(int weight, const XArgs& points, DeltaProjector projector) {

@@ -176,7 +176,7 @@ int main(int /*argc*/, char *argv[]) {
   //   }
   // }
   // // TEST: co-dimension == 1
-  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+  // std::cout << space_rank(space, std::identity{}) << " (of " << space.size() << ")\n";
 
   // // const std::vector exprs = {a, b, c, d, e, f, g, h, i, j, k, l, x, y, z, u, w, m, n, o};
   // const std::vector exprs = {a, m, n, c, d, e, f, h, i, j, k, l, o};
@@ -191,7 +191,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space_b.push_back(loop_expr_substitute(kind_repr, perm));
   //   }
   //   std::cout << pretty_print_loop_kind_index(kind, true) << ": "
-  //     << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+  //     << to_string(space_venn_ranks(space_a, space_b, std::identity{})) << "\n";
   // }
 
   // Based on: [2,1,4,3][2,1,5,4][2,1,5,7,6]
@@ -315,7 +315,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space.push_back(loop_expr_substitute(expr, concat({1}, rotated_vector(reversed(seq_incl(2, 8)), shift))));
   //   }
   // }
-  // std::cout << space_rank(space, identity_function) << "\n";
+  // std::cout << space_rank(space, std::identity{}) << "\n";
 
   // Kill {8} terms with `sh`:
   const auto ssh = s + cycle(sh, {{6,8},{3,4},{2,5}});
@@ -373,7 +373,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space.push_back(loop_expr_substitute(expr, concat({1}, perm)));
   //   }
   // }
-  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+  // std::cout << space_rank(space, std::identity{}) << " (of " << space.size() << ")\n";
 
   // const auto perms = to_vector(permutations(seq_incl(1, 8)));
   // const std::vector exprs = {wshbtgaf, qbtgaf};
@@ -387,7 +387,7 @@ int main(int /*argc*/, char *argv[]) {
   // const std::vector<LoopExpr> space_b = mapped_parallel(perms, [&](const auto& perm) {
   //   return loop_expr_substitute(kind_repr, perm);
   // });
-  // std::cout << to_string(space_venn_ranks(space_a, space_b, identity_function)) << "\n";
+  // std::cout << to_string(space_venn_ranks(space_a, space_b, std::identity{})) << "\n";
 
   // const auto perms = to_vector(permutations(seq_incl(1, 8)));
   // const std::vector exprs = {b, g, h, m, n, q, r, s, t, w, sh};
@@ -413,7 +413,7 @@ int main(int /*argc*/, char *argv[]) {
   //     return loop_expr_substitute(kind_repr, perm);
   //   });
   //   profiler.finish("exprs");
-  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //   profiler.finish("ranks");
   //   // std::cout << pretty_print_loop_kind_index(kind, true) << ": " << to_string(ranks) << "\n";
   //   std::cout << to_string(ranks) << "\n";
@@ -430,7 +430,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space.push_back(loop_expr_substitute(expr, concat({1}, perm)));
   //   }
   // }
-  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+  // std::cout << space_rank(space, std::identity{}) << " (of " << space.size() << ")\n";
 
   // Apply (abcd + abdc = dbca + dbac) to convert {5}+{6} into {8}+{8}
   // const auto e56 =
@@ -451,7 +451,7 @@ int main(int /*argc*/, char *argv[]) {
   //     space.push_back(loop_expr_substitute(expr, p));
   //   }
   // }
-  // std::cout << space_rank(space, identity_function) << " (of " << space.size() << ")\n";
+  // std::cout << space_rank(space, std::identity{}) << " (of " << space.size() << ")\n";
 
   const auto degenrations = make_degenerations(11, 3);
   for (const auto& degenration : degenrations) {
@@ -487,7 +487,7 @@ int main(int /*argc*/, char *argv[]) {
   //   space_ncoproduct(l2, fx),
   //   DISAMBIGUATE(ncomultiply)
   // );
-  // const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  // const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   // std::cout << to_string(ranks) << "\n";
 
   const auto fx = space_ncoproduct(GrFx(dimension, points));
@@ -502,7 +502,7 @@ int main(int /*argc*/, char *argv[]) {
       return ncomultiply(ncoproduct(exprs));
     });
     profiler.finish("spaces");
-    const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+    const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
     profiler.finish("ranks");
     std::cout << "w=" << weight << ": " << to_string(ranks) << "\n";
   }
@@ -524,7 +524,7 @@ int main(int /*argc*/, char *argv[]) {
   //     return ncomultiply(ncoproduct(exprs));
   //   });
   //   profiler.finish("spaces");
-  //   const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //   const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //   profiler.finish("ranks");
   //   std::cout << "w=" << weight << ", #f'=" << num_prime << ": " << to_string(ranks) << "\n";
   // // }
@@ -617,7 +617,7 @@ int main(int /*argc*/, char *argv[]) {
   //         DISAMBIGUATE(ncoproduct)
   //       );
   //       profiler.finish("spaces");
-  //       const auto ranks = space_venn_ranks(space_a, space_b, identity_function);
+  //       const auto ranks = space_venn_ranks(space_a, space_b, std::identity{});
   //       profiler.finish("ranks");
   //       const int result = ranks.a() - ranks.intersected();
   //       std::cout << "w=" << weight << ", d=" << dimension << ", p=" << num_points << ": " << result << "\n";
