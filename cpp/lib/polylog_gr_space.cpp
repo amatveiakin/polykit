@@ -157,8 +157,7 @@ Gr_NCoSpace GrLArnold2(int dimension, const std::vector<int>& points) {
 Gr_Space CGrL_Dim3_naive_test_space(int weight, const std::vector<int>& points) {
   Gr_Space space;
   for (const int bonus_point_idx : range(points.size())) {
-    const auto bonus_args = choose_indices(points, {bonus_point_idx});
-    const auto main_args = removed_index(points, bonus_point_idx);
+    const auto [bonus_args, main_args] = split_indices(points, {bonus_point_idx});
     append_vector(space, mapped(CL(weight, main_args), [&](const auto& expr) {
       return pullback(expr, bonus_args);
     }));
@@ -175,16 +174,14 @@ Gr_Space CGrL3_Dim3_test_space(const std::vector<int>& points) {
   const int weight = 3;
   Gr_Space space;
   for (const int bonus_point_idx : range(points.size())) {
-    const auto bonus_args = choose_indices(points, {bonus_point_idx});
-    const auto main_args = removed_index(points, bonus_point_idx);
+    const auto [bonus_args, main_args] = split_indices(points, {bonus_point_idx});
     append_vector(space, mapped(CL(weight, main_args), [&](const auto& expr) {
       return pullback(expr, bonus_args);
     }));
   }
   {
     const int fixed_points_idx = 0;
-    const auto fixed_args = choose_indices(points, {fixed_points_idx});
-    const auto var_args_pool = removed_index(points, fixed_points_idx);
+    const auto [fixed_args, var_args_pool] = split_indices(points, {fixed_points_idx});
     for (const auto& var_args : combinations(var_args_pool, 5)) {
       space.push_back(GLiVec(weight, concat(fixed_args, var_args)));
     }
@@ -196,8 +193,7 @@ Gr_Space CGrL3_Dim3_test_space_unreduced(const std::vector<int>& points) {
   const int weight = 3;
   Gr_Space space;
   for (const int bonus_point_idx : range(points.size())) {
-    const auto bonus_args = choose_indices(points, {bonus_point_idx});
-    const auto main_args = removed_index(points, bonus_point_idx);
+    const auto [bonus_args, main_args] = split_indices(points, {bonus_point_idx});
     append_vector(space, mapped(CL(weight, main_args), [&](const auto& expr) {
       return pullback(expr, bonus_args);
     }));
@@ -213,8 +209,7 @@ Gr_Space CGrL3_Dim3_test_space_unreduced(const std::vector<int>& points) {
 Gr_Space CGrL_Dim4_naive_test_space(int weight, const std::vector<int>& points) {
   Gr_Space space;
   for (const int bonus_point_idx : range(points.size())) {
-    const auto bonus_args = choose_indices(points, {bonus_point_idx});
-    const auto main_args = removed_index(points, bonus_point_idx);
+    const auto [bonus_args, main_args] = split_indices(points, {bonus_point_idx});
     append_vector(space, mapped(CGrL_Dim3_naive_test_space(weight, main_args), [&](const auto& expr) {
       return pullback(expr, bonus_args);
     }));
@@ -287,8 +282,7 @@ Gr_Space OldChernGrL(int weight, int dimension, const std::vector<int>& points, 
   Gr_Space space;
   if (dimension > 2) {
     for (const int bonus_point_idx : range(points.size())) {
-      const auto bonus_args = choose_indices(points, {bonus_point_idx});
-      const auto main_args = removed_index(points, bonus_point_idx);
+      const auto [bonus_args, main_args] = split_indices(points, {bonus_point_idx});
       append_vector(space, mapped(OldChernGrL(weight, dimension - 1, main_args, depth), [&](const auto& expr) {
         return pullback(expr, bonus_args);
       }));
