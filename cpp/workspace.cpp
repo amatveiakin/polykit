@@ -890,35 +890,124 @@ int main(int /*argc*/, char *argv[]) {
     return is_totally_weakly_separated(expr);
   });
   profiler.finish("space");
-  std::cout << "Loaded " << solutions.size() << " solutions.\n";
-  std::regex re_6_points(R"(\([0-9]+,[0-9]+,[0-9]+,[0-9]+,[0-9]+,[0-9]+\))");
-  for (const auto& solution : solutions) {
+
+  const auto solution_space = mapped(solutions, [&](const auto& solution) {
     GammaNCoExpr expr;
     for (int i : range(solution.size())) {
       if (solution[i] != 0) {
         expr += solution[i] * space[i];
       }
     }
-    // std::cout << expr;
-    CHECK(ncomultiply(expr).is_zero());
-    CHECK(keep_non_weakly_separated(expr).is_zero());
-
-    // CHECK_EQ(solution.size(), space.size());
-    // BasicLinearAnnotation annotations;
-    // bool contain_6_points = false;
-    // for (int i : range(solution.size())) {
-    //   if (solution[i] != 0) {
-    //     if (space[i].annotations().expression.contains([&](const auto& term) {
-    //       return std::regex_search(term, re_6_points);
-    //     })) {
-    //       contain_6_points = true;
-    //     }
-    //     annotations += solution[i] * space[i].annotations().expression;
-    //   }
-    // }
-    // if (contain_6_points && annotations.num_terms() >= 2) {
-    //   std::cout << LinearAnnotation{annotations, {}} << "\n";
-    // }
+    return expr;
+  });
+  profiler.finish("solution space");
+  const auto matrix = space_matrix(solution_space, std::identity{});
+  profiler.finish("matrix");
+  std::cout << dump_to_string(matrix) << "\n";
+  const auto rank = matrix_rank(matrix);
+  profiler.finish("rank");
+  std::cout << rank << "\n";
+  std::cout << "---------------\n";
+  for (const int i_solution : range(10)) {
+    // const auto& solution = solutions.back();
+    const auto& solution = solutions[solutions.size() - i_solution - 1];
+    GammaNCoExpr expr;
+    for (int i : range(solution.size())) {
+      if (solution[i] != 0) {
+        expr += solution[i] * space[i];
+      }
+    }
+    const auto expr_shifted = substitute_variables_1_based(expr, rotated_vector(points, 1));
+    std::cout << "is_totally_weakly_separated orig:    " << is_totally_weakly_separated(expr) << "\n";
+    std::cout << "is_totally_weakly_separated shifted: " << is_totally_weakly_separated(expr_shifted) << "\n";
+    profiler.finish("solution");
+    const auto ranks_orig = space_venn_ranks(solution_space, {expr}, std::identity{});
+    const auto ranks_shifted = space_venn_ranks(solution_space, {expr_shifted}, std::identity{});
+    profiler.finish("ranks");
+    std::cout << "orig:    " << to_string(ranks_orig) << "\n";
+    std::cout << "shifted: " << to_string(ranks_shifted) << "\n";
+    std::cout << "---------------\n";
   }
-  profiler.finish("check");
+  return 0;
+
+  const auto cglr5_space = normalize_space_remove_consecutive(
+    CGrL_test_space(weight, dimension, points),
+    dimension, num_points
+  );
+  profiler.finish("cgrl5 space");
+  const auto cglr5_cospace = mapped(cglr5_space, DISAMBIGUATE(ncomultiply));
+  const auto cglr5_cospace_1_4 = filtered(
+    mapped(cglr5_cospace, [](const auto& expr) { return keep_coexpr_form(expr, {1,4}); }),
+    [](const auto& expr) { return !expr.is_zero(); }
+  );
+  profiler.finish("cgrl5 cospace");
+  for (const int i_solution : range(100)) {
+    // const auto& solution = solutions.back();
+    // const auto& solution = solutions[i];
+    const auto& solution = solutions[solutions.size() - i_solution - 1];
+    GammaNCoExpr expr;
+    for (int i : range(solution.size())) {
+      if (solution[i] != 0) {
+        expr += solution[i] * space[i];
+      }
+    }
+    expr = expr.without_annotations();
+    const auto expr_1_4 = keep_coexpr_form(expr, {1,4});
+    profiler.finish("expr");
+    const auto ranks = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4}, std::identity{});
+    profiler.finish("ranks");
+    std::cout << to_string(ranks) << "\n";
+    const auto expr_1_4_sum = expr_1_4 + substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
+    const auto expr_1_4_diff = expr_1_4 - substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
+    const auto ranks_sum = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_sum}, std::identity{});
+    const auto ranks_diff = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_diff}, std::identity{});
+    profiler.finish("ranks");
+    std::cout << to_string(ranks_sum) << "\n";
+    std::cout << to_string(ranks_diff) << "\n";
+    std::cout << "---------------\n";
+  }
+
+  // const auto proto_expr = expr_1_4.mapped_expanding([](const auto& term) {
+  //   return GammaExpr::single(flatten(term));
+  // });
+  // profiler.finish("protoexpr");
+  // const auto co_proto_expr = ncomultiply(proto_expr);
+  // profiler.finish("comultiply");
+  // std::cout << expr;
+  // std::cout << proto_expr;
+  // std::cout << co_proto_expr;
+  // // std::cout << co_proto_expr - expr;
+
+  // std::cout << "Loaded " << solutions.size() << " solutions.\n";
+  // std::regex re_6_points(R"(\([0-9]+,[0-9]+,[0-9]+,[0-9]+,[0-9]+,[0-9]+\))");
+  // for (const auto& solution : solutions) {
+  //   GammaNCoExpr expr;
+  //   for (int i : range(solution.size())) {
+  //     if (solution[i] != 0) {
+  //       expr += solution[i] * space[i];
+  //     }
+  //   }
+  //   // std::cout << expr;
+  //   CHECK(ncomultiply(expr).is_zero());
+  //   CHECK(keep_non_weakly_separated(expr).is_zero());
+  //   // CHECK_EQ(solution.size(), space.size());
+  //   // BasicLinearAnnotation annotations;
+  //   // bool contain_6_points = false;
+  //   // for (int i : range(solution.size())) {
+  //   //   if (solution[i] != 0) {
+  //   //     if (space[i].annotations().expression.contains([&](const auto& term) {
+  //   //       return std::regex_search(term, re_6_points);
+  //   //     })) {
+  //   //       contain_6_points = true;
+  //   //     }
+  //   //     annotations += solution[i] * space[i].annotations().expression;
+  //   //   }
+  //   // }
+  //   // if (contain_6_points && annotations.num_terms() >= 2) {
+  //   //   std::cout << LinearAnnotation{annotations, {}} << "\n";
+  //   // }
+  // }
+  // profiler.finish("check");
+
+
 }
