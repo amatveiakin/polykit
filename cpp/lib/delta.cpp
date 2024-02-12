@@ -180,14 +180,14 @@ DeltaExpr sort_term_multiples(const DeltaExpr& expr) {
   });
 }
 
-DeltaExpr terms_with_unique_muptiples(const DeltaExpr& expr) {
+DeltaExpr terms_with_unique_multiples(const DeltaExpr& expr) {
   return expr.filtered([&](const std::vector<Delta>& term) {
     const auto term_sorted = sorted(term);
     return absl::c_adjacent_find(term_sorted) == term_sorted.end();
   });
 }
 
-DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr) {
+DeltaExpr terms_with_nonunique_multiples(const DeltaExpr& expr) {
   return expr.filtered([&](const std::vector<Delta>& term) {
     const auto term_sorted = sorted(term);
     return absl::c_adjacent_find(term_sorted) != term_sorted.end();

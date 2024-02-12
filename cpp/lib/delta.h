@@ -308,8 +308,8 @@ DeltaNCoExpr substitute_variables_1_based(const DeltaNCoExpr& expr, const XArgs&
 DeltaExpr involute(const DeltaExpr& expr, const std::vector<int>& points);
 
 DeltaExpr sort_term_multiples(const DeltaExpr& expr);
-DeltaExpr terms_with_unique_muptiples(const DeltaExpr& expr);
-DeltaExpr terms_with_nonunique_muptiples(const DeltaExpr& expr);
+DeltaExpr terms_with_unique_multiples(const DeltaExpr& expr);
+DeltaExpr terms_with_nonunique_multiples(const DeltaExpr& expr);
 
 DeltaExpr terms_with_num_distinct_variables(const DeltaExpr& expr, int num_distinct);
 DeltaExpr terms_with_min_distinct_variables(const DeltaExpr& expr, int min_distinct);
