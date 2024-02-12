@@ -14,8 +14,7 @@ struct CorrFSymb {
 
   std::vector<int> points;
 
-  bool operator==(const CorrFSymb& other) const { return points == other.points; }
-  bool operator< (const CorrFSymb& other) const { return points <  other.points; }
+  auto operator<=>(const CorrFSymb&) const = default;
 };
 
 inline std::string to_string(const CorrFSymb& fsymb) {

@@ -59,12 +59,7 @@ public:
 
   const std::array<int, kCrossRatioElements>& indices() const { return indices_; }
 
-  bool operator==(const CrossRatioTmpl& other) const { return indices_ == other.indices_; }
-  bool operator!=(const CrossRatioTmpl& other) const { return indices_ != other.indices_; }
-  bool operator< (const CrossRatioTmpl& other) const { return indices_ <  other.indices_; }
-  bool operator<=(const CrossRatioTmpl& other) const { return indices_ <= other.indices_; }
-  bool operator> (const CrossRatioTmpl& other) const { return indices_ >  other.indices_; }
-  bool operator>=(const CrossRatioTmpl& other) const { return indices_ >= other.indices_; }
+  auto operator<=>(const CrossRatioTmpl&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const CrossRatioTmpl& ratio) {
@@ -109,12 +104,7 @@ public:
   bool is_unity() const { return !data_.has_value(); }
   const CrossRatioT& as_ratio() const { return data_.value(); }
 
-  bool operator==(const CrossRatioOrUnityTmpl& other) const { return data_ == other.data_; }
-  bool operator!=(const CrossRatioOrUnityTmpl& other) const { return data_ != other.data_; }
-  bool operator< (const CrossRatioOrUnityTmpl& other) const { return data_ <  other.data_; }
-  bool operator<=(const CrossRatioOrUnityTmpl& other) const { return data_ <= other.data_; }
-  bool operator> (const CrossRatioOrUnityTmpl& other) const { return data_ >  other.data_; }
-  bool operator>=(const CrossRatioOrUnityTmpl& other) const { return data_ >= other.data_; }
+  auto operator<=>(const CrossRatioOrUnityTmpl&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const CrossRatioOrUnityTmpl& r) {
@@ -179,12 +169,7 @@ public:
   static std::optional<CompoundRatio> one_minus(const CompoundRatio& ratio);
   static CompoundRatio inverse(const CompoundRatio& ratio);
 
-  bool operator==(const CompoundRatio& other) const { return loops_ == other.loops_; }
-  bool operator!=(const CompoundRatio& other) const { return loops_ != other.loops_; }
-  bool operator< (const CompoundRatio& other) const { return loops_ <  other.loops_; }
-  bool operator<=(const CompoundRatio& other) const { return loops_ <= other.loops_; }
-  bool operator> (const CompoundRatio& other) const { return loops_ >  other.loops_; }
-  bool operator>=(const CompoundRatio& other) const { return loops_ >= other.loops_; }
+  auto operator<=>(const CompoundRatio&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const CompoundRatio& ratio) {

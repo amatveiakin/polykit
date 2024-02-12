@@ -197,7 +197,6 @@ public:
       done_ = !absl::c_next_permutation(current_permutation_);
     }
     bool operator==(const EndIterator&) const { return done_; }
-    bool operator!=(const EndIterator&) const { return !done_; }
 
   private:
     std::vector<T> current_permutation_;
@@ -241,7 +240,6 @@ public:
       current_permutation_with_sign_.second *= sign_change;
     }
     bool operator==(const EndIterator&) const { return done_; }
-    bool operator!=(const EndIterator&) const { return !done_; }
 
   private:
     std::pair<std::vector<T>, int> current_permutation_with_sign_;

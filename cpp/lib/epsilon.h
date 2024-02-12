@@ -42,8 +42,7 @@ public:
   bool is_valid() const { return X::kMinIndex <= idx_ && idx_ < (1 << internal::kEpsilonDataBits); }
   int idx() const { return idx_; }
 
-  bool operator==(const EpsilonVariable& other) const { return idx_ == other.idx_; }
-  bool operator< (const EpsilonVariable& other) const { return idx_ <  other.idx_; }
+  auto operator<=>(const EpsilonVariable&) const = default;
 
 private:
   int idx_ = 0;
@@ -60,8 +59,9 @@ public:
   bool is_valid() const { return indices_.any(); }
   const std::bitset<kMaxComplementVariables>& indices() const { return indices_; }
 
-  bool operator==(const EpsilonComplement& other) const { return indices_ == other.indices_; }
-  bool operator< (const EpsilonComplement& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
+  auto operator<=>(const EpsilonComplement& other) const {
+    return indices_.to_ulong() <=> other.indices_.to_ulong();
+  }
 
 private:
   std::bitset<kMaxComplementVariables> indices_;

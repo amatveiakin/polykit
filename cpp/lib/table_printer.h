@@ -11,8 +11,7 @@ public:
     int row = 0;
     int col = 0;
 
-    bool operator==(CellCoord other) const { return row == other.row && col == other.col; }
-    bool operator!=(CellCoord other) const { return !(*this == other); }
+    bool operator==(const CellCoord& other) const = default;
 
     template <typename H>
     friend H AbslHashValue(H h, CellCoord cell) {

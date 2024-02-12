@@ -19,8 +19,7 @@ public:
   bool contains(int point) const { return point == a_ || point == b_; }
   int other_point(int point) const;
 
-  bool operator==(const SimpleDelta& other) const { return as_pair() == other.as_pair(); }
-  bool operator< (const SimpleDelta& other) const { return as_pair() <  other.as_pair(); }
+  auto operator<=>(const SimpleDelta&) const = default;
 
   // Put larger point first to synchronize ordering with Delta.
   std::pair<int, int> as_pair() const { return {b_, a_}; }

@@ -55,12 +55,7 @@ public:
 
   X substitution_result_0_based(const std::vector<X>& new_points);
 
-  constexpr bool operator==(const X& other) const { return as_pair() == other.as_pair(); }
-  constexpr bool operator!=(const X& other) const { return as_pair() != other.as_pair(); }
-  constexpr bool operator< (const X& other) const { return as_pair() <  other.as_pair(); }
-  constexpr bool operator<=(const X& other) const { return as_pair() <= other.as_pair(); }
-  constexpr bool operator> (const X& other) const { return as_pair() >  other.as_pair(); }
-  constexpr bool operator>=(const X& other) const { return as_pair() >= other.as_pair(); }
+  auto operator<=>(const X&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const X& x) {

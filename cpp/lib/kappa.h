@@ -15,13 +15,11 @@
 #define HAS_KAPPA_EXPR 1
 
 struct KappaX {  // 12 34 56
-  bool operator==(const KappaX&) const { return true; }
-  bool operator< (const KappaX&) const { return false; }
+  auto operator<=>(const KappaX&) const = default;
   template<typename H> friend H AbslHashValue(H h, const KappaX&) { return h; }
 };
 struct KappaY {  // 23 45 61
-  bool operator==(const KappaY&) const { return true; }
-  bool operator< (const KappaY&) const { return false; }
+  auto operator<=>(const KappaY&) const = default;
   template<typename H> friend H AbslHashValue(H h, const KappaY&) { return h; }
 };
 

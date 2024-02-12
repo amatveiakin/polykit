@@ -21,8 +21,7 @@ public:
     Iterator(value_type value) : value_(value) {}
     Iterator& operator++() { ++value_; return *this; }
     value_type operator*() const { return value_; }
-    bool operator==(Iterator other) { return value_ == other.value_; }
-    bool operator!=(Iterator other) { return value_ != other.value_; }
+    bool operator==(const Iterator&) const = default;
 
   private:
     value_type value_;

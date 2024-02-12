@@ -37,8 +37,8 @@ public:
   const BitsetT& index_bitset() const { return indices_; }
   std::vector<int> index_vector() const { return bitset_to_vector(indices_, kBitsetOffset); }
 
-  bool operator==(const Gamma& other) const { return indices_ == other.indices_; }
-  bool operator< (const Gamma& other) const { return indices_.to_ulong() < other.indices_.to_ulong(); }
+  auto operator<=>(const Gamma& other) const { return indices_.to_ulong() <=> other.indices_.to_ulong(); }
+  bool operator==(const Gamma&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const Gamma& gamma) {
@@ -81,8 +81,7 @@ inline MemoryUsage estimated_heap_usage(const GammaStorage&) { return {0, 0}; }
 
 struct GammaUniformityMarker {
   int dimension = 0;
-  bool operator==(const GammaUniformityMarker& other) const { return dimension == other.dimension; }
-  bool operator!=(const GammaUniformityMarker& other) const { return dimension != other.dimension; }
+  bool operator==(const GammaUniformityMarker&) const = default;
 };
 
 std::string to_string(const Gamma& g);

@@ -96,6 +96,9 @@ public:
 
   using ParentT::ParentT;
 
+  // TODO: Deduce `std::strong_ordering` if `T` has `std::strong_ordering`.
+  std::weak_ordering operator<=>(const PVector&) const = default;
+
   bool is_inlined() const {
     if constexpr (kCanInline) {
       return

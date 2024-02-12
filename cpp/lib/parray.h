@@ -72,12 +72,7 @@ public:
     return mapped(elements_, [](const T& value) { return OutT(value); });
   }
 
-  bool operator==(const PArray& other) { return elements_ == other.elements_; }
-  bool operator!=(const PArray& other) { return elements_ != other.elements_; }
-  bool operator< (const PArray& other) { return elements_ <  other.elements_; }
-  bool operator<=(const PArray& other) { return elements_ <= other.elements_; }
-  bool operator> (const PArray& other) { return elements_ >  other.elements_; }
-  bool operator>=(const PArray& other) { return elements_ >= other.elements_; }
+  auto operator<=>(const PArray&) const = default;
 
 private:
   std::array<T, N> elements_;
@@ -118,12 +113,7 @@ public:
     return ret;
   }
 
-  bool operator==(const PArray& other) { return bytes_ == other.bytes_; }
-  bool operator!=(const PArray& other) { return bytes_ != other.bytes_; }
-  bool operator< (const PArray& other) { return bytes_ <  other.bytes_; }
-  bool operator<=(const PArray& other) { return bytes_ <= other.bytes_; }
-  bool operator> (const PArray& other) { return bytes_ >  other.bytes_; }
-  bool operator>=(const PArray& other) { return bytes_ >= other.bytes_; }
+  auto operator<=>(const PArray&) const = default;
 
 private:
   struct ConstructorImpl {};

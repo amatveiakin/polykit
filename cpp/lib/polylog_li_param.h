@@ -31,10 +31,7 @@ public:
   int total_weight() const { return foreweight_ + sum(weights_); }
   int sign() const { return neg_one_pow(depth()); }
 
-  auto as_tie() const { return std::tie(weights_, points_); }
-
-  bool operator==(const LiParam& other) const { return as_tie() == other.as_tie(); }
-  bool operator< (const LiParam& other) const { return as_tie() <  other.as_tie(); }
+  auto operator<=>(const LiParam&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const LiParam& param) {

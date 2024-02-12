@@ -245,8 +245,7 @@ public:
     explicit const_iterator(const_key_iterator it) : it_(std::move(it)) {}
     std::pair<ObjectT, int> operator*() const { return {ParamT::key_to_object(it_->first), it_->second}; }
     const_iterator& operator++() { ++it_; return *this; };
-    bool operator==(const const_iterator& other) const { return it_ == other.it_; }
-    bool operator!=(const const_iterator& other) const { return !(*this == other); }
+    bool operator==(const const_iterator& other) const = default;
   private:
     const_key_iterator it_;
   };
@@ -548,9 +547,6 @@ public:
 
   bool operator==(const BasicLinear& other) const {
     return ((*this) - other).is_zero();
-  }
-  bool operator!=(const BasicLinear& other) const {
-    return !(*this == other);
   }
 
   template <typename H>
@@ -860,9 +856,6 @@ public:
 
   bool operator==(const Linear& other) const {
     return main_ == other.main_;
-  }
-  bool operator!=(const Linear& other) const {
-    return !(*this == other);
   }
 
   template <typename H>

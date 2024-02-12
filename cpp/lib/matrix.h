@@ -38,8 +38,7 @@ public:
   int& operator()(int row, int col);
   int& operator()(std::pair<int, int> rowcol) { return operator()(rowcol.first, rowcol.second); };
 
-  bool operator==(const Matrix& other) const { return triplets_ == other.triplets_ && shape() == other.shape(); }
-  bool operator!=(const Matrix& other) const { return !(*this == other); }
+  bool operator==(const Matrix& other) const = default;
 
 private:
   int rows_ = 0;

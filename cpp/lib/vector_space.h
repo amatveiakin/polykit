@@ -19,9 +19,7 @@ template<typename MarkerT>
 struct SpaceCharacteristics {
   int weight = 0;
   MarkerT marker = {};
-  bool operator==(const SpaceCharacteristics& other) const {
-    return weight == other.weight && marker == other.marker;
-  }
+  bool operator==(const SpaceCharacteristics& other) const = default;
 };
 
 template<typename ExprT>

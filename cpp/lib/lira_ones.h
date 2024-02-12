@@ -24,8 +24,7 @@ public:
   int total_weight() const { return ratios_.size() * 2; }
   int sign() const { return neg_one_pow(depth()); }
 
-  bool operator==(const LiraParamOnes& other) const { return ratios_ == other.ratios_; }
-  bool operator< (const LiraParamOnes& other) const { return ratios_ <  other.ratios_; }
+  auto operator<=>(const LiraParamOnes&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const LiraParamOnes& param) {

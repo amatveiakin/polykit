@@ -455,7 +455,7 @@ int main(int /*argc*/, char *argv[]) {
   // struct Args {
   //   std::vector<int> bonus_points;
   //   std::vector<int> log_points;
-  //   bool operator==(const Args& other) const { return bonus_points == other.bonus_points && log_points == other.log_points; }
+  //   bool operator==(const Args& other) const = default;
   // };
   // struct ArgsAndLog {
   //   Args args;

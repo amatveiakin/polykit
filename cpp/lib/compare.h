@@ -1,3 +1,23 @@
+// Provides:
+//
+//   - `asc_val` / `desc_val` / `asc_ref` / `desc_ref`. Allows to compare tuples lexicographically
+//     while choosing ascending or descending order separately for each field.
+//     Example:
+//       auto compare = cmp::projected([](const std::pair<Foo, Bar>& x) {
+//         return std::tuple{cmp::asc_ref(x.first), cmp::desc_ref(x.second)};
+//       });
+//     Comparing all fields via `cmp::asc_val` is equivalent to returning `std::tuple`.
+//     Comparing all fields via `cmp::asc_ref` is equivalent to returning `std::tie`.
+//
+//   - `projected`. Takes `x`, `y`, `f`, returns whether `f(x)` < `f(y)`. Convenience function
+//     for things like "sort vectors by lengths".
+//     TODO: Consider renaming to `by_key`, similarly to Rust standard functions.
+//
+//   - `greater_from_less`. Inverts comparison operator.
+//
+//   - `lexicographical`. Compares containers lexicographically, based on
+//     `std::lexicographical_compare`.
+
 #pragma once
 
 #include "absl/algorithm/container.h"
@@ -10,12 +30,9 @@ class ascending_value_wrapper {
 public:
   ascending_value_wrapper(T value) : value_(std::move(value)) {}
 
-  bool operator==(const ascending_value_wrapper& other) const { return value_ == other.value_; }
-  bool operator!=(const ascending_value_wrapper& other) const { return value_ != other.value_; }
-  bool operator< (const ascending_value_wrapper& other) const { return value_ <  other.value_; }
-  bool operator<=(const ascending_value_wrapper& other) const { return value_ <= other.value_; }
-  bool operator> (const ascending_value_wrapper& other) const { return value_ >  other.value_; }
-  bool operator>=(const ascending_value_wrapper& other) const { return value_ >= other.value_; }
+  auto operator<=>(const ascending_value_wrapper& other) const {
+    return value_ <=> other.value_;
+  }
 
 private:
   T value_;
@@ -26,12 +43,9 @@ class descending_value_wrapper {
 public:
   descending_value_wrapper(T value) : value_(std::move(value)) {}
 
-  bool operator==(const descending_value_wrapper& other) const { return value_ == other.value_; }
-  bool operator!=(const descending_value_wrapper& other) const { return value_ != other.value_; }
-  bool operator< (const descending_value_wrapper& other) const { return value_ >  other.value_; }
-  bool operator<=(const descending_value_wrapper& other) const { return value_ >= other.value_; }
-  bool operator> (const descending_value_wrapper& other) const { return value_ <  other.value_; }
-  bool operator>=(const descending_value_wrapper& other) const { return value_ <= other.value_; }
+  auto operator<=>(const descending_value_wrapper& other) const {
+    return other.value_ <=> value_;
+  }
 
 private:
   T value_;
@@ -42,12 +56,9 @@ class ascending_reference_wrapper : private std::reference_wrapper<const T> {
 public:
   using std::reference_wrapper<const T>::reference_wrapper;
 
-  bool operator==(const ascending_reference_wrapper& other) const { return this->get() == other.get(); }
-  bool operator!=(const ascending_reference_wrapper& other) const { return this->get() != other.get(); }
-  bool operator< (const ascending_reference_wrapper& other) const { return this->get() <  other.get(); }
-  bool operator<=(const ascending_reference_wrapper& other) const { return this->get() <= other.get(); }
-  bool operator> (const ascending_reference_wrapper& other) const { return this->get() >  other.get(); }
-  bool operator>=(const ascending_reference_wrapper& other) const { return this->get() >= other.get(); }
+  auto operator<=>(const ascending_reference_wrapper& other) const {
+    return this->get() <=> other.get();
+  }
 };
 
 template<typename T>
@@ -55,21 +66,10 @@ class descending_reference_wrapper : private std::reference_wrapper<const T> {
 public:
   using std::reference_wrapper<const T>::reference_wrapper;
 
-  bool operator==(const descending_reference_wrapper& other) const { return this->get() == other.get(); }
-  bool operator!=(const descending_reference_wrapper& other) const { return this->get() != other.get(); }
-  bool operator< (const descending_reference_wrapper& other) const { return this->get() >  other.get(); }
-  bool operator<=(const descending_reference_wrapper& other) const { return this->get() >= other.get(); }
-  bool operator> (const descending_reference_wrapper& other) const { return this->get() <  other.get(); }
-  bool operator>=(const descending_reference_wrapper& other) const { return this->get() <= other.get(); }
+  auto operator<=>(const descending_reference_wrapper& other) const {
+    return other.get() <=> this->get();
+  }
 };
-
-// `asc_val` / `desc_val` / `asc_ref` / `desc_ref` allow to compare tuples lexicographically
-//   while choosing ascending or descending order separately for each field.
-// Example:
-//   auto compare = cmp::projected([](const std::pair<Foo, Bar>& x) {
-//     return std::tuple{cmp::asc_ref(x.first), cmp::desc_ref(x.second)};
-//   });
-// If all fields compare via `cmp::asc_ref` then a simple `std::tie` can be used instead.
 
 template<typename T>
 auto asc_val(T v) { return ascending_value_wrapper<T>(std::move(v)); }

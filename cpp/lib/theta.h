@@ -33,8 +33,7 @@ public:
 
   const CompoundRatio& ratio() const { return ratio_; }
 
-  bool operator==(const ThetaComplement& other) const { return ratio_ == other.ratio_; }
-  bool operator< (const ThetaComplement& other) const { return ratio_ <  other.ratio_; }
+  auto operator<=>(const ThetaComplement&) const = default;
 
 private:
   CompoundRatio ratio_;

@@ -17,7 +17,7 @@ int simple_space_rank(const SpaceF& space, int num_points) {
 struct ClusterCoRanks {
   int space = 0;
   int kernel = 0;
-  bool operator==(const ClusterCoRanks& other) const { return space == other.space && kernel == other.kernel; }
+  bool operator==(const ClusterCoRanks& other) const = default;
 };
 
 template<typename SpaceT>

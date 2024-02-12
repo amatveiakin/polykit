@@ -22,12 +22,7 @@ public:
 
   constexpr std::size_t index() const noexcept { return 0; }
 
-  constexpr bool operator==(const CompactVariant<T>& other) const { return value_ == other.value_; }
-  constexpr bool operator!=(const CompactVariant<T>& other) const { return value_ != other.value_; }
-  constexpr bool operator< (const CompactVariant<T>& other) const { return value_ <  other.value_; }
-  constexpr bool operator<=(const CompactVariant<T>& other) const { return value_ <= other.value_; }
-  constexpr bool operator> (const CompactVariant<T>& other) const { return value_ >  other.value_; }
-  constexpr bool operator>=(const CompactVariant<T>& other) const { return value_ >= other.value_; }
+  auto operator<=>(const CompactVariant&) const = default;
 
   template <typename H>
   friend H AbslHashValue(H h, const CompactVariant& var) {

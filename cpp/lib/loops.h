@@ -14,7 +14,7 @@ using Loops = std::vector<std::vector<int>>;
 class LoopsInvariant {
 public:
   LoopsInvariant(std::vector<int> data) : data_(std::move(data)) {}
-  bool operator==(const LoopsInvariant& other) const { return data_ == other.data_; }
+  bool operator==(const LoopsInvariant& other) const = default;
   template <typename H>
   friend H AbslHashValue(H h, const LoopsInvariant& v) { return H::combine(std::move(h), v.data_); }
 private:
