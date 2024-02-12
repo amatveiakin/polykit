@@ -891,45 +891,6 @@ int main(int /*argc*/, char *argv[]) {
   });
   profiler.finish("space");
 
-  const auto solution_space = mapped(solutions, [&](const auto& solution) {
-    GammaNCoExpr expr;
-    for (int i : range(solution.size())) {
-      if (solution[i] != 0) {
-        expr += solution[i] * space[i];
-      }
-    }
-    return expr;
-  });
-  profiler.finish("solution space");
-  const auto matrix = space_matrix(solution_space, std::identity{});
-  profiler.finish("matrix");
-  std::cout << dump_to_string(matrix) << "\n";
-  const auto rank = matrix_rank(matrix);
-  profiler.finish("rank");
-  std::cout << rank << "\n";
-  std::cout << "---------------\n";
-  for (const int i_solution : range(10)) {
-    // const auto& solution = solutions.back();
-    const auto& solution = solutions[solutions.size() - i_solution - 1];
-    GammaNCoExpr expr;
-    for (int i : range(solution.size())) {
-      if (solution[i] != 0) {
-        expr += solution[i] * space[i];
-      }
-    }
-    const auto expr_shifted = substitute_variables_1_based(expr, rotated_vector(points, 1));
-    std::cout << "is_totally_weakly_separated orig:    " << is_totally_weakly_separated(expr) << "\n";
-    std::cout << "is_totally_weakly_separated shifted: " << is_totally_weakly_separated(expr_shifted) << "\n";
-    profiler.finish("solution");
-    const auto ranks_orig = space_venn_ranks(solution_space, {expr}, std::identity{});
-    const auto ranks_shifted = space_venn_ranks(solution_space, {expr_shifted}, std::identity{});
-    profiler.finish("ranks");
-    std::cout << "orig:    " << to_string(ranks_orig) << "\n";
-    std::cout << "shifted: " << to_string(ranks_shifted) << "\n";
-    std::cout << "---------------\n";
-  }
-  return 0;
-
   const auto cglr5_space = normalize_space_remove_consecutive(
     CGrL_test_space(weight, dimension, points),
     dimension, num_points
@@ -941,9 +902,8 @@ int main(int /*argc*/, char *argv[]) {
     [](const auto& expr) { return !expr.is_zero(); }
   );
   profiler.finish("cgrl5 cospace");
-  for (const int i_solution : range(100)) {
+  for (const int i_solution : range(10)) {
     // const auto& solution = solutions.back();
-    // const auto& solution = solutions[i];
     const auto& solution = solutions[solutions.size() - i_solution - 1];
     GammaNCoExpr expr;
     for (int i : range(solution.size())) {

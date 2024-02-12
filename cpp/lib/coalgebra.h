@@ -1,7 +1,7 @@
 // Functions related to comultiplication.
 //
 // There are three types of coexpressions. They differ in how the parts are reordered:
-//   * "Normal": parts are sorted with the change of sign. Applying normal
+//   * "Normal": parts are sorted lexicographically, with sign. Applying normal
 //     comultiplication twice to the same expressions always yield zero.
 //   * "Iterated": parts are converted to Lyndon basis.
 //   * "Hopf": parts are fixed in place and cannot be reordered. There is no Hopf
@@ -33,6 +33,12 @@
 // NCoExprForExpr<MyExpr> enables `ncoproduct` and `ncomultiply` for `MyExpr`.
 // ICoExprForExpr<MyExpr> enables `icoproduct` in all cases, and `icomultiply` if
 //   `MyCoExpr` supports Lyndon basis.
+//
+// Note that Lyndon basis is used in three different places when working with Lie coalgebras:
+//   1. The entire expression is automatically transformed to Lyndon basis before it is
+//      converted to coexpression.
+//   2. After the expression is cut into part, each part is transformed to Lyndon basis again.
+//   3. Finally, with iterated comultiplication, Lyndon basis is applied to parts as wholes.
 
 #pragma once
 
@@ -102,7 +108,7 @@ auto maybe_to_acoexpr(T expr) {
 }
 
 template<typename CoExprT>
-CoExprT normalize_coproduct(const CoExprT& expr) {
+CoExprT sort_coproduct_parts(const CoExprT& expr) {
   static_assert(CoExprT::Param::coproduct_is_lie_algebra);
   if constexpr (CoExprT::Param::coproduct_is_iterated) {
     return to_lyndon_basis(expr);
@@ -135,12 +141,27 @@ auto coproduct_vec(const std::vector<CoExprT>& coexpr) {
     )
   );
   if constexpr (is_lie_algebra) {
-    return internal::normalize_coproduct(ret);
+    return internal::sort_coproduct_parts(ret);
   } else {
-    return ret;  // `normalize_coproduct` might not compile here, thus `if constexpr`
+    return ret;  // `sort_coproduct_parts` might not compile here, thus `if constexpr`
   }
 }
 }  // namespace internal
+
+// Fixes the order of multiples between parts and within parts in a manually constructed co-expression.
+template<typename CoExprT>
+CoExprT normalize_coproduct(const CoExprT& expr) {
+  constexpr int is_lie_algebra = CoExprT::Param::coproduct_is_lie_algebra;
+  if constexpr (is_lie_algebra) {
+    return internal::sort_coproduct_parts(expr.mapped_expanding([](const auto& term) {
+      return internal::coproduct_vec(mapped(term, [](const auto& part) {
+        return internal::to_coexpr<CoExprT>(Linear<typename CoExprT::Param::PartExprParam>::single(part));
+      }));
+    }));
+  } else {
+    return internal::sort_coproduct_parts(expr);
+  }
+}
 
 template<typename ExprT>
 auto ncoproduct_vec(const std::vector<ExprT>& expr) {
@@ -187,7 +208,7 @@ auto icomultiply(const ExprT& expr, std::vector<int> form) {
   CHECK(form.size() >= 2) << dump_to_string(form);
   CHECK(form.size() == 2 || all_equal(form))
       << "Iterated comultiplication into three or more unequal parts is not supported: " << dump_to_string(form);
-  absl::c_sort(form);  // avoid unnecessary work in `normalize_coproduct`
+  absl::c_sort(form);  // avoid unnecessary work in `sort_coproduct_parts`
 
   using MonomT = typename ExprT::StorageT;
   // Optimization potential: remove conversion of vector form to key (here) and back
