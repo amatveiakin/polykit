@@ -867,65 +867,108 @@ int main(int /*argc*/, char *argv[]) {
   // }
 
 
-  const int weight = 5;
-  const int dimension = 3;
-  const int num_points = 8;
-  const auto points = to_vector(range_incl(1, num_points));
-  Profiler profiler;
-  const auto file_path = absl::StrCat("../../cgrl5_solutions/alt_dp3_p", num_points, "_ns.txt");
-  const auto& solutions = load_bracketed_vectors(file_path);
-  profiler.finish("read");
-  const auto full_space = co_space(weight, 2, [&](const int w) {
-    Gr_Space sp;
-    switch (w) {
-      case 1: sp = GrFx(dimension, points); break;
-      case 2: sp = GrL2_unreduced(dimension, points); break;
-      case 3: sp = CGrL3_Dim3_test_space_unreduced(points); break;
-      default: sp = CGrL_test_space(w, dimension, points); break;
-    }
-    const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
-    return normalize_space_remove_consecutive(spl, dimension, num_points);
-  });
-  const auto space = filtered(full_space, [](const auto& expr) {
-    return is_totally_weakly_separated(expr);
-  });
-  profiler.finish("space");
+  // const int weight = 5;
+  // const int dimension = 3;
+  // const int num_points = 8;
+  // const auto points = to_vector(range_incl(1, num_points));
+  // Profiler profiler;
+  // const auto file_path = absl::StrCat("../../cgrl5_solutions/alt_dp3_p", num_points, "_ns.txt");
+  // const auto& solutions = load_bracketed_vectors(file_path);
+  // profiler.finish("read");
+  // const auto full_space = co_space(weight, 2, [&](const int w) {
+  //   Gr_Space sp;
+  //   switch (w) {
+  //     case 1: sp = GrFx(dimension, points); break;
+  //     case 2: sp = GrL2_unreduced(dimension, points); break;
+  //     case 3: sp = CGrL3_Dim3_test_space_unreduced(points); break;
+  //     default: sp = CGrL_test_space(w, dimension, points); break;
+  //   }
+  //   const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+  //   return normalize_space_remove_consecutive(spl, dimension, num_points);
+  // });
+  // const auto space = filtered(full_space, [](const auto& expr) {
+  //   return is_totally_weakly_separated(expr);
+  // });
+  // profiler.finish("space");
 
-  const auto cglr5_space = normalize_space_remove_consecutive(
-    CGrL_test_space(weight, dimension, points),
-    dimension, num_points
-  );
-  profiler.finish("cgrl5 space");
-  const auto cglr5_cospace = mapped(cglr5_space, DISAMBIGUATE(ncomultiply));
-  const auto cglr5_cospace_1_4 = filtered(
-    mapped(cglr5_cospace, [](const auto& expr) { return keep_coexpr_form(expr, {1,4}); }),
-    [](const auto& expr) { return !expr.is_zero(); }
-  );
-  profiler.finish("cgrl5 cospace");
-  for (const int i_solution : range(10)) {
-    // const auto& solution = solutions.back();
-    const auto& solution = solutions[solutions.size() - i_solution - 1];
-    GammaNCoExpr expr;
-    for (int i : range(solution.size())) {
-      if (solution[i] != 0) {
-        expr += solution[i] * space[i];
-      }
-    }
-    expr = expr.without_annotations();
-    const auto expr_1_4 = keep_coexpr_form(expr, {1,4});
-    profiler.finish("expr");
-    const auto ranks = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4}, std::identity{});
-    profiler.finish("ranks");
-    std::cout << to_string(ranks) << "\n";
-    const auto expr_1_4_sum = expr_1_4 + substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
-    const auto expr_1_4_diff = expr_1_4 - substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
-    const auto ranks_sum = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_sum}, std::identity{});
-    const auto ranks_diff = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_diff}, std::identity{});
-    profiler.finish("ranks");
-    std::cout << to_string(ranks_sum) << "\n";
-    std::cout << to_string(ranks_diff) << "\n";
-    std::cout << "---------------\n";
-  }
+  // const auto cglr5_space = normalize_space_remove_consecutive(
+  //   CGrL_test_space(weight, dimension, points),
+  //   dimension, num_points
+  // );
+  // profiler.finish("cgrl5 space");
+  // const auto cglr5_cospace = mapped(cglr5_space, DISAMBIGUATE(ncomultiply));
+  // const auto cglr5_cospace_1_4 = filtered(
+  //   mapped(cglr5_cospace, [](const auto& expr) { return keep_coexpr_form(expr, {1,4}); }),
+  //   [](const auto& expr) { return !expr.is_zero(); }
+  // );
+  // profiler.finish("cgrl5 cospace");
+  // for (const int i_solution : range(10)) {
+  //   std::cout << "---------------\n";
+  //   // const auto& solution = solutions.back();
+  //   const auto& solution = solutions[solutions.size() - i_solution - 1];
+  //   GammaNCoExpr expr;
+  //   for (int i : range(solution.size())) {
+  //     if (solution[i] != 0) {
+  //       expr += solution[i] * space[i];
+  //     }
+  //   }
+  //   expr = expr.without_annotations();
+  //   const auto expr_1_4 = keep_coexpr_form(expr, {1,4});
+  //   profiler.finish("expr");
+  //   const auto ranks = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4}, std::identity{});
+  //   profiler.finish("ranks");
+  //   std::cout << to_string(ranks) << "\n";
+  //   const auto expr_1_4_sum = expr_1_4 + substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
+  //   const auto expr_1_4_diff = expr_1_4 - substitute_variables_1_based(expr_1_4, rotated_vector(points, 1));
+  //   const auto ranks_sum = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_sum}, std::identity{});
+  //   const auto ranks_diff = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_diff}, std::identity{});
+  //   profiler.finish("ranks");
+  //   std::cout << to_string(ranks_sum) << "\n";
+  //   std::cout << to_string(ranks_diff) << "\n";
+  // }
+
+  // const auto cglr5_space = normalize_space_remove_consecutive(
+  //   CGrL_test_space(weight, dimension, {1,2,3,4,5,6,7,8,9}),
+  //   dimension, 9
+  // );
+  // profiler.finish("cgrl5 space");
+  // const auto cglr5_cospace = mapped(cglr5_space, DISAMBIGUATE(ncomultiply));
+  // const auto cglr5_cospace_1_4 = filtered(
+  //   mapped(cglr5_cospace, [](const auto& expr) { return keep_coexpr_form(expr, {1,4}); }),
+  //   [](const auto& expr) { return !expr.is_zero(); }
+  // );
+  // profiler.finish("cgrl5 cospace");
+  // for (const int i_solution : range(10)) {
+  //   std::cout << "---------------\n";
+  //   // const auto& solution = solutions.back();
+  //   const auto& solution = solutions[solutions.size() - i_solution - 1];
+  //   GammaNCoExpr expr;
+  //   for (int i : range(solution.size())) {
+  //     if (solution[i] != 0) {
+  //       expr += solution[i] * space[i];
+  //     }
+  //   }
+  //   expr = expr.without_annotations();
+  //   const auto expr_1_4 = keep_coexpr_form(expr, {1,4});
+  //   profiler.finish("expr");
+  //   // const auto expr_1_4_alt_sum = sum_looped_vec([&](const auto& points) {
+  //   //   return substitute_variables_1_based(expr_1_4, points);
+  //   // }, 9, {1,2,3,4,5,6,7,8}, SumSign::alternating);
+  //   const auto expr_1_4_alt_sum =
+  //     + substitute_variables_1_based(expr_1_4, {1,2,3,4,5,6,7,8})
+  //     - substitute_variables_1_based(expr_1_4, {1,2,3,4,5,6,7,9})
+  //     + substitute_variables_1_based(expr_1_4, {1,2,3,4,5,6,8,9})
+  //     - substitute_variables_1_based(expr_1_4, {1,2,3,4,5,7,8,9})
+  //     + substitute_variables_1_based(expr_1_4, {1,2,3,4,6,7,8,9})
+  //     - substitute_variables_1_based(expr_1_4, {1,2,3,5,6,7,8,9})
+  //     + substitute_variables_1_based(expr_1_4, {1,2,4,5,6,7,8,9})
+  //     - substitute_variables_1_based(expr_1_4, {1,3,4,5,6,7,8,9})
+  //     + substitute_variables_1_based(expr_1_4, {2,3,4,5,6,7,8,9})
+  //   ;
+  //   const auto alt_sum_ranks = space_venn_ranks(cglr5_cospace_1_4, {expr_1_4_alt_sum}, std::identity{});
+  //   profiler.finish("ranks");
+  //   std::cout << to_string(alt_sum_ranks) << "\n";
+  // }
 
   // const auto proto_expr = expr_1_4.mapped_expanding([](const auto& term) {
   //   return GammaExpr::single(flatten(term));
@@ -970,4 +1013,29 @@ int main(int /*argc*/, char *argv[]) {
   // profiler.finish("check");
 
 
+  const int weight = 5;
+  const int dimension = 3;
+  for (const int num_points : range_incl(5, 10)) {
+    const auto points = to_vector(range_incl(1, num_points));
+    Profiler profiler;
+    const auto full_space = co_space(weight, 2, [&](const int w) {
+      Gr_Space sp;
+      switch (w) {
+        case 1: sp = GrFx(dimension, points); break;
+        case 2: sp = GrL2_unreduced(dimension, points); break;
+        case 3: sp = CGrL3_Dim3_test_space_unreduced(points); break;
+        default: sp = CGrL_test_space(w, dimension, points); break;
+      }
+      const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+      return normalize_space_remove_consecutive(spl, dimension, num_points);
+    });
+    const auto space = filtered(full_space, [](const auto& expr) {
+      return is_totally_weakly_separated(expr);
+    });
+    profiler.finish("space");
+    const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
+    profiler.finish("ranks");
+    std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+    std::cout << to_string(ranks) << "\n";
+  }
 }
