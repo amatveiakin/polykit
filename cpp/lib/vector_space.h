@@ -156,7 +156,7 @@ auto abstract_co_space(int weight, int num_coparts, const SpaceF& get_space, con
         };
       })
     );
-    return mapped(summand_components, combine);
+    return mapped_parallel(summand_components, combine);
   });
 }
 
