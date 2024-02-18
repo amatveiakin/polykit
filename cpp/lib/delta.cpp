@@ -47,7 +47,7 @@ X DeltaAlphabetMapping::alphabet_to_x(int ch) {
 
 DeltaAlphabetMapping::DeltaAlphabetMapping() {
   static constexpr int kAlphabetSize = kMaxDimension * (kMaxDimension - 1) / 2;
-  static_assert(kAlphabetSize <= std::numeric_limits<internal::DeltaDiffT>::max() + 1);
+  static_assert(kAlphabetSize <= std::numeric_limits<DeltaStorage::Value>::max() + 1);
   deltas_.resize(kAlphabetSize);
   for (int b : range(0, kMaxDimension)) {
     for (int a : range(0, b)) {

@@ -58,6 +58,24 @@ inline Gamma::Gamma(const std::vector<int>& vars) {
   }
 }
 
+struct GammaStorage {
+  using Value =
+    std::conditional_t<kMaxGammaVariables <=  8, uint8_t,
+    std::conditional_t<kMaxGammaVariables <= 16, uint16_t,
+    std::conditional_t<kMaxGammaVariables <= 32, uint32_t,
+        void>>>;
+
+  Value value;
+
+  bool operator==(const GammaStorage& other) const { return value == other.value; }
+  bool operator< (const GammaStorage& other) const { return value <  other.value; }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const GammaStorage& g) {
+    return H::combine(std::move(h), g.value);
+  }
+};
+
 struct GammaUniformityMarker {
   int dimension = 0;
   bool operator==(const GammaUniformityMarker& other) const { return dimension == other.dimension; }
@@ -71,12 +89,16 @@ std::string to_string(const GammaUniformityMarker& marker);
 namespace internal {
 struct GammaExprParam {
   using ObjectT = std::vector<Gamma>;
-  using StorageT = PVector<Gamma, 10>;
+  using StorageT = PVector<GammaStorage, 8>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return to_pvector<StorageT>(obj);
+    return mapped_to_pvector<StorageT>(obj, [](const Gamma& g) {
+      return GammaStorage { static_cast<GammaStorage::Value>(g.index_bitset().to_ulong()) };
+    });
   }
   static ObjectT key_to_object(const StorageT& key) {
-    return to_vector(key);
+    return mapped(key, [](GammaStorage s) {
+      return Gamma(Gamma::BitsetT(s.value));
+    });
   }
   IDENTITY_VECTOR_FORM
   LYNDON_COMPARE_DEFAULT
@@ -136,6 +158,9 @@ struct GammaACoExprParam : GammaICoExprParam {
     });
   };
 };
+
+static_assert(GammaExprParam::StorageT::kCanInline);
+static_assert(GammaNCoExprParam::StorageT::kCanInline);  // no strictly necessary, could be removed
 }  // namespace internal
 
 

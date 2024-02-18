@@ -96,18 +96,11 @@ std::ostream& operator<<(std::ostream& os, const PVectorStats& stats);
 // TODO: Private inheritance + re-export methods manually to make sure interfaces are the same.
 template<typename T, int N>
 class PVector : public internal::pvector_base_type<T, N> {
-private:
+public:
   static constexpr bool kCanInline = internal::should_use_inlined_vector<T, N>::value;
   static constexpr size_t kInlineSize = internal::inlined_vector_size<T, N>::value;  // meaningful only if kCanInline is true
   using ParentT = internal::pvector_base_type<T, N>;
 
-  template <typename H>
-  friend H AbslHashValue(H h, const PVector& vec) {
-    return H::combine(std::move(h), static_cast<const ParentT&>(vec));
-  }
-
-public:
-  static constexpr int inlined_size = N;
   using ParentT::ParentT;
 
   bool is_inlined() const {
@@ -123,7 +116,6 @@ public:
   ~PVector() {
 #if PVECTOR_STATS
     // TODO: Add synchronization now that we have `mapped_parallel`.
-    // Idea: add PVector tags to distinguish between different expression types.
     auto& value = pvector_stats.data[{get_type_name<PVector>(), kInlineSize}];
     if constexpr (!kCanInline) {
       value.num_inlined = -1;
@@ -136,6 +128,11 @@ public:
       ++value.num_heap;
     }
 #endif
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const PVector& vec) {
+    return H::combine(std::move(h), static_cast<const ParentT&>(vec));
   }
 };
 

@@ -130,9 +130,20 @@ inline void Delta::simplify() {
   CHECK_LE(a_, b_);
 }
 
-namespace internal {
-using DeltaDiffT = unsigned char;
-}  // namespace internal
+// Use named type to get better output in `PVectorStats`.
+struct DeltaStorage {
+  using Value = unsigned char;
+
+  Value value;
+
+  bool operator==(const DeltaStorage& other) const { return value == other.value; }
+  bool operator< (const DeltaStorage& other) const { return value <  other.value; }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const DeltaStorage& d) {
+    return H::combine(std::move(h), d.value);
+  }
+};
 
 
 class DeltaAlphabetMapping {
@@ -200,15 +211,15 @@ struct DeltaExprParam {
 #if DISABLE_PACKING
   IDENTITY_STORAGE_FORM
 #else
-  using StorageT = PVector<DeltaDiffT, 10>;
+  using StorageT = PVector<DeltaStorage, 10>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) -> DeltaDiffT {
-      return delta_alphabet_mapping.to_alphabet(d);
+    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) {
+      return DeltaStorage { static_cast<DeltaStorage::Value>(delta_alphabet_mapping.to_alphabet(d)) };
     });
   }
   static ObjectT key_to_object(const StorageT& key) {
-    return mapped(key, [](int ch) {
-      return delta_alphabet_mapping.from_alphabet(ch);
+    return mapped(key, [](DeltaStorage s) {
+      return delta_alphabet_mapping.from_alphabet(s.value);
     });
   }
 #endif
@@ -264,6 +275,9 @@ struct DeltaACoExprParam : DeltaICoExprParam {
     });
   };
 };
+
+static_assert(DeltaExprParam::StorageT::kCanInline);
+static_assert(DeltaNCoExprParam::StorageT::kCanInline);  // no strictly necessary, could be removed
 }  // namespace internal
 
 
