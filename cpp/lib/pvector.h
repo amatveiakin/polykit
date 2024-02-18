@@ -80,8 +80,9 @@ using pvector_base_type = std::conditional_t<
 
 
 struct PVectorStats {
-  using Key = std::pair<std::type_index, int>;  // (type, inlined size)
+  using Key = std::pair<std::string_view, int>;  // (type, inlined size)
   struct Value {
+    int64_t num_empty = 0;
     int64_t num_inlined = 0;
     int64_t num_heap = 0;
   };
@@ -121,12 +122,15 @@ public:
   }
   ~PVector() {
 #if PVECTOR_STATS
+    // TODO: Add synchronization now that we have `mapped_parallel`.
     // Idea: add PVector tags to distinguish between different expression types.
-    auto& value = pvector_stats.data[{typeid(T), kInlineSize}];
+    auto& value = pvector_stats.data[{get_type_name<PVector>(), kInlineSize}];
     if constexpr (!kCanInline) {
       value.num_inlined = -1;
     }
-    if (is_inlined()) {
+    if (this->empty()) {
+      ++value.num_empty;
+    } else if (is_inlined()) {
       ++value.num_inlined;
     } else {
       ++value.num_heap;
