@@ -113,15 +113,17 @@ CoExprT sort_coproduct_parts(const CoExprT& expr) {
   if constexpr (CoExprT::Param::coproduct_is_iterated) {
     return to_lyndon_basis(expr);
   } else {
-    return expr.mapped_key_expanding([](auto term) {
+    CoExprT sorted_expr;
+    for (const auto& [term_ref, coeff] : key_view(expr)) {
+      auto term = term_ref;
       // Note: the comparator is fixed, because filtering by form in `ncomultiply_impl`
       // assumes shorter element go first.
       const int sign = sort_with_sign(term, DISAMBIGUATE(compare_length_first));
-      if (!all_unique_sorted(term)) {
-        return CoExprT{};
+      if (all_unique_sorted(term)) {
+        sorted_expr.add_to_key(term, sign * coeff);
       }
-      return sign * CoExprT::single_key(term);
-    });
+    }
+    return sorted_expr.copy_annotations(expr);
   }
 }
 
