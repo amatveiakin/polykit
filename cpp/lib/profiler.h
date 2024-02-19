@@ -6,6 +6,8 @@
 
 class Profiler {
 public:
+  static void rss_stats();
+
   Profiler(bool enable = true);
 
   void finish(const std::string& operation);
