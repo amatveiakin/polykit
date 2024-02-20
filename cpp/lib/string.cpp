@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "absl/strings/str_format.h"
+
 
 std::vector<std::string> split(const std::string& s, char delim) {
   std::vector<std::string> result;
@@ -24,6 +26,13 @@ std::string to_string_with_thousand_sep(int64_t value) {
   ss.imbue(loc);
   ss << value;
   return ss.str();
+}
+
+std::string format_bytes(size_t value) {
+  // constexpr double kMB = 1024. * 1024.;
+  // return absl::StrFormat("%6.2fMB", value / kMB);
+  constexpr double kGB = 1024. * 1024. * 1024.;
+  return absl::StrFormat("%6.2fGB", value / kGB);
 }
 
 std::string en_plural(

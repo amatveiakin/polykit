@@ -89,6 +89,8 @@ std::vector<std::string> split(const std::string& s, char delim);
 
 std::string to_string_with_thousand_sep(int64_t value);
 
+std::string format_bytes(size_t value);
+
 std::string en_plural(
     int number,
     const std::string& singular,

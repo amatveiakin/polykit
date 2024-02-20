@@ -145,6 +145,9 @@ struct DeltaStorage {
   }
 };
 
+inline MemoryUsage estimated_heap_usage(const Delta&) { return {0, 0}; }
+inline MemoryUsage estimated_heap_usage(const DeltaStorage&) { return {0, 0}; }
+
 
 class DeltaAlphabetMapping {
 public:

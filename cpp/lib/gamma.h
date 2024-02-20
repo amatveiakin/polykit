@@ -76,6 +76,9 @@ struct GammaStorage {
   }
 };
 
+inline MemoryUsage estimated_heap_usage(const Gamma&) { return {0, 0}; }
+inline MemoryUsage estimated_heap_usage(const GammaStorage&) { return {0, 0}; }
+
 struct GammaUniformityMarker {
   int dimension = 0;
   bool operator==(const GammaUniformityMarker& other) const { return dimension == other.dimension; }

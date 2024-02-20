@@ -9,12 +9,7 @@
 
 
 std::string get_rss_stats() {
-  // const double current_rss_mb = get_current_rss() / 1024. / 1024.;
-  // const double peak_rss_mb = get_peak_rss() / 1024. / 1024.;
-  // return absl::StrFormat("RSS %6.2fMB / %6.2fMB", current_rss_mb, peak_rss_mb);
-  const double current_rss_gb = get_current_rss() / 1024. / 1024. / 1024.;
-  const double peak_rss_gb = get_peak_rss() / 1024. / 1024. / 1024.;
-  return absl::StrFormat("RSS %6.2fGB / %6.2fGB", current_rss_gb, peak_rss_gb);
+  return absl::StrFormat("RSS %s / %s", format_bytes(get_current_rss()), format_bytes(get_peak_rss()));
 }
 
 void Profiler::rss_stats() {

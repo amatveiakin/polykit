@@ -87,6 +87,7 @@
 
 #include "compare.h"
 #include "format.h"
+#include "memory_usage_micro.h"
 #include "util.h"
 
 
@@ -940,6 +941,21 @@ std::string dump_to_string_impl(const std::vector<Linear<ParamT>>& space) {
   return absl::StrCat("<", str_join(space, ", ", [](const auto& expr) {
     return annotations_one_liner(expr.annotations());
   }), ">");
+}
+
+
+template<typename ParamT>
+MemoryUsage estimated_heap_usage(const BasicLinear<ParamT>& expr) {
+  return estimated_heap_usage(expr.data());
+}
+
+inline MemoryUsage estimated_heap_usage(const LinearAnnotation& annotations) {
+  return estimated_heap_usage(annotations.expression) + estimated_heap_usage(annotations.errors);
+}
+
+template<typename ParamT>
+MemoryUsage estimated_heap_usage(const Linear<ParamT>& expr) {
+  return estimated_heap_usage(expr.main()) + estimated_heap_usage(expr.annotations());
 }
 
 

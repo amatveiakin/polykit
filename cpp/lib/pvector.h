@@ -22,6 +22,7 @@
 #include "absl/types/span.h"
 
 #include "check.h"
+#include "memory_usage_micro.h"
 #include "string.h"
 
 
@@ -143,6 +144,15 @@ template<typename T> inline constexpr bool is_pvector_v = is_pvector<T>::value;
 template<typename T, int N>
 std::string dump_to_string_impl(const PVector<T, N>& v) {
   return dump_to_string(static_cast<const internal::pvector_base_type<T, N>&>(v));
+}
+
+template<typename T, int N>
+MemoryUsage estimated_heap_usage(const PVector<T, N>& v) {
+  if (v.is_inlined()) {
+    return sum(v, [](const auto& e) { return estimated_heap_usage(e); });
+  } else {
+    return simple_container_estimated_ram_usage(v, true);
+  }
 }
 
 
