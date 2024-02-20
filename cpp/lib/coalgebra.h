@@ -1,13 +1,24 @@
 // Functions related to comultiplication.
 //
-// There are three types of coexpressions. They differ in how the parts are reordered:
+// There are several types of coexpressions. They differ in how the parts are reordered:
+//
 //   * "Normal": parts are sorted lexicographically, with sign. Applying normal
 //     comultiplication twice to the same expressions always yield zero.
-//   * "Iterated": parts are converted to Lyndon basis.
-//   * "Hopf": parts are fixed in place and cannot be reordered. There is no Hopf
-//     comultiplication operation, but such an expression can be constructed by hand.
+//     Function prefix: `n`.
 //
-// All functions come in two forms: prefix "n" stands for "normal", "i" for "iterative".
+//   * "Iterated": parts are converted to Lyndon basis. If comultiplication is applied once
+//     (i.e. there are exactly two parts), this is equivalent to "normal" comultiplication.
+//     Can meaningfully comultiply an expression into a coexpression with three or more parts,
+//     but only if they have the same length.
+//     Function prefix: `i`.
+//
+//   * "Anti-iterated": like iterated, but parts are sorted by descending length instead
+//     of ascending. Used by `expand_into_glued_pairs`.
+//     Function prefix: `a`.
+//
+//   * "Hopf": parts are fixed in place and cannot be reordered.
+//     Function prefix: none. There is no Hopf comultiplication operation, such an
+//     expression can only be constructed by hand.
 //
 // Contains two main functions:
 //
@@ -324,6 +335,11 @@ auto ncomultiply(const T& expr, std::vector<int> form = {}) {
 //   + x1 @ (x2*x3) @ ... @ xn
 //     ...
 //   + x1 @ x2 @ ... @ (x{n-1}*xn)
+//
+// Note. This function relies on the fact that longer coproduct parts go first.
+// If longer parts went last, this function would be broken: Lyndon guarantees
+// that the smallest element goes first, but it does not guarantee that the
+// largest elements goes last, and we need pairs to stay in the same position.
 //
 template<typename ExprT>
 auto expand_into_glued_pairs(const ExprT& expr) {
