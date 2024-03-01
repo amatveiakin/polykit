@@ -63,35 +63,10 @@ static_assert(
 );
 #endif
 
-// Prevent
-//   static_assert(N > 0, "`absl::InlinedVector` requires an inlined capacity.");
-// error when computing `inlined_vector_size`.
-// (It is never used because should_use_inlined_vector<T, 0> is always false.)
-template<typename T, int N>
-struct sizeof_inlined_vector {
-  static constexpr size_t value = sizeof(absl::InlinedVector<T, N>);
-};
-template<typename T>
-struct sizeof_inlined_vector<T, 0> {
-  static constexpr size_t value = 0;
-};
-
-template<typename T, int N, typename Enable = void>
-struct inlined_vector_size {
-  static constexpr int value = N;
-};
-template<typename T, int N>
-struct inlined_vector_size<
-    T, N,
-    std::enable_if_t<sizeof_inlined_vector<T, N + 1>::value == sizeof_inlined_vector<T, N>::value>
-> {
-  static constexpr int value = inlined_vector_size<T, N + 1>::value;
-};
-
 template<typename T, int N>
 using pvector_base_type = std::conditional_t<
   should_use_inlined_vector<T, N>::value,
-  absl::InlinedVector<T, inlined_vector_size<T, N>::value>,
+  absl::InlinedVector<T, N>,
   std::vector<T>
 >;
 }  // namespace internal
@@ -116,7 +91,7 @@ template<typename T, int N>
 class PVector : public internal::pvector_base_type<T, N> {
 public:
   static constexpr bool kCanInline = internal::should_use_inlined_vector<T, N>::value;
-  static constexpr size_t kInlineSize = internal::inlined_vector_size<T, N>::value;  // meaningful only if kCanInline is true
+  static constexpr size_t kInlineSize = (sizeof(PVector) - sizeof(void*)) / sizeof(T);  // meaningful only if kCanInline is true
   using ParentT = internal::pvector_base_type<T, N>;
 
   using ParentT::ParentT;
