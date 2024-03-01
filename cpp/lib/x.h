@@ -6,6 +6,7 @@
 
 #include "check.h"
 #include "format_basic.h"
+#include "poly_limits.h"
 
 
 // All constants go after all variables. Order is likely to be stable.
@@ -20,18 +21,24 @@ enum class XForm {
 
 std::string to_string(XForm form);
 
+struct XNoCheck {};
+
 
 class X {
 public:
-  static constexpr int kMinIndex = 0;
+  static constexpr int kMinIndex = kZeroBasedVariables ? 0 : 1;
   static constexpr int kFakeIndex = -1000;
 
-  constexpr X(XForm form, int idx);
-  constexpr X() : X(XForm::undefined, kFakeIndex) {}
-  constexpr X(int idx) : X(XForm::var, idx) {}
-  static constexpr X Zero() { return X(XForm::zero, kFakeIndex); }
-  static constexpr X Inf() { return X(XForm::infinity, kFakeIndex); }
-  static constexpr X Undefined() { return X(); }
+  // TODO(C++20): Merge `XConstant` and regular constructor. Choose between
+  //   `CHECK`s and `static_assert`s based on `std::is_constant_evaluated`.
+  //   Make all other constructors `constexpr`.
+  constexpr X(XForm form, int idx, XNoCheck) : form_(form), idx_(idx) {};
+  X(XForm form, int idx);
+  X() : X(XForm::undefined, kFakeIndex) {}
+  X(int idx) : X(XForm::var, idx) {}
+  static X Zero() { return X(XForm::zero, kFakeIndex); }
+  static X Inf() { return X(XForm::infinity, kFakeIndex); }
+  static X Undefined() { return X(); }
 
   constexpr XForm form() const { return form_; }
   // It is guaranteed that `idx` for any constant if different from any valid variable index.
@@ -67,9 +74,26 @@ private:
   int idx_ = 0;
 };
 
-inline constexpr X::X(XForm form, int idx) : form_(form), idx_(idx) {
-  // TODO(C++20): Replace CHECK-s with static_assert-s under std::is_constant_evaluated;
-  //   make predefined `X` constants constexpr.
+struct XIllegal {};
+
+template<XForm form, int idx, typename Enable = void>
+struct XConstexpr {
+  static constexpr XIllegal value;
+};
+template<XForm form, int idx>
+struct XConstexpr<form, idx,
+  std::enable_if_t<
+    ((form == XForm::var || form == XForm::neg_var || form == XForm::sq_var) && (idx >= X::kMinIndex)) ||
+    ((form == XForm::zero || form == XForm::infinity || form == XForm::undefined) && (idx == X::kFakeIndex))
+  >
+> {
+  static constexpr X value = X(form, idx, XNoCheck());
+};
+
+template<XForm form, int idx>
+constexpr auto XConstexprV = XConstexpr<form, idx>::value;
+
+inline X::X(XForm form, int idx) : form_(form), idx_(idx) {
   switch (form_) {
     case XForm::var:
     case XForm::neg_var:
@@ -151,44 +175,44 @@ inline X X::substitution_result_0_based(const std::vector<X>& new_points) {
   });
 }
 
-inline static const X Zero = X::Zero();
-inline static const X Inf = X::Inf();
+inline constexpr auto Zero = XConstexprV<XForm::zero, X::kFakeIndex>;
+inline constexpr auto Inf = XConstexprV<XForm::infinity, X::kFakeIndex>;
 
-inline static const X x0 = X(0);
-inline static const X x1 = X(1);
-inline static const X x2 = X(2);
-inline static const X x3 = X(3);
-inline static const X x4 = X(4);
-inline static const X x5 = X(5);
-inline static const X x6 = X(6);
-inline static const X x7 = X(7);
-inline static const X x8 = X(8);
-inline static const X x9 = X(9);
-inline static const X x10 = X(10);
-inline static const X x11 = X(11);
-inline static const X x12 = X(12);
-inline static const X x13 = X(13);
-inline static const X x14 = X(14);
-inline static const X x15 = X(15);
-inline static const X x16 = X(16);
+inline constexpr auto x0 = XConstexprV<XForm::var, 0>;
+inline constexpr auto x1 = XConstexprV<XForm::var, 1>;
+inline constexpr auto x2 = XConstexprV<XForm::var, 2>;
+inline constexpr auto x3 = XConstexprV<XForm::var, 3>;
+inline constexpr auto x4 = XConstexprV<XForm::var, 4>;
+inline constexpr auto x5 = XConstexprV<XForm::var, 5>;
+inline constexpr auto x6 = XConstexprV<XForm::var, 6>;
+inline constexpr auto x7 = XConstexprV<XForm::var, 7>;
+inline constexpr auto x8 = XConstexprV<XForm::var, 8>;
+inline constexpr auto x9 = XConstexprV<XForm::var, 9>;
+inline constexpr auto x10 = XConstexprV<XForm::var, 10>;
+inline constexpr auto x11 = XConstexprV<XForm::var, 11>;
+inline constexpr auto x12 = XConstexprV<XForm::var, 12>;
+inline constexpr auto x13 = XConstexprV<XForm::var, 13>;
+inline constexpr auto x14 = XConstexprV<XForm::var, 14>;
+inline constexpr auto x15 = XConstexprV<XForm::var, 15>;
+inline constexpr auto x16 = XConstexprV<XForm::var, 16>;
 
-inline static const X x0s = X(XForm::sq_var, 0);
-inline static const X x1s = X(XForm::sq_var, 1);
-inline static const X x2s = X(XForm::sq_var, 2);
-inline static const X x3s = X(XForm::sq_var, 3);
-inline static const X x4s = X(XForm::sq_var, 4);
-inline static const X x5s = X(XForm::sq_var, 5);
-inline static const X x6s = X(XForm::sq_var, 6);
-inline static const X x7s = X(XForm::sq_var, 7);
-inline static const X x8s = X(XForm::sq_var, 8);
-inline static const X x9s = X(XForm::sq_var, 9);
-inline static const X x10s = X(XForm::sq_var, 10);
-inline static const X x11s = X(XForm::sq_var, 11);
-inline static const X x12s = X(XForm::sq_var, 12);
-inline static const X x13s = X(XForm::sq_var, 13);
-inline static const X x14s = X(XForm::sq_var, 14);
-inline static const X x15s = X(XForm::sq_var, 15);
-inline static const X x16s = X(XForm::sq_var, 16);
+inline constexpr auto x0s = XConstexprV<XForm::sq_var, 0>;
+inline constexpr auto x1s = XConstexprV<XForm::sq_var, 1>;
+inline constexpr auto x2s = XConstexprV<XForm::sq_var, 2>;
+inline constexpr auto x3s = XConstexprV<XForm::sq_var, 3>;
+inline constexpr auto x4s = XConstexprV<XForm::sq_var, 4>;
+inline constexpr auto x5s = XConstexprV<XForm::sq_var, 5>;
+inline constexpr auto x6s = XConstexprV<XForm::sq_var, 6>;
+inline constexpr auto x7s = XConstexprV<XForm::sq_var, 7>;
+inline constexpr auto x8s = XConstexprV<XForm::sq_var, 8>;
+inline constexpr auto x9s = XConstexprV<XForm::sq_var, 9>;
+inline constexpr auto x10s = XConstexprV<XForm::sq_var, 10>;
+inline constexpr auto x11s = XConstexprV<XForm::sq_var, 11>;
+inline constexpr auto x12s = XConstexprV<XForm::sq_var, 12>;
+inline constexpr auto x13s = XConstexprV<XForm::sq_var, 13>;
+inline constexpr auto x14s = XConstexprV<XForm::sq_var, 14>;
+inline constexpr auto x15s = XConstexprV<XForm::sq_var, 15>;
+inline constexpr auto x16s = XConstexprV<XForm::sq_var, 16>;
 
 
 class XArgs {

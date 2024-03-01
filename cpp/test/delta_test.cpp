@@ -5,8 +5,10 @@
 #include "test_util/matchers.h"
 
 
-#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(DeltaExprTest, SubstituteVariables) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const auto expr =
     +  D(x1, x2)
     -2*D(x1, -x3)
@@ -40,4 +42,3 @@ TEST(DeltaExprTest, SubstituteVariables) {
     -  D(x1, Zero)
   );
 }
-#endif

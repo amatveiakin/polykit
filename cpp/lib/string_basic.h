@@ -109,6 +109,10 @@ constexpr std::string_view get_type_name() {
 
 
 namespace internal {
+template<typename C> std::string dump_vector_like_to_string(const C& v);
+template<typename C> std::string dump_set_like_to_string(const C& v);
+template<typename C> std::string dump_map_like_to_string(const C& v);
+
 class DumpToStringHelper {
 private:
   template<typename Container>
@@ -166,41 +170,37 @@ private:
 
   template<typename T>
   static std::string auto_dump(const std::vector<T>& v) {
-    return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return dump_impl(e); }), "]");
+    return dump_vector_like_to_string(v);
   }
   template<typename T, size_t N>
   static std::string auto_dump(const std::array<T, N>& v) {
-    return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return dump_impl(e); }), "]");
+    return dump_vector_like_to_string(v);
   }
   template<typename T, size_t N>
   static std::string auto_dump(const absl::InlinedVector<T, N>& v) {
-    return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return dump_impl(e); }), "]");
+    return dump_vector_like_to_string(v);
   }
   template<typename T>
   static std::string auto_dump(absl::Span<const T> v) {
-    return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return dump_impl(e); }), "]");
+    return dump_vector_like_to_string(v);
   }
 
   template<typename T, typename Comp>
   static std::string auto_dump(const std::set<T, Comp>& v) {
-    return absl::StrCat("{", str_join(set_to_vector(v), ", ", [](const auto& e) { return dump_impl(e); }), "}");
+    return dump_set_like_to_string(v);
   }
   template<typename T>
   static std::string auto_dump(const absl::flat_hash_set<T>& v) {
-    return absl::StrCat("{", str_join(set_to_vector(v), ", ", [](const auto& e) { return dump_impl(e); }), "}");
+    return dump_set_like_to_string(v);
   }
 
   template<typename K, typename V, typename Comp>
   static std::string auto_dump(const std::map<K, V, Comp>& v) {
-    return absl::StrCat("{", str_join(map_to_vector(v), ", ", [](const auto& e) {
-      return absl::StrCat(dump_impl(e.first), " => ", dump_impl(e.second));
-    }), "}");
+    return dump_map_like_to_string(v);
   }
   template<typename K, typename V>
   static std::string auto_dump(const absl::flat_hash_map<K, V>& v) {
-    return absl::StrCat("{", str_join(map_to_vector(v), ", ", [](const auto& e) {
-      return absl::StrCat(dump_impl(e.first), " => ", dump_impl(e.second));
-    }), "}");
+    return dump_map_like_to_string(v);
   }
 
 public:
@@ -220,6 +220,21 @@ public:
     return auto_dump(v);
   }
 };
+
+template<typename C>
+std::string dump_vector_like_to_string(const C& v) {
+  return absl::StrCat("[", str_join(v, ", ", [](const auto& e) { return DumpToStringHelper::dump_impl(e); }), "]");
+}
+template<typename C>
+std::string dump_set_like_to_string(const C& v) {
+  return absl::StrCat("{", str_join(set_to_vector(v), ", ", [](const auto& e) { return dump_impl(e); }), "}");
+}
+template<typename C>
+std::string dump_map_like_to_string(const C& v) {
+  return absl::StrCat("{", str_join(map_to_vector(v), ", ", [](const auto& e) {
+    return absl::StrCat(dump_impl(e.first), " => ", dump_impl(e.second));
+  }), "}");
+}
 }  // namespace internal
 
 template<typename T>

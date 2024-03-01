@@ -334,6 +334,14 @@ auto mapped_array(const std::array<In, N>& src, F&& func) {
   return dst;
 }
 
+template<typename Dst, typename Src, typename F>
+Dst mapped_to(const Src& src, F&& func) {
+  Dst dst;
+  dst.reserve(src.size());
+  absl::c_transform(src, std::back_inserter(dst), std::forward<F>(func));
+  return dst;
+}
+
 // Acts as `mapped(src, &to_string)`; the latter is forbidden because `to_string` is overloaded.
 template<typename Src>
 auto mapped_to_string(const Src& src) {

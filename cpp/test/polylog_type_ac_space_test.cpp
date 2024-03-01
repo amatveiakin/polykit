@@ -171,8 +171,10 @@ TEST(PolylogSpaceTest, HUGE_ClusterCoL_Weight5) {
   EXPECT_EQ(cluster_co_l_ranks(5, 5, 6), (ClusterCoRanks{0, 0}));
 }
 
-#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const std::vector points = {x1,x2,x3,-x1,-x2,-x3};
   auto cl1 = CL1_inv(points);
   auto cl2 = CL2_inv(points);
@@ -192,7 +194,6 @@ TEST(PolylogSpaceTest, LARGE_CLInvGluedPairs) {
   // Note. Testing against previously computed result; no alternative proof known.
   EXPECT_EQ(ranks.intersected(), 42);
 }
-#endif
 
 // TODO: Is this test meaningful? How should it be named?
 TEST(PolylogSpaceTest, LARGE_FixVarDeltaQuasiProjectionKernelRankIsBinomialSum) {

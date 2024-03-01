@@ -260,8 +260,10 @@ TEST(QLiTest, QLi2_Arg6_SuffleDecompose) {
 }
 
 
-#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(QLiTest, KummersEquation) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_EQ_AFTER_LYNDON(
     + QLiSymm3( x1, x2, x3,-x1,-x2,-x3)
     ,
@@ -275,6 +277,9 @@ TEST(QLiTest, KummersEquation) {
 }
 
 TEST(QLiTest, QLiSymm3_Arg4_EquationDerivedFromKummers) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     -2*QLiSymm3( x1, x2,-x1, x3)
     -2*QLiSymm3( x1, x2, x3,-x2)
@@ -289,6 +294,9 @@ TEST(QLiTest, QLiSymm3_Arg4_EquationDerivedFromKummers) {
 }
 
 TEST(QLiTest, QLi4_InvolutionEquation) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     +2*QLi4( x1,-x3, x1,-x2, x3, x2)
     -2*QLi4(-x3,-x2, x1, x3,-x1,-x2)
@@ -304,6 +312,9 @@ TEST(QLiTest, QLi4_InvolutionEquation) {
 }
 
 TEST(QLiTest, QLi4_Arg4_InvolutionComultiplication) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_EQ(
     filter_coexpr(
       icomultiply(QLi4(x1,x3,-x1,-x3), {1,3}),
@@ -317,6 +328,9 @@ TEST(QLiTest, QLi4_Arg4_InvolutionComultiplication) {
 }
 
 TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_1_3) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_EQ(
     filter_coexpr(
       icomultiply(QLi4(x1,-x3,x1,-x2,x3,x2), {1,3}),
@@ -332,6 +346,9 @@ TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_1_3) {
 }
 
 TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   EXPECT_EXPR_ZERO(
     icomultiply(
       + QLi4(-x1,x3,x1,x2,-x1,Inf)
@@ -341,7 +358,6 @@ TEST(QLiTest, QLi4_Arg6_InvolutionComultiplication_2_2) {
     )
   );
 }
-#endif
 
 
 TEST(QLiTest, A2_DihedralSymmetry) {

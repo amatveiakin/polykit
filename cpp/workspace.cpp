@@ -1015,7 +1015,7 @@ int main(int /*argc*/, char *argv[]) {
 
   const int weight = 5;
   const int dimension = 3;
-  for (const int num_points : range_incl(5, 10)) {
+  for (const int num_points : range_incl(5, 8)) {
     const auto points = to_vector(range_incl(1, num_points));
     Profiler profiler;
     const auto full_space = co_space(weight, 2, [&](const int w) {
@@ -1033,9 +1033,9 @@ int main(int /*argc*/, char *argv[]) {
       return is_totally_weakly_separated(expr);
     });
     profiler.finish("space");
-    const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
-    profiler.finish("ranks");
-    std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
-    std::cout << to_string(ranks) << "\n";
+    // const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
+    // profiler.finish("ranks");
+    // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+    // std::cout << to_string(ranks) << "\n";
   }
 }

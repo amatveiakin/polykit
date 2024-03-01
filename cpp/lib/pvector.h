@@ -53,11 +53,28 @@ template<typename T, int N>
 struct should_use_inlined_vector {
   static constexpr bool value = sizeof(absl::InlinedVector<T, N>) < kMaxPVectorSize;
 };
+template<typename T>
+struct should_use_inlined_vector<T, 0> {
+  static constexpr bool value = false;
+};
 static_assert(
   internal::should_use_inlined_vector<char, 1>::value,
   "PVector wouldn't ever use an inlined representation"
 );
 #endif
+
+// Prevent
+//   static_assert(N > 0, "`absl::InlinedVector` requires an inlined capacity.");
+// error when computing `inlined_vector_size`.
+// (It is never used because should_use_inlined_vector<T, 0> is always false.)
+template<typename T, int N>
+struct sizeof_inlined_vector {
+  static constexpr size_t value = sizeof(absl::InlinedVector<T, N>);
+};
+template<typename T>
+struct sizeof_inlined_vector<T, 0> {
+  static constexpr size_t value = 0;
+};
 
 template<typename T, int N, typename Enable = void>
 struct inlined_vector_size {
@@ -66,7 +83,7 @@ struct inlined_vector_size {
 template<typename T, int N>
 struct inlined_vector_size<
     T, N,
-    std::enable_if_t<sizeof(absl::InlinedVector<T, N + 1>) == sizeof(absl::InlinedVector<T, N>)>
+    std::enable_if_t<sizeof_inlined_vector<T, N + 1>::value == sizeof_inlined_vector<T, N>::value>
 > {
   static constexpr int value = inlined_vector_size<T, N + 1>::value;
 };

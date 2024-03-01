@@ -21,17 +21,12 @@
 #include "coalgebra.h"
 #include "format.h"
 #include "linear.h"
-#include "pvector.h"
+#include "poly_vector.h"
 #include "util.h"
 #include "x.h"
 
 
 #define HAS_DELTA_EXPR 1
-
-// Set to `0` in order to support more vars at the expense of losing XForm::neg_var.
-// TODO: Find a better way to support more vars: this implementation is inconvenient and
-//   it disables tests involving negative vars when this is set to 0.
-#define ENABLE_NEGATIVE_DELTA_VARIABLES 1
 
 // TODO: Implement integratability criterion
 
@@ -168,16 +163,20 @@ public:
 
 private:
   static constexpr int kZeroCode = kMaxDimension - 1;
-#if ENABLE_NEGATIVE_DELTA_VARIABLES
-  static constexpr int kNegVarCodeStart = (kZeroCode + 1) / 2;
-#else
-  static constexpr int kNegVarCodeStart = kZeroCode;
-#endif
+  static constexpr int kNegVarCodeStart = kAllowNegativeVariables ? (kZeroCode + 1) / 2 : kZeroCode;
   static constexpr int kNegVarCodeEnd = kZeroCode;
   static constexpr int kMaxNegVars = kNegVarCodeEnd - kNegVarCodeStart;
   static constexpr int kVarCodeStart = 0;
   static constexpr int kVarCodeEnd = kNegVarCodeStart;
   static constexpr int kMaxVars = kVarCodeEnd - kVarCodeStart;
+
+  // TODO: Support as many variables as necessary. Idea: split DeltaExpr into two classes:
+  //   - Simple (x_i - x_j) diffs, which could encode more variables in one byte.
+  //   - Advanced Delta which also supportes (x_i + x_j) and requires two bytes.
+  // Another benefit would be stronger typing, since it only really makes sense to convert
+  // simple `DeltaExpr`s to `GammaExpr`s.
+  //
+  // static_assert(kMaxVars >= kMaxVariables);
 
   static X alphabet_to_x(int ch);
   static int x_to_alphabet(X x) {
@@ -214,9 +213,9 @@ struct DeltaExprParam {
 #if DISABLE_PACKING
   IDENTITY_STORAGE_FORM
 #else
-  using StorageT = PVector<DeltaStorage, 10>;
+  using StorageT = WeightVector<DeltaStorage>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, [](const Delta& d) {
+    return mapped_to<StorageT>(obj, [](const Delta& d) {
       return DeltaStorage { static_cast<DeltaStorage::Value>(delta_alphabet_mapping.to_alphabet(d)) };
     });
   }
@@ -245,9 +244,9 @@ struct DeltaICoExprParam {
   IDENTITY_STORAGE_FORM
 #else
   using PartStorageT = DeltaExprParam::StorageT;
-  using StorageT = PVector<PartStorageT, 2>;
+  using StorageT = CopartVector<PartStorageT>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, DeltaExprParam::object_to_key);
+    return mapped_to<StorageT>(obj, DeltaExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
     return mapped(key, DeltaExprParam::key_to_object);
@@ -280,7 +279,7 @@ struct DeltaACoExprParam : DeltaICoExprParam {
 };
 
 static_assert(DeltaExprParam::StorageT::kCanInline);
-static_assert(DeltaNCoExprParam::StorageT::kCanInline);  // no strictly necessary, could be removed
+// static_assert(DeltaNCoExprParam::StorageT::kCanInline);
 }  // namespace internal
 
 

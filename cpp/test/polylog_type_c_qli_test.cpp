@@ -7,8 +7,10 @@
 #include "test_util/matchers.h"
 
 
-#if ENABLE_NEGATIVE_DELTA_VARIABLES
 TEST(TypeCQLiTest, TypeCQLi_SymmetrizationFormula) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const int weight = 4;
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     +8*typeC_QLi(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
@@ -29,6 +31,9 @@ TEST(TypeCQLiTest, TypeCQLi_SymmetrizationFormula) {
 }
 
 TEST(TypeCQLiTest, LARGE_TypeCQLiSymm4_IsSymmetric) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const std::vector points = {x1,x2,x3,x4,-x1,-x2,-x3,-x4};
   for (const int weight : range_incl(2, 6)) {
     const int sign = neg_one_pow(weight);
@@ -40,6 +45,9 @@ TEST(TypeCQLiTest, LARGE_TypeCQLiSymm4_IsSymmetric) {
 }
 
 TEST(TypeCQLiTest, TypeCQLiSymm3_Formula) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const int weight = 3;
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     + typeC_QLiSymm(weight, {x1,x2,x3,x4,-x1,-x2,-x3,-x4})
@@ -81,6 +89,9 @@ TEST(TypeCQLiTest, TypeCQLiSymm3_Formula) {
 }
 
 TEST(TypeCQLiTest, TypeCQLiSymm4_Sum) {
+  if constexpr (!kAllowNegativeVariables) {
+    GTEST_SKIP();
+  }
   const int weight = 4;
   EXPECT_EXPR_ZERO_AFTER_LYNDON(
     // sign for typeC_QLiSymm = (-1)^(sum of the positive indices)
@@ -178,4 +189,3 @@ TEST(TypeCQLiTest, TypeCQLiSymm4_Sum) {
     )
   );
 }
-#endif

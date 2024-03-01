@@ -9,12 +9,12 @@
 #include "check.h"
 #include "coalgebra.h"
 #include "delta.h"
-#include "pvector.h"
+#include "poly_vector.h"
 
 
 #define HAS_GAMMA_EXPR 1
 
-constexpr int kMaxGammaVariables = 16;
+constexpr int kMaxGammaVariables = kMaxVariables;
 
 static_assert(kMaxGammaVariables <= sizeof(unsigned long) * CHAR_BIT);  // for std::bitset::to_ulong
 
@@ -92,9 +92,9 @@ std::string to_string(const GammaUniformityMarker& marker);
 namespace internal {
 struct GammaExprParam {
   using ObjectT = std::vector<Gamma>;
-  using StorageT = PVector<GammaStorage, 8>;
+  using StorageT = WeightVector<GammaStorage>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, [](const Gamma& g) {
+    return mapped_to<StorageT>(obj, [](const Gamma& g) {
       return GammaStorage { static_cast<GammaStorage::Value>(g.index_bitset().to_ulong()) };
     });
   }
@@ -124,9 +124,9 @@ struct GammaICoExprParam {
   using PartExprParam = GammaExprParam;
   using ObjectT = std::vector<std::vector<Gamma>>;
   using PartStorageT = GammaExprParam::StorageT;
-  using StorageT = PVector<PartStorageT, 2>;
+  using StorageT = CopartVector<PartStorageT>;
   static StorageT object_to_key(const ObjectT& obj) {
-    return mapped_to_pvector<StorageT>(obj, GammaExprParam::object_to_key);
+    return mapped_to<StorageT>(obj, GammaExprParam::object_to_key);
   }
   static ObjectT key_to_object(const StorageT& key) {
     return mapped(key, GammaExprParam::key_to_object);
@@ -163,7 +163,7 @@ struct GammaACoExprParam : GammaICoExprParam {
 };
 
 static_assert(GammaExprParam::StorageT::kCanInline);
-static_assert(GammaNCoExprParam::StorageT::kCanInline);  // no strictly necessary, could be removed
+// static_assert(GammaNCoExprParam::StorageT::kCanInline);
 }  // namespace internal
 
 
