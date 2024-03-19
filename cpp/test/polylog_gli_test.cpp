@@ -246,7 +246,7 @@ TEST(GLiTest, LARGE_GLiViaLowerDim) {
       }
     }
     rhs *= neg_one_pow(p - 1);
-    std::cout << to_lyndon_basis(lhs - rhs);
+    EXPECT_EXPR_EQ_AFTER_LYNDON(lhs, rhs);
   }
 }
 
@@ -263,7 +263,7 @@ TEST(GLiTest, LARGE_GLiSumInKernelA) {
       }
     }
     const auto expr = lhs + neg_one_pow(p - 1) * rhs;
-    std::cout << to_lyndon_basis(a_full(expr, 2*p+1));
+    EXPECT_EXPR_ZERO_AFTER_LYNDON(a_full(expr, 2*p+1));
   }
 }
 
