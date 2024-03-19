@@ -267,6 +267,23 @@ TEST(GLiTest, LARGE_GLiSumInKernelA) {
   }
 }
 
+TEST(GLiTest, LARGE_GLiAntisymmetricModuloWeigth1) {
+  const auto gli_sum =
+    + GLi3(1,2,3,4,5,6)
+    + GLi3(1,4,3,2,5,6)
+  ;
+  Gr_Space space;
+  for (const auto& [bonus_p, main_args_pool] : index_splits(seq_incl(1, 6), 1)) {
+    for (const auto& main_p : combinations(main_args_pool, 4)) {
+      auto p = main_p;
+      space.push_back(GrQLiVec(3, {bonus_p}, p));
+      std::swap(p[1], p[2]);
+      space.push_back(GrQLiVec(3, {bonus_p}, p));
+    }
+  }
+  ASSERT_TRUE(space_contains(space, {gli_sum}, DISAMBIGUATE(to_lyndon_basis)));
+}
+
 TEST(GLiTest, LARGE_ABEquations) {
   for (const auto p : range_incl(3, 4)) {
     EXPECT_EXPR_EQ_AFTER_LYNDON(
