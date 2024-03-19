@@ -1013,29 +1013,50 @@ int main(int /*argc*/, char *argv[]) {
   // profiler.finish("check");
 
 
-  const int weight = 5;
-  const int dimension = 3;
-  for (const int num_points : range_incl(5, 8)) {
-    const auto points = to_vector(range_incl(1, num_points));
-    Profiler profiler;
-    const auto full_space = co_space(weight, 2, [&](const int w) {
-      Gr_Space sp;
-      switch (w) {
-        case 1: sp = GrFx(dimension, points); break;
-        case 2: sp = GrL2_unreduced(dimension, points); break;
-        case 3: sp = CGrL3_Dim3_test_space_unreduced(points); break;
-        default: sp = CGrL_test_space(w, dimension, points); break;
-      }
-      const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
-      return normalize_space_remove_consecutive(spl, dimension, num_points);
-    });
-    const auto space = filtered(full_space, [](const auto& expr) {
-      return is_totally_weakly_separated(expr);
-    });
-    profiler.finish("space");
-    // const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
-    // profiler.finish("ranks");
-    // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
-    // std::cout << to_string(ranks) << "\n";
+  // const int weight = 5;
+  // const int dimension = 3;
+  // for (const int num_points : range_incl(5, 8)) {
+  //   const auto points = to_vector(range_incl(1, num_points));
+  //   Profiler profiler;
+  //   const auto full_space = co_space(weight, 2, [&](const int w) {
+  //     Gr_Space sp;
+  //     switch (w) {
+  //       case 1: sp = GrFx(dimension, points); break;
+  //       case 2: sp = GrL2_unreduced(dimension, points); break;
+  //       case 3: sp = CGrL3_Dim3_test_space_unreduced(points); break;
+  //       default: sp = CGrL_test_space(w, dimension, points); break;
+  //     }
+  //     const auto spl = mapped(sp, DISAMBIGUATE(to_lyndon_basis));
+  //     return normalize_space_remove_consecutive(spl, dimension, num_points);
+  //   });
+  //   const auto space = filtered(full_space, [](const auto& expr) {
+  //     return is_totally_weakly_separated(expr);
+  //   });
+  //   profiler.finish("space");
+  //   // const auto ranks = space_mapping_ranks(space, identity_function, DISAMBIGUATE(ncomultiply));
+  //   // profiler.finish("ranks");
+  //   // std::cout << "d=" << dimension << ", w=" << weight << ", p=" << num_points << ": ";
+  //   // std::cout << to_string(ranks) << "\n";
+  // }
+
+
+  Profiler profiler;
+  {
+    const auto expr = QLi5(1,2,3,4,5,6,7,8,9,10);
+    profiler.finish("expr");
+    const auto lyndon = to_lyndon_basis(expr);
+    profiler.finish("lyndon");
+    const auto ncoexpr = ncomultiply(lyndon);
+    profiler.finish("ncoexpr");
+  }
+  {
+    const auto expr = QLi6(1,2,3,4,5,6,7,8);
+    profiler.finish("expr");
+    const auto lyndon = to_lyndon_basis(expr);
+    profiler.finish("lyndon");
+    const auto ncoexpr = ncomultiply(lyndon);
+    profiler.finish("ncoexpr");
+    const auto icoexpr = icomultiply(lyndon, {2,2,2});
+    profiler.finish("icoexpr");
   }
 }

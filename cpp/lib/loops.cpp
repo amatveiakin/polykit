@@ -247,10 +247,10 @@ LiraExpr loop_expr_to_lira_expr(const LoopExpr& expr) {
             FATAL(absl::StrCat("Unsupported loop size: ", loop.size()));
         }
       });
-    return outer_product(absl::MakeConstSpan(ratio_exprs),
-      [](const auto& lhs, const auto& rhs) {
-        return concat(lhs, rhs);
-      }, AnnNone()
+    return outer_product(
+      absl::MakeConstSpan(ratio_exprs),
+      [](const auto& lhs, const auto& rhs) { return concat(lhs, rhs); },
+      []() { return AnnNone(); }
     ).template mapped<LiraExpr>([](const auto& loops) {
       return LiraParamOnes(loops);
     });
@@ -683,10 +683,8 @@ LoopExpr loops_var5_shuffle_internally(const LoopExpr& expr) {
     });
     return outer_product(
       absl::MakeConstSpan(term_shuffled),
-      [](const Loops& lhs, const Loops& rhs) {
-        return concat(lhs, rhs);
-      },
-      AnnNone()
+      [](const Loops& lhs, const Loops& rhs) { return concat(lhs, rhs); },
+      []() { return AnnNone(); }
     );
   });
 }

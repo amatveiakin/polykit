@@ -9,13 +9,13 @@
 
 constexpr int kForeweight = 0;
 
-static EpsilonExpr to_expression(const EpsilonPack& pack) {
+static EpsilonExpr::Basic to_expression(const EpsilonPack& pack) {
   return std::visit(overloaded{
     [](const std::vector<Epsilon>& product) {
-      return EpsilonExpr::single(product);
+      return EpsilonExpr::Basic::single(product);
     },
     [](const LiParam& formal_symbol) {
-      return LiVec(formal_symbol);
+      return LiVec(formal_symbol).main();
     },
   }, pack);
 }
@@ -40,14 +40,14 @@ static LiParamZipElement glue_li_elements(
   };
 }
 
-static EpsilonExpr monom_mystic_product(
+static EpsilonExpr::Basic monom_mystic_product(
     const EpsilonPack& lhs,
     const EpsilonPack& rhs) {
   if (is_unity(lhs)) {
-    return EpsilonExpr::single(rhs);
+    return EpsilonExpr::Basic::single(rhs);
   }
   if (is_unity(rhs)) {
-    return EpsilonExpr::single(lhs);
+    return EpsilonExpr::Basic::single(lhs);
   }
   if (std::holds_alternative<std::vector<Epsilon>>(lhs) ||
       std::holds_alternative<std::vector<Epsilon>>(rhs)) {
@@ -58,7 +58,7 @@ static EpsilonExpr monom_mystic_product(
   } else {
     CHECK(std::holds_alternative<LiParam>(lhs) &&
           std::holds_alternative<LiParam>(rhs));
-    return EpsilonExpr::from_collection(
+    return EpsilonExpr::Basic::from_collection(
       mapped(
         quasi_shuffle_product(
           li_param_to_vec(std::get<LiParam>(lhs)),
@@ -73,7 +73,7 @@ static EpsilonExpr monom_mystic_product(
   }
 }
 
-static EpsilonExpr monom_key_mystic_product(
+static EpsilonExpr::Basic monom_key_mystic_product(
     const EpsilonExpr::StorageT& lhs_key,
     const EpsilonExpr::StorageT& rhs_key) {
   return monom_mystic_product(
@@ -85,13 +85,13 @@ EpsilonExpr mystic_product(
     const EpsilonExpr& lhs,
     const EpsilonExpr& rhs) {
   return outer_product_expanding(lhs, rhs, monom_key_mystic_product,
-    AnnFunctionOp("mystic"));
+    []() { return AnnFunctionOp("mystic"); });
 }
 
 EpsilonExpr mystic_product(
     const absl::Span<const EpsilonExpr>& expressions) {
   return outer_product_expanding(expressions, monom_key_mystic_product,
-    AnnFunctionOp("mystic"));
+    []() { return AnnFunctionOp("mystic"); });
 }
 
 EpsilonICoExpr mystic_product(
@@ -100,7 +100,7 @@ EpsilonICoExpr mystic_product(
   return outer_product_expanding(
     lhs, rhs,
     [](const EpsilonICoExpr::StorageT& lhs_key,
-       const EpsilonICoExpr::StorageT& rhs_key) -> EpsilonICoExpr {
+       const EpsilonICoExpr::StorageT& rhs_key) -> EpsilonICoExpr::Basic {
       // Optimization potential: do everything in key space without converting to object space.
       const std::vector<EpsilonPack> lhs_term =
           EpsilonICoExpr::Param::key_to_object(lhs_key);
@@ -114,7 +114,7 @@ EpsilonICoExpr mystic_product(
         monom_mystic_product(lhs_term[1], rhs_term[1])
       );
     },
-    AnnFunctionOp("mystic")
+    []() { return AnnFunctionOp("mystic"); }
   );
 }
 
@@ -136,12 +136,12 @@ static LiraParamZipElement glue_lira_elements(
   return LiraParamZipElement{lhs.first + rhs.first, lhs.second * rhs.second};
 }
 
-static ThetaExpr monom_quasi_shuffle_product(
+static ThetaExpr::Basic monom_quasi_shuffle_product(
     const ThetaPack& lhs,
     const ThetaPack& rhs) {
   CHECK(std::holds_alternative<LiraParam>(lhs) &&
         std::holds_alternative<LiraParam>(rhs));
-  return ThetaExpr::from_collection(
+  return ThetaExpr::Basic::from_collection(
     mapped(
       quasi_shuffle_product(
         lira_param_to_vec(std::get<LiraParam>(lhs)),
@@ -155,7 +155,7 @@ static ThetaExpr monom_quasi_shuffle_product(
   );
 }
 
-static ThetaExpr monom_key_quasi_shuffle_product(
+static ThetaExpr::Basic monom_key_quasi_shuffle_product(
     const ThetaExpr::StorageT& lhs_key,
     const ThetaExpr::StorageT& rhs_key) {
   return monom_quasi_shuffle_product(
@@ -166,5 +166,5 @@ static ThetaExpr monom_key_quasi_shuffle_product(
 ThetaExpr quasi_shuffle_product_expr(
     const absl::Span<const ThetaExpr>& expressions) {
   return outer_product_expanding(expressions, monom_key_quasi_shuffle_product,
-    AnnFunctionOp("quasishuffle"));
+    []() { return AnnFunctionOp("quasishuffle"); });
 }

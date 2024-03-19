@@ -6,6 +6,7 @@
 #include "cpp/lib/matrix.h"
 
 
+// TODO: Consider allowing to compare `Linear` with `BasicLinear`.
 template<typename LinearT>
 void EXPECT_EXPR_EQ(const LinearT& lhs, const LinearT& rhs) {
   const LinearT diff = lhs - rhs;

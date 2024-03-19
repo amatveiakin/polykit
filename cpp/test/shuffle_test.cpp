@@ -12,8 +12,9 @@ TEST(ShuffleProductTest, ThreeExpressions) {
       std::vector{0, 1, 0},
       std::vector{1, 0},
       std::vector{1},
-    }).cast_to<SimpleVectorExpr>()
+    }).cast_to<SimpleVectorExpr::Basic>()
     ,
+    (
      +2 * SV({0, 1, 0, 1, 0, 1})
      +4 * SV({0, 1, 0, 1, 1, 0})
      +4 * SV({0, 1, 1, 0, 0, 1})
@@ -26,5 +27,6 @@ TEST(ShuffleProductTest, ThreeExpressions) {
      +8 * SV({1, 0, 1, 1, 0, 0})
      +4 * SV({1, 1, 0, 0, 1, 0})
      +4 * SV({1, 1, 0, 1, 0, 0})
+    ).main()
   );
 }

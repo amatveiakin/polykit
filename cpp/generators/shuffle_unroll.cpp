@@ -22,8 +22,8 @@ std::string shuffle_unrolled(int n, int m) {
   absl::c_sort(lines);
   std::string function_name = absl::StrCat("shuffle_product_unrolled_", n, "_", m);
   std::cout << "template<typename MonomT>\n";
-  std::cout << "Linear<SimpleLinearParam<MonomT>> " << function_name << "(const MonomT& u, const MonomT& v) {\n";
-  std::cout << "  Linear<SimpleLinearParam<MonomT>> ret;\n";
+  std::cout << "BasicLinear<SimpleLinearParam<MonomT>> " << function_name << "(const MonomT& u, const MonomT& v) {\n";
+  std::cout << "  BasicLinear<SimpleLinearParam<MonomT>> ret;\n";
   for (const auto& line : lines) {
     std::cout << line << "\n";
   }
@@ -51,12 +51,12 @@ std::string shuffle_unrolled_rust(int n, int m) {
   }
   absl::c_sort(lines);
   std::string function_name = absl::StrCat("shuffle_product_unrolled_", n, "_", m);
-  std::cout << "fn " << function_name << "<T, MonomT>(u: &MonomT, v: &MonomT) -> Linear<MonomT>\n";
+  std::cout << "fn " << function_name << "<T, MonomT>(u: &MonomT, v: &MonomT) -> BasicLinear<MonomT>\n";
   std::cout << "where\n";
   std::cout << "    T: Clone,\n";
   std::cout << "    MonomT: LinearMonom + VectorLike<T>,\n";
   std::cout << "{\n";
-  std::cout << "    let mut ret = Linear::<MonomT>::zero();\n";
+  std::cout << "    let mut ret = BasicLinear::<MonomT>::zero();\n";
   for (const auto& line : lines) {
     std::cout << line << "\n";
   }
@@ -77,7 +77,7 @@ void generate_shuffle_unrolled() {
     }
   }
   std::cout << "template<typename MonomT>\n";
-  std::cout << "Linear<SimpleLinearParam<MonomT>> shuffle_product_unrolled(MonomT u, MonomT v) {\n";
+  std::cout << "BasicLinear<SimpleLinearParam<MonomT>> shuffle_product_unrolled(MonomT u, MonomT v) {\n";
   std::cout << "  if (u.size() > v.size()) {\n";
   std::cout << "    std::swap(u, v);\n";
   std::cout << "  }\n";
@@ -108,6 +108,7 @@ void generate_shuffle_unrolled_rust() {
       function_names[n][m] = shuffle_unrolled_rust(n, m);
     }
   }
+  // TODO: Switch to BasicLinear too.
   std::cout << "fn shuffle_product_unrolled<T, MonomT>(u: &MonomT, v: &MonomT) -> Option<Linear<MonomT>>\n";
   std::cout << "where\n";
   std::cout << "    T: Clone,\n";

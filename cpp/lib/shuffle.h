@@ -19,8 +19,8 @@
 
 
 template<typename MonomT>
-Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
-  using LinearT = Linear<SimpleLinearParam<MonomT>>;
+BasicLinear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT& v) {
+  using LinearT = BasicLinear<SimpleLinearParam<MonomT>>;
   if (u.empty() && v.empty()) {
     return {};
   }
@@ -58,9 +58,9 @@ Linear<SimpleLinearParam<MonomT>> shuffle_product(const MonomT& u, const MonomT&
 
 // Returns  w1 ⧢ w2 ⧢ ... ⧢ wn
 template<typename MonomT>
-Linear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
+BasicLinear<SimpleLinearParam<MonomT>> shuffle_product(std::vector<MonomT> words) {
   // Optimization potential: unroll for 3-4 words.
-  using LinearT = Linear<SimpleLinearParam<MonomT>>;
+  using LinearT = BasicLinear<SimpleLinearParam<MonomT>>;
   if (words.size() == 0) {
     return {};
   } else if (words.size() == 1) {
@@ -91,12 +91,13 @@ template<typename LinearT>
 LinearT shuffle_product_expr(
     const LinearT& lhs,
     const LinearT& rhs) {
+  static_assert(is_any_linear_v<LinearT>);
   return from_vector_expression<LinearT>(
     outer_product_expanding(
       to_vector_expression(lhs),
       to_vector_expression(rhs),
       [](const auto& u, const auto& v) { return shuffle_product(u, v); },
-      AnnFunctionOp("shuffle")
+      []() { return AnnFunctionOp("shuffle"); }
     )
   );
 }
@@ -104,6 +105,7 @@ LinearT shuffle_product_expr(
 template<typename LinearT>
 LinearT shuffle_product_expr(
     const absl::Span<const LinearT>& expressions) {
+  static_assert(is_any_linear_v<LinearT>);
   return from_vector_expression<LinearT>(
     outer_product_expanding(
       absl::MakeConstSpan(
@@ -112,7 +114,7 @@ LinearT shuffle_product_expr(
         })
       ),
       [](const auto& u, const auto& v) { return shuffle_product(u, v); },
-      AnnFunctionOp("shuffle")
+      []() { return AnnFunctionOp("shuffle"); }
     )
   );
 }

@@ -67,13 +67,19 @@
 // cannot be convrted to vector space.
 //
 //
-// # Annotations
+// # Annotations, `Linear` vs `BasicLinear`
 //
 // A linear expression can be annotated with a function used to create it. Annotations are
 // carried over with the expression and all linear operations (+, -, *, div_int) applied to
 // the expression are applied to the annotations as well. Annotations are a convenient way
 // to keep track of the functions that went into an equation. Use `annotate` in order to add
 // a new annotations to an expression.
+//
+// When dealing with tiny linear expressions internally it could be beneficial to deal with
+// `BasicLinear`s, which don't support annotations, rather than `Linear`s. This approach
+// has two advantages. First, even empty annotations comsume tinby amounts of RAM, so when
+// constructing many tine expressions there could be small but noticeable performace gains.
+// Second, it makes it impossible to forget to annotate the expression.
 
 #pragma once
 
@@ -202,10 +208,23 @@ struct VectorLinearParam : SimpleLinearParam<typename BaseParamT::VectorT> {
 template<typename, typename = void>
 struct is_linear : std::false_type {};
 template<typename T>
-struct is_linear<T, std::void_t<typename T::ObjectT, typename T::StorageT, typename T::BasicLinearMain>> : std::true_type {};
+struct is_linear<T, std::void_t<typename T::ObjectT, typename T::StorageT, typename T::Basic>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_linear_v = is_linear<T>::value;
 
+template<typename, typename = void>
+struct is_basic_linear : std::false_type {};
+template<typename T>
+struct is_basic_linear<T, std::void_t<typename T::ObjectT, typename T::StorageT, typename T::Full>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_basic_linear_v = is_basic_linear<T>::value;
+
+template <typename T>
+inline constexpr bool is_any_linear_v = is_linear_v<T> || is_basic_linear_v<T>;
+
+
+template<typename ParamT>
+class Linear;
 
 template<typename ParamT>
 class BasicLinear {
@@ -213,6 +232,7 @@ public:
   using Param = ParamT;
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
+  using Full = Linear<ParamT>;
 #if DISABLE_PACKING
   using ContainerT = std::unordered_map<StorageT, int, absl::Hash<StorageT>>;
 #else
@@ -247,9 +267,26 @@ public:
   static BasicLinear single(const ObjectT& obj) {
     return single_key(ParamT::object_to_key(obj));
   }
+  template<typename T>
+  static BasicLinear from_collection(const T& container) {
+    BasicLinear ret;
+    for (const ObjectT& obj : container) {
+      ret.add_to(obj, 1);
+    }
+    return ret;
+  }
+
   static BasicLinear single_key(const StorageT& key) {
     BasicLinear ret;
     ret.data_[key] = 1;
+    return ret;
+  }
+  template<typename T>
+  static BasicLinear from_key_collection(const T& container) {
+    BasicLinear ret;
+    for (const StorageT& key : container) {
+      ret.add_to(key, 1);
+    }
     return ret;
   }
 
@@ -380,8 +417,30 @@ public:
     return mapped_key<BasicLinear>(func);
   }
 
+  template<typename F>
+  auto mapped_expanding(F func) const {
+    using ResultT = std::decay_t<std::invoke_result_t<F, ObjectT>>;
+    static_assert(is_basic_linear_v<ResultT>, "mapped_expanding functor must return a BasicLinear expression");
+    ResultT ret;
+    foreach([&](const auto& obj, int coeff) {
+      ret += coeff * func(obj);
+    });
+    return ret;
+  }
+  template<typename F>
+  auto mapped_key_expanding(F func) const {
+    using ResultT = std::decay_t<std::invoke_result_t<F, StorageT>>;
+    static_assert(is_basic_linear_v<ResultT>, "mapped_expanding functor must return a BasicLinear expression");
+    ResultT ret;
+    foreach_key([&](const auto& key, int coeff) {
+      ret += coeff * func(key);
+    });
+    return ret;
+  }
+
   template<typename NewBasicLinearT>
   NewBasicLinearT cast_to() const {
+    static_assert(is_basic_linear_v<NewBasicLinearT>);
     static_assert(std::is_same_v<typename NewBasicLinearT::StorageT, StorageT>);
     return NewBasicLinearT(data_);
   }
@@ -413,6 +472,26 @@ public:
       ret.add_to_key(key, std::abs(coeff));
     });
     return ret;
+  }
+
+  Full annotate(const std::string& annotation) && {
+    return Full::with_single_annotation(std::move(*this), annotation);
+  }
+  Full maybe_annotate(const std::optional<std::string>& annotation) && {
+    return annotation.has_value()
+      ? Full::with_single_annotation(std::move(*this), annotation.value())
+      : Full(std::move(*this));
+  }
+  template<typename SourceLinearT>
+  Full copy_annotations(const SourceLinearT& other) && {
+    return Full(std::move(*this)).copy_annotations(other);
+  }
+
+  BasicLinear operator+() const {
+    return *this;
+  }
+  BasicLinear operator-() const {
+    return -1 * (*this);
   }
 
   BasicLinear operator+(const BasicLinear& other) const {
@@ -548,6 +627,10 @@ struct LinearAnnotation {
   BasicLinearAnnotation expression;
   std::vector<std::string> errors;
 
+  static LinearAnnotation single(const std::string& annotation) {
+    return LinearAnnotation{BasicLinearAnnotation::single(annotation), {}};
+  }
+
   bool empty() const { return expression.is_zero() && errors.empty(); }
   bool has_errors() const { return !errors.empty(); }
 };
@@ -562,40 +645,34 @@ public:
   using Param = ParamT;
   using ObjectT = typename ParamT::ObjectT;
   using StorageT = typename ParamT::StorageT;
-  using BasicLinearMain = BasicLinear<ParamT>;
+  using Basic = BasicLinear<ParamT>;
+  using BasicLinearMain = BasicLinear<ParamT>;  // TODO: Delete
   using const_iterator = typename BasicLinearMain::const_iterator;
   using const_key_iterator = typename BasicLinearMain::const_key_iterator;
 
   Linear() {}
-  explicit Linear(BasicLinearMain main, LinearAnnotation annotations)
+  explicit Linear(BasicLinearMain main) : main_(std::move(main)) {}
+  Linear(BasicLinearMain main, LinearAnnotation annotations)
     : main_(std::move(main)), annotations_(std::move(annotations)) {}
 
+  static Linear with_single_annotation(BasicLinearMain main, const std::string& annotation) {
+    return Linear(std::move(main), LinearAnnotation::single(annotation));
+  }
+
   static Linear single(const ObjectT& obj) {
-    Linear ret;
-    ret.main_ = BasicLinearMain::single(obj);
-    return ret;
+    return Linear(BasicLinearMain::single(obj));
   }
   template<typename T>
   static Linear from_collection(const T& container) {
-    Linear ret;
-    for (const ObjectT& obj : container) {
-      ret.add_to(obj, 1);
-    }
-    return ret;
+    return Linear(BasicLinearMain::from_collection(container));
   }
 
   static Linear single_key(const StorageT& obj) {
-    Linear ret;
-    ret.main_ = BasicLinearMain::single_key(obj);
-    return ret;
+    return Linear(BasicLinearMain::single_key(obj));
   }
   template<typename T>
   static Linear from_key_collection(const T& container) {
-    Linear ret;
-    for (const StorageT& key : container) {
-      ret += Linear::single_key(key);
-    }
-    return ret;
+    return Linear(BasicLinearMain::from_key_collection(container));
   }
 
   bool is_zero() const { return main_.is_zero(); }
@@ -677,6 +754,7 @@ public:
 
   template<typename NewLinearT>
   NewLinearT cast_to() const {
+    static_assert(is_linear_v<NewLinearT>);
     return NewLinearT(main_.template cast_to<typename NewLinearT::BasicLinearMain>(), annotations_);
   }
 
@@ -826,24 +904,25 @@ Linear<ParamT> operator*(int scalar, const Linear<ParamT>& linear) {
   return linear * scalar;
 }
 
-template<typename ParamT>
+template<typename LinearT>
 class LinearKeyView {
 public:
-  explicit LinearKeyView(const Linear<ParamT>& linear) : linear_(linear) {}
-  explicit LinearKeyView(const Linear<ParamT>&& linear) = delete;
-  using const_iterator = typename Linear<ParamT>::const_key_iterator;
+  explicit LinearKeyView(const LinearT& linear) : linear_(linear) {}
+  explicit LinearKeyView(const LinearT&& linear) = delete;
+  using const_iterator = typename LinearT::const_key_iterator;
   const_iterator begin() const { return linear_.begin_key(); };
   const_iterator end() const { return linear_.end_key(); };
 private:
-  const Linear<ParamT>& linear_;
+  const LinearT& linear_;
 };
 
-template<typename ParamT>
-LinearKeyView<ParamT> key_view(const Linear<ParamT>& linear) {
-  return LinearKeyView<ParamT>(linear);
+template<typename LinearT>
+LinearKeyView<LinearT> key_view(const LinearT& linear) {
+  static_assert(is_any_linear_v<LinearT>);
+  return LinearKeyView<LinearT>(linear);
 }
-template<typename ParamT>
-LinearKeyView<ParamT> key_view(const Linear<ParamT>&& linear) = delete;
+template<typename LinearT>
+LinearKeyView<LinearT> key_view(const LinearT&& linear) = delete;
 
 template<typename ParamT, typename CompareF, typename ToStringF>
 std::ostream& to_ostream(
@@ -959,17 +1038,30 @@ MemoryUsage estimated_heap_usage(const Linear<ParamT>& expr) {
 }
 
 
+template<typename ParamTo, typename LinearFrom>
+struct convert_any_linear_type {};
+template<typename ParamTo, typename ParamFrom>
+struct convert_any_linear_type<ParamTo, Linear<ParamFrom>> { using type = Linear<ParamTo>; };
+template<typename ParamTo, typename ParamFrom>
+struct convert_any_linear_type<ParamTo, BasicLinear<ParamFrom>> { using type = BasicLinear<ParamTo>; };
+template<typename ParamTo, typename LinearFrom>
+using convert_any_linear_type_t = typename convert_any_linear_type<ParamTo, LinearFrom>::type;
+
 // Optimization potential: mark IDENTITY_VECTOR_FORM as no-op and return a
 // reference to the original expression; but forbid dangling reference!
 template<typename LinearT>
 auto to_vector_expression(const LinearT& expr) {
-  return expr.template mapped_key<Linear<VectorLinearParam<typename LinearT::Param>>>([](auto vec) {
+  static_assert(is_any_linear_v<LinearT>);
+  using VectorParamT = VectorLinearParam<typename LinearT::Param>;
+  using VectorLinearT = convert_any_linear_type_t<VectorParamT, LinearT>;
+  return expr.template mapped_key<VectorLinearT>([](auto vec) {
     return LinearT::Param::key_to_vector(std::move(vec));
   });
 }
 
-template<typename LinearT, typename VectorParamT>
-LinearT from_vector_expression(const Linear<VectorParamT>& expr) {
+template<typename LinearT, typename VectorLinearT>
+LinearT from_vector_expression(const VectorLinearT& expr) {
+  static_assert(is_any_linear_v<LinearT>);
   return expr.template mapped_key<LinearT>([](auto key) {
     return LinearT::Param::vector_to_key(std::move(key));
   });

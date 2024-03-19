@@ -89,7 +89,7 @@ ThetaICoExpr substitute_ratios_1_based(
       [](const ThetaExpr::StorageT& lhs, const ThetaExpr::StorageT& rhs) {
         return std::array{lhs, rhs};
       },
-      AnnOperator(fmt::coprod_hopf())
+      []() { return AnnOperator(fmt::coprod_hopf()); }
     );
   }).without_annotations();
 }

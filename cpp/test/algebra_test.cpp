@@ -20,7 +20,7 @@ TEST(OuterProductTest, TwoExpressions) {
       +3*StringExpr::single("d")
       ,
       concat_strings,
-      AnnNone()
+      []() { return AnnNone(); }
     ),
     (
       +  StringExpr::single("ac")
@@ -45,7 +45,7 @@ TEST(OuterProductTest, ThreeExpressions) {
       }
       ,
       concat_strings,
-      AnnNone()
+      []() { return AnnNone(); }
     ),
     (
       +2*StringExpr::single("ace")

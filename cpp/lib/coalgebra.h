@@ -15,6 +15,9 @@
 //   * "Anti-iterated": like iterated, but parts are sorted by descending length instead
 //     of ascending. Used by `expand_into_glued_pairs`.
 //     Function prefix: `a`.
+//     TODO: Consider whether this could be made the default order for co-expressions.
+//       If so, remove this additional co-expression type. Problem: when viewing a (1, n-1)
+//       comultiplication, it is nice to have things grouped by the weight 1 part.
 //
 //   * "Hopf": parts are fixed in place and cannot be reordered.
 //     Function prefix: none. There is no Hopf comultiplication operation, such an
@@ -63,26 +66,69 @@ struct NCoExprForExpr {
   using type = void;
 };
 template<typename ExprT>
-using NCoExprForExpr_t = typename NCoExprForExpr<ExprT>::type;
-
-template<typename ExprT>
 struct ICoExprForExpr {
   using type = void;
 };
 template<typename ExprT>
-using ICoExprForExpr_t = typename ICoExprForExpr<ExprT>::type;
-
-// TODO: Consider whether this could be made the default order for co-expressions.
-//   If so, remove this additional co-expression type.
-template<typename ExprT>
 struct ACoExprForExpr {
   using type = void;
 };
-template<typename ExprT>
-using ACoExprForExpr_t = typename ACoExprForExpr<ExprT>::type;
 
+template<typename, typename = void>
+struct is_coexpr : std::false_type {};
+template<typename T>
+struct is_coexpr<T, std::void_t<typename T::Param::PartExprParam>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_coexpr_v = is_coexpr<T>::value;
 
 namespace internal {
+// TODO: Remove duplication. Note. This would happen automatically if we parametrize coexpressions
+//   by expression type enum.
+template<typename, typename = void>
+struct AnyNCoExprForExpr {
+  using type = void;
+};
+template<typename T>
+struct AnyNCoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_linear_v<T>>> {
+  using type = typename NCoExprForExpr<T>::type;
+};
+template<typename T>
+struct AnyNCoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_basic_linear_v<T>>> {
+  using type = typename NCoExprForExpr<typename T::Full>::type::Basic;
+};
+template<typename T>
+using AnyNCoExprForExpr_t = typename AnyNCoExprForExpr<T>::type;
+
+template<typename, typename = void>
+struct AnyICoExprForExpr {
+  using type = void;
+};
+template<typename T>
+struct AnyICoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_linear_v<T>>> {
+  using type = typename ICoExprForExpr<T>::type;
+};
+template<typename T>
+struct AnyICoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_basic_linear_v<T>>> {
+  using type = typename ICoExprForExpr<typename T::Full>::type::Basic;
+};
+template<typename T>
+using AnyICoExprForExpr_t = typename AnyICoExprForExpr<T>::type;
+
+template<typename, typename = void>
+struct AnyACoExprForExpr {
+  using type = void;
+};
+template<typename T>
+struct AnyACoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_linear_v<T>>> {
+  using type = typename ACoExprForExpr<T>::type;
+};
+template<typename T>
+struct AnyACoExprForExpr<T, std::enable_if_t<!is_coexpr_v<T> && is_basic_linear_v<T>>> {
+  using type = typename ACoExprForExpr<typename T::Full>::type::Basic;
+};
+template<typename T>
+using AnyACoExprForExpr_t = typename AnyACoExprForExpr<T>::type;
+
 template<typename CoExprT, typename ExprT>
 auto to_coexpr(ExprT expr) {
   using CoMonomT = typename CoExprT::StorageT;
@@ -95,10 +141,11 @@ auto to_coexpr(ExprT expr) {
   });
 }
 
-// Usage e.g.: maybe_to_coexpr<NCoExprForExpr_t<T>>
+// Usage e.g.: maybe_to_coexpr<AnyNCoExprForExpr_t<T>>
 template<typename CoExprT, typename T>
 auto maybe_to_coexpr(T expr) {
   if constexpr (std::is_void_v<CoExprT>) {
+    static_assert(is_coexpr_v<T>);
     return expr;
   } else {
     return to_coexpr<CoExprT>(std::move(expr));
@@ -107,15 +154,15 @@ auto maybe_to_coexpr(T expr) {
 
 template<typename T>
 auto maybe_to_ncoexpr(T expr) {
-  return maybe_to_coexpr<NCoExprForExpr_t<T>>(std::move(expr));
+  return maybe_to_coexpr<AnyNCoExprForExpr_t<T>>(std::move(expr));
 }
 template<typename T>
 auto maybe_to_icoexpr(T expr) {
-  return maybe_to_coexpr<ICoExprForExpr_t<T>>(std::move(expr));
+  return maybe_to_coexpr<AnyICoExprForExpr_t<T>>(std::move(expr));
 }
 template<typename T>
 auto maybe_to_acoexpr(T expr) {
-  return maybe_to_coexpr<ACoExprForExpr_t<T>>(std::move(expr));
+  return maybe_to_coexpr<AnyACoExprForExpr_t<T>>(std::move(expr));
 }
 
 template<typename CoExprT>
@@ -147,11 +194,13 @@ auto coproduct_vec(const std::vector<CoExprT>& coexpr) {
     [](const auto& u, const auto& v) {
       return concat(u, v);
     },
-    AnnOperator(
-      is_lie_algebra
-        ? (is_iterated ? fmt::coprod_iterated() : fmt::coprod_normal())
-        : fmt::coprod_hopf()
-    )
+    []() {
+      return AnnOperator(
+        is_lie_algebra
+          ? (is_iterated ? fmt::coprod_iterated() : fmt::coprod_normal())
+          : fmt::coprod_hopf()
+      );
+    }
   );
   if constexpr (is_lie_algebra) {
     return internal::sort_coproduct_parts(ret);
@@ -209,7 +258,8 @@ auto acoproduct(Args&&... args) {
 
 template<typename ExprT>
 auto icomultiply(const ExprT& expr, std::vector<int> form) {
-  using CoExprT = ICoExprForExpr_t<ExprT>;
+  static_assert(is_any_linear_v<ExprT>);
+  using CoExprT = internal::AnyICoExprForExpr_t<ExprT>;
   static_assert(CoExprT::Param::coproduct_is_lie_algebra);
   if (expr.is_zero()) {
     return CoExprT{};
@@ -322,8 +372,9 @@ auto ncomultiply_impl(const CoExprT& coexpr, std::vector<int> form) {
 
 template<typename T>
 auto ncomultiply(const T& expr, std::vector<int> form = {}) {
+  static_assert(is_any_linear_v<T>);
   return internal::ncomultiply_impl(
-    internal::maybe_to_coexpr<NCoExprForExpr_t<T>>(expr),
+    internal::maybe_to_coexpr<internal::AnyNCoExprForExpr_t<T>>(expr),
     std::move(form)
   );
 }
@@ -343,8 +394,9 @@ auto ncomultiply(const T& expr, std::vector<int> form = {}) {
 //
 template<typename ExprT>
 auto expand_into_glued_pairs(const ExprT& expr) {
+  static_assert(is_any_linear_v<ExprT>);
   return expr.mapped_expanding([](const auto& term) {
-    ACoExprForExpr_t<ExprT> expanded_expr;
+    internal::AnyACoExprForExpr_t<ExprT> expanded_expr;
     for (const int i : range(term.size() - 1)) {
       std::vector<ExprT> expanded_term;
       for (const int j : range(term.size() - 1)) {

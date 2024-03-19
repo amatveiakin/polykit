@@ -29,6 +29,14 @@
 //   * `tensor_product` is a special case of an outer product. It uses a function
 //     called `monom_tensor_product` defined as part of linear expression params.
 //     Semantically it concatenates two monoms together.
+//
+// All functions can take either `Linear` or `BasicLinear`. The latter version has a
+// annotation argument (which is ignored) to facilitate writing generic product functions,
+// e.g. `tensor_product` doesn't have to support `Linear` or `BasicLinear` separately:
+// it always passes an annotation, and it's discarded if not needed. In order to avoid
+// computing annotation object when not needed, we take a generator function rather than
+// a value, so that the function could be optimized away when it's not called; this is
+// conceptually similar to things like `Option::unwrap_or_else` in Rust.
 
 #pragma once
 
@@ -116,15 +124,13 @@ static std::optional<std::string> product_annotation(
 }  // namespace internal
 
 
-template<typename LinearProdT, typename LinearT, typename MonomProdF>
-LinearProdT outer_product(
+template<typename LinearProdT, typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_basic_linear_v<LinearT> && is_basic_linear_v<LinearProdT>, LinearProdT>
+outer_product(
     const LinearT& lhs,
     const LinearT& rhs,
     const MonomProdF& monom_key_product,
-    const ProductAnnotation& annotation) {
-  static_assert(std::is_same_v<
-      std::invoke_result_t<MonomProdF, typename LinearT::StorageT, typename LinearT::StorageT>,
-      typename LinearProdT::StorageT>);
+    const AnnotationsF& = nullptr) {
   LinearProdT ret;
   lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
     rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
@@ -133,63 +139,116 @@ LinearProdT outer_product(
       ret.add_to_key(ret_key, lhs_coeff * rhs_coeff);
     });
   });
-  return LinearProdT(ret).maybe_annotate(internal::product_annotation(annotation, lhs, rhs));
+  return ret;
 }
-
-template<typename LinearT, typename MonomProdF>
-LinearT outer_product(
-    const absl::Span<const LinearT>& expressions,
-    const MonomProdF& monom_key_product,
-    const ProductAnnotation& annotation) {
-  if (expressions.empty()) {
-    return {};
-  }
-  if (expressions.size() == 1 && std::holds_alternative<ProductAnnotationOperator>(annotation)) {
-    // Keep annotations intact rather than collapsing into a one-liner
-    return expressions.front();
-  }
-  LinearT ret = expressions.front().without_annotations();
-  for (const LinearT& expr : expressions.subspan(1)) {
-    ret = outer_product<LinearT>(ret, expr, monom_key_product, AnnNone());
-  }
-  return ret.maybe_annotate(internal::product_annotation(annotation, expressions));
-}
-
-
-// Similar to `outer_product`, but `monom_key_product` produces an expr rather than one monom.
-template<typename LinearT, typename MonomProdF>
-LinearT outer_product_expanding(
+template<typename LinearProdT, typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_linear_v<LinearT> && is_linear_v<LinearProdT>, LinearProdT>
+outer_product(
     const LinearT& lhs,
     const LinearT& rhs,
     const MonomProdF& monom_key_product,
-    const ProductAnnotation& annotation) {
-  using LinearStorageT = typename LinearT::StorageT;
-  static_assert(std::is_same_v<
-      typename std::invoke_result_t<MonomProdF, LinearStorageT, LinearStorageT>::StorageT,
-      LinearStorageT>);
-  LinearT ret;
-  lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
-    rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
-      const auto& prod = monom_key_product(lhs_key, rhs_key);
-      ret += (lhs_coeff * rhs_coeff) * prod.template cast_to<LinearT>();
-    });
-  });
-  return LinearT(ret).maybe_annotate(internal::product_annotation(annotation, lhs, rhs));
+    const AnnotationsF& get_annotation) {
+  return outer_product<typename LinearProdT::Basic>(
+    lhs.main(), rhs.main(), monom_key_product, nullptr
+  ).maybe_annotate(
+    internal::product_annotation(get_annotation(), lhs, rhs)
+  );
 }
 
-template<typename LinearT, typename MonomProdF>
-LinearT outer_product_expanding(
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_basic_linear_v<LinearT>, LinearT>
+outer_product(
     const absl::Span<const LinearT>& expressions,
     const MonomProdF& monom_key_product,
-    const ProductAnnotation& annotation) {
+    const AnnotationsF& = nullptr) {
   if (expressions.empty()) {
     return {};
   }
   LinearT ret = expressions.front();
   for (const LinearT& expr : expressions.subspan(1)) {
-    ret = outer_product_expanding(ret, expr, monom_key_product, AnnNone());
+    ret = outer_product<LinearT>(ret, expr, monom_key_product, nullptr);
   }
-  return ret.maybe_annotate(internal::product_annotation(annotation, expressions));
+  return ret;
+}
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_linear_v<LinearT>, LinearT>
+outer_product(
+    const absl::Span<const LinearT>& expressions,
+    const MonomProdF& monom_key_product,
+    const AnnotationsF& get_annotation) {
+  const ProductAnnotation annotation = get_annotation();
+  if (expressions.size() == 1 && std::holds_alternative<ProductAnnotationOperator>(annotation)) {
+    // Keep annotations intact rather than collapsing into a one-liner
+    return expressions.front();
+  }
+  const auto basic_expressions = mapped(expressions, [](const auto& expr) { return expr.main(); });
+  return outer_product(
+    absl::MakeConstSpan(basic_expressions), monom_key_product, nullptr
+  ).maybe_annotate(
+    internal::product_annotation(annotation, expressions)
+  );
+}
+
+
+// Similar to `outer_product`, but `monom_key_product` produces an expr rather than one monom.
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_basic_linear_v<LinearT>, LinearT>
+outer_product_expanding(
+    const LinearT& lhs,
+    const LinearT& rhs,
+    const MonomProdF& monom_key_product,
+    const AnnotationsF& = nullptr) {
+  LinearT ret;
+  lhs.foreach_key([&](const auto& lhs_key, int lhs_coeff) {
+    rhs.foreach_key([&](const auto& rhs_key, int rhs_coeff) {
+      // TODO: Remove `cast_to` here, push it to the users where necessary.
+      const auto& prod = monom_key_product(lhs_key, rhs_key);
+      ret += (lhs_coeff * rhs_coeff) * prod.template cast_to<LinearT>();
+    });
+  });
+  return ret;
+}
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_linear_v<LinearT>, LinearT>
+outer_product_expanding(
+    const LinearT& lhs,
+    const LinearT& rhs,
+    const MonomProdF& monom_key_product,
+    const AnnotationsF& get_annotation) {
+  return outer_product_expanding(
+    lhs.main(), rhs.main(), monom_key_product, nullptr
+  ).maybe_annotate(
+    internal::product_annotation(get_annotation(), lhs, rhs)
+  );
+}
+
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_basic_linear_v<LinearT>, LinearT>
+outer_product_expanding(
+    const absl::Span<const LinearT>& expressions,
+    const MonomProdF& monom_key_product,
+    const AnnotationsF& = nullptr) {
+  if (expressions.empty()) {
+    return {};
+  }
+  LinearT ret = expressions.front();
+  for (const LinearT& expr : expressions.subspan(1)) {
+    ret = outer_product_expanding(ret, expr, monom_key_product, nullptr);
+  }
+  return ret;
+}
+template<typename LinearT, typename MonomProdF, typename AnnotationsF>
+std::enable_if_t<is_linear_v<LinearT>, LinearT>
+outer_product_expanding(
+    const absl::Span<const LinearT>& expressions,
+    const MonomProdF& monom_key_product,
+    const AnnotationsF& get_annotation) {
+  const auto basic_expressions = mapped(expressions, [](const auto& expr) { return expr.main(); });
+  return outer_product_expanding(
+    absl::MakeConstSpan(basic_expressions), monom_key_product, nullptr
+  ).maybe_annotate(
+    internal::product_annotation(get_annotation(), expressions)
+  );
 }
 
 
@@ -197,13 +256,15 @@ template<typename LinearT>
 LinearT tensor_product(
     const LinearT& lhs,
     const LinearT& rhs) {
+  static_assert(is_any_linear_v<LinearT>);
   return outer_product<LinearT>(lhs, rhs, LinearT::Param::monom_tensor_product,
-    AnnOperator(fmt::tensor_prod()));
+    []() { return AnnOperator(fmt::tensor_prod()); });
 }
 
 template<typename LinearT>
 LinearT tensor_product(
     const absl::Span<const LinearT>& expressions) {
+  static_assert(is_any_linear_v<LinearT>);
   return outer_product(expressions, LinearT::Param::monom_tensor_product,
-    AnnOperator(fmt::tensor_prod()));
+    []() { return AnnOperator(fmt::tensor_prod()); });
 }

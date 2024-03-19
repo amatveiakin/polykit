@@ -80,8 +80,9 @@ auto lyndon_factorize(const Container& word) {
 //   basis for a mixed-weight expression, we could check length when filling the
 //   queue.
 template<typename LinearT>
-LinearT to_lyndon_basis(const LinearT& expression) {
-  auto expr = to_vector_expression(expression.without_annotations());
+std::enable_if_t<is_basic_linear_v<LinearT>, LinearT>
+to_lyndon_basis(const LinearT& expression) {
+  auto expr = to_vector_expression(expression);
   using VectorLinearT = decltype(expr);
   using VectorT = typename VectorLinearT::Param::StorageT;
   // Optimization potential: Replace the map with a heap.
@@ -93,8 +94,8 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     }
   };
   absl::btree_map<VectorT, int, MapCompare> terms_to_convert{
-    expr.main().data().begin(),
-    expr.main().data().end(),
+    expr.data().begin(),
+    expr.data().end(),
   };
   VectorLinearT terms_converted;
 
@@ -142,6 +143,11 @@ LinearT to_lyndon_basis(const LinearT& expression) {
     }
   };
 
-  LinearT ret = from_vector_expression<LinearT>(terms_converted);
-  return ret.copy_annotations(expression);
+  return from_vector_expression<LinearT>(terms_converted);
+}
+
+template<typename LinearT>
+std::enable_if_t<is_linear_v<LinearT>, LinearT>
+to_lyndon_basis(const LinearT& expression) {
+  return to_lyndon_basis(expression.main()).copy_annotations(expression);
 }
