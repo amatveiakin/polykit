@@ -223,6 +223,24 @@ GammaExpr SymmGLi4_wip(const std::vector<int>& points) {
   );
 }
 
+GammaExpr AlternatedGLiVec(const std::vector<int>& points) {
+  CHECK(points.size() % 2 == 0) << dump_to_string(points);
+  const int n = div_int(points.size(), 2);
+  GammaExpr expr;
+  for (const int i : range(0, n - 1)) {
+    for (const int j : range(0, n - 1)) {
+      const auto args = removed_indices(points, {i, n + j});
+      expr += (neg_one_pow(i) * neg_one_pow(j)) * GLiVec(n - 1, args);
+    }
+  }
+  return expr.without_annotations().annotate(
+    fmt::function_num_args(
+      fmt::opname("AlternatedGLi"),
+      points
+    )
+  );
+}
+
 bool are_GLi_args_ok(int weight, int num_points) {
   return num_points % 2 == 0 && weight >= num_points / 2 - 1;
 }

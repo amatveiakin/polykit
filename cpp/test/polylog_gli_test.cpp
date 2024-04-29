@@ -689,3 +689,17 @@ TEST(GLiTest, LARGE_SumOfPermutations_Arg6) {
   q = to_lyndon_basis(q);
   EXPECT_EXPR_ZERO(p.dived_int(2) - q.dived_int(240));
 }
+
+TEST(GLiTest, AlternatedGLiAlternatedSum) {
+  EXPECT_EXPR_ZERO_AFTER_LYNDON(
+    + AlternatedGLi(1,2,3,4,5,6,7,8)
+    + AlternatedGLi(1,2,3,8,5,6,7,9)
+    + AlternatedGLi(1,2,3,9,5,6,7,4)
+  );
+  // // TODO: Uncomment when we support variable number 11 and higher without changing poly_limits.h
+  // EXPECT_EXPR_ZERO_AFTER_LYNDON(
+  //   + AlternatedGLi(1,2,3,4,5,6,7,8,9,10)
+  //   + AlternatedGLi(1,2,3,4,10,6,7,8,9,11)
+  //   + AlternatedGLi(1,2,3,4,11,6,7,8,9,5)
+  // );
+}

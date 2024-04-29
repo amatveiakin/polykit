@@ -14,6 +14,8 @@ GammaExpr SymmGLi3(const std::vector<int>& points);
 // TODO: Finish symmetrizing.
 GammaExpr SymmGLi4_wip(const std::vector<int>& points);
 
+GammaExpr AlternatedGLiVec(const std::vector<int>& points);
+
 bool are_GLi_args_ok(int weight, int num_points);
 
 // When constructing a set of GLi of all possible point orders, it is sufficient to include
@@ -62,3 +64,5 @@ inline static auto GLi5 = internal::GLiFixedWeight(5);
 inline static auto GLi6 = internal::GLiFixedWeight(6);
 inline static auto GLi7 = internal::GLiFixedWeight(7);
 inline static auto GLi8 = internal::GLiFixedWeight(8);
+
+template<typename... Args> GammaExpr AlternatedGLi(Args... args) { return AlternatedGLiVec({args...}); }
