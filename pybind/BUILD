@@ -1,6 +1,6 @@
 package(default_visibility = ["//:__subpackages__"])
 
-load("@pip//:requirements.bzl", "requirement")
+load("@my_pip_deps//:requirements.bzl", "requirement")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 

@@ -62,13 +62,13 @@ cc_library(
         "lib/unicode_alphabets.cpp",
     ],
     deps = [
-        "@absl//absl/algorithm:container",
-        "@absl//absl/algorithm:algorithm",
-        "@absl//absl/container:flat_hash_map",
-        "@absl//absl/container:flat_hash_set",
-        "@absl//absl/container:inlined_vector",
-        "@absl//absl/types:span",
-        "@absl//absl/strings:strings",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/algorithm:algorithm",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/container:inlined_vector",
+        "@abseil-cpp//absl/types:span",
+        "@abseil-cpp//absl/strings:strings",
     ],
 )
 
@@ -126,10 +126,10 @@ cc_library(
         "lib/x.cpp",
     ],
     deps = [
-        "@absl//absl/strings:strings",
-        "@absl//absl/container:btree",
-        "@absl//absl/container:flat_hash_map",
-        "@absl//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/strings:strings",
+        "@abseil-cpp//absl/container:btree",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
         ":base",
     ],
 )
@@ -173,7 +173,7 @@ cc_library(
         "lib/snowpal.cpp",
     ],
     deps = [
-        "@absl//absl/strings:strings",
+        "@abseil-cpp//absl/strings:strings",
         ":base",
         ":math",
     ],
@@ -223,8 +223,8 @@ cc_binary(
     name = "workspace",
     srcs = ["workspace.cpp"],
     deps = [
-        "@absl//absl/debugging:failure_signal_handler",
-        "@absl//absl/debugging:symbolize",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
         ":base",
         ":math",
         ":polylog",
@@ -236,8 +236,8 @@ cc_binary(
     name = "example",
     srcs = ["example.cpp"],
     deps = [
-        "@absl//absl/debugging:failure_signal_handler",
-        "@absl//absl/debugging:symbolize",
+        "@abseil-cpp//absl/debugging:failure_signal_handler",
+        "@abseil-cpp//absl/debugging:symbolize",
         ":base",
         ":math",
         ":polylog",
