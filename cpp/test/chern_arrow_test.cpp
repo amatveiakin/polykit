@@ -348,3 +348,5 @@ TEST(ChernArrowTest, LARGE_GenerateGLiViaLowerGLiABEquations) {
 INSTANTIATE_TEST_SUITE_P(AllCases, ChernArrowIdentityTest, testing::ValuesIn(exprs_any_num_points));
 INSTANTIATE_TEST_SUITE_P(AllCases, OddNumPointsIdentityTest, testing::ValuesIn(exprs_odd_num_points));
 INSTANTIATE_TEST_SUITE_P(AllCases, EvenNumPointsIdentityTest, testing::ValuesIn(exprs_even_num_points));
+
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(EvenNumPointsIdentityTest);
