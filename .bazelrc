@@ -17,7 +17,10 @@ build:clang --cxxopt -Wimplicit-fallthrough
 build:clang --cxxopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
 build:clang --linkopt -stdlib=libstdc++  # libc++ does not support <execution> parallelism
 build:clang --linkopt -ltbb  # for <execution>
-build:clang --linkopt "-lgmp -lgivaro -lntl -lblas"  # for LinBox
+build:clang --linkopt -lgmp     # for LinBox
+build:clang --linkopt -lgivaro  # for LinBox
+build:clang --linkopt -lntl     # for LinBox
+build:clang --linkopt -lblas    # for LinBox
 
 build:clang-asan --repo_env=CC=clang
 build:clang-asan --cxxopt -std=c++17
